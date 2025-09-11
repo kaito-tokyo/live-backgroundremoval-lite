@@ -24,6 +24,8 @@ jobs:
     secrets: inherit
     permissions:
       contents: read
+    with:
+      environment: production
 
   create-release:
     name: Create Release 🛫
@@ -33,7 +35,6 @@ jobs:
     defaults:
       run:
         shell: bash
-    environment: production
     steps:
       - name: Check Release Tag ☑️
         id: check

@@ -1,6 +1,23 @@
 name: Build Project
 on:
   workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+    secrets:
+      MACOS_NOTARIZATION_PASSWORD:
+        required: false
+      MACOS_NOTARIZATION_USERNAME:
+        required: false
+      MACOS_SIGNING_APPLICATION_IDENTITY:
+        required: false
+      MACOS_SIGNING_CERT:
+        required: false
+      MACOS_SIGNING_CERT_PASSWORD:
+        required: false
+      MACOS_SIGNING_INSTALLER_IDENTITY:
+        required: false
     outputs:
       pluginName:
         description: Project name detected by parsing build spec file
