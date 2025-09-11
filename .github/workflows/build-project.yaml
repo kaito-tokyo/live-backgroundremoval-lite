@@ -5,6 +5,7 @@ on:
       environment:
         required: true
         type: string
+        default: development
     secrets:
       MACOS_NOTARIZATION_PASSWORD:
         required: false
@@ -95,6 +96,7 @@ jobs:
     defaults:
       run:
         shell: zsh --no-rcs --errexit --pipefail {0}
+    environment: ${{ inputs.environment }}
     steps:
       - uses: actions/checkout@v4
         with:
