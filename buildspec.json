@@ -33,13 +33,13 @@
     },
     "platformConfig": {
         "macos": {
-            "bundleId": "com.example.plugintemplate-for-obs"
+            "bundleId": "tokyo.kaito.obs-backgroundremoval-lite"
         }
     },
-    "name": "plugintemplate-for-obs",
-    "displayName": "Plugin Template for OBS",
-    "version": "1.0.0",
-    "author": "Your Name Here",
-    "website": "https://example.com",
-    "email": "me@example.com"
+    "name": "obs-backgroundremoval-lite",
+    "displayName": "OBS Background Removal Lite",
+    "version": "0.1.0",
+    "author": "Kaito Udagawa",
+    "website": "https://obs-backgroundremoval-lite.kaito.tokyo",
+    "email": "umireon@kaito.tokyo"
 }
