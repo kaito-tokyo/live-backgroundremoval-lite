@@ -33,6 +33,7 @@ jobs:
     defaults:
       run:
         shell: bash
+    environment: production
     steps:
       - name: Check Release Tag ☑️
         id: check
