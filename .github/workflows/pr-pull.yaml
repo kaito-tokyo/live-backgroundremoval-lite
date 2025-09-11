@@ -26,4 +26,4 @@ jobs:
     permissions:
       contents: read
     with:
-      environment: ""
+      production: false
