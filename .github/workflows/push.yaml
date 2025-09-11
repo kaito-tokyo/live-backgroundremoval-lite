@@ -25,7 +25,7 @@ jobs:
     permissions:
       contents: read
     with:
-      environment: production
+      production: true
 
   create-release:
     name: Create Release 🛫
