@@ -25,3 +25,5 @@ jobs:
     secrets: inherit
     permissions:
       contents: read
+    with:
+      environment: development
