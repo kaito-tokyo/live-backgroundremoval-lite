@@ -96,7 +96,7 @@ jobs:
     defaults:
       run:
         shell: zsh --no-rcs --errexit --pipefail {0}
-    if: ${{ inputs.release == false }}
+    if: ${{ inputs.production == false }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -201,7 +201,7 @@ jobs:
     defaults:
       run:
         shell: zsh --no-rcs --errexit --pipefail {0}
-    if: ${{ inputs.release == true }}
+    if: ${{ inputs.production == true }}
     environment: production
     steps:
       - uses: actions/checkout@v4
