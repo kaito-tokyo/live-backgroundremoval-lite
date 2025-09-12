@@ -1,0 +1,195 @@
+name: "Tests"
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: "bash"
+
+permissions:
+  contents: "read"
+
+jobs:
+  RunTestsOnMacOS:
+    name: "Run Tests on macOS"
+
+    runs-on: "macos-15"
+
+    timeout-minutes: 30
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Restore Ccache cache"
+        uses: "actions/cache/restore@v4"
+        id: "ccache-cache"
+        with:
+          path: "~/.ccache"
+          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ github.ref_name }}-testing-
+            ${{ runner.os }}-ccache-main-testing-
+
+      - name: "Restore Vcpkg cache"
+        uses: "actions/cache/restore@v4"
+        id: "vcpkg-cache"
+        with:
+          path: "${{ github.workspace }}/vcpkg-cache"
+          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-
+            ${{ runner.os }}-vcpkg-main-testing-
+
+      - name: "Configure"
+        run: "cmake --preset macos-testing-ci"
+
+      - name: "Build"
+        run: "cmake --build --preset macos-testing-ci"
+
+      - name: "Show Ccache statistics"
+        run: "ccache -s"
+
+      - name: "Save Ccache cache"
+        uses: "actions/cache/save@v4"
+        with:
+          path: "~/.ccache"
+          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
+
+      - name: "Save Vcpkg cache"
+        uses: "actions/cache/save@v4"
+        with:
+          path: "${{ github.workspace }}/vcpkg-cache"
+          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+
+      - name: "Run tests"
+        run: "ctest --preset macos-testing-ci --verbose"
+
+  RunTestsOnWindows:
+    name: "Run Tests on Windows"
+
+    runs-on: "windows-2022"
+
+    timeout-minutes: 30
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Restore Vcpkg cache"
+        uses: "actions/cache/restore@v4"
+        id: "vcpkg-cache"
+        with:
+          path: "${{ github.workspace }}/vcpkg-cache"
+          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-
+            ${{ runner.os }}-vcpkg-main-testing-
+
+      - name: "Configure"
+        run: "cmake --preset windows-testing-ci-x64"
+
+      - name: "Build"
+        run: "cmake --build --preset windows-testing-ci-x64"
+
+      - name: "Save Vcpkg cache"
+        uses: "actions/cache/save@v4"
+        with:
+          path: "${{ github.workspace }}/vcpkg-cache"
+          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+
+      - name: "Run tests"
+        run: "ctest --preset windows-testing-ci-x64 --verbose"
+
+  RunTestsOnUbuntu:
+    name: "Run Tests on Ubuntu"
+
+    runs-on: "ubuntu-24.04"
+
+    timeout-minutes: 30
+
+    steps:
+      - name: "Disable man-db update"
+        run: |
+          echo "man-db man-db/auto-update boolean false" | sudo debconf-set-selections
+          sudo apt-get remove --purge -y man-db
+
+      - name: "Install dependencies"
+        run: |
+          sudo add-apt-repository -y ppa:obsproject/obs-studio
+          sudo apt update
+          sudo apt-get install -y --no-install-recommends \
+            libgles2-mesa-dev \
+            qt6-base-dev \
+            libqt6svg6-dev \
+            qt6-base-private-dev \
+            cmake \
+            ccache \
+            git \
+            jq \
+            ninja-build \
+            pkg-config \
+            xvfb
+
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Restore Ccache cache"
+        uses: "actions/cache/restore@v4"
+        id: "ccache-cache"
+        with:
+          path: "~/.ccache"
+          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ github.ref_name }}-testing-
+            ${{ runner.os }}-ccache-main-testing-
+
+      - name: "Restore Vcpkg cache"
+        uses: "actions/cache/restore@v4"
+        id: "vcpkg-cache"
+        with:
+          path: "${{ github.workspace }}/vcpkg-cache"
+          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-
+            ${{ runner.os }}-vcpkg-main-testing-
+
+      - name: "Configure"
+        run: "cmake --preset ubuntu-testing-ci-x86_64"
+
+      - name: "Build"
+        run: "cmake --build --preset ubuntu-testing-ci-x86_64"
+
+      - name: "Show Ccache statistics"
+        run: "ccache -s"
+
+      - name: "Save Ccache cache"
+        uses: "actions/cache/save@v4"
+        with:
+          path: "~/.ccache"
+          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
+
+      - name: "Save Vcpkg cache"
+        uses: "actions/cache/save@v4"
+        with:
+          path: "${{ github.workspace }}/vcpkg-cache"
+          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+
+      - name: "Run tests"
+        run: "ctest --preset ubuntu-testing-ci-x86_64 --verbose"

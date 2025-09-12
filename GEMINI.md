@@ -5,7 +5,7 @@
 - Implementation related to unique_ptr should be placed under bridge.hpp.
 - C and C++ files must be formatted using clang-format-19 after any modification.
 - CMake files must be formatted using gersemi after any modification.
-- OBS team maintains the CMake and GitHub Actions so we don't need to improve these parts. However, you can modify workflows start with `showdraw-`.
+- OBS team maintains the CMake and GitHub Actions so we don't need to improve these parts. However, you can modify workflows start with `my-`.
 - The default branch of this project is `main`.
 - There must be a empty newline at the end of the file. The build will fail if this rule is not followed.
 
