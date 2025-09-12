@@ -36,6 +36,7 @@ if(ENABLE_QT)
 endif()
 
 target_sources(${CMAKE_PROJECT_NAME}_impl PRIVATE src/MainPluginContext.cpp)
+target_link_libraries(${CMAKE_PROJECT_NAME}_impl PRIVATE plugin-support)
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.c)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_PROJECT_NAME}_impl)
