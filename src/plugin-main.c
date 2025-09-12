@@ -25,23 +25,23 @@ OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
 struct obs_source_info main_plugin_context = {.id = "backgroundremoval_lite",
-					  .type = OBS_SOURCE_TYPE_FILTER,
-					  .output_flags = OBS_SOURCE_VIDEO,
-					  .get_name = main_plugin_context_get_name,
-					  .create = main_plugin_context_create,
-					  .destroy = main_plugin_context_destroy,
-					  .get_width = main_plugin_context_get_width,
-					  .get_height = main_plugin_context_get_height,
-					  .get_defaults = main_plugin_context_get_defaults,
-					  .get_properties = main_plugin_context_get_properties,
-					  .update = main_plugin_context_update,
-					  .activate = main_plugin_context_activate,
-					  .deactivate = main_plugin_context_deactivate,
-					  .show = main_plugin_context_show,
-					  .hide = main_plugin_context_hide,
-					  .video_tick = main_plugin_context_video_tick,
-					  .video_render = main_plugin_context_video_render,
-					  .filter_video = main_plugin_context_filter_video};
+					      .type = OBS_SOURCE_TYPE_FILTER,
+					      .output_flags = OBS_SOURCE_VIDEO,
+					      .get_name = main_plugin_context_get_name,
+					      .create = main_plugin_context_create,
+					      .destroy = main_plugin_context_destroy,
+					      .get_width = main_plugin_context_get_width,
+					      .get_height = main_plugin_context_get_height,
+					      .get_defaults = main_plugin_context_get_defaults,
+					      .get_properties = main_plugin_context_get_properties,
+					      .update = main_plugin_context_update,
+					      .activate = main_plugin_context_activate,
+					      .deactivate = main_plugin_context_deactivate,
+					      .show = main_plugin_context_show,
+					      .hide = main_plugin_context_hide,
+					      .video_tick = main_plugin_context_video_tick,
+					      .video_render = main_plugin_context_video_render,
+					      .filter_video = main_plugin_context_filter_video};
 
 bool obs_module_load(void)
 {

@@ -203,7 +203,7 @@ try {
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-    self->get()->videoRender();
+	self->get()->videoRender();
 } catch (const std::exception &e) {
 	obs_log(LOG_ERROR, "Failed to render video in main plugin context: %s", e.what());
 } catch (...) {
@@ -227,21 +227,23 @@ try {
 	return frame;
 }
 
-bool main_plugin_context_load() try {
+bool main_plugin_context_module_load()
+try {
 	return true;
 } catch (const std::exception &e) {
-    obs_log(LOG_ERROR, "Failed to load main plugin context: %s", e.what());
+	obs_log(LOG_ERROR, "Failed to load main plugin context: %s", e.what());
 	return false;
 } catch (...) {
-    obs_log(LOG_ERROR, "Failed to load main plugin context: unknown error");
+	obs_log(LOG_ERROR, "Failed to load main plugin context: unknown error");
 	return false;
 }
 
-void main_plugin_context_unload() try {
+void main_plugin_context_module_unload()
+try {
 } catch (const std::exception &e) {
-    obs_log(LOG_ERROR, "Failed to unload main plugin context: %s", e.what());
+	obs_log(LOG_ERROR, "Failed to unload main plugin context: %s", e.what());
 } catch (...) {
-    obs_log(LOG_ERROR, "Failed to unload main plugin context: unknown error");
+	obs_log(LOG_ERROR, "Failed to unload main plugin context: unknown error");
 }
 
 namespace kaito_tokyo {
@@ -254,9 +256,7 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 	update(settings);
 }
 
-MainPluginContext::~MainPluginContext() noexcept
-{
-}
+MainPluginContext::~MainPluginContext() noexcept {}
 
 uint32_t MainPluginContext::getWidth() const noexcept
 {
@@ -275,33 +275,25 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 
 obs_properties_t *MainPluginContext::getProperties()
 {
-    return nullptr;
+	return nullptr;
 }
 
 void MainPluginContext::update(obs_data_t *_settings)
 {
-    settings = _settings;
+	settings = _settings;
 }
 
-void MainPluginContext::activate()
-{
-}
+void MainPluginContext::activate() {}
 
-void MainPluginContext::deactivate()
-{
-}
+void MainPluginContext::deactivate() {}
 
-void MainPluginContext::show()
-{
-}
+void MainPluginContext::show() {}
 
-void MainPluginContext::hide()
-{
-}
+void MainPluginContext::hide() {}
 
 void MainPluginContext::videoTick(float seconds)
 {
-    UNUSED_PARAMETER(seconds);
+	UNUSED_PARAMETER(seconds);
 }
 
 void MainPluginContext::videoRender()
@@ -311,7 +303,7 @@ void MainPluginContext::videoRender()
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 {
-    width = frame->width;
+	width = frame->width;
 	height = frame->height;
 	return frame;
 }
