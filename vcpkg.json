@@ -1,14 +1,5 @@
 {
   "dependencies": [
-    "gtest",
-    {
-      "name": "opencv4",
-      "default-features": false,
-      "features": [
-        "jpeg",
-        "png",
-        "webp"
-      ]
-    }
+    "gtest"
   ]
 }
