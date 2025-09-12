@@ -384,6 +384,13 @@ if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
   set(
     DEPS_STRING
     "include(CMakeFindDependencyMacro)
+find_dependency(Threads)"
+  )
+  if("dnn" IN_LIST FEATURES)
+    string(
+      APPEND
+      DEPS_STRING
+      "\n
 find_dependency(protobuf CONFIG)
 if(protobuf_FOUND)
   if(TARGET protobuf::libprotobuf)
@@ -399,9 +406,9 @@ if(protobuf_FOUND)
       INTERFACE_SYSTEM_INCLUDE_DIRECTORIES \"${Protobuf_INCLUDE_DIR}\"
     )
   endif()
-endif()
-find_dependency(Threads)"
-  )
+endif()"
+    )
+  endif()
   if("tiff" IN_LIST FEATURES)
     string(APPEND DEPS_STRING "\nfind_dependency(TIFF)")
   endif()
