@@ -90,7 +90,7 @@ Mat PixelBufferToMat(CVPixelBufferRef pixelBuffer) {
     size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
 
     // Visionの人物セグメンテーションマスクは通常、CV_8UC1形式に合致します
-    Mat mask(height, width, CV_8UC1, baseAddress, bytesPerRow);
+    Mat mask(static_cast<int>(height), static_cast<int>(width), CV_8UC1, baseAddress, bytesPerRow);
 
     // pixelBufferのロックが解除されるとbaseAddressは無効になるため、データをコピー（クローン）する
     Mat resultMat = mask.clone();
@@ -151,14 +151,6 @@ TEST(StubTest, Stub)
         // 7. マスクを使って元の画像から人物を切り抜く
         Mat segmentedImage = Mat::zeros(originalImage.size(), originalImage.type());
         originalImage.copyTo(segmentedImage, binaryMask);
-
-        // 8. 結果をOpenCVのウィンドウで表示
-        imshow("Original Image", originalImage);
-        imshow("Segmentation Mask", binaryMask);
-        imshow("Segmented Person", segmentedImage);
-
-        printf("ウィンドウを閉じるには、いずれかのキーを押してください...\n");
-        waitKey(0);
 
         // CGImageRefを解放
         CFRelease(cgImage);
