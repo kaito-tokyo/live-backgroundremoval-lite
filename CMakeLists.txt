@@ -36,8 +36,6 @@ if(ENABLE_QT)
   )
 endif()
 
-find_package(onnxruntime REQUIRED)
-
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/MainPluginContext.cpp src/plugin-main.c)
 target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE onnxruntime::onnxruntime)
 
