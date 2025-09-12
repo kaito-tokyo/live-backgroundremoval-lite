@@ -195,7 +195,7 @@ jobs:
           key: ${{ runner.os }}-ccache-${{ needs.check-event.outputs.config }}
 
   macos-build-release:
-    name: Build for macOS 🍏
+    name: Build for macOS (Production) 🍏
     runs-on: macos-15
     needs: check-event
     defaults:
