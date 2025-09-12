@@ -54,8 +54,6 @@ namespace obs_backgroundremoval_lite {
 
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
 public:
-	static const char *getName() noexcept;
-
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	~MainPluginContext() noexcept;
 

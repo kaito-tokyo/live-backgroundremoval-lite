@@ -10,9 +10,11 @@ option(ENABLE_QT "Use Qt functionality" OFF)
 include(compilerconfig)
 include(defaults)
 include(helpers)
+include(install-vcpkg)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE)
 add_library(${CMAKE_PROJECT_NAME}_impl STATIC)
+target_include_directories(${CMAKE_PROJECT_NAME}_impl PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src OBS::libobs)
 
 find_package(libobs REQUIRED)
 target_link_libraries(${CMAKE_PROJECT_NAME}_impl PRIVATE OBS::libobs)
@@ -36,13 +38,15 @@ if(ENABLE_QT)
 endif()
 
 target_sources(${CMAKE_PROJECT_NAME}_impl PRIVATE src/MainPluginContext.cpp)
-target_link_libraries(${CMAKE_PROJECT_NAME}_impl PRIVATE plugin-support)
+target_link_libraries(${CMAKE_PROJECT_NAME}_impl PUBLIC OBS::libobs plugin-support)
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.c)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs ${CMAKE_PROJECT_NAME}_impl)
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_PROJECT_NAME}_impl)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
 
 if(BUILD_TESTING)
   enable_testing()
+  find_package(GTest CONFIG REQUIRED)
+  add_subdirectory(tests)
 endif()

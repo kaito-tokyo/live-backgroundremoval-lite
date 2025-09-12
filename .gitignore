@@ -7,6 +7,8 @@
 !/cmake
 !/data
 !/src
+!/tests
+!/vcpkg-triplets
 !.aiexclude
 !.clang-format
 !.gersemirc
@@ -17,6 +19,8 @@
 !GEMINI.md
 !LICENSE
 !README.md
+!vcpkg-configuration.json
+!vcpkg.json
 
 # Exclude lock files
 *.lock.json
