@@ -10,6 +10,7 @@ option(ENABLE_QT "Use Qt functionality" OFF)
 include(compilerconfig)
 include(defaults)
 include(helpers)
+include(install-vcpkg)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE)
 add_library(${CMAKE_PROJECT_NAME}_impl STATIC)
@@ -45,4 +46,6 @@ set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_nam
 
 if(BUILD_TESTING)
   enable_testing()
+  find_package(GTest CONFIG REQUIRED)
+  add_subdirectory(tests)
 endif()

@@ -1,31 +1,5 @@
 {
   "dependencies": [
-    {
-      "name": "cpr",
-      "default-features": false
-    },
-    {
-      "name": "curl",
-      "default-features": false,
-      "features": [
-        "wolfssl"
-      ]
-    },
-    {
-      "name": "directxtk",
-      "platform": "windows"
-    },
-    "gtest",
-    "neargye-semver",
-    "nlohmann-json",
-    {
-      "name": "opencv4",
-      "default-features": false,
-      "features": [
-        "jpeg",
-        "png",
-        "webp"
-      ]
-    }
+    "gtest"
   ]
 }
