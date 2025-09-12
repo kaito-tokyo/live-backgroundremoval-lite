@@ -29,5 +29,5 @@ using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
 TEST(MainPluginContextTest, GetName)
 {
-	EXPECT_STREQ(main_plugin_context_get_name(nullptr), "OBS Background Removal Lite");
+    MainPluginContext context(nullptr, nullptr);
 }

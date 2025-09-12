@@ -31,6 +31,9 @@ jobs:
       VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
 
     steps:
+      - name: "Install dependencies"
+        run: "brew install ccache"
+
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
