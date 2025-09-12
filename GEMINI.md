@@ -1,7 +1,7 @@
 # Development Guideline of the OBS plugin
 
 - This project must be developed in C++17.
-- Use `()` instead of `(void)` for empty argument lists.
+- Use `()` instead of `(void)` for empty argument lists except for part surrounded by `extern "C"`.
 - Implementation related to unique_ptr should be placed under bridge.hpp.
 - C and C++ files must be formatted using clang-format-19 after any modification.
 - CMake files must be formatted using gersemi after any modification.
