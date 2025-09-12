@@ -196,10 +196,7 @@ vcpkg_cmake_config_fixup(CONFIG_PATH "share/opencv4")
 vcpkg_fixup_pkgconfig()
 
 if("webp" IN_LIST FEATURES)
-    file(REMOVE 
-        "${CURRENT_PACKAGES_DIR}/lib/libwebp.lib"
-        "${CURRENT_PACKAGES_DIR}/debug/lib/libwebp.lib"
-    )
+  file(REMOVE "${CURRENT_PACKAGES_DIR}/lib/libwebp.lib" "${CURRENT_PACKAGES_DIR}/debug/lib/libwebp.lib")
 endif()
 
 if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
