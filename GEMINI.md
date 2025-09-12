@@ -1,7 +1,7 @@
 # Development Guideline of the OBS plugin
 
 - This project must be developed in C++17.
-- Use `()` instead of `(void)` for empty argument lists.
+- Use `()` instead of `(void)` for empty argument lists except for part surrounded by `extern "C"`.
 - Implementation related to unique_ptr should be placed under bridge.hpp.
 - C and C++ files must be formatted using clang-format-19 after any modification.
 - CMake files must be formatted using gersemi after any modification.
@@ -23,7 +23,7 @@
 ## How to test plugin with OBS
 
 1. Run `cmake --preset macos-testing` only when CMake-related changes are made.
-2. Run `cmake --build --preset macos-testing && rm -rf ~/"Library/Application Support/obs-studio/plugins/obs-showdraw.plugin" && cp -r ./build_macos/RelWithDebInfo/obs-showdraw.plugin ~/"Library/Application Support/obs-studio/plugins"`.
+2. Run `cmake --build --preset macos-testing && rm -rf ~/"Library/Application Support/obs-studio/plugins/obs-backgroundremoval-lite.plugin" && cp -r ./build_macos/RelWithDebInfo/obs-backgroundremoval-lite.plugin ~/"Library/Application Support/obs-studio/plugins"`.
 
 ## Release Automation with Gemini
 
