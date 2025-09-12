@@ -20,9 +20,14 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "MainPluginContext.h"
 
+#include <obs-module.h>
+
+OBS_DECLARE_MODULE();
+OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
+
 using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
 TEST(MainPluginContextTest, GetName)
 {
-    EXPECT_STREQ(MainPluginContext::getName(), "OBS Background Removal Lite");
+    EXPECT_STREQ(main_plugin_context_get_name(nullptr), "OBS Background Removal Lite");
 }

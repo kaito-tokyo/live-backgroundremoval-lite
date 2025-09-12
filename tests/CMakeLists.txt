@@ -1,4 +1,4 @@
 include(GoogleTest)
 add_executable(MainPluginContext_test MainPluginContext_test.cpp)
 target_link_libraries(MainPluginContext_test PRIVATE ${CMAKE_PROJECT_NAME}_impl GTest::gtest_main)
-gtest_discover_tests(MainPluginContext_test)
+gtest_discover_tests(MainPluginContext_test DISCOVERY_MODE PRE_TEST)
