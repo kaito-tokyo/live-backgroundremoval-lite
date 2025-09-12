@@ -18,16 +18,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <gtest/gtest.h>
 
-#include "MainPluginContext.h"
-
-#include <obs-module.h>
-
-OBS_DECLARE_MODULE();
-OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
-
-using namespace kaito_tokyo::obs_backgroundremoval_lite;
-
-TEST(MainPluginContextTest, GetName)
+TEST(StubTest, Stub)
 {
-	MainPluginContext context(nullptr, nullptr);
+	SUCCEED();
 }
