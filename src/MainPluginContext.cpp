@@ -59,7 +59,7 @@ try {
 	obs_log(LOG_ERROR, "Failed to destroy main plugin context: unknown error");
 }
 
-uint32_t main_plugin_context_get_width(void *data)
+std::uint32_t main_plugin_context_get_width(void *data)
 {
 	if (!data) {
 		obs_log(LOG_ERROR, "main_plugin_context_get_width called with null data");
@@ -70,7 +70,7 @@ uint32_t main_plugin_context_get_width(void *data)
 	return self->get()->getWidth();
 }
 
-uint32_t main_plugin_context_get_height(void *data)
+std::uint32_t main_plugin_context_get_height(void *data)
 {
 	if (!data) {
 		obs_log(LOG_ERROR, "main_plugin_context_get_height called with null data");
@@ -258,12 +258,12 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 
 MainPluginContext::~MainPluginContext() noexcept {}
 
-uint32_t MainPluginContext::getWidth() const noexcept
+std::uint32_t MainPluginContext::getWidth() const noexcept
 {
 	return width;
 }
 
-uint32_t MainPluginContext::getHeight() const noexcept
+std::uint32_t MainPluginContext::getHeight() const noexcept
 {
 	return height;
 }

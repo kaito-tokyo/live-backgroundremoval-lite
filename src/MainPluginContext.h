@@ -46,6 +46,7 @@ void main_plugin_context_module_unload(void);
 #ifdef __cplusplus
 }
 
+#include <cstdint>
 #include <memory>
 
 namespace kaito_tokyo {
@@ -58,8 +59,8 @@ public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	~MainPluginContext() noexcept;
 
-	uint32_t getWidth() const noexcept;
-	uint32_t getHeight() const noexcept;
+	std::uint32_t getWidth() const noexcept;
+	std::uint32_t getHeight() const noexcept;
 
 	static void getDefaults(obs_data_t *data);
 
