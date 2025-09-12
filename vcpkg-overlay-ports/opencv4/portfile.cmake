@@ -1,8 +1,8 @@
-if (EXISTS "${CURRENT_INSTALLED_DIR}/share/opencv2")
+if(EXISTS "${CURRENT_INSTALLED_DIR}/share/opencv2")
   message(FATAL_ERROR "OpenCV 2 is installed, please uninstall and try again:\n    vcpkg remove opencv2")
 endif()
 
-if (EXISTS "${CURRENT_INSTALLED_DIR}/share/opencv3")
+if(EXISTS "${CURRENT_INSTALLED_DIR}/share/opencv3")
   message(FATAL_ERROR "OpenCV 3 is installed, please uninstall and try again:\n    vcpkg remove opencv3")
 endif()
 
@@ -122,11 +122,14 @@ endif()
 # Build image quality module when building with 'contrib' feature and not UWP.
 set(BUILD_opencv_quality OFF)
 if("contrib" IN_LIST FEATURES)
-  if (VCPKG_TARGET_IS_UWP)
+  if(VCPKG_TARGET_IS_UWP)
     set(BUILD_opencv_quality OFF)
     message(WARNING "The image quality module (quality) does not build for UWP, the module has been disabled.")
     # The hdf module is silently disabled by OpenCVs buildsystem if HDF5 is not detected.
-    message(WARNING "The hierarchical data format module (hdf) depends on HDF5 which doesn't support UWP, the module has been disabled.")
+    message(
+      WARNING
+      "The hierarchical data format module (hdf) depends on HDF5 which doesn't support UWP, the module has been disabled."
+    )
   else()
     set(BUILD_opencv_quality CMAKE_DEPENDS_IN_PROJECT_ONLY)
   endif()
@@ -212,7 +215,7 @@ if(WITH_IPP)
         URLS "https://raw.githubusercontent.com/opencv/opencv_3rdparty/a56b6ac6f030c312b2dce17430eef13aed9af274/ippicv/ippicv_2020_mac_intel64_20191018_general.tgz"
         FILENAME "opencv-cache/ippicv/1c3d675c2a2395d094d523024896e01b-ippicv_2020_mac_intel64_20191018_general.tgz"
         SHA512 454dfaaa245e3a3b2f1ffb1aa8e27e280b03685009d66e147482b14e5796fdf2d332cac0f9b0822caedd5760fda4ee0ce2961889597456bbc18202f10bf727cd
-    )
+      )
     else()
       message(WARNING "This target architecture is not supported IPPICV")
       set(WITH_IPP OFF)
@@ -262,13 +265,13 @@ if(NOT VCPKG_TARGET_IS_WINDOWS OR VCPKG_TARGET_IS_UWP)
   set(WITH_MSMF OFF)
 endif()
 
-if (VCPKG_LIBRARY_LINKAGE STREQUAL static)
-  if (WITH_TBB)
+if(VCPKG_LIBRARY_LINKAGE STREQUAL static)
+  if(WITH_TBB)
     message(WARNING "TBB is currently unsupported in this build configuration, turning it off")
     set(WITH_TBB OFF)
   endif()
 
-  if (VCPKG_TARGET_IS_WINDOWS AND BUILD_opencv_ovis)
+  if(VCPKG_TARGET_IS_WINDOWS AND BUILD_opencv_ovis)
     message(WARNING "OVIS is currently unsupported in this build configuration, turning it off")
     set(BUILD_opencv_ovis OFF)
   endif()
@@ -378,7 +381,9 @@ vcpkg_copy_pdbs()
 
 if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
   file(READ ${CURRENT_PACKAGES_DIR}/share/opencv/OpenCVModules.cmake OPENCV_MODULES)
-  set(DEPS_STRING "include(CMakeFindDependencyMacro)
+  set(
+    DEPS_STRING
+    "include(CMakeFindDependencyMacro)
 find_dependency(protobuf CONFIG)
 if(protobuf_FOUND)
   if(TARGET protobuf::libprotobuf)
@@ -395,7 +400,8 @@ if(protobuf_FOUND)
     )
   endif()
 endif()
-find_dependency(Threads)")
+find_dependency(Threads)"
+  )
   if("tiff" IN_LIST FEATURES)
     string(APPEND DEPS_STRING "\nfind_dependency(TIFF)")
   endif()
@@ -403,11 +409,15 @@ find_dependency(Threads)")
     string(APPEND DEPS_STRING "\nfind_dependency(CUDA)")
   endif()
   if(BUILD_opencv_quality)
-    string(APPEND DEPS_STRING "
+    string(
+      APPEND
+      DEPS_STRING
+      "
 # C language is required for try_compile tests in FindHDF5
 enable_language(C)
 find_dependency(HDF5)
-find_dependency(Tesseract)")
+find_dependency(Tesseract)"
+    )
   endif()
   if(WITH_TBB)
     string(APPEND DEPS_STRING "\nfind_dependency(TBB)")
@@ -434,11 +444,15 @@ find_dependency(Tesseract)")
     string(APPEND DEPS_STRING "\nfind_dependency(Ogre)\nfind_dependency(Freetype)")
   endif()
   if("qt" IN_LIST FEATURES)
-    string(APPEND DEPS_STRING "
+    string(
+      APPEND
+      DEPS_STRING
+      "
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
-find_dependency(Qt5 COMPONENTS OpenGL Concurrent Test)")
+find_dependency(Qt5 COMPONENTS OpenGL Concurrent Test)"
+    )
   endif()
   if("ade" IN_LIST FEATURES)
     string(APPEND DEPS_STRING "\nfind_dependency(ade)")
@@ -447,19 +461,28 @@ find_dependency(Qt5 COMPONENTS OpenGL Concurrent Test)")
     string(APPEND DEPS_STRING "\nfind_dependency(GDCM)")
   endif()
 
-  string(REPLACE "set(CMAKE_IMPORT_FILE_VERSION 1)"
-                 "set(CMAKE_IMPORT_FILE_VERSION 1)\n${DEPS_STRING}" OPENCV_MODULES "${OPENCV_MODULES}")
+  string(
+    REPLACE
+    "set(CMAKE_IMPORT_FILE_VERSION 1)"
+    "set(CMAKE_IMPORT_FILE_VERSION 1)\n${DEPS_STRING}"
+    OPENCV_MODULES
+    "${OPENCV_MODULES}"
+  )
 
   if(WITH_OPENMP)
-    string(REPLACE "set_target_properties(opencv_core PROPERTIES
+    string(
+      REPLACE
+      "set_target_properties(opencv_core PROPERTIES
   INTERFACE_LINK_LIBRARIES \""
-                   "set_target_properties(opencv_core PROPERTIES
-  INTERFACE_LINK_LIBRARIES \"\$<LINK_ONLY:OpenMP::OpenMP_CXX>;" OPENCV_MODULES "${OPENCV_MODULES}")
+      "set_target_properties(opencv_core PROPERTIES
+  INTERFACE_LINK_LIBRARIES \"\$<LINK_ONLY:OpenMP::OpenMP_CXX>;"
+      OPENCV_MODULES
+      "${OPENCV_MODULES}"
+    )
   endif()
 
   if(BUILD_opencv_ovis)
-    string(REPLACE "OgreGLSupportStatic"
-                   "OgreGLSupport" OPENCV_MODULES "${OPENCV_MODULES}")
+    string(REPLACE "OgreGLSupportStatic" "OgreGLSupport" OPENCV_MODULES "${OPENCV_MODULES}")
   endif()
 
   file(WRITE ${CURRENT_PACKAGES_DIR}/share/opencv/OpenCVModules.cmake "${OPENCV_MODULES}")
