@@ -18,7 +18,12 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <gtest/gtest.h>
 
+#include <iostream>
+#include <opencv2/opencv.hpp>
+#include <opencv2/dnn.hpp>
+
 TEST(StubTest, Stub)
 {
-	SUCCEED();
+    std::string model_path = "data/models/model.onnx";
+    cv::dnn::Net net = cv::dnn::readNetFromONNX(model_path);
 }

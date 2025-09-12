@@ -36,6 +36,8 @@ if(ENABLE_QT)
   )
 endif()
 
+find_package(OpenCV CONFIG REQUIRED core imgproc imgcodecs)
+
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/MainPluginContext.cpp src/plugin-main.c)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
