@@ -1,0 +1,179 @@
+{
+  "name": "opencv4",
+  "version": "4.3.0",
+  "port-version": 5,
+  "description": "computer vision library",
+  "homepage": "https://github.com/opencv/opencv",
+  "dependencies": [
+    "zlib"
+  ],
+  "default-features": [
+    "dnn",
+    "jpeg",
+    "png",
+    "tiff",
+    "webp"
+  ],
+  "features": {
+    "nonfree": {
+      "description": "allow nonfree and unredistributable libraries"
+    },
+    "ade": {
+      "description": "graph api",
+      "dependencies": [
+        "ade"
+      ]
+    },
+    "contrib": {
+      "description": "opencv_contrib module",
+      "dependencies": [
+        {
+          "name": "hdf5",
+          "platform": "!uwp & !(windows & (arm | arm64))"
+        },
+        {
+          "name": "tesseract",
+          "platform": "!uwp & !(windows & (arm | arm64))"
+        }
+      ]
+    },
+    "cuda": {
+      "description": "CUDA support for opencv",
+      "dependencies": [
+        "contrib",
+        "cuda",
+        "cudnn"
+      ]
+    },
+    "dnn": {
+      "description": "Enable dnn module",
+      "dependencies": [
+        "protobuf"
+      ]
+    },
+    "eigen": {
+      "description": "Eigen support for opencv",
+      "dependencies": [
+        "eigen3"
+      ]
+    },
+    "ffmpeg": {
+      "description": "ffmpeg support for opencv",
+      "dependencies": [
+        "ffmpeg"
+      ]
+    },
+    "gdcm": {
+      "description": "GDCM support for opencv",
+      "dependencies": [
+        "gdcm"
+      ]
+    },
+    "halide": {
+      "description": "Halide support for opencv",
+      "dependencies": [
+        "halide",
+        "dnn"
+      ]
+    },
+    "ipp": {
+      "description": "Enable Intel Integrated Performance Primitives"
+    },
+    "jasper": {
+      "description": "JPEG 2000 support for opencv",
+      "dependencies": [
+        "jasper"
+      ]
+    },
+    "jpeg": {
+      "description": "JPEG support for opencv",
+      "dependencies": [
+        "libjpeg-turbo"
+      ]
+    },
+    "lapack": {
+      "description": "LAPACK support for opencv",
+      "dependencies": [
+        "blas",
+        "lapack"
+      ]
+    },
+    "openexr": {
+      "description": "OpenEXR support for opencv",
+      "dependencies": [
+        "openexr"
+      ]
+    },
+    "opengl": {
+      "description": "opengl support for opencv",
+      "dependencies": [
+        "opengl"
+      ]
+    },
+    "openmp": {
+      "description": "Enable openmp support for opencv"
+    },
+    "ovis": {
+      "description": "opencv_ovis module",
+      "dependencies": [
+        "contrib",
+        "ogre"
+      ]
+    },
+    "png": {
+      "description": "PNG support for opencv",
+      "dependencies": [
+        "libpng"
+      ]
+    },
+    "qt": {
+      "description": "Qt GUI support for opencv",
+      "dependencies": [
+        {
+          "name": "qt5-base",
+          "features": [
+            "core"
+          ]
+        }
+      ]
+    },
+    "sfm": {
+      "description": "opencv_sfm module",
+      "dependencies": [
+        "contrib",
+        "eigen",
+        "glog",
+        "gflags",
+        "ceres"
+      ]
+    },
+    "tbb": {
+      "description": "Enable Intel Threading Building Blocks",
+      "dependencies": [
+        "tbb"
+      ]
+    },
+    "tiff": {
+      "description": "TIFF support for opencv",
+      "dependencies": [
+        "tiff"
+      ]
+    },
+    "vtk": {
+      "description": "vtk support for opencv",
+      "dependencies": [
+        "contrib",
+        "vtk"
+      ]
+    },
+    "webp": {
+      "description": "WebP support for opencv",
+      "dependencies": [
+        "libwebp"
+      ]
+    },
+    "world": {
+      "description": "Compile to a single package support for opencv"
+    }
+  }
+}

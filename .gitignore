@@ -9,6 +9,7 @@
 !/src
 !/tests
 !/vcpkg-triplets
+!/vcpkg-overlay-ports
 !.aiexclude
 !.clang-format
 !.gersemirc
