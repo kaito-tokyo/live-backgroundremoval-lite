@@ -1,5 +1,5 @@
 /*
-obs-showdraw
+OBS Background Removal Lite
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -58,8 +58,8 @@ public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	~MainPluginContext() noexcept;
 
-	uint32_t getWidth() const;
-	uint32_t getHeight() const;
+	uint32_t getWidth() const noexcept;
+	uint32_t getHeight() const noexcept;
 
 	static void getDefaults(obs_data_t *data);
 

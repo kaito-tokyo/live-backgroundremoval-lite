@@ -136,7 +136,7 @@ try {
 void main_plugin_context_deactivate(void *data)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "showdraw_deactivate called with null data");
+		obs_log(LOG_ERROR, "main_plugin_context_deactivate called with null data");
 		return;
 	}
 
@@ -231,8 +231,10 @@ bool main_plugin_context_load() try {
 	return true;
 } catch (const std::exception &e) {
     obs_log(LOG_ERROR, "Failed to load main plugin context: %s", e.what());
+	return false;
 } catch (...) {
     obs_log(LOG_ERROR, "Failed to load main plugin context: unknown error");
+	return false;
 }
 
 void main_plugin_context_unload() try {
@@ -243,7 +245,7 @@ void main_plugin_context_unload() try {
 }
 
 namespace kaito_tokyo {
-namespace obs_showdraw {
+namespace obs_backgroundremoval_lite {
 
 MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_source)
 	: settings{_settings},
@@ -314,5 +316,5 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 	return frame;
 }
 
-} // namespace obs_showdraw
+} // namespace obs_backgroundremoval_lite
 } // namespace kaito_tokyo
