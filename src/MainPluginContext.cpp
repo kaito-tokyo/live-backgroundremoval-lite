@@ -90,17 +90,17 @@ obs_properties_t *main_plugin_context_get_properties(void *data)
 try {
 	if (!data) {
 		obs_log(LOG_ERROR, "main_plugin_context_get_properties called with null data");
-		return nullptr;
+		return obs_properties_create();
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	return self->get()->getProperties();
 } catch (const std::exception &e) {
 	obs_log(LOG_ERROR, "Failed to get properties: %s", e.what());
-	return nullptr;
+	return obs_properties_create();
 } catch (...) {
 	obs_log(LOG_ERROR, "Failed to get properties: unknown error");
-	return nullptr;
+	return obs_properties_create();
 }
 
 void main_plugin_context_update(void *data, obs_data_t *settings)
@@ -275,7 +275,7 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 
 obs_properties_t *MainPluginContext::getProperties()
 {
-	return nullptr;
+	return obs_properties_create();
 }
 
 void MainPluginContext::update(obs_data_t *_settings)
