@@ -17,11 +17,11 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
 #include <gtest/gtest.h>
+#import <opencv2/opencv.hpp>
 
 #import <Foundation/Foundation.h>
 #import <Vision/Vision.h>
 #import <CoreGraphics/CoreGraphics.h>
-#import <opencv2/opencv.hpp>
 
 // Objective-C++なのでC++のusing宣言も可能
 using namespace cv;
