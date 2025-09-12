@@ -29,5 +29,5 @@ using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
 TEST(MainPluginContextTest, GetName)
 {
-    MainPluginContext context(nullptr, nullptr);
+	MainPluginContext context(nullptr, nullptr);
 }
