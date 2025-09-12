@@ -37,6 +37,8 @@ if(ENABLE_QT)
   )
 endif()
 
+find_package(OpenCV CONFIG REQUIRED core imgproc imgcodecs)
+
 target_sources(${CMAKE_PROJECT_NAME}_impl PRIVATE src/MainPluginContext.cpp)
 target_link_libraries(${CMAKE_PROJECT_NAME}_impl PUBLIC OBS::libobs plugin-support)
 
