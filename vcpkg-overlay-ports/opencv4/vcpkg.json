@@ -131,9 +131,7 @@
       "dependencies": [
         {
           "name": "qt5-base",
-          "features": [
-            "core"
-          ]
+          "default-features": false
         }
       ]
     },
