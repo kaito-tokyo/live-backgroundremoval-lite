@@ -24,6 +24,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 TEST(StubTest, Stub)
 {
-    std::string model_path = "data/models/model.onnx";
-    cv::dnn::Net net = cv::dnn::readNetFromONNX(model_path);
+	std::string model_path = "data/models/model.onnx";
+	cv::dnn::Net net = cv::dnn::readNetFromONNX(model_path);
 }
