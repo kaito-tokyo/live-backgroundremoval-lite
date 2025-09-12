@@ -197,9 +197,13 @@ vcpkg_fixup_pkgconfig()
 
 if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
   file(READ "${CURRENT_PACKAGES_DIR}/share/opencv4/OpenCVModules.cmake" OPENCV_MODULES)
-  set(
-    DEPS_STRING
-    "include(CMakeFindDependencyMacro)
+  set(DEPS_STRING "include(CMakeFindDependencyMacro)\nfind_dependency(Threads)")
+
+  if("dnn" IN_LIST FEATURES)
+    string(
+      APPEND
+      DEPS_STRING
+      "
 find_dependency(protobuf CONFIG)
 if(protobuf_FOUND)
   if(TARGET protobuf::libprotobuf)
@@ -215,9 +219,9 @@ if(protobuf_FOUND)
       INTERFACE_SYSTEM_INCLUDE_DIRECTORIES \"${Protobuf_INCLUDE_DIR}\"
     )
   endif()
-endif()
-find_dependency(Threads)"
-  )
+endif()"
+    )
+  endif()
   if("tiff" IN_LIST FEATURES)
     string(APPEND DEPS_STRING "\nfind_dependency(TIFF)")
   endif()
