@@ -195,6 +195,13 @@ vcpkg_copy_pdbs()
 vcpkg_cmake_config_fixup(CONFIG_PATH "share/opencv4")
 vcpkg_fixup_pkgconfig()
 
+if("webp" IN_LIST FEATURES)
+    file(REMOVE 
+        "${CURRENT_PACKAGES_DIR}/lib/libwebp.lib"
+        "${CURRENT_PACKAGES_DIR}/debug/lib/libwebp.lib"
+    )
+endif()
+
 if(VCPKG_LIBRARY_LINKAGE STREQUAL "static")
   file(READ "${CURRENT_PACKAGES_DIR}/share/opencv4/OpenCVModules.cmake" OPENCV_MODULES)
   set(DEPS_STRING "include(CMakeFindDependencyMacro)\nfind_dependency(Threads)")
