@@ -18,12 +18,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <gtest/gtest.h>
 
-#include <iostream>
-#include <onnxruntime_cxx_api.h>
-
 TEST(StubTest, Stub)
 {
-    Ort::Env env(ORT_LOGGING_LEVEL_VERBOSE, "test");
-    Ort::SessionOptions session_options;
-    Ort::Session session(env, "data/models/model.onnx", session_options);
+    SUCCEED();
 }
