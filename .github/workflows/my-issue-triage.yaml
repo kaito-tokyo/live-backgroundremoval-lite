@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: 'Run Gemini CLI for triage'
         id: gemini_triage # Give this step an ID to reference its output later
-        uses: google-github-actions/run-gemini-cli@main
+        uses: google-github-actions/run-gemini-cli@b8dcd5ff197981cd002d61650bb95b5af3d2b856
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           # This is the prompt (instruction) for Gemini

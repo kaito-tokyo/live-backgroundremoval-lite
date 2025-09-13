@@ -23,7 +23,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #ifdef __cplusplus
 
 #include <memory>
+#include <mutex>
 #include <stdint.h>
+#include <vector>
 
 #include <net.h>
 
@@ -32,6 +34,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
 #include "SelfieSegmenter.hpp"
+#include "TaskQueue.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -40,6 +43,7 @@ class MainPluginContext : public std::enable_shared_from_this<MainPluginContext>
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	~MainPluginContext() noexcept;
+	void shutdown() noexcept { selfieSegmenterTaskQueue.reset(); }
 
 	uint32_t getWidth() const noexcept;
 	uint32_t getHeight() const noexcept;
@@ -63,6 +67,9 @@ private:
 
 	MainEffect mainEffect;
 	SelfieSegmenter selfieSegmenter;
+	std::unique_ptr<TaskQueue> selfieSegmenterTaskQueue;
+	TaskQueue::CancellationToken selfieSegmenterPendingTaskToken;
+	std::mutex selfieSegmenterPendingTaskTokenMutex;
 
 	uint32_t width = 0;
 	uint32_t height = 0;
