@@ -72,7 +72,7 @@ public:
 
         // 1. Pre-processing (no resizing)
         // The input format is now BGRA. ncnn will handle the conversion to the model's required input format.
-        ncnn::Mat in = ncnn::Mat::from_pixels(bgra_data, ncnn::Mat::PIXEL_BGRA, INPUT_WIDTH, INPUT_HEIGHT);
+        ncnn::Mat in = ncnn::Mat::from_pixels(bgra_data, ncnn::Mat::PIXEL_BGRA2RGB, INPUT_WIDTH, INPUT_HEIGHT);
         in.substract_mean_normalize(meanVals, normVals);
 
         // 2. Run inference. This is the most time-consuming part and is done outside the lock
@@ -122,10 +122,10 @@ public:
 
         for (int i = 0; i < PIXEL_COUNT; ++i) {
             // Update the alpha channel of the RGBA data (every 4th byte) with the mask value
-            rgba_data[i * 4 + 0] = mask_data[i];
-            rgba_data[i * 4 + 1] = mask_data[i];
-            rgba_data[i * 4 + 2] = mask_data[i];
-            rgba_data[i * 4 + 3] = 1.0;
+            rgba_data[i * 4 + 0] = 255;
+            rgba_data[i * 4 + 1] = 255;
+            rgba_data[i * 4 + 2] = 255;
+            rgba_data[i * 4 + 3] = mask_data[i];
         }
     }
 
