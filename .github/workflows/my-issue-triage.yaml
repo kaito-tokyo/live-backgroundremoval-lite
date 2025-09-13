@@ -1,0 +1,79 @@
+name: 'Gemini Issue Triage'
+
+on:
+  issues:
+    types:
+      - 'opened'
+      - 'reopened'
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'issue number to triage'
+        required: true
+        type: 'number'
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write # Required to add labels and post comments on issues
+
+    steps:
+      - name: 'Run Gemini CLI for triage'
+        id: gemini_triage # Give this step an ID to reference its output later
+        uses: google-github-actions/run-gemini-cli@b8dcd5ff197981cd002d61650bb95b5af3d2b856
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          # This is the prompt (instruction) for Gemini
+          prompt: |
+            You are an expert triage engineer for a GitHub repository.
+            Analyze the content of the following issue and perform the requested tasks.
+
+            **Issue Title:**
+            ${{ github.event.issue.title }}
+
+            **Issue Body:**
+            ${{ github.event.issue.body }}
+
+            **Your Tasks:**
+            1. From the list below, choose the single most appropriate label for this issue:
+               - bug: A clear bug or error report.
+               - feature-request: A request for a new feature.
+               - documentation: A report of missing or incorrect documentation.
+               - question: A user question about how to use the project.
+            2. Evaluate the priority of this issue as one of the following: `High`, `Medium`, or `Low`.
+            3. If the issue is a `bug`, check if it includes steps to reproduce, expected behavior, and actual behavior. If any of these are missing, create a single-sentence draft comment gently asking the user to provide the missing information. If all information is present, leave the comment draft empty.
+
+            **Output Format:**
+            Provide the result strictly in the following JSON format. Do not include any other text or explanations.
+            ```json
+            {
+              "label": "The chosen label",
+              "priority": "The evaluated priority",
+              "comment": "The drafted comment"
+            }
+            ```
+
+      - name: 'Add labels and comment'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          GEMINI_OUTPUT: ${{ steps.gemini_triage.outputs.gemini_response }}
+        run: |
+          # Extract the label, priority, and comment from Gemini's output
+          LABEL=$(echo "$GEMINI_OUTPUT" | jq -r '.label')
+          PRIORITY=$(echo "$GEMINI_OUTPUT" | jq -r '.priority')
+          COMMENT=$(echo "$GEMINI_OUTPUT" | jq -r '.comment')
+
+          # Add the labels
+          if [ -n "$LABEL" ] && [ "$LABEL" != "null" ]; then
+            gh issue edit $ISSUE_NUMBER --add-label "$LABEL"
+          fi
+          if [ -n "$PRIORITY" ] && [ "$PRIORITY" != "null" ]; then
+            gh issue edit $ISSUE_NUMBER --add-label "$PRIORITY"
+          fi
+
+          # Post the comment if it exists
+          if [ -n "$COMMENT" ] && [ "$COMMENT" != "null" ]; then
+            gh issue comment $ISSUE_NUMBER --body "$COMMENT"
+          fi
