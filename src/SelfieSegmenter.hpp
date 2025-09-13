@@ -76,7 +76,7 @@ public:
 	 * @brief Locks the buffer and returns a reference to the back buffer for writing.
 	 * The caller must call commitWrite() to make the buffer readable.
 	 */
-	std::vector<std::uint8_t>& beginWrite()
+	std::vector<std::uint8_t> &beginWrite()
 	{
 		bufferMutex.lock();
 		const int writeIndex = (readableIndex.load(std::memory_order_relaxed) + 1) % 2;
@@ -117,7 +117,8 @@ public:
 
 	SelfieSegmenter(const kaito_tokyo::obs_bridge_utils::unique_bfree_t &param_path,
 			const kaito_tokyo::obs_bridge_utils::unique_bfree_t &bin_path)
-		: inferenceEngine(param_path, bin_path), maskBuffer(PIXEL_COUNT)
+		: inferenceEngine(param_path, bin_path),
+		  maskBuffer(PIXEL_COUNT)
 	{
 		// Pre-allocate memory for the input Mat.
 		m_inputMat.create(INPUT_WIDTH, INPUT_HEIGHT, 3, sizeof(float));
@@ -140,11 +141,11 @@ public:
 		inferenceEngine.run(m_inputMat, m_outputMat);
 
 		// 3. Get a reference to the buffer to write to
-		std::vector<std::uint8_t>& maskToWrite = maskBuffer.beginWrite();
-		
+		std::vector<std::uint8_t> &maskToWrite = maskBuffer.beginWrite();
+
 		// 4. Post-process the result directly into the back buffer
 		postprocess(maskToWrite);
-		
+
 		// 5. Commit the write, making the buffer available for reading
 		maskBuffer.commitWrite();
 	}
@@ -153,10 +154,7 @@ public:
      * @brief Retrieves the latest segmentation mask (executed on the rendering thread).
      * @return A const reference to the vector of mask data (grayscale values).
      */
-	const std::vector<std::uint8_t> &getMask() const
-	{
-		return maskBuffer.read();
-	}
+	const std::vector<std::uint8_t> &getMask() const { return maskBuffer.read(); }
 
 private:
 	void preprocess(const std::uint8_t *bgra_data)
@@ -177,7 +175,7 @@ private:
 		}
 	}
 
-	void postprocess(std::vector<std::uint8_t>& mask) const
+	void postprocess(std::vector<std::uint8_t> &mask) const
 	{
 		const float *src_ptr = m_outputMat.channel(0);
 		for (int i = 0; i < PIXEL_COUNT; i++) {
