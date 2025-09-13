@@ -180,10 +180,10 @@ public:
      * This operation is lock-free and provides immediate access to the most recently synced frame.
      * @return A reference to the active pixel data buffer.
      */
-	std::vector<uint8_t> &getBuffer() noexcept
+	std::vector<std::uint8_t> &getBuffer() noexcept
 	{
 		// non-const version calls const version and removes constness.
-		return const_cast<std::vector<uint8_t> &>(std::as_const(*this).getBuffer());
+		return const_cast<std::vector<std::uint8_t> &>(std::as_const(*this).getBuffer());
 	}
 
 	/**
@@ -191,7 +191,7 @@ public:
      * This operation is lock-free and provides immediate access to the most recently synced frame.
      * @return A constant reference to the active pixel data buffer.
      */
-	const std::vector<uint8_t> &getBuffer() const noexcept
+	const std::vector<std::uint8_t> &getBuffer() const noexcept
 	{
 		return cpuBuffers[activeCpuBufferIndex.load(std::memory_order_acquire)];
 	}
@@ -219,7 +219,7 @@ private:
 	const std::uint32_t height;
 	const std::uint32_t bufferLinesize;
 
-	std::array<std::vector<uint8_t>, 2> cpuBuffers;
+	std::array<std::vector<std::uint8_t>, 2> cpuBuffers;
 	std::atomic<std::size_t> activeCpuBufferIndex = {0};
 
 	std::array<kaito_tokyo::obs_bridge_utils::unique_gs_stagesurf_t, 2> stagesurfs;

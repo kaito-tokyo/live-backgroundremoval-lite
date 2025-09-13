@@ -18,6 +18,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <cstdint>
+
 #include "plugin-support.h"
 #include <obs.h>
 
@@ -83,7 +85,9 @@ public:
 	explicit MainEffect(const kaito_tokyo::obs_bridge_utils::unique_bfree_t &effectPath)
 		: effect(kaito_tokyo::obs_bridge_utils::make_unique_gs_effect_from_file(effectPath)),
 		  textureImage(main_effect_detail::getEffectParam(effect, "image")),
-		  techDraw(main_effect_detail::getEffectTech(effect, "Draw"))
+		  textureMask(main_effect_detail::getEffectParam(effect, "mask")),
+		  techDraw(main_effect_detail::getEffectTech(effect, "Draw")),
+		  techDrawWithMask(main_effect_detail::getEffectTech(effect, "DrawWithMask"))
 	{
 	}
 
@@ -95,16 +99,35 @@ public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t effect;
 
 	gs_eparam_t *const textureImage;
+	gs_eparam_t *const textureMask;
 
 	gs_technique_t *const techDraw;
+	gs_technique_t *const techDrawWithMask;
 
-	void draw(uint32_t width, uint32_t height, gs_texture_t *sourceTexture) noexcept
+	void draw(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) noexcept
 	{
 		gs_technique_t *tech = techDraw;
-		size_t passes = gs_technique_begin(tech);
-		for (size_t i = 0; i < passes; i++) {
+		std::size_t passes = gs_technique_begin(tech);
+		for (std::size_t i = 0; i < passes; i++) {
 			if (gs_technique_begin_pass(tech, i)) {
 				gs_effect_set_texture(textureImage, sourceTexture);
+
+				gs_draw_sprite(nullptr, 0, width, height);
+				gs_technique_end_pass(tech);
+			}
+		}
+		gs_technique_end(tech);
+	}
+
+	void drawWithMask(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
+			  gs_texture_t *maskTexture) noexcept
+	{
+		gs_technique_t *tech = techDrawWithMask;
+		std::size_t passes = gs_technique_begin(tech);
+		for (std::size_t i = 0; i < passes; i++) {
+			if (gs_technique_begin_pass(tech, i)) {
+				gs_effect_set_texture(textureImage, sourceTexture);
+				gs_effect_set_texture(textureMask, maskTexture);
 
 				gs_draw_sprite(nullptr, 0, width, height);
 				gs_technique_end_pass(tech);

@@ -21,10 +21,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <iostream>
 #include <stdexcept>
 
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-
 #include "plugin-support.h"
 #include <obs-module.h>
 
@@ -33,15 +29,16 @@ using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
 namespace {
 
-inline void ensureTexture(unique_gs_texture_t &texture, uint32_t width, uint32_t height, gs_color_format format)
+inline void ensureTexture(unique_gs_texture_t &texture, std::uint32_t width, std::uint32_t height,
+			  gs_color_format format, std::uint32_t flags)
 {
 	if (!texture || gs_texture_get_width(texture.get()) != width ||
 	    gs_texture_get_height(texture.get()) != height) {
-		texture = make_unique_gs_texture(width, height, format, 1, NULL, GS_RENDER_TARGET);
+		texture = make_unique_gs_texture(width, height, format, 1, NULL, flags);
 	}
 }
 
-void ensureTextureReader(std::unique_ptr<AsyncTextureReader> &textureReader, uint32_t width, uint32_t height,
+void ensureTextureReader(std::unique_ptr<AsyncTextureReader> &textureReader, std::uint32_t width, std::uint32_t height,
 			 gs_color_format format)
 {
 	if (!textureReader || textureReader->getWidth() != width || textureReader->getHeight() != height) {
@@ -57,7 +54,9 @@ namespace obs_backgroundremoval_lite {
 MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_source)
 	: settings{_settings},
 	  source{_source},
-	  mainEffect(unique_bfree_t(obs_module_file("effects/main.effect")))
+	  mainEffect(unique_bfree_t(obs_module_file("effects/main.effect"))),
+	  selfieSegmenter(unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param")),
+			  unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin")))
 {
 	update(settings);
 }
@@ -112,15 +111,21 @@ void MainPluginContext::videoRender()
 
 	ensureTextures();
 
-	if (!bgrxSourceImage) {
-		obs_log(LOG_ERROR, "bgrxSourceImage is null, skipping video render");
+	if (!bgrxSegmenterInput) {
+		obs_log(LOG_ERROR, "bgrxSegmenterInput is null, skipping video render");
 		obs_source_skip_video_filter(source);
 		return;
 	}
 
-	if (readerSourceImage) {
+	if (!bgrxSegmenterInput) {
+		obs_log(LOG_ERROR, "bgrxSegmenterInput is null, skipping video render");
+		obs_source_skip_video_filter(source);
+		return;
+	}
+
+	if (readerSegmenterInput) {
 		try {
-			readerSourceImage->sync();
+			readerSegmenterInput->sync();
 		} catch (const std::exception &e) {
 			obs_log(LOG_ERROR, "Failed to sync texture reader: %s", e.what());
 		}
@@ -138,7 +143,7 @@ void MainPluginContext::videoRender()
 	gs_ortho(0.0f, (float)width, 0.0f, (float)height, -100.0f, 100.0f);
 	gs_matrix_identity();
 
-	gs_set_render_target(bgrxSourceImage.get(), NULL);
+	gs_set_render_target_with_color_space(bgrxSourceInput.get(), nullptr, GS_CS_SRGB);
 
 	if (!obs_source_process_filter_begin(source, GS_BGRA, OBS_ALLOW_DIRECT_RENDERING)) {
 		obs_log(LOG_ERROR, "Could not begin processing filter");
@@ -148,16 +153,72 @@ void MainPluginContext::videoRender()
 
 	obs_source_process_filter_end(source, mainEffect.effect.get(), width, height);
 
+	gs_set_render_target_with_color_space(bgrxSegmenterInput.get(), nullptr, GS_CS_SRGB);
+
+	vec4 black = {0.0f, 0.0f, 0.0f, 1.0f};
+	gs_clear(GS_CLEAR_COLOR, &black, 1.0f, 0);
+
+	double scaleW = static_cast<double>(SelfieSegmenter::INPUT_WIDTH) / static_cast<double>(width);
+	double scaleH = static_cast<double>(SelfieSegmenter::INPUT_HEIGHT) / static_cast<double>(height);
+	double scale = std::min(scaleW, scaleH);
+
+	std::uint32_t scaledW = static_cast<std::uint32_t>(std::round(width * scale));
+	std::uint32_t scaledH = static_cast<std::uint32_t>(std::round(height * scale));
+
+	std::uint32_t offsetX = (SelfieSegmenter::INPUT_WIDTH - scaledW) / 2;
+	std::uint32_t offsetY = (SelfieSegmenter::INPUT_HEIGHT - scaledH) / 2;
+
+	gs_viewport_push();
+	gs_projection_push();
+	gs_matrix_push();
+
+	gs_set_viewport(offsetX, offsetY, scaledW, scaledH);
+	gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
+	gs_matrix_identity();
+
+	mainEffect.draw(width, height, bgrxSourceInput.get());
+
+	gs_viewport_pop();
+	gs_projection_pop();
+	gs_matrix_pop();
+
 	gs_set_render_target_with_color_space(defaultRenderTarget, defaultZStencil, defaultColorSpace);
 
 	gs_viewport_pop();
 	gs_projection_pop();
 	gs_matrix_pop();
 
-	mainEffect.draw(width, height, bgrxSourceImage.get());
+	static int renderCount = 0;
+	renderCount++;
+	std::vector<std::uint8_t> maskData(SelfieSegmenter::PIXEL_COUNT * 4);
+	selfieSegmenter.applyMaskToFrame(maskData.data());
+	std::vector<std::uint8_t> scaledMaskData(width * height * 4);
+	for (std::uint32_t y = 0; y < height; ++y) {
+		for (std::uint32_t x = 0; x < width; ++x) {
+			std::uint32_t src_x_in_crop =
+				static_cast<std::uint32_t>(static_cast<double>(x) / width * scaledW);
+			std::uint32_t src_y_in_crop =
+				static_cast<std::uint32_t>(static_cast<double>(y) / height * scaledH);
 
-	if (readerSourceImage && bgrxSourceImage) {
-		readerSourceImage->stage(bgrxSourceImage.get());
+			std::uint32_t src_x_in_mask = offsetX + src_x_in_crop;
+			std::uint32_t src_y_in_mask = offsetY + src_y_in_crop;
+
+			std::size_t src_idx = (src_y_in_mask * SelfieSegmenter::INPUT_WIDTH + src_x_in_mask) * 4;
+			std::size_t dst_idx = (y * width + x) * 4;
+
+			scaledMaskData[dst_idx + 0] = maskData[src_idx + 0];
+			scaledMaskData[dst_idx + 1] = maskData[src_idx + 1];
+			scaledMaskData[dst_idx + 2] = maskData[src_idx + 2];
+			scaledMaskData[dst_idx + 3] = maskData[src_idx + 3];
+		}
+	}
+
+	const std::uint8_t *bgraData = scaledMaskData.data();
+	unique_gs_texture_t maskTexture = make_unique_gs_texture(width, height, GS_BGRA, 1, &bgraData, 0);
+	mainEffect.drawWithMask(width, height, bgrxSourceInput.get(), maskTexture.get());
+
+	if (readerSegmenterInput && bgrxSegmenterInput) {
+		readerSegmenterInput->stage(bgrxSegmenterInput.get());
 	}
 }
 
@@ -166,7 +227,14 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 	if (width != frame->width || height != frame->height) {
 		width = frame->width;
 		height = frame->height;
+
 		ensureTextures();
+	}
+
+	static int frameCount = 0;
+	frameCount++;
+	if (readerSegmenterInput) {
+		selfieSegmenter.process(readerSegmenterInput->getBuffer().data());
 	}
 
 	return frame;
@@ -174,8 +242,10 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 
 void MainPluginContext::ensureTextures()
 {
-	ensureTexture(bgrxSourceImage, width, height, GS_BGRX);
-	ensureTextureReader(readerSourceImage, width, height, GS_BGRX);
+	ensureTexture(bgrxSourceInput, width, height, GS_BGRX, GS_RENDER_TARGET);
+	ensureTexture(bgrxSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX,
+		      GS_RENDER_TARGET);
+	ensureTextureReader(readerSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX);
 }
 
 } // namespace obs_backgroundremoval_lite

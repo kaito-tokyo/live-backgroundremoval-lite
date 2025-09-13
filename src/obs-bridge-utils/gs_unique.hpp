@@ -137,8 +137,9 @@ struct gs_texture_deleter {
 
 using unique_gs_texture_t = std::unique_ptr<gs_texture_t, gs_texture_deleter>;
 
-inline unique_gs_texture_t make_unique_gs_texture(uint32_t width, uint32_t height, enum gs_color_format color_format,
-						  uint32_t levels, const uint8_t **data, uint32_t flags)
+inline unique_gs_texture_t make_unique_gs_texture(std::uint32_t width, std::uint32_t height,
+						  enum gs_color_format color_format, std::uint32_t levels,
+						  const std::uint8_t **data, std::uint32_t flags)
 {
 	gs_texture_t *rawTexture = gs_texture_create(width, height, color_format, levels, data, flags);
 	if (!rawTexture) {
@@ -153,7 +154,7 @@ struct gs_stagesurf_deleter {
 
 using unique_gs_stagesurf_t = std::unique_ptr<gs_stagesurf_t, gs_stagesurf_deleter>;
 
-inline unique_gs_stagesurf_t make_unique_gs_stagesurf(uint32_t width, uint32_t height,
+inline unique_gs_stagesurf_t make_unique_gs_stagesurf(std::uint32_t width, std::uint32_t height,
 						      enum gs_color_format color_format)
 {
 	gs_stagesurf_t *rawSurface = gs_stagesurface_create(width, height, color_format);
