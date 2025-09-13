@@ -70,7 +70,7 @@ private:
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceInput = nullptr;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput = nullptr;
 
-	unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
+	std::unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
 
 	void ensureTextures();
 };
