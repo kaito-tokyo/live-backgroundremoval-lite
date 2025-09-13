@@ -1,0 +1,51 @@
+---
+interface Props {
+  frontmatter: {
+    title: string;
+    lang: string;
+  };
+}
+
+const { title, lang } = Astro.props.frontmatter;
+
+const backToTopText = lang === "ja" ? "トップページへ戻る" : "Back to Top";
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <main>
+      <div class="white-box">
+        <slot />
+        <a href="/">{backToTopText}</a>
+      </div>
+    </main>
+  </body>
+</html>
+
+<style>
+  body {
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .white-box {
+    background-color: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+</style>
