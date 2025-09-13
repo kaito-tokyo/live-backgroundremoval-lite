@@ -33,11 +33,11 @@ using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
 namespace {
 
-inline void ensureTexture(unique_gs_texture_t &texture, uint32_t width, uint32_t height, gs_color_format format)
+inline void ensureTexture(unique_gs_texture_t &texture, uint32_t width, uint32_t height, gs_color_format format, uint32_t flags)
 {
 	if (!texture || gs_texture_get_width(texture.get()) != width ||
 	    gs_texture_get_height(texture.get()) != height) {
-		texture = make_unique_gs_texture(width, height, format, 1, NULL, GS_RENDER_TARGET);
+		texture = make_unique_gs_texture(width, height, format, 1, NULL, flags);
 	}
 }
 
@@ -57,12 +57,10 @@ namespace obs_backgroundremoval_lite {
 MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_source)
 	: settings{_settings},
 	  source{_source},
-	  mainEffect(unique_bfree_t(obs_module_file("effects/main.effect")))
+	  mainEffect(unique_bfree_t(obs_module_file("effects/main.effect"))),
+	  selfieSegmenter(unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param")),
+			  unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin")))
 {
-	unique_bfree_t paramPath(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param"));
-	unique_bfree_t modelPath(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin"));
-    selfieSegmentationNet.load_param(paramPath.get());
-    selfieSegmentationNet.load_model(modelPath.get());
 	update(settings);
 }
 
@@ -116,15 +114,21 @@ void MainPluginContext::videoRender()
 
 	ensureTextures();
 
-	if (!bgrxSourceImage) {
-		obs_log(LOG_ERROR, "bgrxSourceImage is null, skipping video render");
+	if (!bgrxSegmenterInput) {
+		obs_log(LOG_ERROR, "bgrxSegmenterInput is null, skipping video render");
 		obs_source_skip_video_filter(source);
 		return;
 	}
 
-	if (readerSourceImage) {
+	if (!bgrxSegmenterInput) {
+		obs_log(LOG_ERROR, "bgrxSegmenterInput is null, skipping video render");
+		obs_source_skip_video_filter(source);
+		return;
+	}
+
+	if (readerSegmenterInput) {
 		try {
-			readerSourceImage->sync();
+			readerSegmenterInput->sync();
 		} catch (const std::exception &e) {
 			obs_log(LOG_ERROR, "Failed to sync texture reader: %s", e.what());
 		}
@@ -142,7 +146,7 @@ void MainPluginContext::videoRender()
 	gs_ortho(0.0f, (float)width, 0.0f, (float)height, -100.0f, 100.0f);
 	gs_matrix_identity();
 
-	gs_set_render_target(bgrxSourceImage.get(), NULL);
+	gs_set_render_target_with_color_space(bgrxSourceInput.get(), nullptr, GS_CS_SRGB);
 
 	if (!obs_source_process_filter_begin(source, GS_BGRA, OBS_ALLOW_DIRECT_RENDERING)) {
 		obs_log(LOG_ERROR, "Could not begin processing filter");
@@ -152,16 +156,45 @@ void MainPluginContext::videoRender()
 
 	obs_source_process_filter_end(source, mainEffect.effect.get(), width, height);
 
+	gs_set_render_target_with_color_space(bgrxSegmenterInput.get(), nullptr, GS_CS_SRGB);
+
+	vec4 black = {0.0f, 0.0f, 0.0f, 1.0f};
+	gs_clear(GS_CLEAR_COLOR, &black, 1.0f, 0);
+
+	double scaleW = static_cast<double>(SelfieSegmenter::INPUT_WIDTH) / static_cast<double>(width);
+	double scaleH = static_cast<double>(SelfieSegmenter::INPUT_HEIGHT) / static_cast<double>(height);
+	double scale = std::max(scaleW, scaleH);
+
+	std::uint32_t scaledW = static_cast<std::uint32_t>(std::round(width * scale));
+	std::uint32_t scaledH = static_cast<std::uint32_t>(std::round(height * scale));
+
+	// std::uint32_t offsetX = (SelfieSegmenter::INPUT_WIDTH - scaledW) / 2;
+	// std::uint32_t offsetY = (SelfieSegmenter::INPUT_HEIGHT - scaledH) / 2;
+
+	//gs_projection_push();
+	// gs_ortho(offsetX, (float)SelfieSegmenter::INPUT_WIDTH - offsetX, offsetY, (float)SelfieSegmenter::INPUT_HEIGHT - offsetY, -100.0f, 100.0f);
+
+	mainEffect.draw(scaledW, scaledH, bgrxSourceInput.get());
+
+	//gs_projection_pop();
+
 	gs_set_render_target_with_color_space(defaultRenderTarget, defaultZStencil, defaultColorSpace);
 
 	gs_viewport_pop();
 	gs_projection_pop();
 	gs_matrix_pop();
 
-	mainEffect.draw(width, height, bgrxSourceImage.get());
+	// std::vector<uint8_t> maskData(SelfieSegmenter::PIXEL_COUNT);
+	// const uint8_t *bgraData = readerSegmenterInput->getBuffer().data();
+	// selfieSegmenter.applyMaskToFrame(maskData.data());
+	// unique_gs_texture_t maskTexture = make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH,
+	// 							      SelfieSegmenter::INPUT_HEIGHT, GS_BGRA,
+	// 							      1, &bgraData, 0);
+	// mainEffect.draw(width, height, bgrxSourceInput.get());
+	// mainEffect.draw(width, height, maskTexture.get());
 
-	if (readerSourceImage && bgrxSourceImage) {
-		readerSourceImage->stage(bgrxSourceImage.get());
+	if (readerSegmenterInput && bgrxSegmenterInput) {
+		readerSegmenterInput->stage(bgrxSegmenterInput.get());
 	}
 }
 
@@ -172,45 +205,14 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 		height = frame->height;
 
 		ensureTextures();
+	}
 
-		const float mean_vals[3] = {127.5f, 127.5f, 127.5f};
-		const float norm_vals[3] = {1.0f / 127.5f, 1.0f / 127.5f, 1.0f / 127.5f};
-
-		const int target_size = 256;
-		int img_w = readerSourceImage->getWidth();
-		int img_h = readerSourceImage->getHeight();
-
-		ncnn::Mat in = ncnn::Mat::from_pixels_resize(readerSourceImage->getBuffer().data(), ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h, target_size, target_size);
-	    in.substract_mean_normalize(mean_vals, norm_vals);
-
-		ncnn::Extractor ex = selfieSegmentationNet.create_extractor();
-		ex.input("in0", in);
-
-		ncnn::Mat out;
-		ex.extract("out0", out);
-
-		// ncnn::MatからOpenCVのMatに変換
-		// 出力は0.0~1.0の確率値なので、255を掛けてグレースケール画像にする
-		cv::Mat mask(out.h, out.w, CV_32FC1); // まずはfloat型でデータを受け取る
-		memcpy(mask.data, (float*)out.data, out.w * out.h * sizeof(float));
-
-		// 0-255の範囲に変換し、8bitのグレースケール画像にする
-		cv::Mat mask_8u;
-		mask.convertTo(mask_8u, CV_8UC1, 255.0);
-
-		// 6. マスクを元の画像サイズにリサイズ
-		cv::Mat resized_mask;
-		cv::resize(mask_8u, resized_mask, cv::Size(img_w, img_h), 0, 0, cv::INTER_LINEAR);
-
-		// (オプション) よりくっきりしたマスクにするために閾値処理を追加
-		cv::Mat binary_mask = resized_mask.clone();
-
-		cv::Mat masked_image;
-		cv::Mat bgr_image(height, width, CV_8UC3, readerSourceImage->getBuffer().data(), readerSourceImage->getBufferLinesize());
-		bgr_image.copyTo(masked_image, binary_mask);
-
-		cv::imwrite("mask_output.png", binary_mask);
-		cv::imwrite("masked_image_output.png", masked_image);
+	static int frameCount = 0;
+	frameCount++;
+	if (readerSegmenterInput) {
+		selfieSegmenter.process(readerSegmenterInput->getBuffer().data());
+		cv::Mat scaledInput(SelfieSegmenter::INPUT_HEIGHT, SelfieSegmenter::INPUT_WIDTH, CV_8UC4, readerSegmenterInput->getBuffer().data());
+		cv::imwrite("output/scaled_input" + std::to_string(frameCount) + ".png", scaledInput);
 	}
 
 	return frame;
@@ -218,8 +220,9 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 
 void MainPluginContext::ensureTextures()
 {
-	ensureTexture(bgrxSourceImage, width, height, GS_BGRX);
-	ensureTextureReader(readerSourceImage, width, height, GS_BGRX);
+	ensureTexture(bgrxSourceInput, width, height, GS_BGRX, GS_RENDER_TARGET);
+	ensureTexture(bgrxSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX, GS_RENDER_TARGET);
+	ensureTextureReader(readerSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX);
 }
 
 } // namespace obs_backgroundremoval_lite

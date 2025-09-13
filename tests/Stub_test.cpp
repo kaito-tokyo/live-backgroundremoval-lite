@@ -25,49 +25,50 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 TEST(StubTest, Stub)
 {
-    ncnn::Net net;
-    net.load_param("data/models/mediapipe_selfie_segmentation.ncnn.param");
-    net.load_model("data/models/mediapipe_selfie_segmentation.ncnn.bin");
+	ncnn::Net net;
+	net.load_param("data/models/mediapipe_selfie_segmentation.ncnn.param");
+	net.load_model("data/models/mediapipe_selfie_segmentation.ncnn.bin");
 
-    cv::Mat bgr_image = cv::imread("test.png", cv::IMREAD_COLOR);
+	cv::Mat bgr_image = cv::imread("test.png", cv::IMREAD_COLOR);
 
-    const int target_size = 256;
-    int img_w = bgr_image.cols;
-    int img_h = bgr_image.rows;
+	const int target_size = 256;
+	int img_w = bgr_image.cols;
+	int img_h = bgr_image.rows;
 
-    const float mean_vals[3] = {127.5f, 127.5f, 127.5f};
-    const float norm_vals[3] = {1.0f / 127.5f, 1.0f / 127.5f, 1.0f / 127.5f};
+	const float mean_vals[3] = {127.5f, 127.5f, 127.5f};
+	const float norm_vals[3] = {1.0f / 127.5f, 1.0f / 127.5f, 1.0f / 127.5f};
 
-    ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr_image.data, ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h, target_size, target_size);
+	ncnn::Mat in = ncnn::Mat::from_pixels_resize(bgr_image.data, ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h,
+						     target_size, target_size);
 
-    in.substract_mean_normalize(mean_vals, norm_vals);
+	in.substract_mean_normalize(mean_vals, norm_vals);
 
-    ncnn::Extractor ex = net.create_extractor();
-    ex.input("in0", in);
+	ncnn::Extractor ex = net.create_extractor();
+	ex.input("in0", in);
 
-    ncnn::Mat out;
-    ex.extract("out0", out);
-    printf("Output shape: w=%d, h=%d, c=%d, dims=%d\n", out.w, out.h, out.c, out.dims);
+	ncnn::Mat out;
+	ex.extract("out0", out);
+	printf("Output shape: w=%d, h=%d, c=%d, dims=%d\n", out.w, out.h, out.c, out.dims);
 
-    // ncnn::MatからOpenCVのMatに変換
-    // 出力は0.0~1.0の確率値なので、255を掛けてグレースケール画像にする
-    cv::Mat mask(out.h, out.w, CV_32FC1); // まずはfloat型でデータを受け取る
-    memcpy(mask.data, (float*)out.data, out.w * out.h * sizeof(float));
+	// ncnn::MatからOpenCVのMatに変換
+	// 出力は0.0~1.0の確率値なので、255を掛けてグレースケール画像にする
+	cv::Mat mask(out.h, out.w, CV_32FC1); // まずはfloat型でデータを受け取る
+	memcpy(mask.data, (float *)out.data, out.w * out.h * sizeof(float));
 
-    // 0-255の範囲に変換し、8bitのグレースケール画像にする
-    cv::Mat mask_8u;
-    mask.convertTo(mask_8u, CV_8UC1, 255.0);
+	// 0-255の範囲に変換し、8bitのグレースケール画像にする
+	cv::Mat mask_8u;
+	mask.convertTo(mask_8u, CV_8UC1, 255.0);
 
-    // 6. マスクを元の画像サイズにリサイズ
-    cv::Mat resized_mask;
-    cv::resize(mask_8u, resized_mask, cv::Size(img_w, img_h), 0, 0, cv::INTER_LINEAR);
+	// 6. マスクを元の画像サイズにリサイズ
+	cv::Mat resized_mask;
+	cv::resize(mask_8u, resized_mask, cv::Size(img_w, img_h), 0, 0, cv::INTER_LINEAR);
 
-    // (オプション) よりくっきりしたマスクにするために閾値処理を追加
-    cv::Mat binary_mask = resized_mask.clone();
+	// (オプション) よりくっきりしたマスクにするために閾値処理を追加
+	cv::Mat binary_mask = resized_mask.clone();
 
-    cv::Mat masked_image;
-    bgr_image.copyTo(masked_image, binary_mask);
+	cv::Mat masked_image;
+	bgr_image.copyTo(masked_image, binary_mask);
 
-    cv::imwrite("mask_output.png", binary_mask);
-    cv::imwrite("masked_image_output.png", masked_image);
+	cv::imwrite("mask_output.png", binary_mask);
+	cv::imwrite("masked_image_output.png", masked_image);
 }

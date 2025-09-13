@@ -31,6 +31,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
+#include "SelfieSegmenter.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -61,14 +62,15 @@ private:
 	obs_source_t *source = nullptr;
 
 	MainEffect mainEffect;
-	ncnn::Net selfieSegmentationNet;
+	SelfieSegmenter selfieSegmenter;
 
 	std::uint32_t width = 0;
 	std::uint32_t height = 0;
 
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceImage = nullptr;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceInput = nullptr;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput = nullptr;
 
-	std::unique_ptr<AsyncTextureReader> readerSourceImage = nullptr;
+	std::unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
 
 	void ensureTextures();
 };
