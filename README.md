@@ -19,5 +19,12 @@ This project is built upon and incorporates several open-source components. We a
     *   License: [BSD-3-Clause](https://github.com/Tencent/ncnn/blob/master/LICENSE.txt)
 *   **GoogleTest**
     *   License: [BSD-3-Clause](https://github.com/google/googletest/blob/main/LICENSE)
+*   **wolfSSL**
+    *   License: [GPL-2.0](https://github.com/wolfSSL/wolfssl/blob/v5.8.0-stable/COPYING)
+*   **cURL**
+    *   License: [curl](https://curl.se/docs/copyright.html)
+*   **cpr**
+    *   License: [MIT](https://github.com/libcpr/cpr/blob/master/LICENSE)
+
 
 This plugin itself is licensed under the [GPL-2.0](LICENSE). Please refer to the respective licenses for detailed terms and conditions.
