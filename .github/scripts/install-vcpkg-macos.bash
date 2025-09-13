@@ -4,6 +4,8 @@
 # or a command in a pipe fails.
 set -euo pipefail
 
+brew install autoconf automake libtool
+
 #================================================================
 # Configuration
 #================================================================
