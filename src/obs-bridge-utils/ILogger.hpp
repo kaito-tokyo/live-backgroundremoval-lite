@@ -20,6 +20,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <cstdint>
 #include <cstdio>
+#include <string_view>
 #include <string>
 #include <utility>
 
@@ -34,22 +35,22 @@ public:
 
     template<typename... Args>
     void debug(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        format_and_log(LogLevel::Debug, fmt, std::forward<Args>(args)...);
+        formatAndLog(LogLevel::Debug, fmt, std::forward<Args>(args)...);
     }
 
     template<typename... Args>
     void info(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        format_and_log(LogLevel::Info, fmt, std::forward<Args>(args)...);
+        formatAndLog(LogLevel::Info, fmt, std::forward<Args>(args)...);
     }
 
     template<typename... Args>
     void warn(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        format_and_log(LogLevel::Warn, fmt, std::forward<Args>(args)...);
+        formatAndLog(LogLevel::Warn, fmt, std::forward<Args>(args)...);
     }
 
     template<typename... Args>
     void error(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        format_and_log(LogLevel::Error, fmt, std::forward<Args>(args)...);
+        formatAndLog(LogLevel::Error, fmt, std::forward<Args>(args)...);
     }
 
 protected:
@@ -60,22 +61,23 @@ protected:
         Error
     };
 
-    virtual void log(LogLevel level, const std::string& message) const noexcept = 0;
-    virtual LogLevel get_current_level() const noexcept {
-        return LogLevel::Debug;
+    virtual void log(LogLevel level, std::string_view message) const noexcept = 0;
+
+    virtual std::string_view getPrefix() const noexcept{
+        return "";
     }
 
 private:
     template<typename... Args>
-    void format_and_log(LogLevel level, fmt::format_string<Args...> fmt, Args&&... args) const noexcept try {
-        if (level >= get_current_level()) {
-            const std::string message = fmt::format(fmt, std::forward<Args>(args)...);
-            log(level, message);
-        }
+    void formatAndLog(LogLevel level, fmt::format_string<Args...> fmt, Args&&... args) const noexcept try {
+        fmt::memory_buffer buffer;
+        fmt::format_to(std::back_inserter(buffer), "{}", getPrefix());
+        fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
+        log(level, {buffer.data(), buffer.size()});
     } catch (const std::exception& e) {
-        std::fprintf(std::stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
+        fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
     } catch (...) {
-        std::fprintf(std::stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
+        fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
     }
 };
 
