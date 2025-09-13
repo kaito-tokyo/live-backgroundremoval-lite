@@ -21,9 +21,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <iostream>
 #include <stdexcept>
 
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
+
 
 #include "plugin-support.h"
 #include <obs-module.h>
