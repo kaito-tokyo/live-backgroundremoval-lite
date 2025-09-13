@@ -117,7 +117,8 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void drawWithMask(uint32_t width, uint32_t height, gs_texture_t *sourceTexture, gs_texture_t *maskTexture) noexcept
+	void drawWithMask(uint32_t width, uint32_t height, gs_texture_t *sourceTexture,
+			  gs_texture_t *maskTexture) noexcept
 	{
 		gs_technique_t *tech = techDrawWithMask;
 		size_t passes = gs_technique_begin(tech);
