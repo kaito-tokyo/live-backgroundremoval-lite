@@ -50,13 +50,11 @@ public:
 		}
 	}
 
-	ncnn::Mat run(const ncnn::Mat &input) const
+	void run(const ncnn::Mat &input, ncnn::Mat &output) const
 	{
 		ncnn::Extractor ex = net.create_extractor();
 		ex.input("in0", input);
-		ncnn::Mat out;
-		ex.extract("out0", out);
-		return out;
+		ex.extract("out0", output);
 	}
 
 private:
@@ -71,12 +69,25 @@ class MaskBuffer {
 public:
 	explicit MaskBuffer(std::size_t size) : buffers(2, std::vector<std::uint8_t>(size)), readableIndex(0) {}
 
-	void write(const std::vector<std::uint8_t> &data)
+	/**
+	 * @brief Locks the buffer and returns a reference to the back buffer for writing.
+	 * The caller must call commitWrite() to make the buffer readable.
+	 */
+	std::vector<std::uint8_t>& beginWrite()
 	{
-		std::lock_guard<std::mutex> lock(bufferMutex);
+		bufferMutex.lock();
 		const int writeIndex = (readableIndex.load(std::memory_order_relaxed) + 1) % 2;
-		buffers[writeIndex] = data;
+		return buffers[writeIndex];
+	}
+
+	/**
+	 * @brief Commits the write operation, making the back buffer readable, and unlocks.
+	 */
+	void commitWrite()
+	{
+		const int writeIndex = (readableIndex.load(std::memory_order_relaxed) + 1) % 2;
 		readableIndex.store(writeIndex, std::memory_order_release);
+		bufferMutex.unlock();
 	}
 
 	const std::vector<std::uint8_t> &read() const
@@ -105,6 +116,8 @@ public:
 			const kaito_tokyo::obs_bridge_utils::unique_bfree_t &bin_path)
 		: inferenceEngine(param_path, bin_path), maskBuffer(PIXEL_COUNT)
 	{
+		// Pre-allocate memory for the input Mat.
+		m_inputMat.create(INPUT_WIDTH, INPUT_HEIGHT, 3, sizeof(float));
 	}
 
 	/**
@@ -117,17 +130,20 @@ public:
 			return;
 		}
 
-		// 1. Pre-processing
-		ncnn::Mat input = preprocess(bgra_data);
+		// 1. Pre-process data into the pre-allocated member Mat
+		preprocess(bgra_data);
 
-		// 2. Run inference
-		ncnn::Mat output = inferenceEngine.run(input);
+		// 2. Run inference using member Mats
+		inferenceEngine.run(m_inputMat, m_outputMat);
 
-		// 3. Post-processing
-		std::vector<std::uint8_t> mask = postprocess(output);
-
-		// 4. Write to buffer
-		maskBuffer.write(mask);
+		// 3. Get a reference to the buffer to write to
+		std::vector<std::uint8_t>& maskToWrite = maskBuffer.beginWrite();
+		
+		// 4. Post-process the result directly into the back buffer
+		postprocess(maskToWrite);
+		
+		// 5. Commit the write, making the buffer available for reading
+		maskBuffer.commitWrite();
 	}
 
 	/**
@@ -140,25 +156,30 @@ public:
 	}
 
 private:
-	ncnn::Mat preprocess(const std::uint8_t *bgra_data) const
+	void preprocess(const std::uint8_t *bgra_data)
 	{
-		ncnn::Mat in = ncnn::Mat::from_pixels(bgra_data, ncnn::Mat::PIXEL_BGRA2RGB, INPUT_WIDTH, INPUT_HEIGHT);
-		in.substract_mean_normalize(MEAN_VALS, NORM_VALS);
-		return in;
+		// Wrap the external pixel data without copying it.
+		const ncnn::Mat in_external = ncnn::Mat(INPUT_WIDTH, INPUT_HEIGHT, (void *)bgra_data, 4, sizeof(uint8_t));
+
+		// Convert from the external BGRA data to the internal RGB float Mat.
+		m_inputMat.from_pixels(in_external, ncnn::Mat::PIXEL_BGRA2RGB, INPUT_WIDTH, INPUT_HEIGHT);
+		m_inputMat.substract_mean_normalize(MEAN_VALS, NORM_VALS);
 	}
 
-	std::vector<std::uint8_t> postprocess(const ncnn::Mat &output) const
+	void postprocess(std::vector<std::uint8_t>& mask) const
 	{
-		std::vector<std::uint8_t> mask(PIXEL_COUNT);
-		const float *src_ptr = output.channel(0);
+		const float *src_ptr = m_outputMat.channel(0);
 		for (int i = 0; i < PIXEL_COUNT; i++) {
 			mask[i] = static_cast<std::uint8_t>(std::max(0.f, std::min(255.f, src_ptr[i] * 255.f)));
 		}
-		return mask;
 	}
 
 	NcnnInferenceEngine inferenceEngine;
 	MaskBuffer maskBuffer;
+
+	// Member variables to reuse memory for ncnn::Mat
+	ncnn::Mat m_inputMat;
+	ncnn::Mat m_outputMat;
 
 	static constexpr float MEAN_VALS[3] = {127.5f, 127.5f, 127.5f};
 	static constexpr float NORM_VALS[3] = {1.0f / 127.5f, 1.0f / 127.5f, 1.0f / 127.5f};
