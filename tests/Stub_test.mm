@@ -121,7 +121,7 @@ TEST(StubTest, Stub)
         // 3. Visionフレームワークで人物セグメンテーションリクエストを作成
         // 高品質なマスクを生成するために .accurate を指定
         VNGeneratePersonSegmentationRequest* request = [[VNGeneratePersonSegmentationRequest alloc] init];
-        request.qualityLevel = VNGeneratePersonSegmentationRequestQualityLevelAccurate;
+        request.qualityLevel = VNGeneratePersonSegmentationRequestQualityLevelFast;
 
         // 4. 画像リクエストハンドラを作成し、リクエストを実行
         VNImageRequestHandler* handler = [[VNImageRequestHandler alloc] initWithCGImage:cgImage options:@{}];
@@ -148,9 +148,36 @@ TEST(StubTest, Stub)
         Mat binaryMask;
         threshold(mask, binaryMask, 0, 255, THRESH_BINARY);
 
-        // 7. マスクを使って元の画像から人物を切り抜く
+        // 7. マスクのサイズを元の画像に合わせてリサイズし、人物を切り抜く
+        Mat resizedMask;
+        // binaryMaskをoriginalImageと同じサイズにリサイズする
+        // INTER_NEARESTは、白黒のマスク画像をリサイズするのに最も適した補間方法
+        resize(binaryMask, resizedMask, originalImage.size(), 0, 0, INTER_NEAREST);
+
         Mat segmentedImage = Mat::zeros(originalImage.size(), originalImage.type());
-        originalImage.copyTo(segmentedImage, binaryMask);
+        // リサイズしたマスクを使って切り抜く
+        originalImage.copyTo(segmentedImage, resizedMask);
+
+        // 8. 結果をファイルに保存
+        std::string outputMaskPath = "result_mask.png";
+        std::string outputSegmentedPath = "result_segmented.png";
+
+        bool isMaskSaved = imwrite(outputMaskPath, resizedMask); // 保存するマスクもリサイズ後のものに
+        if (!isMaskSaved) {
+            printf("エラー: マスク画像の保存に失敗しました: %s\n", outputMaskPath.c_str());
+        } else {
+            printf("マスク画像を保存しました: %s\n", outputMaskPath.c_str());
+        }
+
+        bool isSegmentedSaved = imwrite(outputSegmentedPath, segmentedImage);
+        if (!isSegmentedSaved) {
+            printf("エラー: 切り抜き画像の保存に失敗しました: %s\n", outputSegmentedPath.c_str());
+        } else {
+            printf("切り抜き画像を保存しました: %s\n", outputSegmentedPath.c_str());
+        }
+        
+        ASSERT_TRUE(isMaskSaved);
+        ASSERT_TRUE(isSegmentedSaved);
 
         // CGImageRefを解放
         CFRelease(cgImage);
