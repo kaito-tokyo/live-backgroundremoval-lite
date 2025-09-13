@@ -1,5 +1,5 @@
 /*
-OBS Background Removal Lite
+obs-bridge-utils
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -16,24 +16,21 @@ You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
-#include <plugin-support.h>
+#pragma once
 
-const char *PLUGIN_NAME = "@CMAKE_PROJECT_NAME@";
-const char *PLUGIN_VERSION = "@CMAKE_PROJECT_VERSION@";
+#include <string>
 
-void obs_log(int log_level, const char *format, ...)
-{
-	size_t length = 4 + strlen(PLUGIN_NAME) + strlen(format);
+namespace kaito_tokyo {
+namespace obs_bridge_utils {
 
-	char *template = malloc(length + 1);
+class ILogger {
+public:
+	virtual ~ILogger() noexcept = default;
+	virtual void debug(const char *message, ...) const noexcept = 0;
+	virtual void info(const char *message, ...) const noexcept = 0;
+	virtual void warn(const char *message, ...) const noexcept = 0;
+	virtual void error(const char *message, ...) const noexcept = 0;
+};
 
-	snprintf(template, length, "[%s] %s", PLUGIN_NAME, format);
-
-	va_list(args);
-
-	va_start(args, format);
-	blogva(log_level, template, args);
-	va_end(args);
-
-	free(template);
-}
+} // namespace obs_bridge_utils
+} // namespace kaito_tokyo
