@@ -24,6 +24,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "plugin-support.h"
 #include <obs-module.h>
 
+#include "UpdateChecker.hpp"
+
 using namespace kaito_tokyo::obs_bridge_utils;
 using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
@@ -81,7 +83,17 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 
 obs_properties_t *MainPluginContext::getProperties()
 {
-	return obs_properties_create();
+	obs_properties_t *props = obs_properties_create();
+
+	const char *updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
+	std::optional<LatestVersion> latestVersion = getLatestVersion();
+	if (latestVersion.has_value() && latestVersion->isUpdateAvailable(PLUGIN_VERSION)) {
+		updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
+	}
+
+	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
+
+	return props;
 }
 
 void MainPluginContext::update(obs_data_t *_settings)
@@ -251,6 +263,19 @@ void MainPluginContext::ensureTextures()
 	ensureTexture(bgrxSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX,
 		      GS_RENDER_TARGET);
 	ensureTextureReader(readerSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX);
+}
+
+std::optional<LatestVersion> MainPluginContext::getLatestVersion() const
+{
+	if (!futureLatestVersion.valid()) {
+		return std::nullopt;
+	}
+
+	if (futureLatestVersion.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
+		return std::nullopt;
+	}
+
+	return futureLatestVersion.get();
 }
 
 } // namespace obs_backgroundremoval_lite

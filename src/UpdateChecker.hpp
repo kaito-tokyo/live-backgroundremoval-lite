@@ -18,20 +18,23 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <future>
 #include <optional>
 #include <string>
+#include <memory>
 
-// Dependencies from the implementation file are moved here
 #include <cpr/cpr.h>
 #include <semver.hpp>
-#include <obs.h> // For obs_log
 
-// Assuming these headers are available in the include path.
-// MyCprSession is likely defined in one of these.
+#include <plugin-support.h>
+#include <obs.h>
+
 #include <obs-bridge-utils/obs-bridge-utils.hpp>
 
+#include "MyCprUtils.hpp"
+
 namespace kaito_tokyo {
-namespace obs_showdraw {
+namespace obs_backgroundremoval_lite {
 
 class LatestVersion {
 public:
@@ -99,9 +102,9 @@ public:
     std::optional<LatestVersion> fetch()
     {
         // Use a fully qualified name to avoid `using namespace` in a header file.
-        // MyCprSession is assumed to be in the kaito_tokyo::obs_bridge_utils namespace.
-        kaito_tokyo::obs_bridge_utils::MyCprSession session;
-        session.SetUrl(cpr::Url{"https://obs-showdraw.kaito.tokyo/metadata/latest-version.txt"});
+        // MyCprSession is assumed to be in the kaito_tokyo::obs_backgroundremoval_lite namespace.
+        kaito_tokyo::obs_backgroundremoval_lite::MyCprSession session;
+        session.SetUrl(cpr::Url{"https://obs-backgroundremoval-lite.kaito.tokyo/metadata/latest-version.txt"});
         cpr::Response r = session.Get();
 
         if (r.status_code == 200) {
@@ -113,5 +116,5 @@ public:
     }
 };
 
-} // namespace obs_showdraw
+} // namespace obs_backgroundremoval_lite
 } // namespace kaito_tokyo

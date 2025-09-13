@@ -22,10 +22,13 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #ifdef __cplusplus
 
+#include <future>
 #include <memory>
 #include <mutex>
 #include <stdint.h>
 #include <vector>
+
+#include "UpdateChecker.hpp"
 
 #include <net.h>
 
@@ -81,6 +84,9 @@ private:
 
 	std::unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
 
+	std::shared_future<std::optional<kaito_tokyo::obs_backgroundremoval_lite::LatestVersion>> futureLatestVersion;
+
+	std::optional<kaito_tokyo::obs_backgroundremoval_lite::LatestVersion> getLatestVersion() const;
 	void ensureTextures();
 };
 
