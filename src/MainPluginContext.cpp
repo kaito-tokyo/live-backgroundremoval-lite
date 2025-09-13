@@ -163,20 +163,27 @@ void MainPluginContext::videoRender()
 
 	double scaleW = static_cast<double>(SelfieSegmenter::INPUT_WIDTH) / static_cast<double>(width);
 	double scaleH = static_cast<double>(SelfieSegmenter::INPUT_HEIGHT) / static_cast<double>(height);
-	double scale = std::max(scaleW, scaleH);
+	double scale = std::min(scaleW, scaleH);
 
 	std::uint32_t scaledW = static_cast<std::uint32_t>(std::round(width * scale));
 	std::uint32_t scaledH = static_cast<std::uint32_t>(std::round(height * scale));
 
-	// std::uint32_t offsetX = (SelfieSegmenter::INPUT_WIDTH - scaledW) / 2;
-	// std::uint32_t offsetY = (SelfieSegmenter::INPUT_HEIGHT - scaledH) / 2;
+	std::uint32_t offsetX = (SelfieSegmenter::INPUT_WIDTH - scaledW) / 2;
+	std::uint32_t offsetY = (SelfieSegmenter::INPUT_HEIGHT - scaledH) / 2;
 
-	//gs_projection_push();
-	// gs_ortho(offsetX, (float)SelfieSegmenter::INPUT_WIDTH - offsetX, offsetY, (float)SelfieSegmenter::INPUT_HEIGHT - offsetY, -100.0f, 100.0f);
+	gs_viewport_push();
+	gs_projection_push();
+	gs_matrix_push();
 
-	mainEffect.draw(scaledW, scaledH, bgrxSourceInput.get());
+	gs_set_viewport(offsetX, offsetY, scaledW, scaledH);
+	gs_ortho(0.0f, width, 0.0f, height, -100.0f, 100.0f);
+	gs_matrix_identity();
 
-	//gs_projection_pop();
+	mainEffect.draw(width, height, bgrxSourceInput.get());
+
+	gs_viewport_pop();
+	gs_projection_pop();
+	gs_matrix_pop();
 
 	gs_set_render_target_with_color_space(defaultRenderTarget, defaultZStencil, defaultColorSpace);
 
@@ -184,14 +191,18 @@ void MainPluginContext::videoRender()
 	gs_projection_pop();
 	gs_matrix_pop();
 
-	// std::vector<uint8_t> maskData(SelfieSegmenter::PIXEL_COUNT);
-	// const uint8_t *bgraData = readerSegmenterInput->getBuffer().data();
-	// selfieSegmenter.applyMaskToFrame(maskData.data());
-	// unique_gs_texture_t maskTexture = make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH,
-	// 							      SelfieSegmenter::INPUT_HEIGHT, GS_BGRA,
-	// 							      1, &bgraData, 0);
-	// mainEffect.draw(width, height, bgrxSourceInput.get());
-	// mainEffect.draw(width, height, maskTexture.get());
+	static int renderCount = 0;
+	renderCount++;
+	std::vector<uint8_t> maskData(SelfieSegmenter::PIXEL_COUNT * 4);
+	const uint8_t *bgraData = maskData.data();;
+	selfieSegmenter.applyMaskToFrame(maskData.data());
+	cv::Mat maskImage(SelfieSegmenter::INPUT_HEIGHT, SelfieSegmenter::INPUT_WIDTH, CV_8UC4, maskData.data());
+	cv::imwrite("output/mask" + std::to_string(renderCount) + ".png", maskImage);
+	UNUSED_PARAMETER(bgraData);
+	unique_gs_texture_t maskTexture = make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH,
+								      SelfieSegmenter::INPUT_HEIGHT, GS_BGRA,
+								      1, &bgraData, 0);
+	mainEffect.drawWithMask(width, height, bgrxSourceInput.get(), maskTexture.get());
 
 	if (readerSegmenterInput && bgrxSegmenterInput) {
 		readerSegmenterInput->stage(bgrxSegmenterInput.get());
@@ -211,8 +222,6 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 	frameCount++;
 	if (readerSegmenterInput) {
 		selfieSegmenter.process(readerSegmenterInput->getBuffer().data());
-		cv::Mat scaledInput(SelfieSegmenter::INPUT_HEIGHT, SelfieSegmenter::INPUT_WIDTH, CV_8UC4, readerSegmenterInput->getBuffer().data());
-		cv::imwrite("output/scaled_input" + std::to_string(frameCount) + ".png", scaledInput);
 	}
 
 	return frame;

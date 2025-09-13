@@ -1,5 +1,6 @@
 uniform float4x4 ViewProj;
 uniform texture2d image;
+uniform texture2d mask;
 
 sampler_state def_sampler
 {
@@ -26,11 +27,29 @@ float4 PSDraw(VertInOut vert_in) : TARGET
 	return image.Sample(def_sampler, vert_in.uv);
 }
 
+float4 PSDrawWithMask(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+	float4 final_color;
+	final_color.rgb = image.Sample(def_sampler, uv).rgb;
+	final_color.a = 1.0f - mask.Sample(def_sampler, vert_in.uv).a;
+	return final_color;
+}
+
 technique Draw
 {
 	pass
 	{
 		vertex_shader = VSDefault(vert_in);
 		pixel_shader = PSDraw(vert_in);
+	}
+}
+
+technique DrawWithMask
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSDrawWithMask(vert_in);
 	}
 }

@@ -122,7 +122,10 @@ public:
 
         for (int i = 0; i < PIXEL_COUNT; ++i) {
             // Update the alpha channel of the RGBA data (every 4th byte) with the mask value
-            rgba_data[i * 4 + 3] = mask_data[i];
+            rgba_data[i * 4 + 0] = mask_data[i];
+            rgba_data[i * 4 + 1] = mask_data[i];
+            rgba_data[i * 4 + 2] = mask_data[i];
+            rgba_data[i * 4 + 3] = 1.0;
         }
     }
 
