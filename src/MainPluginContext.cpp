@@ -222,7 +222,9 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 			selfieSegmenterPendingTaskToken->store(true);
 		}
 
-		selfieSegmenterPendingTaskToken = selfieSegmenterTaskQueue->push([self = weak_from_this()](const TaskQueue::CancellationToken &token) {
+		selfieSegmenterPendingTaskToken = selfieSegmenterTaskQueue->push([self = weak_from_this()](
+											 const TaskQueue::CancellationToken
+												 &token) {
 			if (auto s = self.lock()) {
 				if (!token->load()) {
 					s.get()->selfieSegmenter.process(
