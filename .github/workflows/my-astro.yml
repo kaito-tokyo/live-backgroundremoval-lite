@@ -1,0 +1,77 @@
+name: Deploy Astro site to Pages
+
+on:
+  push:
+    branches:
+      - "main"
+
+  release:
+    types:
+      - "published"
+
+  workflow_dispatch:
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+permissions:
+  contents: "read"
+  pages: "write"
+  id-token: "write"
+
+env:
+  BUILD_PATH: "docs"
+
+jobs:
+  build:
+    name: "Build"
+
+    runs-on: "ubuntu-24.04"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup Node"
+        uses: "actions/setup-node@v5"
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: "${{ env.BUILD_PATH }}/package-lock.json"
+
+      - name: "Setup Pages"
+        id: "pages"
+        uses: "actions/configure-pages@v5"
+
+      - name: "Install dependencies"
+        run: "npm ci"
+        working-directory: "${{ env.BUILD_PATH }}"
+
+      - name: Build with Astro
+        run: |
+          npx astro build \
+            --site "${{ steps.pages.outputs.origin }}" \
+            --base "${{ steps.pages.outputs.base_path }}"
+        working-directory: "${{ env.BUILD_PATH }}"
+        env:
+          EVENT_NAME: "${{ github.event_name }}"
+          EVENT_PAYLOAD: "${{ toJson(github.event) }}"
+
+
+      - name: "Upload artifact"
+        uses: "actions/upload-pages-artifact@v4"
+        with:
+          path: "${{ env.BUILD_PATH }}/dist"
+
+  deploy:
+    environment:
+      name: "github-pages"
+      url: "${{ steps.deployment.outputs.page_url }}"
+    needs: "build"
+    runs-on: "ubuntu-24.04"
+    name: "Deploy"
+    steps:
+      - name: "Deploy to GitHub Pages"
+        id: "deployment"
+        uses: "actions/deploy-pages@v4"

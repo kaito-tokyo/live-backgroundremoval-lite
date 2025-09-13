@@ -2,6 +2,8 @@
 
 An OBS plugin to remove your background without hassle.
 
+[Download](https://obs-backgroundremoval-lite.kaito.tokyo/)
+
 ## Acknowledgements
 
 This project is built upon and incorporates several open-source components. We are grateful to the developers and contributors of these projects.
