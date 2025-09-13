@@ -14,7 +14,14 @@
       "name": "curl",
       "default-features": false,
       "features": [
-        "wolfssl"
+        {
+          "name": "sspi",
+          "platform": "(windows & !uwp) | mingw"
+        },
+        {
+          "name": "gnutls",
+          "platform": "(uwp | !windows) & !mingw"
+        }
       ]
     },
     {
