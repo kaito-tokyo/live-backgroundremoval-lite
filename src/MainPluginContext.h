@@ -21,33 +21,14 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs.h>
 
 #ifdef __cplusplus
-extern "C" {
-#endif
-
-const char *main_plugin_context_get_name(void *type_data);
-void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source);
-void main_plugin_context_destroy(void *data);
-uint32_t main_plugin_context_get_width(void *data);
-uint32_t main_plugin_context_get_height(void *data);
-void main_plugin_context_get_defaults(obs_data_t *data);
-obs_properties_t *main_plugin_context_get_properties(void *data);
-void main_plugin_context_update(void *data, obs_data_t *settings);
-void main_plugin_context_activate(void *data);
-void main_plugin_context_deactivate(void *data);
-void main_plugin_context_show(void *data);
-void main_plugin_context_hide(void *data);
-void main_plugin_context_video_tick(void *data, float seconds);
-void main_plugin_context_video_render(void *data, gs_effect_t *effect);
-struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs_source_frame *frame);
-
-bool main_plugin_context_module_load(void);
-void main_plugin_context_module_unload(void);
-
-#ifdef __cplusplus
-}
 
 #include <cstdint>
 #include <memory>
+
+#include "obs-bridge-utils/obs-bridge-utils.hpp"
+
+#include "AsyncTextureReader.hpp"
+#include "MainEffect.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -77,11 +58,43 @@ private:
 	obs_data_t *settings = nullptr;
 	obs_source_t *source = nullptr;
 
+	MainEffect mainEffect;
+
 	std::uint32_t width = 0;
 	std::uint32_t height = 0;
+
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceImage = nullptr;
+
+	std::unique_ptr<AsyncTextureReader> readerSourceImage = nullptr;
+
+	void ensureTextures();
 };
 
 } // namespace obs_backgroundremoval_lite
 } // namespace kaito_tokyo
 
+extern "C" {
+#endif // __cplusplus
+
+const char *main_plugin_context_get_name(void *type_data);
+void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source);
+void main_plugin_context_destroy(void *data);
+uint32_t main_plugin_context_get_width(void *data);
+uint32_t main_plugin_context_get_height(void *data);
+void main_plugin_context_get_defaults(obs_data_t *data);
+obs_properties_t *main_plugin_context_get_properties(void *data);
+void main_plugin_context_update(void *data, obs_data_t *settings);
+void main_plugin_context_activate(void *data);
+void main_plugin_context_deactivate(void *data);
+void main_plugin_context_show(void *data);
+void main_plugin_context_hide(void *data);
+void main_plugin_context_video_tick(void *data, float seconds);
+void main_plugin_context_video_render(void *data, gs_effect_t *effect);
+struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs_source_frame *frame);
+
+bool main_plugin_context_module_load(void);
+void main_plugin_context_module_unload(void);
+
+#ifdef __cplusplus
+}
 #endif // __cplusplus

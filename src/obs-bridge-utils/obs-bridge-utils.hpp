@@ -1,5 +1,5 @@
 /*
-OBS Background Removal Lite
+obs-bridge-utils
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -18,26 +18,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-
-extern const char *PLUGIN_NAME;
-extern const char *PLUGIN_VERSION;
-
-void obs_log(int log_level, const char *format, ...);
-
-#ifdef _MSC_VER
-extern __declspec(dllexport) void blogva(int log_level, const char *format, va_list args);
-#else
-extern __attribute__((visibility("default"))) void blogva(int log_level, const char *format, va_list args);
-#endif
-
-#ifdef __cplusplus
-}
-#endif
+#include <obs-bridge-utils/gs_unique.hpp>
+#include <obs-bridge-utils/unique_bfree.hpp>
+#include <obs-bridge-utils/unique_obs_data_array.hpp>
+#include <obs-bridge-utils/unique_obs_data.hpp>
