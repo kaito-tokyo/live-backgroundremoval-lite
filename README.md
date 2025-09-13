@@ -12,7 +12,7 @@ This project is built upon and incorporates several open-source components. We a
     *   License: [Apache-2.0](https://opensource.org/licenses/Apache-2.0)
     *   Source: [huggingface.co/onnx-community/mediapipe_selfie_segmentation](https://huggingface.co/onnx-community/mediapipe_selfie_segmentation)
 *   **OpenCV**
-    *   License: [Apache-2.0](https://github.com/opencv/opencv/blob/4.x/LICENSE)
+    *   License: [BSD-3-Clause](https://github.com/opencv/opencv/blob/4.3.0/LICENSE)
 *   **ncnn**
     *   License: [BSD-3-Clause](https://github.com/Tencent/ncnn/blob/master/LICENSE.txt)
 *   **GoogleTest**
