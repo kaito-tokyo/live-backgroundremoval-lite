@@ -18,6 +18,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <cstdint>
+
 #include "plugin-support.h"
 #include <obs.h>
 
@@ -102,11 +104,11 @@ public:
 	gs_technique_t *const techDraw;
 	gs_technique_t *const techDrawWithMask;
 
-	void draw(uint32_t width, uint32_t height, gs_texture_t *sourceTexture) noexcept
+	void draw(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) noexcept
 	{
 		gs_technique_t *tech = techDraw;
-		size_t passes = gs_technique_begin(tech);
-		for (size_t i = 0; i < passes; i++) {
+		std::size_t passes = gs_technique_begin(tech);
+		for (std::size_t i = 0; i < passes; i++) {
 			if (gs_technique_begin_pass(tech, i)) {
 				gs_effect_set_texture(textureImage, sourceTexture);
 
@@ -117,12 +119,12 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void drawWithMask(uint32_t width, uint32_t height, gs_texture_t *sourceTexture,
+	void drawWithMask(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
 			  gs_texture_t *maskTexture) noexcept
 	{
 		gs_technique_t *tech = techDrawWithMask;
-		size_t passes = gs_technique_begin(tech);
-		for (size_t i = 0; i < passes; i++) {
+		std::size_t passes = gs_technique_begin(tech);
+		for (std::size_t i = 0; i < passes; i++) {
 			if (gs_technique_begin_pass(tech, i)) {
 				gs_effect_set_texture(textureImage, sourceTexture);
 				gs_effect_set_texture(textureMask, maskTexture);

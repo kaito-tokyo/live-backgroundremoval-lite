@@ -29,8 +29,8 @@ using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
 namespace {
 
-inline void ensureTexture(unique_gs_texture_t &texture, uint32_t width, uint32_t height, gs_color_format format,
-			  uint32_t flags)
+inline void ensureTexture(unique_gs_texture_t &texture, std::uint32_t width, std::uint32_t height,
+			  gs_color_format format, std::uint32_t flags)
 {
 	if (!texture || gs_texture_get_width(texture.get()) != width ||
 	    gs_texture_get_height(texture.get()) != height) {
@@ -38,7 +38,7 @@ inline void ensureTexture(unique_gs_texture_t &texture, uint32_t width, uint32_t
 	}
 }
 
-void ensureTextureReader(std::unique_ptr<AsyncTextureReader> &textureReader, uint32_t width, uint32_t height,
+void ensureTextureReader(std::unique_ptr<AsyncTextureReader> &textureReader, std::uint32_t width, std::uint32_t height,
 			 gs_color_format format)
 {
 	if (!textureReader || textureReader->getWidth() != width || textureReader->getHeight() != height) {
@@ -190,19 +190,21 @@ void MainPluginContext::videoRender()
 
 	static int renderCount = 0;
 	renderCount++;
-	std::vector<uint8_t> maskData(SelfieSegmenter::PIXEL_COUNT * 4);
+	std::vector<std::uint8_t> maskData(SelfieSegmenter::PIXEL_COUNT * 4);
 	selfieSegmenter.applyMaskToFrame(maskData.data());
-	std::vector<uint8_t> scaledMaskData(width * height * 4);
-	for (uint32_t y = 0; y < height; ++y) {
-		for (uint32_t x = 0; x < width; ++x) {
-			uint32_t src_x_in_crop = static_cast<uint32_t>(static_cast<double>(x) / width * scaledW);
-			uint32_t src_y_in_crop = static_cast<uint32_t>(static_cast<double>(y) / height * scaledH);
+	std::vector<std::uint8_t> scaledMaskData(width * height * 4);
+	for (std::uint32_t y = 0; y < height; ++y) {
+		for (std::uint32_t x = 0; x < width; ++x) {
+			std::uint32_t src_x_in_crop =
+				static_cast<std::uint32_t>(static_cast<double>(x) / width * scaledW);
+			std::uint32_t src_y_in_crop =
+				static_cast<std::uint32_t>(static_cast<double>(y) / height * scaledH);
 
-			uint32_t src_x_in_mask = offsetX + src_x_in_crop;
-			uint32_t src_y_in_mask = offsetY + src_y_in_crop;
+			std::uint32_t src_x_in_mask = offsetX + src_x_in_crop;
+			std::uint32_t src_y_in_mask = offsetY + src_y_in_crop;
 
-			size_t src_idx = (src_y_in_mask * SelfieSegmenter::INPUT_WIDTH + src_x_in_mask) * 4;
-			size_t dst_idx = (y * width + x) * 4;
+			std::size_t src_idx = (src_y_in_mask * SelfieSegmenter::INPUT_WIDTH + src_x_in_mask) * 4;
+			std::size_t dst_idx = (y * width + x) * 4;
 
 			scaledMaskData[dst_idx + 0] = maskData[src_idx + 0];
 			scaledMaskData[dst_idx + 1] = maskData[src_idx + 1];
@@ -211,7 +213,7 @@ void MainPluginContext::videoRender()
 		}
 	}
 
-	const uint8_t *bgraData = scaledMaskData.data();
+	const std::uint8_t *bgraData = scaledMaskData.data();
 	unique_gs_texture_t maskTexture = make_unique_gs_texture(width, height, GS_BGRA, 1, &bgraData, 0);
 	mainEffect.drawWithMask(width, height, bgrxSourceInput.get(), maskTexture.get());
 

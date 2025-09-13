@@ -47,7 +47,7 @@ public:
      */
 	SelfieSegmenter(const kaito_tokyo::obs_bridge_utils::unique_bfree_t &param_path,
 			const kaito_tokyo::obs_bridge_utils::unique_bfree_t &bin_path)
-		: buffers(2, std::vector<uint8_t>(PIXEL_COUNT)),
+		: buffers(2, std::vector<std::uint8_t>(PIXEL_COUNT)),
 		  currentIndex(0)
 	{
 		if (net.load_param(param_path.get()) != 0) {
@@ -64,7 +64,7 @@ public:
      * @brief Processes a 256x256 BGRA image to generate a background mask (for the writer thread).
      * @param bgra_data Pointer to the 256x256 BGRA image data.
      */
-	void process(const uint8_t *bgra_data)
+	void process(const std::uint8_t *bgra_data)
 	{
 		if (!bgra_data) {
 			return;
@@ -88,11 +88,12 @@ public:
 
 		// 3. Post-processing & writing to the inactive buffer
 		int next_idx = (currentIndex.load(std::memory_order_relaxed) + 1) % 2;
-		std::vector<uint8_t> &target_buffer = buffers[next_idx];
+		std::vector<std::uint8_t> &target_buffer = buffers[next_idx];
 
 		const float *src_ptr = out.channel(0);
 		for (int i = 0; i < PIXEL_COUNT; i++) {
-			target_buffer[i] = static_cast<uint8_t>(std::max(0.f, std::min(255.f, src_ptr[i] * 255.f)));
+			target_buffer[i] =
+				static_cast<std::uint8_t>(std::max(0.f, std::min(255.f, src_ptr[i] * 255.f)));
 		}
 
 		// 4. Atomically update the readable index. This is done inside the lock
@@ -105,7 +106,7 @@ public:
      * This operation is zero-copy and thread-safe.
      * @param rgba_data Pointer to the RGBA (32-bit) frame data.
      */
-	void applyMaskToFrame(uint8_t *rgba_data)
+	void applyMaskToFrame(std::uint8_t *rgba_data)
 	{
 		if (!rgba_data)
 			return;
@@ -119,7 +120,7 @@ public:
 		int read_idx = currentIndex.load(std::memory_order_relaxed);
 
 		// Get a const reference to the mask data. No copy is made.
-		const std::vector<uint8_t> &mask_data = buffers[read_idx];
+		const std::vector<std::uint8_t> &mask_data = buffers[read_idx];
 
 		for (int i = 0; i < PIXEL_COUNT; ++i) {
 			// Update the alpha channel of the RGBA data (every 4th byte) with the mask value
@@ -134,7 +135,7 @@ private:
 	static constexpr float meanVals[3] = {127.5f, 127.5f, 127.5f};
 	static constexpr float normVals[3] = {1.0f / 127.5f, 1.0f / 127.5f, 1.0f / 127.5f};
 
-	std::vector<std::vector<uint8_t>> buffers;
+	std::vector<std::vector<std::uint8_t>> buffers;
 	std::atomic<int> currentIndex;
 
 	ncnn::Net net;

@@ -22,8 +22,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #ifdef __cplusplus
 
-#include <cstdint>
 #include <memory>
+#include <stdint.h>
 
 #include <net.h>
 
@@ -41,8 +41,8 @@ public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	~MainPluginContext() noexcept;
 
-	std::uint32_t getWidth() const noexcept;
-	std::uint32_t getHeight() const noexcept;
+	uint32_t getWidth() const noexcept;
+	uint32_t getHeight() const noexcept;
 
 	static void getDefaults(obs_data_t *data);
 
@@ -64,13 +64,13 @@ private:
 	MainEffect mainEffect;
 	SelfieSegmenter selfieSegmenter;
 
-	std::uint32_t width = 0;
-	std::uint32_t height = 0;
+	uint32_t width = 0;
+	uint32_t height = 0;
 
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceInput = nullptr;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput = nullptr;
 
-	std::unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
+	unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
 
 	void ensureTextures();
 };
