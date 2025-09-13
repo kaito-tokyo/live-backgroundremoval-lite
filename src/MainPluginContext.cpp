@@ -57,7 +57,7 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 	  mainEffect(unique_bfree_t(obs_module_file("effects/main.effect"))),
 	  selfieSegmenter(unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param")),
 			  unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin"))),
-	  taskQueue(std::make_unique<TaskQueue>())
+	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>())
 {
 	update(settings);
 }
@@ -215,8 +215,14 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 		ensureTextures();
 	}
 
-	if (taskQueue) {
-		taskQueue->push([self = weak_from_this()](const TaskQueue::CancellationToken &token) {
+	if (selfieSegmenterTaskQueue) {
+		std::lock_guard<std::mutex> lock(selfieSegmenterPendingTaskTokenMutex);
+
+		if (selfieSegmenterPendingTaskToken) {
+			selfieSegmenterPendingTaskToken->store(true);
+		}
+
+		selfieSegmenterPendingTaskToken = selfieSegmenterTaskQueue->push([self = weak_from_this()](const TaskQueue::CancellationToken &token) {
 			if (auto s = self.lock()) {
 				if (!token->load()) {
 					s.get()->selfieSegmenter.process(
