@@ -173,7 +173,7 @@ void MainPluginContext::videoRender()
 	gs_matrix_push();
 
 	gs_set_viewport(offsetX, offsetY, scaledW, scaledH);
-	gs_ortho(0.0f, width, 0.0f, height, -100.0f, 100.0f);
+	gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
 	gs_matrix_identity();
 
 	mainEffect.draw(width, height, bgrxSourceInput.get());
