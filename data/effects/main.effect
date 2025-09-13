@@ -32,7 +32,7 @@ float4 PSDrawWithMask(VertInOut vert_in) : TARGET
 	float2 uv = vert_in.uv;
 	float4 final_color;
 	final_color.rgb = image.Sample(def_sampler, uv).rgb;
-	final_color.a = mask.Sample(def_sampler, vert_in.uv).a;
+	final_color.a = mask.Sample(def_sampler, vert_in.uv).r;
 	return final_color;
 }
 

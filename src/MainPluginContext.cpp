@@ -168,19 +168,11 @@ void MainPluginContext::videoRender()
 	std::uint32_t offsetX = (SelfieSegmenter::INPUT_WIDTH - scaledW) / 2;
 	std::uint32_t offsetY = (SelfieSegmenter::INPUT_HEIGHT - scaledH) / 2;
 
-	gs_viewport_push();
-	gs_projection_push();
-	gs_matrix_push();
-
 	gs_set_viewport(offsetX, offsetY, scaledW, scaledH);
 	gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
 	gs_matrix_identity();
 
 	mainEffect.draw(width, height, bgrxSourceInput.get());
-
-	gs_viewport_pop();
-	gs_projection_pop();
-	gs_matrix_pop();
 
 	gs_set_render_target_with_color_space(defaultRenderTarget, defaultZStencil, defaultColorSpace);
 
@@ -188,33 +180,24 @@ void MainPluginContext::videoRender()
 	gs_projection_pop();
 	gs_matrix_pop();
 
-	static int renderCount = 0;
-	renderCount++;
-	std::vector<std::uint8_t> maskData(SelfieSegmenter::PIXEL_COUNT * 4);
-	selfieSegmenter.applyMaskToFrame(maskData.data());
-	std::vector<std::uint8_t> scaledMaskData(width * height * 4);
-	for (std::uint32_t y = 0; y < height; ++y) {
-		for (std::uint32_t x = 0; x < width; ++x) {
-			std::uint32_t src_x_in_crop =
-				static_cast<std::uint32_t>(static_cast<double>(x) / width * scaledW);
-			std::uint32_t src_y_in_crop =
-				static_cast<std::uint32_t>(static_cast<double>(y) / height * scaledH);
+	const auto &maskData = selfieSegmenter.getMask();
 
-			std::uint32_t src_x_in_mask = offsetX + src_x_in_crop;
-			std::uint32_t src_y_in_mask = offsetY + src_y_in_crop;
+	const cv::Mat srcMask(SelfieSegmenter::INPUT_HEIGHT, SelfieSegmenter::INPUT_WIDTH, CV_8UC1,
+			      const_cast<unsigned char *>(maskData.data()));
 
-			std::size_t src_idx = (src_y_in_mask * SelfieSegmenter::INPUT_WIDTH + src_x_in_mask) * 4;
-			std::size_t dst_idx = (y * width + x) * 4;
+	const cv::Rect roi(offsetX, offsetY, scaledW, scaledH);
+	const cv::Mat croppedMask = srcMask(roi);
 
-			scaledMaskData[dst_idx + 0] = maskData[src_idx + 0];
-			scaledMaskData[dst_idx + 1] = maskData[src_idx + 1];
-			scaledMaskData[dst_idx + 2] = maskData[src_idx + 2];
-			scaledMaskData[dst_idx + 3] = maskData[src_idx + 3];
-		}
+	if (scaledMaskData.size() != static_cast<size_t>(width * height)) {
+		scaledMaskData.resize(width * height);
 	}
 
-	const std::uint8_t *bgraData = scaledMaskData.data();
-	unique_gs_texture_t maskTexture = make_unique_gs_texture(width, height, GS_BGRA, 1, &bgraData, 0);
+	cv::Mat dstMask(height, width, CV_8UC1, scaledMaskData.data());
+
+	cv::resize(croppedMask, dstMask, dstMask.size(), 0, 0, cv::INTER_NEAREST);
+
+	const std::uint8_t *r8Data = scaledMaskData.data();
+	unique_gs_texture_t maskTexture = make_unique_gs_texture(width, height, GS_R8, 1, &r8Data, 0);
 	mainEffect.drawWithMask(width, height, bgrxSourceInput.get(), maskTexture.get());
 
 	if (readerSegmenterInput && bgrxSegmenterInput) {

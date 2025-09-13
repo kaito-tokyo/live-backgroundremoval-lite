@@ -70,6 +70,8 @@ private:
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceInput = nullptr;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput = nullptr;
 
+	std::vector<std::uint8_t> scaledMaskData;
+
 	std::unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
 
 	void ensureTextures();
