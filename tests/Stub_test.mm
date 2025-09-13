@@ -31,7 +31,8 @@ using namespace cv;
  * @param image BGR形式の入力cv::Mat
  * @return 変換されたCGImageRefオブジェクト。呼び出し元でCFRelease()で解放する必要があります。
  */
-CGImageRef MatToCGImage(const Mat& image) {
+CGImageRef MatToCGImage(const Mat &image)
+{
     if (image.empty() || !(image.type() == CV_8UC3)) {
         return NULL;
     }
@@ -47,26 +48,25 @@ CGImageRef MatToCGImage(const Mat& image) {
     }
 
     // MatのデータからCGDataProviderRefを作成
-    NSData* data = [NSData dataWithBytes:rgbImage.data length:rgbImage.total() * rgbImage.elemSize()];
-    CGDataProviderRef provider = CGDataProviderCreateWithCFData((CFDataRef)data);
+    NSData *data = [NSData dataWithBytes:rgbImage.data length:rgbImage.total() * rgbImage.elemSize()];
+    CGDataProviderRef provider = CGDataProviderCreateWithCFData((CFDataRef) data);
     if (provider == NULL) {
         fprintf(stderr, "Failed to create data provider.\n");
         CGColorSpaceRelease(colorSpace);
         return NULL;
     }
 
-    CGImageRef cgImage = CGImageCreate(
-        rgbImage.cols,        // 幅
-        rgbImage.rows,        // 高さ
-        8,                    // 1コンポーネントあたりのビット数
-        24,                   // 1ピクセルあたりのビット数 (8 bits * 3 channels)
-        rgbImage.step,        // 1行あたりのバイト数
-        colorSpace,           // カラースペース
-        kCGBitmapByteOrderDefault | kCGImageAlphaNone, // ビットマップ情報
-        provider,             // データプロバイダ
-        NULL,                 // デコード配列
-        false,                // shouldInterpolate
-        kCGRenderingIntentDefault // レンダリングインテント
+    CGImageRef cgImage = CGImageCreate(rgbImage.cols,  // 幅
+                                       rgbImage.rows,  // 高さ
+                                       8,              // 1コンポーネントあたりのビット数
+                                       24,             // 1ピクセルあたりのビット数 (8 bits * 3 channels)
+                                       rgbImage.step,  // 1行あたりのバイト数
+                                       colorSpace,     // カラースペース
+                                       kCGBitmapByteOrderDefault | kCGImageAlphaNone,  // ビットマップ情報
+                                       provider,                                       // データプロバイダ
+                                       NULL,                                           // デコード配列
+                                       false,                                          // shouldInterpolate
+                                       kCGRenderingIntentDefault                       // レンダリングインテント
     );
 
     // 作成したオブジェクトを解放
@@ -81,10 +81,11 @@ CGImageRef MatToCGImage(const Mat& image) {
  * @param pixelBuffer 入力CVPixelBufferRef (kCVPixelFormatType_OneComponent8)
  * @return 変換されたグレースケールのcv::Matオブジェクト
  */
-Mat PixelBufferToMat(CVPixelBufferRef pixelBuffer) {
+Mat PixelBufferToMat(CVPixelBufferRef pixelBuffer)
+{
     CVPixelBufferLockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
 
-    void* baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
+    void *baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
     size_t width = CVPixelBufferGetWidth(pixelBuffer);
     size_t height = CVPixelBufferGetHeight(pixelBuffer);
     size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
@@ -120,13 +121,13 @@ TEST(StubTest, Stub)
 
         // 3. Visionフレームワークで人物セグメンテーションリクエストを作成
         // 高品質なマスクを生成するために .accurate を指定
-        VNGeneratePersonSegmentationRequest* request = [[VNGeneratePersonSegmentationRequest alloc] init];
+        VNGeneratePersonSegmentationRequest *request = [[VNGeneratePersonSegmentationRequest alloc] init];
         request.qualityLevel = VNGeneratePersonSegmentationRequestQualityLevelFast;
 
         // 4. 画像リクエストハンドラを作成し、リクエストを実行
-        VNImageRequestHandler* handler = [[VNImageRequestHandler alloc] initWithCGImage:cgImage options:@{}];
+        VNImageRequestHandler *handler = [[VNImageRequestHandler alloc] initWithCGImage:cgImage options:@ {}];
 
-        NSError* error = nil;
+        NSError *error = nil;
         if (![handler performRequests:@[request] error:&error]) {
             NSLog(@"リクエストの実行に失敗しました: %@", error);
             CFRelease(cgImage);
@@ -134,7 +135,7 @@ TEST(StubTest, Stub)
         }
 
         // 5. 結果を処理する
-        VNPixelBufferObservation* result = request.results.firstObject;
+        VNPixelBufferObservation *result = request.results.firstObject;
         if (!result) {
             printf("人物が見つかりませんでした。\n");
             CFRelease(cgImage);
@@ -143,7 +144,7 @@ TEST(StubTest, Stub)
 
         // 6. 結果のマスク(CVPixelBufferRef)をOpenCVのMatに変換
         Mat mask = PixelBufferToMat(result.pixelBuffer);
-        
+
         // Visionのマスクは値が0か1なので、表示や後処理のために255倍して見やすくする
         Mat binaryMask;
         threshold(mask, binaryMask, 0, 255, THRESH_BINARY);
@@ -162,7 +163,7 @@ TEST(StubTest, Stub)
         std::string outputMaskPath = "result_mask.png";
         std::string outputSegmentedPath = "result_segmented.png";
 
-        bool isMaskSaved = imwrite(outputMaskPath, resizedMask); // 保存するマスクもリサイズ後のものに
+        bool isMaskSaved = imwrite(outputMaskPath, resizedMask);  // 保存するマスクもリサイズ後のものに
         if (!isMaskSaved) {
             printf("エラー: マスク画像の保存に失敗しました: %s\n", outputMaskPath.c_str());
         } else {
@@ -175,7 +176,7 @@ TEST(StubTest, Stub)
         } else {
             printf("切り抜き画像を保存しました: %s\n", outputSegmentedPath.c_str());
         }
-        
+
         ASSERT_TRUE(isMaskSaved);
         ASSERT_TRUE(isSegmentedSaved);
 
