@@ -21,8 +21,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <iostream>
 #include <stdexcept>
 
-
-
 #include "plugin-support.h"
 #include <obs-module.h>
 
@@ -31,7 +29,8 @@ using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
 namespace {
 
-inline void ensureTexture(unique_gs_texture_t &texture, uint32_t width, uint32_t height, gs_color_format format, uint32_t flags)
+inline void ensureTexture(unique_gs_texture_t &texture, uint32_t width, uint32_t height, gs_color_format format,
+			  uint32_t flags)
 {
 	if (!texture || gs_texture_get_width(texture.get()) != width ||
 	    gs_texture_get_height(texture.get()) != height) {
@@ -213,8 +212,7 @@ void MainPluginContext::videoRender()
 	}
 
 	const uint8_t *bgraData = scaledMaskData.data();
-	unique_gs_texture_t maskTexture =
-		make_unique_gs_texture(width, height, GS_BGRA, 1, &bgraData, 0);
+	unique_gs_texture_t maskTexture = make_unique_gs_texture(width, height, GS_BGRA, 1, &bgraData, 0);
 	mainEffect.drawWithMask(width, height, bgrxSourceInput.get(), maskTexture.get());
 
 	if (readerSegmenterInput && bgrxSegmenterInput) {
@@ -243,7 +241,8 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 void MainPluginContext::ensureTextures()
 {
 	ensureTexture(bgrxSourceInput, width, height, GS_BGRX, GS_RENDER_TARGET);
-	ensureTexture(bgrxSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX, GS_RENDER_TARGET);
+	ensureTexture(bgrxSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX,
+		      GS_RENDER_TARGET);
 	ensureTextureReader(readerSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX);
 }
 
