@@ -56,7 +56,8 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 	  source{_source},
 	  mainEffect(unique_bfree_t(obs_module_file("effects/main.effect"))),
 	  selfieSegmenter(unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param")),
-			  unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin")))
+			  unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin"))),
+	  taskQueue(std::make_unique<TaskQueue>())
 {
 	update(settings);
 }
@@ -214,10 +215,23 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 		ensureTextures();
 	}
 
-	static int frameCount = 0;
-	frameCount++;
-	if (readerSegmenterInput) {
-		selfieSegmenter.process(readerSegmenterInput->getBuffer().data());
+	if (taskQueue) {
+		taskQueue->push([self = weak_from_this()](const TaskQueue::CancellationToken &token) {
+			if (auto s = self.lock()) {
+				if (token->load()) {
+					s.get()->selfieSegmenter.process(
+						s.get()->readerSegmenterInput->getBuffer().data());
+				} else {
+					obs_log(LOG_DEBUG,
+						"MainPluginContext has been destroyed or task was cancelled, skipping processing");
+				}
+			} else {
+				obs_log(LOG_DEBUG,
+					"MainPluginContext has been destroyed or task was cancelled, skipping processing");
+			}
+		});
+	} else {
+		obs_log(LOG_WARNING, "Task queue is not initialized");
 	}
 
 	return frame;
@@ -261,6 +275,7 @@ try {
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
+	self->get()->shutdown();
 	delete self;
 
 	graphics_context_guard guard;
