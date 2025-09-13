@@ -21,8 +21,11 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <iostream>
 #include <stdexcept>
 
-#include "plugin-support.h"
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
 
+#include "plugin-support.h"
 #include <obs-module.h>
 
 using namespace kaito_tokyo::obs_bridge_utils;
@@ -35,6 +38,14 @@ inline void ensureTexture(unique_gs_texture_t &texture, uint32_t width, uint32_t
 	if (!texture || gs_texture_get_width(texture.get()) != width ||
 	    gs_texture_get_height(texture.get()) != height) {
 		texture = make_unique_gs_texture(width, height, format, 1, NULL, GS_RENDER_TARGET);
+	}
+}
+
+void ensureTextureReader(std::unique_ptr<AsyncTextureReader> &textureReader, uint32_t width, uint32_t height,
+			 gs_color_format format)
+{
+	if (!textureReader || textureReader->getWidth() != width || textureReader->getHeight() != height) {
+		textureReader = std::make_unique<AsyncTextureReader>(width, height, format);
 	}
 }
 
@@ -107,6 +118,14 @@ void MainPluginContext::videoRender()
 		return;
 	}
 
+	if (readerSourceImage) {
+		try {
+			readerSourceImage->sync();
+		} catch (const std::exception &e) {
+			obs_log(LOG_ERROR, "Failed to sync texture reader: %s", e.what());
+		}
+	}
+
 	gs_texture_t *defaultRenderTarget = gs_get_render_target();
 	gs_zstencil_t *defaultZStencil = gs_get_zstencil_target();
 	gs_color_space defaultColorSpace = gs_get_color_space();
@@ -136,6 +155,10 @@ void MainPluginContext::videoRender()
 	gs_matrix_pop();
 
 	mainEffect.draw(width, height, bgrxSourceImage.get());
+
+	if (readerSourceImage && bgrxSourceImage) {
+		readerSourceImage->stage(bgrxSourceImage.get());
+	}
 }
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
@@ -145,12 +168,14 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 		height = frame->height;
 		ensureTextures();
 	}
+
 	return frame;
 }
 
 void MainPluginContext::ensureTextures()
 {
 	ensureTexture(bgrxSourceImage, width, height, GS_BGRX);
+	ensureTextureReader(readerSourceImage, width, height, GS_BGRX);
 }
 
 } // namespace obs_backgroundremoval_lite
@@ -164,6 +189,7 @@ const char *main_plugin_context_get_name(void *type_data)
 
 void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
 try {
+	graphics_context_guard guard;
 	auto self = std::make_shared<MainPluginContext>(settings, source);
 	return new std::shared_ptr<MainPluginContext>(self);
 } catch (const std::exception &e) {
@@ -183,10 +209,19 @@ try {
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	delete self;
+
+	graphics_context_guard guard;
+	gs_unique::drain();
 } catch (const std::exception &e) {
 	obs_log(LOG_ERROR, "Failed to destroy main plugin context: %s", e.what());
+
+	graphics_context_guard guard;
+	gs_unique::drain();
 } catch (...) {
 	obs_log(LOG_ERROR, "Failed to destroy main plugin context: unknown error");
+
+	graphics_context_guard guard;
+	gs_unique::drain();
 }
 
 std::uint32_t main_plugin_context_get_width(void *data)
@@ -348,7 +383,9 @@ try {
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	return self->get()->filterVideo(frame);
+	obs_source_frame *result = self->get()->filterVideo(frame);
+	gs_unique::drain();
+	return result;
 } catch (const std::exception &e) {
 	obs_log(LOG_ERROR, "Failed to filter video in main plugin context: %s", e.what());
 	return frame;
@@ -370,6 +407,8 @@ try {
 
 void main_plugin_context_module_unload()
 try {
+	graphics_context_guard guard;
+	gs_unique::drain();
 } catch (const std::exception &e) {
 	obs_log(LOG_ERROR, "Failed to unload main plugin context: %s", e.what());
 } catch (...) {

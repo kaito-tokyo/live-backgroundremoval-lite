@@ -27,6 +27,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "obs-bridge-utils/obs-bridge-utils.hpp"
 
+#include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
 
 namespace kaito_tokyo {
@@ -62,7 +63,9 @@ private:
 	std::uint32_t width = 0;
 	std::uint32_t height = 0;
 
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceImage;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceImage = nullptr;
+
+	std::unique_ptr<AsyncTextureReader> readerSourceImage = nullptr;
 
 	void ensureTextures();
 };
