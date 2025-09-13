@@ -218,20 +218,20 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 	if (taskQueue) {
 		taskQueue->push([self = weak_from_this()](const TaskQueue::CancellationToken &token) {
 			if (auto s = self.lock()) {
-				if (token->load()) {
+				if (!token->load()) {
 					s.get()->selfieSegmenter.process(
 						s.get()->readerSegmenterInput->getBuffer().data());
 				} else {
-					obs_log(LOG_DEBUG,
+					obs_log(LOG_INFO,
 						"MainPluginContext has been destroyed or task was cancelled, skipping processing");
 				}
 			} else {
-				obs_log(LOG_DEBUG,
+				obs_log(LOG_INFO,
 					"MainPluginContext has been destroyed or task was cancelled, skipping processing");
 			}
 		});
 	} else {
-		obs_log(LOG_WARNING, "Task queue is not initialized");
+		obs_log(LOG_ERROR, "Task queue is not initialized");
 	}
 
 	return frame;
