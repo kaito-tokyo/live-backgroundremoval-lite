@@ -25,6 +25,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <cstdint>
 #include <memory>
 
+#include <net.h>
+
 #include "obs-bridge-utils/obs-bridge-utils.hpp"
 
 #include "AsyncTextureReader.hpp"
@@ -59,6 +61,7 @@ private:
 	obs_source_t *source = nullptr;
 
 	MainEffect mainEffect;
+	ncnn::Net selfieSegmentationNet;
 
 	std::uint32_t width = 0;
 	std::uint32_t height = 0;

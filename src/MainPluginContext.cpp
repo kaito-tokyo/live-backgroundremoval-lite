@@ -59,6 +59,10 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 	  source{_source},
 	  mainEffect(unique_bfree_t(obs_module_file("effects/main.effect")))
 {
+	unique_bfree_t paramPath(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param"));
+	unique_bfree_t modelPath(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin"));
+    selfieSegmentationNet.load_param(paramPath.get());
+    selfieSegmentationNet.load_model(modelPath.get());
 	update(settings);
 }
 
@@ -166,7 +170,47 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 	if (width != frame->width || height != frame->height) {
 		width = frame->width;
 		height = frame->height;
+
 		ensureTextures();
+
+		const float mean_vals[3] = {127.5f, 127.5f, 127.5f};
+		const float norm_vals[3] = {1.0f / 127.5f, 1.0f / 127.5f, 1.0f / 127.5f};
+
+		const int target_size = 256;
+		int img_w = readerSourceImage->getWidth();
+		int img_h = readerSourceImage->getHeight();
+
+		ncnn::Mat in = ncnn::Mat::from_pixels_resize(readerSourceImage->getBuffer().data(), ncnn::Mat::PIXEL_BGR2RGB, img_w, img_h, target_size, target_size);
+	    in.substract_mean_normalize(mean_vals, norm_vals);
+
+		ncnn::Extractor ex = selfieSegmentationNet.create_extractor();
+		ex.input("in0", in);
+
+		ncnn::Mat out;
+		ex.extract("out0", out);
+
+		// ncnn::MatからOpenCVのMatに変換
+		// 出力は0.0~1.0の確率値なので、255を掛けてグレースケール画像にする
+		cv::Mat mask(out.h, out.w, CV_32FC1); // まずはfloat型でデータを受け取る
+		memcpy(mask.data, (float*)out.data, out.w * out.h * sizeof(float));
+
+		// 0-255の範囲に変換し、8bitのグレースケール画像にする
+		cv::Mat mask_8u;
+		mask.convertTo(mask_8u, CV_8UC1, 255.0);
+
+		// 6. マスクを元の画像サイズにリサイズ
+		cv::Mat resized_mask;
+		cv::resize(mask_8u, resized_mask, cv::Size(img_w, img_h), 0, 0, cv::INTER_LINEAR);
+
+		// (オプション) よりくっきりしたマスクにするために閾値処理を追加
+		cv::Mat binary_mask = resized_mask.clone();
+
+		cv::Mat masked_image;
+		cv::Mat bgr_image(height, width, CV_8UC3, readerSourceImage->getBuffer().data(), readerSourceImage->getBufferLinesize());
+		bgr_image.copyTo(masked_image, binary_mask);
+
+		cv::imwrite("mask_output.png", binary_mask);
+		cv::imwrite("masked_image_output.png", masked_image);
 	}
 
 	return frame;
