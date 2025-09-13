@@ -27,12 +27,25 @@ float4 PSDraw(VertInOut vert_in) : TARGET
 	return image.Sample(def_sampler, vert_in.uv);
 }
 
+float random(float2 p)
+{
+    float3 p3 = frac(p.xyx * float3(443.897, 441.423, 437.195));
+    p3 += dot(p3, p3.yzx + 19.19);
+    return frac((p3.x + p3.y) * p3.z);
+}
+
 float4 PSDrawWithMask(VertInOut vert_in) : TARGET
 {
 	float2 uv = vert_in.uv;
 	float4 final_color;
+
 	final_color.rgb = image.Sample(def_sampler, uv).rgb;
-	final_color.a = mask.Sample(def_sampler, vert_in.uv).r;
+
+    float mask_alpha = mask.Sample(def_sampler, uv).r;
+	float threshold = random(uv);
+
+	final_color.a = step(threshold, mask_alpha);
+
 	return final_color;
 }
 
