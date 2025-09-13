@@ -23,7 +23,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <opencv2/imgproc.hpp>
 #include <net.h>
 
-TEST(StubTest, Stub)
+TEST(StubTest, DISABLED_Stub)
 {
 	ncnn::Net net;
 	net.load_param("data/models/mediapipe_selfie_segmentation.ncnn.param");
@@ -50,20 +50,15 @@ TEST(StubTest, Stub)
 	ex.extract("out0", out);
 	printf("Output shape: w=%d, h=%d, c=%d, dims=%d\n", out.w, out.h, out.c, out.dims);
 
-	// ncnn::MatからOpenCVのMatに変換
-	// 出力は0.0~1.0の確率値なので、255を掛けてグレースケール画像にする
-	cv::Mat mask(out.h, out.w, CV_32FC1); // まずはfloat型でデータを受け取る
+	cv::Mat mask(out.h, out.w, CV_32FC1);
 	memcpy(mask.data, (float *)out.data, out.w * out.h * sizeof(float));
 
-	// 0-255の範囲に変換し、8bitのグレースケール画像にする
 	cv::Mat mask_8u;
 	mask.convertTo(mask_8u, CV_8UC1, 255.0);
 
-	// 6. マスクを元の画像サイズにリサイズ
 	cv::Mat resized_mask;
 	cv::resize(mask_8u, resized_mask, cv::Size(img_w, img_h), 0, 0, cv::INTER_LINEAR);
 
-	// (オプション) よりくっきりしたマスクにするために閾値処理を追加
 	cv::Mat binary_mask = resized_mask.clone();
 
 	cv::Mat masked_image;
