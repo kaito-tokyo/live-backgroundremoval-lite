@@ -18,13 +18,13 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
-#include <algorithm>
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <vector>
 #include <stdexcept>
 #include <string>
-#include <vector>
+#include <algorithm>
 
 #include <net.h>
 
@@ -33,22 +33,14 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
-class SelfieSegmenter {
+/**
+ * @class NcnnInferenceEngine
+ * @brief A class responsible for loading and running ncnn models.
+ */
+class NcnnInferenceEngine {
 public:
-	// Expose fixed dimensions as public constants
-	static constexpr int INPUT_WIDTH = 256;
-	static constexpr int INPUT_HEIGHT = 256;
-	static constexpr int PIXEL_COUNT = INPUT_WIDTH * INPUT_HEIGHT;
-
-	/**
-     * @brief Constructor
-     * @param param_path Path to the ncnn model's .param file
-     * @param bin_path Path to the ncnn model's .bin file
-     */
-	SelfieSegmenter(const kaito_tokyo::obs_bridge_utils::unique_bfree_t &param_path,
-			const kaito_tokyo::obs_bridge_utils::unique_bfree_t &bin_path)
-		: buffers(2, std::vector<std::uint8_t>(PIXEL_COUNT)),
-		  currentIndex(0)
+	NcnnInferenceEngine(const kaito_tokyo::obs_bridge_utils::unique_bfree_t &param_path,
+			    const kaito_tokyo::obs_bridge_utils::unique_bfree_t &bin_path)
 	{
 		if (net.load_param(param_path.get()) != 0) {
 			throw std::runtime_error(std::string("Failed to load ncnn param file: ") + param_path.get());
@@ -58,11 +50,66 @@ public:
 		}
 	}
 
-	~SelfieSegmenter() {}
+	ncnn::Mat run(const ncnn::Mat &input) const
+	{
+		ncnn::Extractor ex = net.create_extractor();
+		ex.input("in0", input);
+		ncnn::Mat out;
+		ex.extract("out0", out);
+		return out;
+	}
+
+private:
+	ncnn::Net net;
+};
+
+/**
+ * @class MaskBuffer
+ * @brief A thread-safe double buffer for managing mask data.
+ */
+class MaskBuffer {
+public:
+	explicit MaskBuffer(std::size_t size) : buffers(2, std::vector<std::uint8_t>(size)), readableIndex(0) {}
+
+	void write(const std::vector<std::uint8_t> &data)
+	{
+		std::lock_guard<std::mutex> lock(bufferMutex);
+		const int writeIndex = (readableIndex.load(std::memory_order_relaxed) + 1) % 2;
+		buffers[writeIndex] = data;
+		readableIndex.store(writeIndex, std::memory_order_release);
+	}
+
+	const std::vector<std::uint8_t> &read() const
+	{
+		// Lock-free read
+		return buffers[readableIndex.load(std::memory_order_acquire)];
+	}
+
+private:
+	std::vector<std::vector<std::uint8_t>> buffers;
+	std::atomic<int> readableIndex;
+	mutable std::mutex bufferMutex;
+};
+
+/**
+ * @class SelfieSegmenter
+ * @brief A class that orchestrates image preprocessing, inference, and postprocessing.
+ */
+class SelfieSegmenter {
+public:
+	static constexpr int INPUT_WIDTH = 256;
+	static constexpr int INPUT_HEIGHT = 256;
+	static constexpr int PIXEL_COUNT = INPUT_WIDTH * INPUT_HEIGHT;
+
+	SelfieSegmenter(const kaito_tokyo::obs_bridge_utils::unique_bfree_t &param_path,
+			const kaito_tokyo::obs_bridge_utils::unique_bfree_t &bin_path)
+		: inferenceEngine(param_path, bin_path), maskBuffer(PIXEL_COUNT)
+	{
+	}
 
 	/**
-     * @brief Processes a 256x256 BGRA image to generate a background mask (for the writer thread).
-     * @param bgra_data Pointer to the 256x256 BGRA image data.
+     * @brief Generates a segmentation mask from BGRA image data (executed on the inference thread).
+     * @param bgra_data A pointer to the 256x256 BGRA image data.
      */
 	void process(const std::uint8_t *bgra_data)
 	{
@@ -70,77 +117,51 @@ public:
 			return;
 		}
 
-		// 1. Pre-processing (no resizing)
-		// The input format is now BGRA. ncnn will handle the conversion to the model's required input format.
-		ncnn::Mat in = ncnn::Mat::from_pixels(bgra_data, ncnn::Mat::PIXEL_BGRA2RGB, INPUT_WIDTH, INPUT_HEIGHT);
-		in.substract_mean_normalize(meanVals, normVals);
+		// 1. Pre-processing
+		ncnn::Mat input = preprocess(bgra_data);
 
-		// 2. Run inference. This is the most time-consuming part and is done outside the lock
-		// to maximize concurrency.
-		ncnn::Extractor ex = net.create_extractor();
-		ex.input("in0", in);
-		ncnn::Mat out;
-		ex.extract("out0", out); // Assuming the output size is also 256x256
+		// 2. Run inference
+		ncnn::Mat output = inferenceEngine.run(input);
 
-		// Lock is acquired only for the short duration of writing to the buffer and updating the index.
-		// This prevents race conditions with the reader thread (applyMaskToFrame).
-		std::lock_guard<std::mutex> lock(bufferMutex);
+		// 3. Post-processing
+		std::vector<std::uint8_t> mask = postprocess(output);
 
-		// 3. Post-processing & writing to the inactive buffer
-		int next_idx = (currentIndex.load(std::memory_order_relaxed) + 1) % 2;
-		std::vector<std::uint8_t> &target_buffer = buffers[next_idx];
-
-		const float *src_ptr = out.channel(0);
-		for (int i = 0; i < PIXEL_COUNT; i++) {
-			target_buffer[i] =
-				static_cast<std::uint8_t>(std::max(0.f, std::min(255.f, src_ptr[i] * 255.f)));
-		}
-
-		// 4. Atomically update the readable index. This is done inside the lock
-		// to ensure the reader thread gets a consistent state.
-		currentIndex.store(next_idx, std::memory_order_release);
+		// 4. Write to buffer
+		maskBuffer.write(mask);
 	}
 
 	/**
-     * @brief Applies the latest mask directly to a 256x256 RGBA frame (overwrites the alpha channel).
-     * This operation is zero-copy and thread-safe.
-     * @param rgba_data Pointer to the RGBA (32-bit) frame data.
+     * @brief Retrieves the latest segmentation mask (executed on the rendering thread).
+     * @return A const reference to the vector of mask data (grayscale values).
      */
-	void applyMaskToFrame(std::uint8_t *rgba_data)
+	const std::vector<std::uint8_t> &getMask() const
 	{
-		if (!rgba_data)
-			return;
-
-		// Lock the buffer to ensure thread-safe access to the mask data.
-		// This prevents the writer thread (process) from modifying the buffer while we are reading it.
-		std::lock_guard<std::mutex> lock(bufferMutex);
-
-		// Get the index of the latest completed mask.
-		// memory_order_relaxed is sufficient as the lock provides the necessary memory barrier.
-		int read_idx = currentIndex.load(std::memory_order_relaxed);
-
-		// Get a const reference to the mask data. No copy is made.
-		const std::vector<std::uint8_t> &mask_data = buffers[read_idx];
-
-		for (int i = 0; i < PIXEL_COUNT; ++i) {
-			// Update the alpha channel of the RGBA data (every 4th byte) with the mask value
-			rgba_data[i * 4 + 0] = 255;
-			rgba_data[i * 4 + 1] = 255;
-			rgba_data[i * 4 + 2] = 255;
-			rgba_data[i * 4 + 3] = mask_data[i];
-		}
+		return maskBuffer.read();
 	}
 
 private:
-	static constexpr float meanVals[3] = {127.5f, 127.5f, 127.5f};
-	static constexpr float normVals[3] = {1.0f / 127.5f, 1.0f / 127.5f, 1.0f / 127.5f};
+	ncnn::Mat preprocess(const std::uint8_t *bgra_data) const
+	{
+		ncnn::Mat in = ncnn::Mat::from_pixels(bgra_data, ncnn::Mat::PIXEL_BGRA2RGB, INPUT_WIDTH, INPUT_HEIGHT);
+		in.substract_mean_normalize(MEAN_VALS, NORM_VALS);
+		return in;
+	}
 
-	std::vector<std::vector<std::uint8_t>> buffers;
-	std::atomic<int> currentIndex;
+	std::vector<std::uint8_t> postprocess(const ncnn::Mat &output) const
+	{
+		std::vector<std::uint8_t> mask(PIXEL_COUNT);
+		const float *src_ptr = output.channel(0);
+		for (int i = 0; i < PIXEL_COUNT; i++) {
+			mask[i] = static_cast<std::uint8_t>(std::max(0.f, std::min(255.f, src_ptr[i] * 255.f)));
+		}
+		return mask;
+	}
 
-	ncnn::Net net;
+	NcnnInferenceEngine inferenceEngine;
+	MaskBuffer maskBuffer;
 
-	std::mutex bufferMutex;
+	static constexpr float MEAN_VALS[3] = {127.5f, 127.5f, 127.5f};
+	static constexpr float NORM_VALS[3] = {1.0f / 127.5f, 1.0f / 127.5f, 1.0f / 127.5f};
 };
 
 } // namespace obs_backgroundremoval_lite
