@@ -105,7 +105,7 @@ void MainPluginContext::videoTick(float seconds)
 void MainPluginContext::videoRender()
 {
 	if (width == 0 || height == 0) {
-		obs_log(LOG_WARNING, "Width or height is zero, skipping video render");
+		obs_log(LOG_DEBUG, "Width or height is zero, skipping video render");
 		obs_source_skip_video_filter(source);
 		return;
 	}
