@@ -20,6 +20,13 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs.h>
 
+#ifndef PLUGIN_NAME
+#define PLUGIN_NAME "obs-backgroundremoval-lite"
+#endif
+#ifndef PLUGIN_VERSION
+#define PLUGIN_VERSION "0.0.0-alpha"
+#endif
+
 #ifdef __cplusplus
 
 #include <future>

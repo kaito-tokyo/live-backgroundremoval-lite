@@ -35,15 +35,21 @@ if(ENABLE_QT)
   )
 endif()
 
-find_package(OpenCV CONFIG REQUIRED core imgproc imgcodecs)
-find_package(ncnn CONFIG REQUIRED)
-find_package(semver CONFIG REQUIRED)
 find_package(cpr CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+find_package(ncnn CONFIG REQUIRED)
+find_package(OpenCV CONFIG REQUIRED core imgproc imgcodecs)
+find_package(semver CONFIG REQUIRED)
+
+target_compile_definitions(
+  ${CMAKE_PROJECT_NAME}
+  PRIVATE PLUGIN_NAME="${CMAKE_PROJECT_NAME}" PLUGIN_VERSION="${CMAKE_PROJECT_VERSION}"
+)
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/MainPluginContext.cpp src/plugin-main.c)
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs plugin-support opencv_core opencv_imgproc opencv_imgcodecs ncnn semver::semver cpr::cpr
+  PUBLIC OBS::libobs cpr::cpr fmt::fmt ncnn opencv_core opencv_imgproc opencv_imgcodecs semver::semver
 )
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})

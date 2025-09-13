@@ -21,6 +21,7 @@
       "name": "cpr",
       "default-features": false
     },
-    "neargye-semver"
+    "neargye-semver",
+    "fmt"
   ]
 }
