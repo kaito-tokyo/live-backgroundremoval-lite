@@ -37,11 +37,13 @@ endif()
 
 find_package(OpenCV CONFIG REQUIRED core imgproc imgcodecs)
 find_package(ncnn CONFIG REQUIRED)
+find_package(semver CONFIG REQUIRED)
+find_package(cpr CONFIG REQUIRED)
 
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/MainPluginContext.cpp src/plugin-main.c)
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs plugin-support opencv_core opencv_imgproc opencv_imgcodecs ncnn
+  PUBLIC OBS::libobs plugin-support opencv_core opencv_imgproc opencv_imgcodecs ncnn semver::semver cpr::cpr
 )
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
