@@ -1,29 +1,33 @@
-name: 'Gemini Issue Triage'
+name: "Issue Triage"
 
 on:
   issues:
     types:
-      - 'opened'
-      - 'reopened'
+      - "opened"
+      - "reopened"
   workflow_dispatch:
     inputs:
       issue_number:
-        description: 'issue number to triage'
+        description: "issue number to triage"
         required: true
-        type: 'number'
+        type: "number"
+
+defaults:
+  run:
+    shell: "bash"
 
 jobs:
   triage:
-    runs-on: ubuntu-latest
+    runs-on: "ubuntu-24.04"
     permissions:
-      issues: write # Required to add labels and post comments on issues
+      issues: "write"
 
     steps:
-      - name: 'Run Gemini CLI for triage'
-        id: gemini_triage # Give this step an ID to reference its output later
-        uses: google-github-actions/run-gemini-cli@b8dcd5ff197981cd002d61650bb95b5af3d2b856
+      - name: "Run Gemini CLI for triage"
+        id: "gemini_triage"
+        uses: "google-github-actions/run-gemini-cli@b8dcd5ff197981cd002d61650bb95b5af3d2b856"
         with:
-          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          gemini_api_key: "${{ secrets.GEMINI_API_KEY }}""
           # This is the prompt (instruction) for Gemini
           prompt: |
             You are an expert triage engineer for a GitHub repository.
@@ -54,7 +58,10 @@ jobs:
             }
             ```
 
-      - name: 'Add labels and comment'
+      - name: "Print Gemini Output"
+        run: echo "${{ steps.gemini_triage.outputs.gemini_response }}"
+
+      - name: "Add labels and comment"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
