@@ -422,6 +422,7 @@ try {
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->videoRender();
+	gs_unique::drain();
 } catch (const std::exception &e) {
 	obs_log(LOG_ERROR, "Failed to render video in main plugin context: %s", e.what());
 } catch (...) {
