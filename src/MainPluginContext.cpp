@@ -190,15 +190,7 @@ void MainPluginContext::videoRender()
 
 	const auto &maskData = selfieSegmenter.getMask();
 
-	std::vector<std::uint8_t> maskTextureData(SelfieSegmenter::PIXEL_COUNT * 4);
-	for (int i = 0; i < SelfieSegmenter::PIXEL_COUNT; ++i) {
-		maskTextureData[i * 4 + 0] = 255; // R
-		maskTextureData[i * 4 + 1] = 255; // G
-		maskTextureData[i * 4 + 2] = 255; // B
-		maskTextureData[i * 4 + 3] = maskData[i]; // A
-	}
-	
-	std::vector<std::uint8_t> scaledMaskData(width * height * 4);
+	std::vector<std::uint8_t> scaledMaskData(width * height);
 	for (std::uint32_t y = 0; y < height; ++y) {
 		for (std::uint32_t x = 0; x < width; ++x) {
 			std::uint32_t src_x_in_crop =
@@ -209,18 +201,15 @@ void MainPluginContext::videoRender()
 			std::uint32_t src_x_in_mask = offsetX + src_x_in_crop;
 			std::uint32_t src_y_in_mask = offsetY + src_y_in_crop;
 
-			std::size_t src_idx = (src_y_in_mask * SelfieSegmenter::INPUT_WIDTH + src_x_in_mask) * 4;
-			std::size_t dst_idx = (y * width + x) * 4;
+			std::size_t src_idx = src_y_in_mask * SelfieSegmenter::INPUT_WIDTH + src_x_in_mask;
+			std::size_t dst_idx = y * width + x;
 
-			scaledMaskData[dst_idx + 0] = maskTextureData[src_idx + 0];
-			scaledMaskData[dst_idx + 1] = maskTextureData[src_idx + 1];
-			scaledMaskData[dst_idx + 2] = maskTextureData[src_idx + 2];
-			scaledMaskData[dst_idx + 3] = maskTextureData[src_idx + 3];
+			scaledMaskData[dst_idx] = maskData[src_idx];
 		}
 	}
 
-	const std::uint8_t *bgraData = scaledMaskData.data();
-	unique_gs_texture_t maskTexture = make_unique_gs_texture(width, height, GS_BGRA, 1, &bgraData, 0);
+	const std::uint8_t *r8Data = scaledMaskData.data();
+	unique_gs_texture_t maskTexture = make_unique_gs_texture(width, height, GS_R8, 1, &r8Data, 0);
 	mainEffect.drawWithMask(width, height, bgrxSourceInput.get(), maskTexture.get());
 
 	if (readerSegmenterInput && bgrxSegmenterInput) {
