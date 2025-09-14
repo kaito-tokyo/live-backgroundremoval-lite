@@ -18,6 +18,7 @@ defaults:
 
 permissions:
   contents: "read"
+  packages: "write"
 
 jobs:
   RunTestsOnMacOS:
@@ -28,9 +29,24 @@ jobs:
     timeout-minutes: 30
 
     env:
-      VCPKG_BINARY_SOURCES: "x-gha,read;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
 
     steps:
+      - name: Add GitHub Packages NuGet source
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        run: |
+          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
+            sources add \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
+            -StorePasswordInClearText \
+            -Name "GitHub" \
+            -UserName "kaito-tokyo" \
+            -Password "$GITHUB_TOKEN"
+          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
+            setapikey "$GITHUB_TOKEN" \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
+
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
@@ -51,6 +67,7 @@ jobs:
 
       - name: "Save Vcpkg cache"
         uses: "actions/cache/save@v4"
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
         with:
           path: "${{ github.workspace }}/vcpkg-cache"
           key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
@@ -66,9 +83,24 @@ jobs:
     timeout-minutes: 30
 
     env:
-      VCPKG_BINARY_SOURCES: "x-gha,read;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
 
     steps:
+      - name: Add GitHub Packages NuGet source
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        run: |
+          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
+            sources add \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
+            -StorePasswordInClearText \
+            -Name "GitHub" \
+            -UserName "kaito-tokyo" \
+            -Password "$GITHUB_TOKEN"
+          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
+            setapikey "$GITHUB_TOKEN" \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
+
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
@@ -89,6 +121,7 @@ jobs:
 
       - name: "Save Vcpkg cache"
         uses: "actions/cache/save@v4"
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
         with:
           path: "${{ github.workspace }}/vcpkg-cache"
           key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
@@ -104,9 +137,24 @@ jobs:
     timeout-minutes: 30
 
     env:
-      VCPKG_BINARY_SOURCES: "x-gha,read;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
 
     steps:
+      - name: Add GitHub Packages NuGet source
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        run: |
+          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
+            sources add \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
+            -StorePasswordInClearText \
+            -Name "GitHub" \
+            -UserName "kaito-tokyo" \
+            -Password "$GITHUB_TOKEN"
+          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
+            setapikey "$GITHUB_TOKEN" \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
+
       - name: "Disable man-db update"
         run: |
           echo "man-db man-db/auto-update boolean false" | sudo debconf-set-selections
@@ -149,6 +197,7 @@ jobs:
 
       - name: "Save Vcpkg cache"
         uses: "actions/cache/save@v4"
+        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
         with:
           path: "${{ github.workspace }}/vcpkg-cache"
           key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
