@@ -81,7 +81,7 @@ jobs:
             jq \
             ninja-build \
             pkg-config \
-            mono-runtime
+            mono-devel
 
       - name: "Configure"
         run: "cmake --preset ${{ matrix.preset }}"
