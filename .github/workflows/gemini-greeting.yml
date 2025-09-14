@@ -33,6 +33,7 @@ jobs:
           private-key: '${{ secrets.APP_PRIVATE_KEY }}'
           permission-issues: 'write'
 
+      # STEP 1: Geminiが挨拶メッセージのテキストを生成することに専念する
       - name: 'Generate Greeting Text'
         id: 'generate_greeting'
         uses: 'google-github-actions/run-gemini-cli@v0'
@@ -73,18 +74,15 @@ jobs:
                 - For anything else: "Thank you for creating this issue."
             3.  **Output**: Produce the complete and final Markdown message as your direct output.
 
+      # STEP 2: ワークフローが、生成されたテキストを使ってコメントを投稿する
       - name: 'Post Greeting'
+        if: steps.generate_greeting.outputs.summary != ''
         env:
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           ISSUE_NUMBER: '${{ github.event.issue.number }}'
-          # 修正点: 新しい出力変数 `summary` を参照するように変更
           MESSAGE: '${{ steps.generate_greeting.outputs.summary }}'
           REPOSITORY: '${{ github.repository }}'
         run: |-
-          if [[ -n "${MESSAGE}" ]]; then
-            gh issue comment "${ISSUE_NUMBER}" \
-              --body "${MESSAGE}" \
-              --repo "${REPOSITORY}"
-          else
-            echo "Generated message was empty. Skipping comment."
-          fi
+          gh issue comment "${ISSUE_NUMBER}" \
+            --body "${MESSAGE}" \
+            --repo "${REPOSITORY}"
