@@ -129,8 +129,10 @@ jobs:
       needs.dispatch.outputs.command == 'triage'
     uses: './.github/workflows/gemini-greeting.yml'
     permissions:
-      issues: 'write'
+      contents: 'read'
       id-token: 'write'
+      issues: 'write'
+      pull-requests: 'write'
     secrets:
       APP_PRIVATE_KEY: '${{ secrets.APP_PRIVATE_KEY }}'
       GEMINI_API_KEY: '${{ secrets.GEMINI_API_KEY }}'
