@@ -497,6 +497,8 @@ jobs:
             -Name "GitHub" `
             -UserName "kaito-tokyo" `
             -Password "${{ secrets.GITHUB_TOKEN }}"
+          & $NUGET_EXE_PATH setapikey "${{ secrets.GITHUB_TOKEN }}" `
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: Set Up Environment 🔧
         id: setup
