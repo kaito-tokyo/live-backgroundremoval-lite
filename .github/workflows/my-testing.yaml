@@ -21,149 +21,47 @@ permissions:
   packages: "write"
 
 jobs:
-  RunTestsOnMacOS:
-    name: "Run Tests on macOS"
+  RunTests:
+    name: "Run Tests on ${{ matrix.os-name }}"
+    strategy:
+      matrix:
+        include:
+          - os: macos-15
+            os-name: macOS
+            preset: macos-testing-ci
+          - os: windows-2022
+            os-name: Windows
+            preset: windows-testing-ci-x64
+          - os: ubuntu-24.04
+            os-name: Ubuntu
+            preset: ubuntu-testing-ci-x86_64
+      fail-fast: false
 
-    runs-on: "macos-15"
-
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
 
     env:
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
 
     steps:
-      - name: Add GitHub Packages NuGet source
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-        run: |
-          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
-            sources add \
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
-            -StorePasswordInClearText \
-            -Name "GitHub" \
-            -UserName "kaito-tokyo" \
-            -Password "$GITHUB_TOKEN"
-          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
-            setapikey "$GITHUB_TOKEN" \
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
-
       - name: "Checkout"
-        uses: "actions/checkout@v5"
+        uses: "actions/checkout@v4"
 
-      - name: "Restore Vcpkg cache"
-        uses: "actions/cache/restore@v4"
-        id: "vcpkg-cache"
+      - name: "Setup .NET"
+        uses: "actions/setup-dotnet@v4"
         with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json') }}"
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
+          dotnet-version: '8.0.x'
 
-      - name: "Configure"
-        run: "cmake --preset macos-testing-ci"
-
-      - name: "Build"
-        run: "cmake --build --preset macos-testing-ci"
-
-      - name: "Save Vcpkg cache"
-        uses: "actions/cache/save@v4"
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
-
-      - name: "Run tests"
-        run: "ctest --preset macos-testing-ci --verbose"
-
-  RunTestsOnWindows:
-    name: "Run Tests on Windows"
-
-    runs-on: "windows-2022"
-
-    timeout-minutes: 30
-
-    env:
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
-
-    steps:
-      - name: Add GitHub Packages NuGet source
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: "Setup NuGet Credentials"
+        shell: pwsh
         run: |
-          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
-            sources add \
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
-            -StorePasswordInClearText \
-            -Name "GitHub" \
-            -UserName "kaito-tokyo" \
-            -Password "$GITHUB_TOKEN"
-          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
-            setapikey "$GITHUB_TOKEN" \
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
-
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Restore Vcpkg cache"
-        uses: "actions/cache/restore@v4"
-        id: "vcpkg-cache"
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json') }}"
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
-
-      - name: "Configure"
-        run: "cmake --preset windows-testing-ci-x64"
-
-      - name: "Build"
-        run: "cmake --build --preset windows-testing-ci-x64"
-
-      - name: "Save Vcpkg cache"
-        uses: "actions/cache/save@v4"
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
-
-      - name: "Run tests"
-        run: "ctest --preset windows-testing-ci-x64 --verbose"
-
-  RunTestsOnUbuntu:
-    name: "Run Tests on Ubuntu"
-
-    runs-on: "ubuntu-24.04"
-
-    timeout-minutes: 30
-
-    env:
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
-
-    steps:
-      - name: Add GitHub Packages NuGet source
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          dotnet nuget add source --name "GitHub" --source "https://nuget.pkg.github.com/kaito-tokyo/index.json" --username "kaito-tokyo" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          dotnet nuget update source "GitHub" --username "kaito-tokyo" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+      
+      - name: "Install dependencies on Ubuntu"
+        if: runner.os == 'Linux'
         run: |
-          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
-            sources add \
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
-            -StorePasswordInClearText \
-            -Name "GitHub" \
-            -UserName "kaito-tokyo" \
-            -Password "$GITHUB_TOKEN"
-          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
-            setapikey "$GITHUB_TOKEN" \
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
-
-      - name: "Disable man-db update"
-        run: |
-          echo "man-db man-db/auto-update boolean false" | sudo debconf-set-selections
-          sudo apt-get remove --purge -y man-db
-
-      - name: "Install dependencies"
-        run: |
-          sudo add-apt-repository -y ppa:obsproject/obs-studio
-          sudo apt update
+          sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libgles2-mesa-dev \
             obs-studio \
@@ -177,30 +75,11 @@ jobs:
             pkg-config \
             xvfb
 
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Restore Vcpkg cache"
-        uses: "actions/cache/restore@v4"
-        id: "vcpkg-cache"
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json') }}"
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-
-
       - name: "Configure"
-        run: "cmake --preset ubuntu-testing-ci-x86_64"
+        run: "cmake --preset ${{ matrix.preset }}"
 
       - name: "Build"
-        run: "cmake --build --preset ubuntu-testing-ci-x86_64"
-
-      - name: "Save Vcpkg cache"
-        uses: "actions/cache/save@v4"
-        if: steps.vcpkg-cache.outputs.cache-hit != 'true'
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
-
+        run: "cmake --build --preset ${{ matrix.preset }}"
+        
       - name: "Run tests"
-        run: "ctest --preset ubuntu-testing-ci-x86_64 --verbose"
+        run: "ctest --preset ${{ matrix.preset }} --verbose"
