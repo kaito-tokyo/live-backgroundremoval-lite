@@ -20,6 +20,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <cstdint>
 #include <cstdio>
+#include <iterator>
 #include <string_view>
 #include <string>
 #include <utility>
