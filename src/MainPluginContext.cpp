@@ -62,15 +62,14 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>(logger)),
 	  updateChecker(logger)
 {
-	futureLatestVersion =
-		std::async(std::launch::async, [self = weak_from_this()]() -> std::optional<std::string> {
-			if (auto s = self.lock()) {
-				return s.get()->updateChecker.fetch();
-			} else {
-				blog(LOG_INFO, "MainPluginContext has been destroyed, skipping update check");
-				return std::nullopt;
-			}
-		});
+	futureLatestVersion = std::async(std::launch::async, [self = weak_from_this()]() -> std::optional<std::string> {
+		if (auto s = self.lock()) {
+			return s.get()->updateChecker.fetch();
+		} else {
+			blog(LOG_INFO, "MainPluginContext has been destroyed, skipping update check");
+			return std::nullopt;
+		}
+	});
 	update(settings);
 }
 
