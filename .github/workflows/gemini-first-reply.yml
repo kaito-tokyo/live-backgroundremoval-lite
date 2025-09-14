@@ -67,7 +67,8 @@ jobs:
                     "Authorization": "Bearer $GITHUB_TOKEN"
                   }
                 }
-              }
+              },
+              "coreTools": ["run_shell_command(echo)"]
             }
           prompt: |-
             ## Role
