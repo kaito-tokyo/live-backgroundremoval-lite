@@ -1,6 +1,20 @@
 {
   "dependencies": [
+    {
+      "name": "cpr",
+      "default-features": false
+    },
+    {
+      "name": "curl",
+      "default-features": false,
+      "features": [
+        "wolfssl"
+      ]
+    },
+    "fmt",
     "gtest",
+    "ncnn",
+    "neargye-semver",
     {
       "name": "opencv4",
       "default-features": false,
@@ -9,19 +23,6 @@
         "png"
       ]
     },
-    "ncnn",
-    {
-      "name": "curl",
-      "default-features": false,
-      "features": [
-        "wolfssl"
-      ]
-    },
-    {
-      "name": "cpr",
-      "default-features": false
-    },
-    "neargye-semver",
-    "fmt"
+    "eigen3"
   ]
 }
