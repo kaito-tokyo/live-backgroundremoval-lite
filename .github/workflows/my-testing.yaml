@@ -45,6 +45,12 @@ jobs:
       VCPKG_FEATURE_FLAGS: "credentialprovider"
 
     steps:
+      - name: "Disable man-db update"
+        if: runner.os == 'Linux'
+        run: |
+          echo "man-db man-db/auto-update boolean false" | sudo debconf-set-selections
+          sudo apt-get remove --purge -y man-db
+
       - name: "Checkout"
         uses: "actions/checkout@v4"
 
