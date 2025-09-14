@@ -55,6 +55,7 @@ public:
 		cpr::Response r = session.Get();
 
 		if (r.status_code == 200) {
+			logger.info("Fetched latest version information: {}", r.text);
 			return {r.text};
 		} else {
 			logger.warn("Failed to fetch latest version information: HTTP {}", r.status_code);
