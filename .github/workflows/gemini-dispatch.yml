@@ -123,6 +123,19 @@ jobs:
             --body "${MESSAGE}" \
             --repo "${REPOSITORY}"
 
+  greeting:
+    needs: 'dispatch'
+    if: |-
+      needs.dispatch.outputs.command == 'triage'
+    uses: './.github/workflows/gemini-greeting.yml'
+    permissions:
+      issues: 'write'
+      id-token: 'write'
+    # 'secrets: inherit' を削除し、以下のように明示的に渡す
+    secrets:
+      APP_PRIVATE_KEY: '${{ secrets.APP_PRIVATE_KEY }}'
+      GEMINI_API_KEY: '${{ secrets.GEMINI_API_KEY }}'
+  
   review:
     needs: 'dispatch'
     if: |-
@@ -202,15 +215,3 @@ jobs:
           gh issue comment "${ISSUE_NUMBER}" \
             --body "${MESSAGE}" \
             --repo "${REPOSITORY}"
-
-  first-reply:
-    needs: 'dispatch'
-    if: |-
-      ${{ needs.dispatch.outputs.command == 'triage' }}
-    uses: './.github/workflows/gemini-first-reply.yml'
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-      issues: 'write'
-      pull-requests: 'write'
-    secrets: 'inherit'

@@ -1,0 +1,96 @@
+name: '🤖 Gemini Greeting'
+
+on:
+  workflow_call:
+    # このワークフローが呼び出し元から受け取るSecretを明示的に定義する
+    secrets:
+      APP_PRIVATE_KEY:
+        required: false # App IDがない場合を考慮
+      GEMINI_API_KEY:
+        required: false # GCP Workload Identityを使う場合を考慮
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.event.issue.number }}'
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: 'bash'
+
+jobs:
+  greet:
+    runs-on: 'ubuntu-latest'
+    permissions:
+      issues: 'write'
+      id-token: 'write'
+    steps:
+      - name: 'Mint identity token'
+        id: 'mint_identity_token'
+        if: |-
+          ${{ vars.APP_ID }}
+        uses: 'actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b' # ratchet:actions/create-github-app-token@v2
+        with:
+          app-id: '${{ vars.APP_ID }}'
+          # 呼び出し元から渡されたSecretを参照する
+          private-key: '${{ secrets.APP_PRIVATE_KEY }}'
+          permission-issues: 'write'
+
+      - name: 'Generate custom greeting'
+        id: 'generate_greeting'
+        uses: 'google-github-actions/run-gemini-cli@v0' # ratchet:exclude
+        env:
+          ISSUE_TITLE: '${{ github.event.issue.title }}'
+          ISSUE_BODY: '${{ github.event.issue.body }}'
+        with:
+          # ▼▼▼ 以下は呼び出し元のワークフローではなく、このファイルで直接設定します ▼▼▼
+          gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
+          gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
+          gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
+          gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
+          gcp_service_account: '${{ vars.SERVICE_ACCOUNT_EMAIL }}'
+          use_vertex_ai: '${{ vars.GOOGLE_GENAI_USE_VERTEXAI }}'
+          google_api_key: '${{ secrets.GOOGLE_API_KEY }}'
+          use_gemini_code_assist: '${{ vars.GOOGLE_GENAI_USE_GCA }}'
+          gemini_debug: '${{ fromJSON(vars.DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
+          gemini_model: '${{ vars.GEMINI_MODEL }}'
+          # 呼び出し元から渡されたSecretを参照する
+          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          settings: |-
+            {
+              "maxSessionTurns": 25,
+              "telemetry": {
+                "enabled": ${{ vars.GOOGLE_CLOUD_PROJECT != '' }},
+                "target": "gcp"
+              }
+            }
+          prompt: |-
+            ## Role
+            You are a helpful and friendly triage assistant for a GitHub repository. Your goal is to provide an initial, welcoming response to a newly created issue.
+
+            ## Task
+            1.  Read the issue title and body from the environment variables: "${ISSUE_TITLE}" and "${ISSUE_BODY}".
+            2.  Analyze the content to understand the user's intent (e.g., bug report, feature request, question).
+            3.  Generate a warm, welcoming message that acknowledges the new issue.
+            4.  Based on the content, add a brief, helpful sentence. For example:
+                - If it looks like a bug report, say something like: "Thank you for reporting this bug. The team will investigate it shortly."
+                - If it's a feature request, say: "Thank you for this great suggestion! We'll review it for future consideration."
+                - If it's a question, say: "Thanks for asking! Someone from the team will get back to you soon."
+            5.  Combine the greeting and the context-specific sentence into a single, friendly comment.
+
+            ## Output Format
+            - Output **only** the final message in Markdown format.
+
+      - name: 'Post Greeting'
+        env:
+          GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
+          ISSUE_NUMBER: '${{ github.event.issue.number }}'
+          MESSAGE: '${{ steps.generate_greeting.outputs.gemini_response }}'
+          REPOSITORY: '${{ github.repository }}'
+        run: |-
+          if [[ -n "${MESSAGE}" ]]; then
+            gh issue comment "${ISSUE_NUMBER}" \
+              --body "${MESSAGE}" \
+              --repo "${REPOSITORY}"
+          else
+            echo "Generated message was empty. Skipping comment."
+          fi
