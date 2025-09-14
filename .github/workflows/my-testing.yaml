@@ -42,7 +42,6 @@ jobs:
 
     env:
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
-      VCPKG_FEATURE_FLAGS: "credentialprovider"
       VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
 
     steps:
@@ -101,19 +100,21 @@ jobs:
             mono-devel
 
       - name: "Setup NuGet Credentials on Windows"
-        if: runner.os == 'Windows'
+        shell: pwsh
         run: |
-          dotnet nuget add source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
-            --name "GitHub" \
-            --username "kaito-tokyo" \
-            --password "${{ secrets.GITHUB_TOKEN }}" \
-            --store-password-in-clear-text
+          $NUGET_EXE_PATH = & "${{ env.VCPKG_ROOT }}/vcpkg" fetch nuget | Select-Object -Last 1
+          
+          & $NUGET_EXE_PATH sources add `
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" `
+            -StorePasswordInClearText `
+            -Name "GitHub" `
+            -UserName "kaito-tokyo" `
+            -Password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "Setup NuGet Credentials on macOS / Linux"
         if: runner.os != 'Windows'
         run: |
-          mono "$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)" \
-            sources add \
+          mono "$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)" sources add \
             -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
             -StorePasswordInClearText \
             -Name "GitHub" \
