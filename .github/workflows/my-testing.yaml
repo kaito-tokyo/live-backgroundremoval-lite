@@ -18,182 +18,163 @@ defaults:
 
 permissions:
   contents: "read"
+  packages: "write"
 
 jobs:
-  RunTestsOnMacOS:
+  TestOnMacOS:
     name: "Run Tests on macOS"
-
     runs-on: "macos-15"
-
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     env:
-      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
+      VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
 
     steps:
-      - name: "Install dependencies"
-        run: "brew install ccache"
-
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
-      - name: "Restore Ccache cache"
-        uses: "actions/cache/restore@v4"
-        id: "ccache-cache"
+      - name: "Checkout vcpkg repository"
+        uses: "actions/checkout@v5"
         with:
-          path: "~/.ccache"
-          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
-          restore-keys: |
-            ${{ runner.os }}-ccache-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-ccache-main-testing-
+          repository: "microsoft/vcpkg"
+          path: "${{ env.VCPKG_ROOT }}"
 
-      - name: "Restore Vcpkg cache"
-        uses: "actions/cache/restore@v4"
-        id: "vcpkg-cache"
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-vcpkg-main-testing-
+      - name: "Bootstrap vcpkg"
+        working-directory: "${{ env.VCPKG_ROOT }}"
+        run: ./bootstrap-vcpkg.sh
+
+      - name: "Install mono"
+        run: brew install mono
+
+      - name: "Setup NuGet Credentials"
+        run: |
+          NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
+          mono "$NUGET_PATH" sources add \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
+            -StorePasswordInClearText \
+            -Name "GitHub" \
+            -UserName "kaito-tokyo" \
+            -Password "${{ secrets.GITHUB_TOKEN }}"
+          mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: "Configure"
         run: "cmake --preset macos-testing-ci"
-
+        
       - name: "Build"
         run: "cmake --build --preset macos-testing-ci"
-
-      - name: "Show Ccache statistics"
-        run: "ccache -s"
-
-      - name: "Save Ccache cache"
-        uses: "actions/cache/save@v4"
-        with:
-          path: "~/.ccache"
-          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
-
-      - name: "Save Vcpkg cache"
-        uses: "actions/cache/save@v4"
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
-
+        
       - name: "Run tests"
         run: "ctest --preset macos-testing-ci --verbose"
 
-  RunTestsOnWindows:
+  TestOnWindows:
     name: "Run Tests on Windows"
-
     runs-on: "windows-2022"
-
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     env:
-      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
+      VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
 
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
-      - name: "Restore Vcpkg cache"
-        uses: "actions/cache/restore@v4"
-        id: "vcpkg-cache"
+      - name: "Checkout vcpkg repository"
+        uses: "actions/checkout@v5"
         with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-vcpkg-main-testing-
+          repository: "microsoft/vcpkg"
+          path: "${{ env.VCPKG_ROOT }}"
+
+      - name: "Bootstrap vcpkg"
+        working-directory: "${{ env.VCPKG_ROOT }}"
+        shell: "pwsh"
+        run: ".\\bootstrap-vcpkg.bat"
+
+      - name: "Setup NuGet Credentials on Windows"
+        shell: pwsh
+        run: |
+          $NUGET_EXE_PATH = & "${{ env.VCPKG_ROOT }}/vcpkg" fetch nuget | Select-Object -Last 1
+          
+          & $NUGET_EXE_PATH sources add `
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" `
+            -StorePasswordInClearText `
+            -Name "GitHub" `
+            -UserName "kaito-tokyo" `
+            -Password "${{ secrets.GITHUB_TOKEN }}"
+          & $NUGET_EXE_PATH setapikey "${{ secrets.GITHUB_TOKEN }}" `
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: "Configure"
         run: "cmake --preset windows-testing-ci-x64"
 
       - name: "Build"
         run: "cmake --build --preset windows-testing-ci-x64"
-
-      - name: "Save Vcpkg cache"
-        uses: "actions/cache/save@v4"
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
-
+        
       - name: "Run tests"
         run: "ctest --preset windows-testing-ci-x64 --verbose"
 
-  RunTestsOnUbuntu:
+  TestOnUbuntu:
     name: "Run Tests on Ubuntu"
-
     runs-on: "ubuntu-24.04"
+    timeout-minutes: 60
 
-    timeout-minutes: 30
+    env:
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
+      VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
 
     steps:
-      - name: "Disable man-db update"
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Checkout vcpkg repository"
+        uses: "actions/checkout@v5"
+        with:
+          repository: "microsoft/vcpkg"
+          path: "${{ env.VCPKG_ROOT }}"
+
+      - name: "Bootstrap vcpkg"
+        working-directory: "${{ env.VCPKG_ROOT }}"
+        run: "./bootstrap-vcpkg.sh"
+
+      - name: "Install dependencies on Ubuntu"
         run: |
           echo "man-db man-db/auto-update boolean false" | sudo debconf-set-selections
           sudo apt-get remove --purge -y man-db
-
-      - name: "Install dependencies"
-        run: |
           sudo add-apt-repository -y ppa:obsproject/obs-studio
-          sudo apt update
+          sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
+            build-essential \
             libgles2-mesa-dev \
             obs-studio \
             qt6-base-dev \
             libqt6svg6-dev \
             qt6-base-private-dev \
             cmake \
-            ccache \
             git \
             jq \
             ninja-build \
             pkg-config \
-            xvfb
+            mono-devel
 
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Restore Ccache cache"
-        uses: "actions/cache/restore@v4"
-        id: "ccache-cache"
-        with:
-          path: "~/.ccache"
-          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
-          restore-keys: |
-            ${{ runner.os }}-ccache-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-ccache-main-testing-
-
-      - name: "Restore Vcpkg cache"
-        uses: "actions/cache/restore@v4"
-        id: "vcpkg-cache"
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
-          restore-keys: |
-            ${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-vcpkg-main-testing-
+      - name: "Setup NuGet Credentials"
+        run: |
+          NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
+          mono "$NUGET_PATH" sources add \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
+            -StorePasswordInClearText \
+            -Name "GitHub" \
+            -UserName "kaito-tokyo" \
+            -Password "${{ secrets.GITHUB_TOKEN }}"
+          mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: "Configure"
         run: "cmake --preset ubuntu-testing-ci-x86_64"
 
       - name: "Build"
         run: "cmake --build --preset ubuntu-testing-ci-x86_64"
-
-      - name: "Show Ccache statistics"
-        run: "ccache -s"
-
-      - name: "Save Ccache cache"
-        uses: "actions/cache/save@v4"
-        with:
-          path: "~/.ccache"
-          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
-
-      - name: "Save Vcpkg cache"
-        uses: "actions/cache/save@v4"
-        with:
-          path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
-
+        
       - name: "Run tests"
         run: "ctest --preset ubuntu-testing-ci-x86_64 --verbose"
