@@ -33,6 +33,24 @@ jobs:
             **Issue Body:**
             ${{ github.event.issue.body }}
 
+      - id: 'triage-label'
+        name: Triage Issue Label
+        uses: 'google-github-actions/run-gemini-cli@2a77eb258d8d2447292fd5d9df6e7b49533d4f37'
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt: |
+            Your task is to analyze the following GitHub issue and categorize it.
+            Read the title and body, then respond with ONLY ONE of the following words and nothing else: bug, enhancement, question.
+            If none of the categories seem appropriate, respond with the word "none".
+
+            - Use "bug" for reports of errors, crashes, or unexpected behavior.
+            - Use "enhancement" for feature requests or suggestions for improvement.
+            - Use "question" for requests for help, clarification, or information.
+
+            **Issue Title:** ${{ github.event.issue.title }}
+            **Issue Body:**
+            ${{ github.event.issue.body }}
+
       - name: Generate GitHub App token
         id: generate-token
         uses: actions/create-github-app-token@v2
@@ -54,3 +72,20 @@ jobs:
               issue_number: context.issue.number,
               body: body
             });
+
+      - name: Add Label to Issue
+        if: steps.triage-label.outputs.summary != 'none' && steps.triage-label.outputs.summary != ''
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            // Geminiからの出力には予期せぬ空白が含まれることがあるため、trim()で除去します
+            const label = "${{ steps.triage-label.outputs.summary }}".trim();
+            if (['bug', 'enhancement', 'question'].includes(label)) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: [label]
+              });
+            }
