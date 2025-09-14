@@ -103,6 +103,8 @@ jobs:
             -Name "GitHub" `
             -UserName "kaito-tokyo" `
             -Password "${{ secrets.GITHUB_TOKEN }}"
+          & $NUGET_EXE_PATH setapikey "${{ secrets.GITHUB_TOKEN }}" `
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: "Configure"
         run: "cmake --preset windows-testing-ci-x64"
@@ -145,6 +147,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             build-essential \
             libgles2-mesa-dev \
+            obs-studio \
             qt6-base-dev \
             libqt6svg6-dev \
             qt6-base-private-dev \
