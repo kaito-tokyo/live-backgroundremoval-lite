@@ -51,7 +51,6 @@ public:
 		if (net.load_model(bin_path.get()) != 0) {
 			throw std::runtime_error(std::string("Failed to load ncnn bin file: ") + bin_path.get());
 		}
-		net.opt.num_threads = 1;
 	}
 
 	void run(const ncnn::Mat &input, ncnn::Mat &output) const
