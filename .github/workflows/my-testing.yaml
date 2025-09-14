@@ -52,7 +52,7 @@ jobs:
           sudo apt-get remove --purge -y man-db
 
       - name: "Checkout"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
 
       - name: "Setup .NET"
         uses: "actions/setup-dotnet@v4"
