@@ -54,20 +54,19 @@ jobs:
           FILES_TO_READ=("README.md" "GEMINI.md" "CONTRIBUTING.md")
           for FILE in "${FILES_TO_READ[@]}"; do
             if [[ -f "$FILE" ]]; then
-              CONTEXT_DATA="$CONTEXT_DATA\n\n---\n\n# Content from ${FILE}:\n\n$(cat ${FILE})"
+              # ファイルの内容をエスケープしながら読み込む
+              ESCAPED_CONTENT=$(cat "$FILE" | sed -e ':a' -e 'N' -e '$!ba' -e 's/\\/\\\\/g' -e 's/%/%25/g' -e 's/\n/%0A/g' -e 's/\r/%0D/g')
+              CONTEXT_DATA="${CONTEXT_DATA}\n\n---\n\n# Content from ${FILE}:\n\n${ESCAPED_CONTENT}"
             fi
           done
-          echo "context<<EOF" >> $GITHUB_OUTPUT
-          echo "$CONTEXT_DATA" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "context=${CONTEXT_DATA}" >> $GITHUB_OUTPUT
 
       - name: Detect Language
         id: detect_lang
-        uses: google-github-actions/run-gemini-cli@v0
+        uses: google-github-actions/run-gemini-cli@v1
         with:
           model: 'gemini-1.5-flash-latest'
           gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
-          # 他の認証情報（gcp_workload_identity_providerなど）も必要に応じて追加してください
           prompt: |
             Analyze the following text and identify its primary language.
             Respond with ONLY ONE of the following: "Japanese", "English", or "Other".
@@ -75,58 +74,60 @@ jobs:
             Title: ${{ github.event.issue.title }}
             Body: ${{ github.event.issue.body }}
 
+      # --- ここからが重要な修正箇所です ---
       - name: Prepare Prompt
         id: prepare_prompt
-        run: |
-          LANG=$(echo -n "${{ steps.detect_lang.outputs.response }}" | tr -d '[:space:]')
-          AUTHOR="${{ github.event.issue.user.login }}"
-          COMMENT_INSTRUCTIONS=""
-          if [[ "$LANG" == "Japanese" ]]; then
-            COMMENT_INSTRUCTIONS="あなたは親切なAIアシスタントです。日本のユーザーに、丁寧で歓迎されていると感じられるコメントを作成してください。\n\n**コメント生成の指示:**\n1. @${AUTHOR} さんで始める。2. Issue報告への感謝を述べる。3. 内容を理解したことを示し、チームが確認することを伝える。"
-          elif [[ "$LANG" == "English" ]]; then
-            COMMENT_INSTRUCTIONS="You are a friendly AI assistant. Create a welcoming and helpful comment for the user in English.\n\n**Comment Generation Instructions:**\n1. Start with \"Hi @${AUTHOR}\". 2. Thank them for the issue. 3. Acknowledge you understand the report and that the team will review it."
-          else
-            COMMENT_INSTRUCTIONS="You are a friendly AI assistant. Create a polite apology in English as we cannot support the user's language.\n\n**Comment Generation Instructions:**\n1. Thank the user for the report. 2. Apologize and state that we can only support English or Japanese at this time. 3. Ask if they can resubmit in one of those languages."
-          fi
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const lang = "${{ steps.detect_lang.outputs.response }}".trim();
+            const author = "${{ github.event.issue.user.login }}";
+            const issueTitle = `${{ github.event.issue.title }}`;
+            const issueBody = `${{ github.event.issue.body }}`;
+            const repoContext = `${{ steps.read_docs.outputs.context }}`;
+            const availableLabels = "${{ steps.get_labels.outputs.available_labels }}".split(',');
+            
+            let commentInstructions = '';
+            let labelsInstruction = `Choose relevant labels from this list: ${JSON.stringify(availableLabels)}`;
 
-          AVAILABLE_LABELS_JSON=$(echo '${{ steps.get_labels.outputs.available_labels }}' | jq -R 'split(",")' | jq -c '.')
-          LABELS_INSTRUCTION="Available labels are: ${AVAILABLE_LABELS_JSON}"
-          if [[ "$LANG" == "Other" ]]; then
-            LABELS_INSTRUCTION='Choose ONLY from this list: ["needs-translation"]'
-          fi
+            if (lang === "Japanese") {
+              commentInstructions = `あなたは親切なAIアシスタントです。日本のユーザーに、丁寧で歓迎されていると感じられるコメントを作成してください。\n\n**コメント生成の指示:**\n1. @${author} さんで始める。2. Issue報告への感謝を述べる。3. 内容を理解したことを示し、チームが確認することを伝える。`;
+            } else if (lang === "English") {
+              commentInstructions = `You are a friendly AI assistant. Create a welcoming and helpful comment for the user in English.\n\n**Comment Generation Instructions:**\n1. Start with "Hi @${author}". 2. Thank them for the issue. 3. Acknowledge you understand the report and that the team will review it.`;
+            } else { // Other
+              commentInstructions = `You are a friendly AI assistant. Create a polite apology in English as we cannot support the user's language.\n\n**Comment Generation Instructions:**\n1. Thank the user for the report. 2. Apologize and state that we can only support English or Japanese at this time. 3. Ask if they can resubmit in one of those languages.`;
+              labelsInstruction = 'Choose ONLY from this list: ["needs-translation"]';
+            }
 
-          FINAL_PROMPT=$(cat <<EOF
-          # Task: Generate two parts: a user-facing comment and a machine-readable list of labels, separated by '---JSON_LABELS---'.
-          
-          # Part 1: The user-facing comment.
-          ${COMMENT_INSTRUCTIONS}
-          
-          # Repository Context for your response:
-          ${{ steps.read_docs.outputs.context }}
+            const finalPrompt = `
+            # Task: Generate two parts: a user-facing comment and a machine-readable list of labels, separated by '---JSON_LABELS---'.
+            
+            # Part 1: The user-facing comment.
+            ${commentInstructions}
+            
+            # Repository Context for your response:
+            ${repoContext}
 
-          # Issue Details:
-          Author: @${AUTHOR}
-          Title: ${{ github.event.issue.title }}
-          Body: ${{ github.event.issue.body }}
+            # Issue Details:
+            Author: @${author}
+            Title: ${issueTitle}
+            Body: ${issueBody}
 
-          ---JSON_LABELS---
+            ---JSON_LABELS---
 
-          # Part 2: Triage Labels in JSON format.
-          # Analyze the issue and choose relevant labels. ${LABELS_INSTRUCTION}
-          # Respond with a valid JSON object like: {"labels": ["bug", "enhancement"]}
-          EOF
-          )
-          echo "full_prompt<<EOF" >> $GITHUB_OUTPUT
-          echo "$FINAL_PROMPT" >> $GITHUB_OUTPUT
-          echo "EOF"
+            # Part 2: Triage Labels in JSON format.
+            # Analyze the issue. ${labelsInstruction}
+            # Respond with a valid JSON object like: {"labels": ["bug", "enhancement"]}
+            `;
+            
+            core.setOutput('full_prompt', finalPrompt);
 
       - name: Generate Response and Labels
         id: gemini_response
-        uses: google-github-actions/run-gemini-cli@v0
+        uses: google-github-actions/run-gemini-cli@v1
         with:
           model: 'gemini-1.5-flash-latest'
           gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
-          # 他の認証情報も必要に応じて追加
           prompt: ${{ steps.prepare_prompt.outputs.full_prompt }}
 
       - name: Parse Response and Post Comment
@@ -144,8 +145,7 @@ jobs:
               const parsedJson = JSON.parse(labelsJsonString);
               labels = parsedJson.labels || [];
             } catch (e) {
-              console.error("Failed to parse labels JSON:", e);
-              core.warning("Could not parse labels from Gemini response.");
+              core.warning("Could not parse labels from Gemini response: " + e.message);
             }
 
             // Post Comment
@@ -168,29 +168,23 @@ jobs:
     if: |-
       ${{ needs.triage.outputs.selected_labels != '' }}
     permissions:
-      contents: 'read'
       issues: 'write'
-      pull-requests: 'write'
     steps:
       - name: 'Apply labels'
-        env:
-          ISSUE_NUMBER: '${{ github.event.issue.number }}'
-          AVAILABLE_LABELS: '${{ needs.triage.outputs.available_labels }}'
-          SELECTED_LABELS: '${{ needs.triage.outputs.selected_labels }}'
-        uses: 'actions/github-script@v7'
+        uses: actions/github-script@v7
         with:
-          github-token: '${{ secrets.GITHUB_TOKEN }}' # Mint token can also be used here
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
           script: |
-            const availableLabels = (process.env.AVAILABLE_LABELS || '').split(',').map(l => l.trim());
-            const selectedLabels = (process.env.SELECTED_LABELS || '').split(',')
+            const availableLabels = "${{ needs.triage.outputs.available_labels }}".split(',');
+            const selectedLabels = "${{ needs.triage.outputs.selected_labels }}".split(',')
               .map(label => label.trim())
-              .filter(label => availableLabels.includes(label));
+              .filter(label => label && availableLabels.includes(label));
 
             if (selectedLabels.length > 0) {
               await github.rest.issues.setLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: process.env.ISSUE_NUMBER,
+                issue_number: context.issue.number,
                 labels: selectedLabels,
               });
               core.info(`Successfully set labels: ${selectedLabels.join(',')}`);
