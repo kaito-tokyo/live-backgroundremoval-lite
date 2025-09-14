@@ -1,6 +1,6 @@
 {
   "name": "opencv4",
-  "version": "4.3.0",
+  "version": "4.4.0",
   "port-version": 5,
   "description": "computer vision library",
   "homepage": "https://github.com/opencv/opencv",

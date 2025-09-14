@@ -5,11 +5,26 @@ if(EXISTS "${CURRENT_INSTALLED_DIR}/share/opencv3")
   message(FATAL_ERROR "OpenCV 3 is installed, please uninstall and try again:\n    vcpkg remove opencv3")
 endif()
 
+set(DISABLED_OPENCV_MODULES
+    -DBUILD_opencv_calib3d=OFF
+    -DBUILD_opencv_features2d=OFF
+    -DBUILD_opencv_flann=OFF
+    -DBUILD_opencv_highgui=OFF
+    -DBUILD_opencv_ml=OFF
+    -DBUILD_opencv_objdetect=OFF
+    -DBUILD_opencv_photo=OFF
+    -DBUILD_opencv_stitching=OFF
+    -DBUILD_opencv_video=OFF
+    -DBUILD_opencv_videoio=OFF
+    -DVIDEOIO_ENABLE_TEGRA_CAMERA=OFF
+    -DWITH_QUIRC=OFF
+)
+
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO opencv/opencv
     REF "${VERSION}"
-    SHA512 ac22b41fffa3e3138701fa0df0d19900b3ce72e168f4478ecdc593c5c9fd004b4b1b26612d62c25b681db99a8720db7a11b5b224e576e595624965fa79b0f383
+    SHA512 ce4bada7b57c1a00439eca02abcba262732d5eabfd26090f6f83642d747a9a1a7908230bcd01a2b999c509e0c43c8b0dcb2b93ac824518b79cffe533f22652bb
     HEAD_REF master
     PATCHES
       0001-disable-downloading.patch
@@ -188,6 +203,7 @@ vcpkg_cmake_configure(
         ${BUILD_WITH_CONTRIB_FLAG}
         ${FEATURE_OPTIONS}
         ${ADDITIONAL_BUILD_FLAGS}
+        ${DISABLED_OPENCV_MODULES}
 )
 
 vcpkg_cmake_install()
