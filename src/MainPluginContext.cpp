@@ -57,8 +57,8 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 	  source{_source},
 	  logger("[" PLUGIN_NAME "] "),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
-	  selfieSegmenter(unique_obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param"),
-			  unique_obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin")),
+	  selfieSegmenter(unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.param"),
+			  unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.bin")),
 	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>(logger)),
 	  updateChecker(logger)
 {
