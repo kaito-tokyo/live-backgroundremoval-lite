@@ -1,0 +1,47 @@
+name: AI Issue Commenter
+
+on:
+  issues:
+    # 課題がオープンされた時と、再オープンされた時に実行
+    types: [opened, reopened]
+
+permissions:
+  issues: write # 課題にコメントするために必要
+  contents: read
+
+jobs:
+  comment-on-issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # run-gemini-cli アクションを実行して、課題の内容からコメントを生成
+      - id: 'gemini-response'
+        uses: 'google-github-actions/run-gemini-cli@main'
+        with:
+          # GitHub Secrets に保存したAPIキーを使用
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+
+          # プロンプトを指定
+          prompt: |
+            以下のGitHub Issueを受け取りました。Issueの報告者への挨拶と、内容を元にした簡単な解決策の提案をMarkdown形式で生成してください。
+
+            **タイトル:** ${{ github.event.issue.title }}
+
+            **本文:**
+            ${{ github.event.issue.body }}
+
+      # 生成されたテキストを課題にコメントとして投稿
+      - name: Create comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const body = `${{ steps.gemini-response.outputs.summary }}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
