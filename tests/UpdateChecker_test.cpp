@@ -24,28 +24,28 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
-// TEST(UpdateCheckerTest, Fetch)
-// {
-// 	NullLogger logger;
-// 	UpdateChecker checker(logger);
-// 	auto latestVersion = checker.fetch();
-// 	ASSERT_TRUE(latestVersion.has_value());
-// 	EXPECT_FALSE(latestVersion->toString().empty());
-// }
+TEST(UpdateCheckerTest, Fetch)
+{
+	NullLogger logger;
+	UpdateChecker checker(logger);
+	auto latestVersion = checker.fetch();
+	ASSERT_TRUE(latestVersion.has_value());
+	EXPECT_FALSE(latestVersion->toString().empty());
+}
 
-// TEST(LatestVersionTest, IsUpdateAvailable)
-// {
-// 	LatestVersion v100("1.0.0");
-// 	EXPECT_TRUE(v100.isUpdateAvailable("0.9.0"));
-// 	EXPECT_FALSE(v100.isUpdateAvailable("1.0.0"));
-// 	EXPECT_FALSE(v100.isUpdateAvailable("1.1.0"));
+TEST(LatestVersionTest, IsUpdateAvailable)
+{
+	LatestVersion v100("1.0.0");
+	EXPECT_TRUE(v100.isUpdateAvailable("0.9.0"));
+	EXPECT_FALSE(v100.isUpdateAvailable("1.0.0"));
+	EXPECT_FALSE(v100.isUpdateAvailable("1.1.0"));
 
-// 	LatestVersion v200b("2.0.0-beta");
-// 	EXPECT_TRUE(v200b.isUpdateAvailable("1.0.0"));
-// 	EXPECT_TRUE(v200b.isUpdateAvailable("2.0.0-alpha"));
-// 	EXPECT_FALSE(v200b.isUpdateAvailable("2.0.0-beta"));
-// 	EXPECT_FALSE(v200b.isUpdateAvailable("2.0.0"));
+	LatestVersion v200b("2.0.0-beta");
+	EXPECT_TRUE(v200b.isUpdateAvailable("1.0.0"));
+	EXPECT_TRUE(v200b.isUpdateAvailable("2.0.0-alpha"));
+	EXPECT_FALSE(v200b.isUpdateAvailable("2.0.0-beta"));
+	EXPECT_FALSE(v200b.isUpdateAvailable("2.0.0"));
 
-// 	LatestVersion vempty("");
-// 	EXPECT_FALSE(vempty.isUpdateAvailable("1.0.0"));
-// }
+	LatestVersion vempty("");
+	EXPECT_FALSE(vempty.isUpdateAvailable("1.0.0"));
+}
