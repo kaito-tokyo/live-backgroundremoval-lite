@@ -92,6 +92,7 @@ private:
 
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceInput = nullptr;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput = nullptr;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8Mask = nullptr;
 
 	std::vector<std::uint8_t> scaledMaskData;
 
