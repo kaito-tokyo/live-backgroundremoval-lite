@@ -59,12 +59,26 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
 	  selfieSegmenter(unique_obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param"),
 			  unique_obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin")),
-	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>(logger))
+	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>(logger)),
+	  updateChecker(logger)
 {
+	futureLatestVersion = std::async(std::launch::async, [self = weak_from_this()]() -> std::optional<LatestVersion> {
+		if (auto s = self.lock()) {
+			return s.get()->updateChecker.fetch();
+		} else {
+			blog(LOG_INFO, "MainPluginContext has been destroyed, skipping update check");
+			return std::nullopt;
+		}
+	});
 	update(settings);
 }
 
 MainPluginContext::~MainPluginContext() noexcept {}
+
+void MainPluginContext::shutdown() noexcept
+{
+	selfieSegmenterTaskQueue.reset();
+}
 
 std::uint32_t MainPluginContext::getWidth() const noexcept
 {

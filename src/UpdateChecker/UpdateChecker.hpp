@@ -26,8 +26,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs-bridge-utils/ILogger.hpp>
 
-#include "MyCprUtils.hpp"
-
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
@@ -87,8 +85,11 @@ private:
  * @note The calling context is expected to handle any desired asynchronous
  * execution.
  */
+template <typename TCprSession = cpr::Session>
 class UpdateChecker {
 public:
+    static_assert(std::is_base_of_v<cpr::Session, TCprSession>, "TCprSession must inherit from cpr::Session");
+
 	UpdateChecker(const kaito_tokyo::obs_bridge_utils::ILogger &_logger) : logger(_logger) {}
 
 	/**
@@ -100,7 +101,7 @@ public:
 	{
 		// Use a fully qualified name to avoid `using namespace` in a header file.
 		// MyCprSession is assumed to be in the kaito_tokyo::obs_backgroundremoval_lite namespace.
-		kaito_tokyo::obs_backgroundremoval_lite::MyCprSession session;
+		TCprSession session;
 		session.SetUrl(cpr::Url{"https://obs-backgroundremoval-lite.kaito.tokyo/metadata/latest-version.txt"});
 		cpr::Response r = session.Get();
 

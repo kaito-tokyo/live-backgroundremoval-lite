@@ -39,7 +39,7 @@ inline CURLcode ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *userptr)
 	return CURLE_OK;
 }
 
-class MyCprSession : public ::cpr::Session {
+class MyCprSession : public cpr::Session {
 public:
 	MyCprSession()
 	{

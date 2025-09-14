@@ -35,8 +35,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <stdint.h>
 #include <vector>
 
-#include "UpdateChecker/UpdateChecker.hpp"
-
 #include <net.h>
 
 #include "obs-bridge-utils/gs_unique.hpp"
@@ -44,8 +42,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
+#include "MyCprSession.hpp"
 #include "SelfieSegmenter.hpp"
 #include "TaskQueue.hpp"
+#include "UpdateChecker/UpdateChecker.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -54,7 +54,7 @@ class MainPluginContext : public std::enable_shared_from_this<MainPluginContext>
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	~MainPluginContext() noexcept;
-	void shutdown() noexcept { selfieSegmenterTaskQueue.reset(); }
+	void shutdown() noexcept;
 
 	uint32_t getWidth() const noexcept;
 	uint32_t getHeight() const noexcept;
@@ -84,6 +84,7 @@ private:
 	std::unique_ptr<TaskQueue> selfieSegmenterTaskQueue;
 	TaskQueue::CancellationToken selfieSegmenterPendingTaskToken;
 	std::mutex selfieSegmenterPendingTaskTokenMutex;
+	UpdateChecker<MyCprSession> updateChecker;
 
 	uint32_t width = 0;
 	uint32_t height = 0;
