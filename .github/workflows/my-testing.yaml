@@ -90,14 +90,14 @@ jobs:
       - name: "Setup NuGet Credentials on macOS/Linux"
         if: runner.os != 'Windows'
         run: |
-          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
+          mono "$(${VCPKG_ROOT-$VCPKG_INSTALLATION_ROOT})/vcpkg fetch nuget)" \
             sources add \
             -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
             -StorePasswordInClearText \
             -Name "GitHub" \
             -UserName "kaito-tokyo" \
             -Password "$GITHUB_TOKEN"
-          mono "$($VCPKG_INSTALLATION_ROOT)/vcpkg fetch nuget)" \
+          mono "$(${VCPKG_ROOT-$VCPKG_INSTALLATION_ROOT})/vcpkg fetch nuget)" \
             setapikey "$GITHUB_TOKEN" \
             -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
