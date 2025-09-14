@@ -86,3 +86,9 @@ Gemini: `GitHub上でリリースを完了してください。`
 - **Formatting**: All files within the `docs/` directory must be formatted using Prettier.
 - **Formatting Command**: To format the files, run `npm run format` from within the `docs/` directory.
 - **Dependencies**: Dependencies are managed by `npm` and defined in `docs/package.json`.
+
+# 課題トリアージ方針
+
+- パッケージングの方針はOBS公式の方針に倣います。Windows向けにはzipのみ提供します。Mac向けにはpkgのみ提供します。Ubuntu向けにはdebのみ提供します。それ以外の形式を提供することはありません。
+- Ubuntu以外のLinuxユーザーには自分でプラグインをビルドすることを求めます。
+- FlatpakやAURをサポートする予定は今のところありません。

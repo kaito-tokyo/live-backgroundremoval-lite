@@ -1,0 +1,179 @@
+# GitHub Actions: AI Issue Triage and Labeling
+# Detects language (JA/EN), posts a friendly reply, and adds relevant labels.
+name: 'AI Issue Triage'
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'The number of the issue to analyze'
+        required: true
+        type: 'string'
+
+# Permissions: write access to issues is required to add comments and labels.
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  triage-issue:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Steps 0, 1, 1.5: Checkout, Get Data, Read Context (No changes)
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Get Issue Data
+        id: issue_data
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            let issueNumber, issueTitle, issueBody, issueAuthor;
+            if (context.eventName === 'workflow_dispatch') {
+              issueNumber = ${{ github.event.inputs.issue_number }};
+              const { data: issue } = await github.rest.issues.get({ owner: context.repo.owner, repo: context.repo.repo, issue_number: issueNumber });
+              issueTitle = issue.title; issueBody = issue.body; issueAuthor = issue.user.login;
+            } else {
+              issueNumber = context.issue.number;
+              issueTitle = context.payload.issue.title; issueBody = context.payload.issue.body; issueAuthor = context.payload.issue.user.login;
+            }
+            core.setOutput('number', issueNumber); core.setOutput('title', issueTitle); core.setOutput('body', issueBody); core.setOutput('author', issueAuthor);
+      - name: Read Context Files
+        id: read_docs
+        run: |
+          CONTEXT_DATA=""
+          FILES_TO_READ=("README.md" "GEMINI.md" "CONTRIBUTING.md")
+          for FILE in "${FILES_TO_READ[@]}"; do
+            if [[ -f "$FILE" ]]; then
+              CONTEXT_DATA="$CONTEXT_DATA\n\n---\n\n# Content from ${FILE}:\n\n$(cat ${FILE})"
+            fi
+          done
+          echo "context<<EOF" >> $GITHUB_OUTPUT
+          echo "$CONTEXT_DATA" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # Step 2: Detect the language of the issue
+      - name: Detect Language
+        id: detect_lang
+        uses: google-github-actions/run-gemini-cli@v1
+        with:
+          model: 'gemini-1.5-flash-latest' # Correctly specified as a 'with' parameter
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt: |
+            Analyze the following text from a GitHub issue and identify its primary language.
+            Respond with ONLY ONE of the following words: "Japanese", "English", or "Other".
+
+            ---
+            Title: ${{ steps.issue_data.outputs.title }}
+            Body: ${{ steps.issue_data.outputs.body }}
+
+      # Step 3: Generate response and triage labels based on language
+      - name: Generate Response and Labels
+        id: gemini_response
+        uses: google-github-actions/run-gemini-cli@v1
+        with:
+          model: 'gemini-1.5-flash-latest' # Correctly specified as a 'with' parameter
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt: |
+            # Overall Goal: Act as a helpful AI assistant to perform initial issue triage.
+            # Task: Generate two parts: a user-facing comment and a machine-readable list of labels.
+            # The two parts MUST be separated by a unique delimiter: '---JSON_LABELS---'.
+            
+            # Part 1: The user-facing comment.
+            # Base your response on the detected language: ${{ steps.detect_lang.outputs.response }}
+
+            ${{ steps.detect_lang.outputs.response == 'Japanese' && 'あなたは親切なAIアシスタントです。日本のユーザーに、丁寧で歓迎されていると感じられるコメントを作成してください。' || '' }}
+            ${{ steps.detect_lang.outputs.response == 'English' && 'You are a friendly AI assistant. Create a welcoming and helpful comment for the user in English.' || '' }}
+            ${{ steps.detect_lang.outputs.response == 'Other' && 'You are a friendly AI assistant. Create a polite apology in English as we cannot support the user''s language.' || '' }}
+            
+            # Repository Context for your response:
+            <RepositoryContext>
+            ${{ steps.read_docs.outputs.context }}
+            </RepositoryContext>
+
+            # Issue Details:
+            Author: @${{ steps.issue_data.outputs.author }}
+            Title: ${{ steps.issue_data.outputs.title }}
+            Body: ${{ steps.issue_data.outputs.body }}
+
+            # Comment Generation Instructions:
+            ${{ steps.detect_lang.outputs.response == 'Japanese' && '1. @${{ steps.issue_data.outputs.author }} さんで始める。2. Issue報告への感謝を述べる。3. 内容を理解したことを示し、チームが確認することを伝える。4. 必要なら追加情報を丁寧に尋ねる。' || '' }}
+            ${{ steps.detect_lang.outputs.response == 'English' && '1. Start with "Hi @${{ steps.issue_data.outputs.author }}". 2. Thank them for the issue. 3. Acknowledge you understand the report and that the team will review it. 4. Politely ask for more info if needed.' || '' }}
+            ${{ steps.detect_lang.outputs.response == 'Other' && '1. Thank the user for the report. 2. Apologize and state that we can only support English or Japanese at this time. 3. Ask if they can resubmit in one of those languages.' || '' }}
+
+            ---JSON_LABELS---
+
+            # Part 2: Triage Labels in JSON format.
+            # Analyze the issue and choose relevant labels from ["bug", "enhancement", "question"].
+            # Respond with a valid JSON array containing the chosen labels as strings.
+            # Example: {"labels": ["bug"]}
+            # If no labels seem appropriate, respond with an empty array: {"labels": []}
+            ${{ steps.detect_lang.outputs.response == 'Other' && '{"labels": ["needs-translation"]}' || '' }}
+
+      # Step 4: Parse the response from Gemini
+      - name: Parse Response
+        id: parse_response
+        run: |
+          RESPONSE_BODY="${{ steps.gemini_response.outputs.response }}"
+          COMMENT=$(echo "$RESPONSE_BODY" | awk 'BEGIN{FS="---JSON_LABELS---"} {print $1}')
+          LABELS_JSON=$(echo "$RESPONSE_BODY" | awk 'BEGIN{FS="---JSON_LABELS---"} {print $2}')
+          # Extract the array part from the JSON for the next step
+          LABELS_ARRAY=$(echo "$LABELS_JSON" | jq -c '.labels')
+
+          echo "comment_body<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMENT" >> $GITHUB_OUTPUT
+          echo "EOF"
+
+          echo "labels<<EOF" >> $GITHUB_OUTPUT
+          echo "$LABELS_ARRAY" >> $GITHUB_OUTPUT
+          echo "EOF"
+
+      # Step 5: Debug Parsed Output
+      - name: Debug Parsed Output
+        if: always()
+        run: |
+          echo "Detected language: ${{ steps.detect_lang.outputs.response }}"
+          echo "--- Parsed Comment Body ---"
+          echo "${{ steps.parse_response.outputs.comment_body }}"
+          echo "--- Parsed Labels ---"
+          echo "${{ steps.parse_response.outputs.labels }}"
+
+      # Step 6: Post the comment to the issue
+      - name: Post Comment to Issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const commentBody = `${{ steps.parse_response.outputs.comment_body }}`;
+            if (commentBody && commentBody.trim().length > 0) {
+              await github.rest.issues.createComment({
+                issue_number: ${{ steps.issue_data.outputs.number }},
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody.trim()
+              });
+            } else {
+              console.log("Comment body is empty, skipping comment.");
+            }
+
+      # Step 7: Add labels to the issue
+      - name: Add Labels to Issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const labels = ${{ steps.parse_response.outputs.labels }};
+            if (labels && labels.length > 0) {
+              await github.rest.issues.addLabels({
+                issue_number: ${{ steps.issue_data.outputs.number }},
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: labels
+              });
+              console.log(`Successfully added labels: ${labels.join(', ')}`);
+            } else {
+              console.log("No labels to add.");
+            }
