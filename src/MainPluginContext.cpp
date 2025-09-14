@@ -62,6 +62,10 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>(logger)),
 	  updateChecker(logger)
 {
+}
+
+void MainPluginContext::startup() noexcept
+{
 	futureLatestVersion = std::async(std::launch::async, [self = weak_from_this()]() -> std::optional<std::string> {
 		if (auto s = self.lock()) {
 			return s.get()->updateChecker.fetch();
@@ -305,6 +309,7 @@ void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
 try {
 	graphics_context_guard guard;
 	auto self = std::make_shared<MainPluginContext>(settings, source);
+	self->startup();
 	return new std::shared_ptr<MainPluginContext>(self);
 } catch (const std::exception &e) {
 	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to create main plugin context: %s", e.what());
