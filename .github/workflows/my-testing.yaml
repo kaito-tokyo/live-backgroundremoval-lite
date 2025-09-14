@@ -61,7 +61,7 @@ jobs:
       - name: "Install dependencies on macOS"
         if: runner.os == 'macOS'
         run: |
-          brew install mono-runtime
+          brew install mono
 
       - name: "Install dependencies on Ubuntu"
         if: runner.os == 'Linux'
@@ -78,7 +78,7 @@ jobs:
             jq \
             ninja-build \
             pkg-config \
-            mono
+            mono-runtime
 
       - name: "Configure"
         run: "cmake --preset ${{ matrix.preset }}"
