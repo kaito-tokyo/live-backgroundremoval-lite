@@ -85,10 +85,9 @@ private:
  * @note The calling context is expected to handle any desired asynchronous
  * execution.
  */
-template <typename TCprSession = cpr::Session>
-class UpdateChecker {
+template<typename TCprSession = cpr::Session> class UpdateChecker {
 public:
-    static_assert(std::is_base_of_v<cpr::Session, TCprSession>, "TCprSession must inherit from cpr::Session");
+	static_assert(std::is_base_of_v<cpr::Session, TCprSession>, "TCprSession must inherit from cpr::Session");
 
 	UpdateChecker(const kaito_tokyo::obs_bridge_utils::ILogger &_logger) : logger(_logger) {}
 
