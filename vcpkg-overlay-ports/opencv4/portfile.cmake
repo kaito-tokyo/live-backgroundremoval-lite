@@ -17,7 +17,6 @@ set(
   -DBUILD_opencv_stitching=OFF
   -DBUILD_opencv_video=OFF
   -DBUILD_opencv_videoio=OFF
-  -DVIDEOIO_ENABLE_TEGRA_CAMERA=OFF
   -DWITH_QUIRC=OFF
 )
 
