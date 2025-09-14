@@ -227,8 +227,8 @@ void MainPluginContext::videoRender()
 	cv::resize(croppedMask, dstMask, dstMask.size(), 0, 0, cv::INTER_NEAREST);
 
 	const std::uint8_t *r8Data = scaledMaskData.data();
-	unique_gs_texture_t maskTexture = make_unique_gs_texture(width, height, GS_R8, 1, &r8Data, 0);
-	mainEffect.drawWithMask(width, height, bgrxSourceInput.get(), maskTexture.get());
+	gs_texture_set_image(r8Mask.get(), r8Data, width, 0);
+	mainEffect.drawWithMask(width, height, bgrxSourceInput.get(), r8Mask.get());
 
 	if (readerSegmenterInput && bgrxSegmenterInput) {
 		readerSegmenterInput->stage(bgrxSegmenterInput.get());
@@ -279,6 +279,7 @@ void MainPluginContext::ensureTextures()
 	ensureTexture(bgrxSourceInput, width, height, GS_BGRX, GS_RENDER_TARGET);
 	ensureTexture(bgrxSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX,
 		      GS_RENDER_TARGET);
+	ensureTexture(r8Mask, width, height, GS_R8, GS_DYNAMIC);
 	ensureTextureReader(readerSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX);
 }
 
