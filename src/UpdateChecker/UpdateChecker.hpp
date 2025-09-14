@@ -29,56 +29,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
-class LatestVersion {
-public:
-	/**
-     * @brief Constructs a LatestVersion object.
-     * @param version The version string (e.g., "1.2.3").
-     */
-	LatestVersion(const std::string &_version, const kaito_tokyo::obs_bridge_utils::ILogger &_logger)
-		: version(_version),
-		  logger(_logger)
-	{
-	}
-
-	/**
-     * @brief Compares this version with the current version to check for updates.
-     * @param currentVersion The version string of the currently running software.
-     * @return True if an update is available, false otherwise.
-     */
-	bool isUpdateAvailable(const std::string &currentVersion) const noexcept
-	{
-		if (version.empty()) {
-			logger.info("Latest version information is not available.");
-			return false;
-		}
-
-		semver::version latest, current;
-
-		if (!semver::parse(version, latest)) {
-			logger.warn("Failed to parse latest version: {}", version);
-			return false;
-		}
-
-		if (!semver::parse(currentVersion, current)) {
-			logger.warn("Failed to parse current version: {}", currentVersion);
-			return false;
-		}
-
-		return latest > current;
-	}
-
-	/**
-     * @brief Gets the version string.
-     * @return A constant reference to the version string.
-     */
-	const std::string &toString() const noexcept { return version; }
-
-private:
-	std::string version;
-	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
-};
-
 /**
  * @brief Performs a synchronous check for software updates.
  *
@@ -96,7 +46,7 @@ public:
      * @return An std::optional<LatestVersion> containing the latest version if successful,
      * or std::nullopt on failure.
      */
-	std::optional<LatestVersion> fetch()
+	std::optional<std::string> fetch()
 	{
 		// Use a fully qualified name to avoid `using namespace` in a header file.
 		// MyCprSession is assumed to be in the kaito_tokyo::obs_backgroundremoval_lite namespace.
@@ -105,11 +55,38 @@ public:
 		cpr::Response r = session.Get();
 
 		if (r.status_code == 200) {
-			return LatestVersion(r.text, logger);
+			return {r.text};
 		} else {
 			logger.warn("Failed to fetch latest version information: HTTP {}", r.status_code);
 			return std::nullopt;
 		}
+	}
+
+	/**
+     * @brief Compares this version with the current version to check for updates.
+     * @param currentVersion The version string of the currently running software.
+     * @return True if an update is available, false otherwise.
+     */
+	bool isUpdateAvailable(const std::string &latestVersion, const std::string &currentVersion) const noexcept
+	{
+		if (latestVersion.empty()) {
+			logger.info("Latest version information is not available.");
+			return false;
+		}
+
+		semver::version latest, current;
+
+		if (!semver::parse(latestVersion, latest)) {
+			logger.warn("Failed to parse latest version: {}", latestVersion);
+			return false;
+		}
+
+		if (!semver::parse(currentVersion, current)) {
+			logger.warn("Failed to parse current version: {}", currentVersion);
+			return false;
+		}
+
+		return latest > current;
 	}
 
 private:

@@ -30,24 +30,22 @@ TEST(UpdateCheckerTest, Fetch)
 	UpdateChecker checker(logger);
 	auto latestVersion = checker.fetch();
 	ASSERT_TRUE(latestVersion.has_value());
-	EXPECT_FALSE(latestVersion->toString().empty());
+	EXPECT_FALSE(latestVersion->empty());
 }
 
 TEST(LatestVersionTest, IsUpdateAvailable)
 {
 	NullLogger logger;
+	UpdateChecker checker(logger);
 
-	LatestVersion v100("1.0.0", logger);
-	EXPECT_TRUE(v100.isUpdateAvailable("0.9.0"));
-	EXPECT_FALSE(v100.isUpdateAvailable("1.0.0"));
-	EXPECT_FALSE(v100.isUpdateAvailable("1.1.0"));
+	EXPECT_TRUE(checker.isUpdateAvailable("1.0.0", "0.9.0"));
+	EXPECT_FALSE(checker.isUpdateAvailable("1.0.0", "1.0.0"));
+	EXPECT_FALSE(checker.isUpdateAvailable("1.0.0", "1.1.0"));
 
-	LatestVersion v200b("2.0.0-beta", logger);
-	EXPECT_TRUE(v200b.isUpdateAvailable("1.0.0"));
-	EXPECT_TRUE(v200b.isUpdateAvailable("2.0.0-alpha"));
-	EXPECT_FALSE(v200b.isUpdateAvailable("2.0.0-beta"));
-	EXPECT_FALSE(v200b.isUpdateAvailable("2.0.0"));
+	EXPECT_TRUE(checker.isUpdateAvailable("2.0.0-beta", "1.0.0"));
+	EXPECT_TRUE(checker.isUpdateAvailable("2.0.0-beta", "2.0.0-alpha"));
+	EXPECT_FALSE(checker.isUpdateAvailable("2.0.0-beta", "2.0.0-beta"));
+	EXPECT_FALSE(checker.isUpdateAvailable("2.0.0-beta", "2.0.0"));
 
-	LatestVersion vempty("", logger);
-	EXPECT_FALSE(vempty.isUpdateAvailable("1.0.0"));
+	EXPECT_FALSE(checker.isUpdateAvailable("", "1.0.0"));
 }

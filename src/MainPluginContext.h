@@ -96,9 +96,9 @@ private:
 
 	std::unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
 
-	std::shared_future<std::optional<kaito_tokyo::obs_backgroundremoval_lite::LatestVersion>> futureLatestVersion;
+	std::shared_future<std::optional<std::string>> futureLatestVersion;
 
-	std::optional<kaito_tokyo::obs_backgroundremoval_lite::LatestVersion> getLatestVersion() const;
+	std::optional<std::string> getLatestVersion() const;
 	void ensureTextures();
 };
 
