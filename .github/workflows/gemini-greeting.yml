@@ -33,7 +33,9 @@ jobs:
         with:
           app-id: '${{ vars.APP_ID }}'
           private-key: '${{ secrets.APP_PRIVATE_KEY }}'
+          permission-contents: 'read'
           permission-issues: 'write'
+          permission-pull-requests: 'write'
 
       - name: 'Generate and Post Greeting using MCP'
         uses: 'google-github-actions/run-gemini-cli@v0' # ratchet:exclude
@@ -43,7 +45,6 @@ jobs:
           ISSUE_AUTHOR: '${{ github.actor }}'
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           ISSUE_NUMBER: '${{ github.event.issue.number }}'
-          # ownerとrepoを渡すために環境変数を追加
           OWNER: '${{ github.repository_owner }}'
           REPO: '${{ github.event.repository.name }}'
         with:
@@ -60,7 +61,7 @@ jobs:
           gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
           settings: |-
             {
-              "maxSessionTurns": 5,
+              "maxSessionTurns": 25,
               "telemetry": {
                 "enabled": ${{ vars.GOOGLE_CLOUD_PROJECT != '' }},
                 "target": "gcp"
