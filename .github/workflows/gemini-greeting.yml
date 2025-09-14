@@ -20,10 +20,8 @@ jobs:
   greet:
     runs-on: 'ubuntu-latest'
     permissions:
-      contents: 'read'
       issues: 'write'
       id-token: 'write'
-      pull-requests: 'write'
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
@@ -33,9 +31,7 @@ jobs:
         with:
           app-id: '${{ vars.APP_ID }}'
           private-key: '${{ secrets.APP_PRIVATE_KEY }}'
-          permission-contents: 'read'
           permission-issues: 'write'
-          permission-pull-requests: 'write'
 
       - name: 'Generate and Post Greeting using MCP'
         uses: 'google-github-actions/run-gemini-cli@v0' # ratchet:exclude
@@ -45,7 +41,9 @@ jobs:
           ISSUE_AUTHOR: '${{ github.actor }}'
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           ISSUE_NUMBER: '${{ github.event.issue.number }}'
-          REPOSITORY: '${{ github.repository }}'
+          # ownerとrepoを渡すために環境変数を追加
+          OWNER: '${{ github.repository_owner }}'
+          REPO: '${{ github.event.repository.name }}'
         with:
           gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
           gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
@@ -78,11 +76,7 @@ jobs:
                 }
               },
               "coreTools": [
-                "run_shell_command(echo)",
-                "run_shell_command(cat)",
-                "run_shell_command(grep)",
-                "run_shell_command(head)",
-                "run_shell_command(tail)"
+                "run_shell_command(echo)"
               ]
             }
           prompt: |-
@@ -91,7 +85,7 @@ jobs:
             You are a friendly and helpful AI assistant for a GitHub repository. Your primary purpose is to provide a warm, welcoming, and context-aware initial response to newly created issues by using your available tools.
 
             1.  **Systematic**: You follow a strict workflow: analyze the issue, generate a greeting, and use the `mcp__github__add_issue_comment` tool to post it.
-            2.  **Tool-Oriented**: You interact with GitHub exclusively through the provided `mcp__github__*` tools. You can also use `coreTools` like `run_shell_command(echo)` for basic operations if needed.
+            2.  **Tool-Oriented**: You interact with GitHub exclusively through the provided `mcp__github__*` tools.
             3.  **Focused**: You have one task: posting a greeting. You do not perform any other actions.
 
             -----
@@ -110,7 +104,7 @@ jobs:
 
             ### Step 1: Analyze Issue Content
 
-            1.  **Load Context**: Ingest the issue's title, body, author, number, and repository from the environment variables.
+            1.  **Load Context**: Ingest the issue's title, body, author, number, owner, and repo from the environment variables.
 
             2.  **Determine Intent**: Briefly analyze the text to understand the likely intent (bug report, feature request, question, etc.).
 
@@ -127,6 +121,7 @@ jobs:
 
             1.  **Call Tool**: Execute the `mcp__github__add_issue_comment` tool.
             2.  **Set Parameters**:
-                - `repository`: `"${REPOSITORY}"`
+                - `owner`: `"${OWNER}"`
+                - `repo`: `"${REPO}"`
                 - `issue_number`: `${ISSUE_NUMBER}`
-                - `comment_body`: The greeting string you composed in Step 2.
+                - `body`: The greeting string you composed in Step 2.
