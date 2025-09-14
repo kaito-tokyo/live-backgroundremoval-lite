@@ -20,17 +20,18 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <util/base.h>
 
-#include "obs-bridge-utils/ILogger.hpp"
+#include <obs-bridge-utils/ILogger.hpp>
 
 namespace kaito_tokyo {
 namespace obs_bridge_utils {
 
 class ObsLogger final : public ILogger {
 public:
-    ObsLogger(const std::string &pluginName) : prefix(pluginName + " ") {}
+	ObsLogger(const std::string &_prefix) : prefix(_prefix) {}
 
 protected:
-    virtual void log(LogLevel level, std::string_view message) const noexcept {
+	virtual void log(LogLevel level, std::string_view message) const noexcept
+	{
 		int blogLevel;
 		switch (level) {
 		case LogLevel::Debug:
@@ -50,13 +51,11 @@ protected:
 			return;
 		}
 
- 		blog(blogLevel, "%.*s", static_cast<int>(message.length()), message.data());
-    }
+		blog(blogLevel, "%.*s", static_cast<int>(message.length()), message.data());
+	}
 
 protected:
-	virtual std::string_view getPrefix() const noexcept {
-		return prefix;
-	}
+	virtual std::string_view getPrefix() const noexcept { return prefix; }
 
 private:
 	const std::string prefix;
@@ -64,4 +63,3 @@ private:
 
 } // namespace obs_bridge_utils
 } // namespace kaito_tokyo
-

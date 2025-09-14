@@ -31,54 +31,54 @@ namespace obs_bridge_utils {
 
 class ILogger {
 public:
+	ILogger() noexcept = default;
 	virtual ~ILogger() noexcept = default;
 
-    template<typename... Args>
-    void debug(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        formatAndLog(LogLevel::Debug, fmt, std::forward<Args>(args)...);
-    }
+	ILogger(const ILogger &) = delete;
+	ILogger &operator=(const ILogger &) = delete;
+	ILogger(ILogger &&) = delete;
+	ILogger &operator=(ILogger &&) = delete;
 
-    template<typename... Args>
-    void info(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        formatAndLog(LogLevel::Info, fmt, std::forward<Args>(args)...);
-    }
+	template<typename... Args> void debug(fmt::format_string<Args...> fmt, Args &&...args) const noexcept
+	{
+		formatAndLog(LogLevel::Debug, fmt, std::forward<Args>(args)...);
+	}
 
-    template<typename... Args>
-    void warn(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        formatAndLog(LogLevel::Warn, fmt, std::forward<Args>(args)...);
-    }
+	template<typename... Args> void info(fmt::format_string<Args...> fmt, Args &&...args) const noexcept
+	{
+		formatAndLog(LogLevel::Info, fmt, std::forward<Args>(args)...);
+	}
 
-    template<typename... Args>
-    void error(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        formatAndLog(LogLevel::Error, fmt, std::forward<Args>(args)...);
-    }
+	template<typename... Args> void warn(fmt::format_string<Args...> fmt, Args &&...args) const noexcept
+	{
+		formatAndLog(LogLevel::Warn, fmt, std::forward<Args>(args)...);
+	}
+
+	template<typename... Args> void error(fmt::format_string<Args...> fmt, Args &&...args) const noexcept
+	{
+		formatAndLog(LogLevel::Error, fmt, std::forward<Args>(args)...);
+	}
 
 protected:
-    enum class LogLevel : std::int8_t {
-        Debug,
-        Info,
-        Warn,
-        Error
-    };
+	enum class LogLevel : std::int8_t { Debug, Info, Warn, Error };
 
-    virtual void log(LogLevel level, std::string_view message) const noexcept = 0;
+	virtual void log(LogLevel level, std::string_view message) const noexcept = 0;
 
-    virtual std::string_view getPrefix() const noexcept{
-        return "";
-    }
+	virtual std::string_view getPrefix() const noexcept { return ""; }
 
 private:
-    template<typename... Args>
-    void formatAndLog(LogLevel level, fmt::format_string<Args...> fmt, Args&&... args) const noexcept try {
-        fmt::memory_buffer buffer;
-        fmt::format_to(std::back_inserter(buffer), "{}", getPrefix());
-        fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
-        log(level, {buffer.data(), buffer.size()});
-    } catch (const std::exception& e) {
-        fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
-    } catch (...) {
-        fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
-    }
+	template<typename... Args>
+	void formatAndLog(LogLevel level, fmt::format_string<Args...> fmt, Args &&...args) const noexcept
+	try {
+		fmt::memory_buffer buffer;
+		fmt::format_to(std::back_inserter(buffer), "{}", getPrefix());
+		fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
+		log(level, {buffer.data(), buffer.size()});
+	} catch (const std::exception &e) {
+		fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
+	} catch (...) {
+		fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
+	}
 };
 
 } // namespace obs_bridge_utils

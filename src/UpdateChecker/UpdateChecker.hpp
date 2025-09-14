@@ -24,10 +24,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <cpr/cpr.h>
 #include <semver.hpp>
 
-#include <plugin-support.h>
-#include <obs.h>
-
-#include "obs-bridge-utils/Logger.hpp"
+#include <obs-bridge-utils/ILogger.hpp>
 
 #include "MyCprUtils.hpp"
 
@@ -40,9 +37,9 @@ public:
      * @brief Constructs a LatestVersion object.
      * @param version The version string (e.g., "1.2.3").
      */
-	explicit LatestVersion(const std::string &_version, const kaito_tokyo::obs_bridge_utils::ILogger &logger)
+	LatestVersion(const std::string &_version, const kaito_tokyo::obs_bridge_utils::ILogger &_logger)
 		: version(_version),
-		  logger(logger)
+		  logger(_logger)
 	{
 	}
 
@@ -61,13 +58,12 @@ public:
 		semver::version latest, current;
 
 		if (!semver::parse(version, latest)) {
-			logger.warn("Failed to parse latest version: " + version);
+			logger.warn("Failed to parse latest version: {}", version);
 			return false;
 		}
 
 		if (!semver::parse(currentVersion, current)) {
-			obs_log(LOG_WARNING, "[obs-showdraw] Failed to parse current version: %s",
-				currentVersion.data());
+			logger.warn("Failed to parse current version: {}", currentVersion);
 			return false;
 		}
 
@@ -93,7 +89,7 @@ private:
  */
 class UpdateChecker {
 public:
-	UpdateChecker() = default;
+	UpdateChecker(const kaito_tokyo::obs_bridge_utils::ILogger &_logger) : logger(_logger) {}
 
 	/**
      * @brief Fetches the latest version information from the remote server.
@@ -109,13 +105,15 @@ public:
 		cpr::Response r = session.Get();
 
 		if (r.status_code == 200) {
-			return LatestVersion(r.text);
+			return LatestVersion(r.text, logger);
 		} else {
-			obs_log(LOG_WARNING, "[obs-showdraw] Failed to fetch latest version information: HTTP %ld",
-				r.status_code);
+			logger.warn("Failed to fetch latest version information: HTTP {}", r.status_code);
 			return std::nullopt;
 		}
 	}
+
+private:
+	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
 };
 
 } // namespace obs_backgroundremoval_lite

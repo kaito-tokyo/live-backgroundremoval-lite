@@ -31,7 +31,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
 
-#include "obs-bridge-utils/obs-bridge-utils.hpp"
+#include "obs-bridge-utils/unique_bfree.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -42,8 +42,8 @@ namespace obs_backgroundremoval_lite {
  */
 class NcnnInferenceEngine {
 public:
-	NcnnInferenceEngine(const kaito_tokyo::obs_bridge_utils::unique_bfree_t &param_path,
-			    const kaito_tokyo::obs_bridge_utils::unique_bfree_t &bin_path)
+	NcnnInferenceEngine(const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &param_path,
+			    const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &bin_path)
 	{
 		if (net.load_param(param_path.get()) != 0) {
 			throw std::runtime_error(std::string("Failed to load ncnn param file: ") + param_path.get());
@@ -115,8 +115,8 @@ public:
 	static constexpr int INPUT_HEIGHT = 256;
 	static constexpr int PIXEL_COUNT = INPUT_WIDTH * INPUT_HEIGHT;
 
-	SelfieSegmenter(const kaito_tokyo::obs_bridge_utils::unique_bfree_t &param_path,
-			const kaito_tokyo::obs_bridge_utils::unique_bfree_t &bin_path)
+	SelfieSegmenter(const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &param_path,
+			const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &bin_path)
 		: inferenceEngine(param_path, bin_path),
 		  maskBuffer(PIXEL_COUNT)
 	{

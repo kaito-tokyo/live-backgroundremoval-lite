@@ -21,10 +21,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <iostream>
 #include <stdexcept>
 
-#include "plugin-support.h"
 #include <obs-module.h>
 
-#include "UpdateChecker.hpp"
+#include <obs-bridge-utils/ObsLogger.hpp>
 
 using namespace kaito_tokyo::obs_bridge_utils;
 using namespace kaito_tokyo::obs_backgroundremoval_lite;
@@ -56,10 +55,11 @@ namespace obs_backgroundremoval_lite {
 MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_source)
 	: settings{_settings},
 	  source{_source},
-	  mainEffect(unique_bfree_t(obs_module_file("effects/main.effect"))),
-	  selfieSegmenter(unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param")),
-			  unique_bfree_t(obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin"))),
-	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>())
+	  logger("[" PLUGIN_NAME "] "),
+	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
+	  selfieSegmenter(unique_obs_module_file("models/mediapipe_selfie_segmentation.ncnn.param"),
+			  unique_obs_module_file("models/mediapipe_selfie_segmentation.ncnn.bin")),
+	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>(logger))
 {
 	update(settings);
 }
@@ -117,7 +117,7 @@ void MainPluginContext::videoTick(float seconds)
 void MainPluginContext::videoRender()
 {
 	if (width == 0 || height == 0) {
-		obs_log(LOG_DEBUG, "Width or height is zero, skipping video render");
+		logger.debug("Width or height is zero, skipping video render");
 		obs_source_skip_video_filter(source);
 		return;
 	}
@@ -125,13 +125,13 @@ void MainPluginContext::videoRender()
 	ensureTextures();
 
 	if (!bgrxSegmenterInput) {
-		obs_log(LOG_ERROR, "bgrxSegmenterInput is null, skipping video render");
+		logger.error("bgrxSegmenterInput is null, skipping video render");
 		obs_source_skip_video_filter(source);
 		return;
 	}
 
 	if (!bgrxSegmenterInput) {
-		obs_log(LOG_ERROR, "bgrxSegmenterInput is null, skipping video render");
+		logger.error("bgrxSegmenterInput is null, skipping video render");
 		obs_source_skip_video_filter(source);
 		return;
 	}
@@ -140,7 +140,7 @@ void MainPluginContext::videoRender()
 		try {
 			readerSegmenterInput->sync();
 		} catch (const std::exception &e) {
-			obs_log(LOG_ERROR, "Failed to sync texture reader: %s", e.what());
+			logger.error("Failed to sync texture reader: {}", e.what());
 		}
 	}
 
@@ -159,7 +159,7 @@ void MainPluginContext::videoRender()
 	gs_set_render_target_with_color_space(bgrxSourceInput.get(), nullptr, GS_CS_SRGB);
 
 	if (!obs_source_process_filter_begin(source, GS_BGRA, OBS_ALLOW_DIRECT_RENDERING)) {
-		obs_log(LOG_ERROR, "Could not begin processing filter");
+		logger.error("Could not begin processing filter");
 		obs_source_skip_video_filter(source);
 		return;
 	}
@@ -242,16 +242,16 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 					s.get()->selfieSegmenter.process(
 						s.get()->readerSegmenterInput->getBuffer().data());
 				} else {
-					obs_log(LOG_INFO,
-						"MainPluginContext has been destroyed or task was cancelled, skipping processing");
+					s.get()->getLogger().info(
+						"Selfie segmentation task was cancelled, skipping processing");
 				}
 			} else {
-				obs_log(LOG_INFO,
-					"MainPluginContext has been destroyed or task was cancelled, skipping processing");
+				blog(LOG_INFO,
+				     "MainPluginContext has been destroyed or task was cancelled, skipping processing");
 			}
 		});
 	} else {
-		obs_log(LOG_ERROR, "Task queue is not initialized");
+		logger.error("Task queue is not initialized");
 	}
 
 	return frame;
@@ -293,17 +293,17 @@ try {
 	auto self = std::make_shared<MainPluginContext>(settings, source);
 	return new std::shared_ptr<MainPluginContext>(self);
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to create main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to create main plugin context: %s", e.what());
 	return nullptr;
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to create main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to create main plugin context: unknown error");
 	return nullptr;
 }
 
 void main_plugin_context_destroy(void *data)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_destroy called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_destroy called with null data");
 		return;
 	}
 
@@ -314,12 +314,12 @@ try {
 	graphics_context_guard guard;
 	gs_unique::drain();
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to destroy main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to destroy main plugin context: %s", e.what());
 
 	graphics_context_guard guard;
 	gs_unique::drain();
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to destroy main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to destroy main plugin context: unknown error");
 
 	graphics_context_guard guard;
 	gs_unique::drain();
@@ -328,7 +328,7 @@ try {
 std::uint32_t main_plugin_context_get_width(void *data)
 {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_get_width called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_get_width called with null data");
 		return 0;
 	}
 
@@ -339,7 +339,7 @@ std::uint32_t main_plugin_context_get_width(void *data)
 std::uint32_t main_plugin_context_get_height(void *data)
 {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_get_height called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_get_height called with null data");
 		return 0;
 	}
 
@@ -355,108 +355,108 @@ void main_plugin_context_get_defaults(obs_data_t *data)
 obs_properties_t *main_plugin_context_get_properties(void *data)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_get_properties called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_get_properties called with null data");
 		return obs_properties_create();
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	return self->get()->getProperties();
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to get properties: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to get properties: %s", e.what());
 	return obs_properties_create();
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to get properties: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to get properties: unknown error");
 	return obs_properties_create();
 }
 
 void main_plugin_context_update(void *data, obs_data_t *settings)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_update called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_update called with null data");
 		return;
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->update(settings);
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to update main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to update main plugin context: %s", e.what());
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to update main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to update main plugin context: unknown error");
 }
 
 void main_plugin_context_activate(void *data)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_activate called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_activate called with null data");
 		return;
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->activate();
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to activate main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to activate main plugin context: %s", e.what());
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to activate main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to activate main plugin context: unknown error");
 }
 
 void main_plugin_context_deactivate(void *data)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_deactivate called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_deactivate called with null data");
 		return;
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->deactivate();
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to deactivate main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to deactivate main plugin context: %s", e.what());
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to deactivate main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to deactivate main plugin context: unknown error");
 }
 
 void main_plugin_context_show(void *data)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_show called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_show called with null data");
 		return;
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->show();
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to show main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to show main plugin context: %s", e.what());
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to show main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to show main plugin context: unknown error");
 }
 
 void main_plugin_context_hide(void *data)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_hide called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_hide called with null data");
 		return;
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->hide();
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to hide main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to hide main plugin context: %s", e.what());
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to hide main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to hide main plugin context: unknown error");
 }
 
 void main_plugin_context_video_tick(void *data, float seconds)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_video_tick called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_video_tick called with null data");
 		return;
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->videoTick(seconds);
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to tick main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to tick main plugin context: %s", e.what());
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to tick main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to tick main plugin context: unknown error");
 }
 
 void main_plugin_context_video_render(void *data, gs_effect_t *_unused)
@@ -464,7 +464,7 @@ try {
 	UNUSED_PARAMETER(_unused);
 
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_video_render called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_video_render called with null data");
 		return;
 	}
 
@@ -472,15 +472,15 @@ try {
 	self->get()->videoRender();
 	gs_unique::drain();
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to render video in main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to render video in main plugin context: %s", e.what());
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to render video in main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to render video in main plugin context: unknown error");
 }
 
 struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs_source_frame *frame)
 try {
 	if (!data) {
-		obs_log(LOG_ERROR, "main_plugin_context_filter_video called with null data");
+		blog(LOG_ERROR, "[" PLUGIN_NAME "] main_plugin_context_filter_video called with null data");
 		return frame;
 	}
 
@@ -489,10 +489,10 @@ try {
 	gs_unique::drain();
 	return result;
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to filter video in main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to filter video in main plugin context: %s", e.what());
 	return frame;
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to filter video in main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to filter video in main plugin context: unknown error");
 	return frame;
 }
 
@@ -500,10 +500,10 @@ bool main_plugin_context_module_load()
 try {
 	return true;
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to load main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to load main plugin context: %s", e.what());
 	return false;
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to load main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to load main plugin context: unknown error");
 	return false;
 }
 
@@ -512,7 +512,7 @@ try {
 	graphics_context_guard guard;
 	gs_unique::drain();
 } catch (const std::exception &e) {
-	obs_log(LOG_ERROR, "Failed to unload main plugin context: %s", e.what());
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to unload main plugin context: %s", e.what());
 } catch (...) {
-	obs_log(LOG_ERROR, "Failed to unload main plugin context: unknown error");
+	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to unload main plugin context: unknown error");
 }

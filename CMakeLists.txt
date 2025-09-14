@@ -51,8 +51,12 @@ target_link_libraries(
   ${CMAKE_PROJECT_NAME}
   PUBLIC OBS::libobs cpr::cpr fmt::fmt ncnn opencv_core opencv_imgproc opencv_imgcodecs semver::semver
 )
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
+
+add_library(${CMAKE_PROJECT_NAME}_header INTERFACE)
+target_include_directories(${CMAKE_PROJECT_NAME}_header INTERFACE ${CMAKE_SOURCE_DIR}/src)
 
 if(BUILD_TESTING)
   enable_testing()

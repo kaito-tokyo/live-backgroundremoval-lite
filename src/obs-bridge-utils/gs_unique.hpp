@@ -118,11 +118,11 @@ struct gs_effect_deleter {
 
 using unique_gs_effect_t = std::unique_ptr<gs_effect_t, gs_effect_deleter>;
 
-inline unique_gs_effect_t make_unique_gs_effect_from_file(const unique_bfree_t &file)
+inline unique_gs_effect_t make_unique_gs_effect_from_file(const unique_bfree_char_t &file)
 {
 	char *raw_error_string = nullptr;
 	gs_effect_t *raw_effect = gs_effect_create_from_file(file.get(), &raw_error_string);
-	unique_bfree_t error_string(raw_error_string);
+	unique_bfree_char_t error_string(raw_error_string);
 
 	if (!raw_effect) {
 		throw std::runtime_error(std::string("gs_effect_create_from_file failed: ") +

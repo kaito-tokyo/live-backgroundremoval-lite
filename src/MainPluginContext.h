@@ -35,11 +35,12 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <stdint.h>
 #include <vector>
 
-#include "UpdateChecker.hpp"
+#include "UpdateChecker/UpdateChecker.hpp"
 
 #include <net.h>
 
-#include "obs-bridge-utils/obs-bridge-utils.hpp"
+#include "obs-bridge-utils/gs_unique.hpp"
+#include <obs-bridge-utils/ObsLogger.hpp>
 
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
@@ -71,10 +72,13 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
+	const kaito_tokyo::obs_bridge_utils::ILogger &getLogger() const noexcept { return logger; }
+
 private:
 	obs_data_t *settings = nullptr;
 	obs_source_t *source = nullptr;
 
+	kaito_tokyo::obs_bridge_utils::ObsLogger logger;
 	MainEffect mainEffect;
 	SelfieSegmenter selfieSegmenter;
 	std::unique_ptr<TaskQueue> selfieSegmenterTaskQueue;
