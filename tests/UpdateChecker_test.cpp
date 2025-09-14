@@ -20,6 +20,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <gtest/gtest.h>
 
+#include <MyCprSession.hpp>
+
 #include "NullLogger.hpp"
 
 using namespace kaito_tokyo::obs_backgroundremoval_lite;
@@ -27,7 +29,7 @@ using namespace kaito_tokyo::obs_backgroundremoval_lite;
 TEST(UpdateCheckerTest, Fetch)
 {
 	NullLogger logger;
-	UpdateChecker checker(logger);
+	UpdateChecker<MyCprSession> checker(logger);
 	auto latestVersion = checker.fetch();
 	ASSERT_TRUE(latestVersion.has_value());
 	EXPECT_FALSE(latestVersion->empty());
@@ -36,7 +38,7 @@ TEST(UpdateCheckerTest, Fetch)
 TEST(LatestVersionTest, IsUpdateAvailable)
 {
 	NullLogger logger;
-	UpdateChecker checker(logger);
+	UpdateChecker<MyCprSession> checker(logger);
 
 	EXPECT_TRUE(checker.isUpdateAvailable("1.0.0", "0.9.0"));
 	EXPECT_FALSE(checker.isUpdateAvailable("1.0.0", "1.0.0"));
