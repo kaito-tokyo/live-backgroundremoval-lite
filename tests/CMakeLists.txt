@@ -11,4 +11,5 @@ target_link_libraries(
   UpdateChecker_test
   PRIVATE GTest::gtest_main ${CMAKE_PROJECT_NAME}_header cpr::cpr fmt::fmt semver::semver
 )
+target_compile_definitions(UpdateChecker_test PRIVATE NOMINMAX)
 gtest_discover_tests(UpdateChecker_test DISCOVERY_MODE PRE_TEST)
