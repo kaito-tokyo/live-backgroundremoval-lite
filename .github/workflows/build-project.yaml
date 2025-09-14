@@ -119,14 +119,17 @@ jobs:
       - name: Install mono
         run: brew install mono
 
-      - name: Setup NuGet Credentials
+      - name: "Setup NuGet Credentials"
         run: |
-          mono "$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)" sources add \
+          NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
+          mono "$NUGET_PATH" sources add \
             -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
             -StorePasswordInClearText \
             -Name "GitHub" \
             -UserName "kaito-tokyo" \
             -Password "${{ secrets.GITHUB_TOKEN }}"
+          mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: Set Up Environment 🔧
         id: setup
@@ -250,14 +253,17 @@ jobs:
       - name: Install mono
         run: brew install mono
 
-      - name: Setup NuGet Credentials
+      - name: "Setup NuGet Credentials"
         run: |
-          mono "$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)" sources add \
+          NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
+          mono "$NUGET_PATH" sources add \
             -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
             -StorePasswordInClearText \
             -Name "GitHub" \
             -UserName "kaito-tokyo" \
             -Password "${{ secrets.GITHUB_TOKEN }}"
+          mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: Set Up Environment 🔧
         id: setup
@@ -382,14 +388,17 @@ jobs:
       - name: Install mono
         run: sudo apt-get -y install mono-devel
 
-      - name: Setup NuGet Credentials
+      - name: "Setup NuGet Credentials"
         run: |
-          mono "$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)" sources add \
+          NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
+          mono "$NUGET_PATH" sources add \
             -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
             -StorePasswordInClearText \
             -Name "GitHub" \
             -UserName "kaito-tokyo" \
             -Password "${{ secrets.GITHUB_TOKEN }}"
+          mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: Set Up Environment 🔧
         id: setup
@@ -477,7 +486,7 @@ jobs:
         run: |
           .\bootstrap-vcpkg.bat
 
-      - name: "Setup NuGet Credentials"
+      - name: "Setup NuGet Credentials on Windows"
         shell: pwsh
         run: |
           $NUGET_EXE_PATH = & "${{ env.VCPKG_ROOT }}/vcpkg" fetch nuget | Select-Object -Last 1
