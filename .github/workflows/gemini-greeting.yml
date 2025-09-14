@@ -20,8 +20,10 @@ jobs:
   greet:
     runs-on: 'ubuntu-latest'
     permissions:
+      contents: 'read'
       issues: 'write'
       id-token: 'write'
+      pull-requests: 'write'
     steps:
       - name: 'Mint identity token'
         id: 'mint_identity_token'
@@ -76,7 +78,11 @@ jobs:
                 }
               },
               "coreTools": [
-                "run_shell_command(echo)"
+                "run_shell_command(cat)",
+                "run_shell_command(echo)",
+                "run_shell_command(grep)",
+                "run_shell_command(head)",
+                "run_shell_command(tail)"
               ]
             }
           prompt: |-
