@@ -131,7 +131,6 @@ jobs:
     permissions:
       issues: 'write'
       id-token: 'write'
-    # 'secrets: inherit' を削除し、以下のように明示的に渡す
     secrets:
       APP_PRIVATE_KEY: '${{ secrets.APP_PRIVATE_KEY }}'
       GEMINI_API_KEY: '${{ secrets.GEMINI_API_KEY }}'
