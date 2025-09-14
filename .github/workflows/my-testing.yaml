@@ -28,34 +28,20 @@ jobs:
     timeout-minutes: 30
 
     env:
-      VCPKG_BINARY_SOURCES: "x-gha,readwrite;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "x-gha,read;files,${{ github.workspace }}/vcpkg-cache,readwrite"
 
     steps:
-      - name: "Install dependencies"
-        run: "brew install ccache"
-
       - name: "Checkout"
         uses: "actions/checkout@v5"
-
-      - name: "Restore Ccache cache"
-        uses: "actions/cache/restore@v4"
-        id: "ccache-cache"
-        with:
-          path: "~/.ccache"
-          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
-          restore-keys: |
-            ${{ runner.os }}-ccache-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-ccache-main-testing-
 
       - name: "Restore Vcpkg cache"
         uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
           path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+          key: "${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json') }}"
           restore-keys: |
-            ${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-vcpkg-main-testing-
+            ${{ runner.os }}-vcpkg-
 
       - name: "Configure"
         run: "cmake --preset macos-testing-ci"
@@ -63,20 +49,11 @@ jobs:
       - name: "Build"
         run: "cmake --build --preset macos-testing-ci"
 
-      - name: "Show Ccache statistics"
-        run: "ccache -s"
-
-      - name: "Save Ccache cache"
-        uses: "actions/cache/save@v4"
-        with:
-          path: "~/.ccache"
-          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
-
       - name: "Save Vcpkg cache"
         uses: "actions/cache/save@v4"
         with:
           path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+          key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
 
       - name: "Run tests"
         run: "ctest --preset macos-testing-ci --verbose"
@@ -89,7 +66,7 @@ jobs:
     timeout-minutes: 30
 
     env:
-      VCPKG_BINARY_SOURCES: "x-gha,readwrite;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "x-gha,read;files,${{ github.workspace }}/vcpkg-cache,readwrite"
 
     steps:
       - name: "Checkout"
@@ -100,10 +77,9 @@ jobs:
         id: "vcpkg-cache"
         with:
           path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+          key: "${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json') }}"
           restore-keys: |
-            ${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-vcpkg-main-testing-
+            ${{ runner.os }}-vcpkg-
 
       - name: "Configure"
         run: "cmake --preset windows-testing-ci-x64"
@@ -115,7 +91,7 @@ jobs:
         uses: "actions/cache/save@v4"
         with:
           path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+          key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
 
       - name: "Run tests"
         run: "ctest --preset windows-testing-ci-x64 --verbose"
@@ -128,7 +104,7 @@ jobs:
     timeout-minutes: 30
 
     env:
-      VCPKG_BINARY_SOURCES: "x-gha,readwrite;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "x-gha,read;files,${{ github.workspace }}/vcpkg-cache,readwrite"
 
     steps:
       - name: "Disable man-db update"
@@ -147,7 +123,6 @@ jobs:
             libqt6svg6-dev \
             qt6-base-private-dev \
             cmake \
-            ccache \
             git \
             jq \
             ninja-build \
@@ -157,25 +132,14 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
-      - name: "Restore Ccache cache"
-        uses: "actions/cache/restore@v4"
-        id: "ccache-cache"
-        with:
-          path: "~/.ccache"
-          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
-          restore-keys: |
-            ${{ runner.os }}-ccache-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-ccache-main-testing-
-
       - name: "Restore Vcpkg cache"
         uses: "actions/cache/restore@v4"
         id: "vcpkg-cache"
         with:
           path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+          key: "${{ runner.os }}-vcpkg-${{ hashFiles('**/vcpkg.json', '**/vcpkg-configuration.json') }}"
           restore-keys: |
-            ${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-
-            ${{ runner.os }}-vcpkg-main-testing-
+            ${{ runner.os }}-vcpkg-
 
       - name: "Configure"
         run: "cmake --preset ubuntu-testing-ci-x86_64"
@@ -183,20 +147,11 @@ jobs:
       - name: "Build"
         run: "cmake --build --preset ubuntu-testing-ci-x86_64"
 
-      - name: "Show Ccache statistics"
-        run: "ccache -s"
-
-      - name: "Save Ccache cache"
-        uses: "actions/cache/save@v4"
-        with:
-          path: "~/.ccache"
-          key: "${{ runner.os }}-ccache-${{ github.ref_name }}-testing-${{ github.sha }}"
-
       - name: "Save Vcpkg cache"
         uses: "actions/cache/save@v4"
         with:
           path: "${{ github.workspace }}/vcpkg-cache"
-          key: "${{ runner.os }}-vcpkg-${{ github.ref_name }}-testing-${{ github.sha }}"
+          key: "${{ steps.vcpkg-cache.outputs.cache-primary-key }}"
 
       - name: "Run tests"
         run: "ctest --preset ubuntu-testing-ci-x86_64 --verbose"
