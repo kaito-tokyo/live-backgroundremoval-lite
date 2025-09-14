@@ -20,10 +20,7 @@ jobs:
       - id: 'gemini-response'
         uses: 'google-github-actions/run-gemini-cli@main'
         with:
-          # GitHub Secrets に保存したAPIキーを使用
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-
-          # プロンプトを指定
           prompt: |
             以下のGitHub Issueを受け取りました。Issueの報告者への挨拶と、内容を元にした簡単な解決策の提案をMarkdown形式で生成してください。
 
@@ -32,13 +29,17 @@ jobs:
             **本文:**
             ${{ github.event.issue.body }}
 
-      # 生成されたテキストを課題にコメントとして投稿
+      # [修正箇所] 生成されたテキストを課題にコメントとして投稿
       - name: Create comment
         uses: actions/github-script@v7
+        # AIの応答を環境変数として渡す
+        env:
+          COMMENT_BODY: ${{ steps.gemini-response.outputs.summary }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const body = `${{ steps.gemini-response.outputs.summary }}`;
+            // 環境変数から安全に応答を読み込む
+            const body = process.env.COMMENT_BODY;
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
