@@ -28,7 +28,7 @@ jobs:
     timeout-minutes: 30
 
     env:
-      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "x-gha,readwrite;files,${{ github.workspace }}/vcpkg-cache,readwrite"
 
     steps:
       - name: "Install dependencies"
@@ -89,7 +89,7 @@ jobs:
     timeout-minutes: 30
 
     env:
-      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg-cache,readwrite"
+      VCPKG_BINARY_SOURCES: "x-gha,readwrite;files,${{ github.workspace }}/vcpkg-cache,readwrite"
 
     steps:
       - name: "Checkout"
@@ -126,6 +126,9 @@ jobs:
     runs-on: "ubuntu-24.04"
 
     timeout-minutes: 30
+
+    env:
+      VCPKG_BINARY_SOURCES: "x-gha,readwrite;files,${{ github.workspace }}/vcpkg-cache,readwrite"
 
     steps:
       - name: "Disable man-db update"
