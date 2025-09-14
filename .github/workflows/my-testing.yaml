@@ -78,7 +78,7 @@ jobs:
             jq \
             ninja-build \
             pkg-config \
-            xvfb
+            mono
 
       - name: "Configure"
         run: "cmake --preset ${{ matrix.preset }}"
