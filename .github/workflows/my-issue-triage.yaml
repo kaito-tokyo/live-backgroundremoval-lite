@@ -58,9 +58,8 @@ jobs:
       # Step 2: Detect the language of the issue
       - name: Detect Language
         id: detect_lang
-        uses: google-github-actions/run-gemini-cli@v1
+        uses: google-github-actions/run-gemini-cli@11742af4712bf5b7cb96de90a3805f4d9ad5ce87
         with:
-          model: 'gemini-1.5-flash-latest' # Correctly specified as a 'with' parameter
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           prompt: |
             Analyze the following text from a GitHub issue and identify its primary language.
@@ -73,9 +72,8 @@ jobs:
       # Step 3: Generate response and triage labels based on language
       - name: Generate Response and Labels
         id: gemini_response
-        uses: google-github-actions/run-gemini-cli@v1
+        uses: google-github-actions/run-gemini-cli@11742af4712bf5b7cb96de90a3805f4d9ad5ce87
         with:
-          model: 'gemini-1.5-flash-latest' # Correctly specified as a 'with' parameter
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           prompt: |
             # Overall Goal: Act as a helpful AI assistant to perform initial issue triage.
