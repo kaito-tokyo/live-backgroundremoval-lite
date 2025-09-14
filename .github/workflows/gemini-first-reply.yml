@@ -63,7 +63,7 @@ jobs:
                   "command": "docker",
                   "args": [ "run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server" ],
                   "includeTools": [ "add_issue_comment" ],
-                  "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}" }
+                  "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "${{ env.GITHUB_TOKEN }}" }
                 }
               },
               "coreTools": ["run_shell_command(echo)"]
