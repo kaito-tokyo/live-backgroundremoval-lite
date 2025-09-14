@@ -27,6 +27,8 @@ This project is built upon and incorporates several open-source components. We a
     *   License: [MIT](https://github.com/libcpr/cpr/blob/master/LICENSE)
 *   **semver**
     *   License: [MIT](https://github.com/Neargye/semver/blob/master/LICENSE)
+*   **Eigen**
+    *   License: [MPL-2.0](LICENSES/MPL-2.0.txt)
 
 
 This plugin itself is licensed under the [GPL-2.0](LICENSE). Please refer to the respective licenses for detailed terms and conditions.
