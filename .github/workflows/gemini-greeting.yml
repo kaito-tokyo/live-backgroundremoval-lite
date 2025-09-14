@@ -33,7 +33,6 @@ jobs:
           private-key: '${{ secrets.APP_PRIVATE_KEY }}'
           permission-issues: 'write'
 
-      # STEP 1: Geminiが挨拶メッセージのテキストを生成することに専念する
       - name: 'Generate Greeting Text'
         id: 'generate_greeting'
         uses: 'google-github-actions/run-gemini-cli@v0'
@@ -68,13 +67,14 @@ jobs:
 
             ## Execution Workflow
             1.  **Analyze Context**: Read the issue's title and body from the `${ISSUE_TITLE}` and `${ISSUE_BODY}` environment variables to understand the user's intent (e.g., bug report, feature request, question).
-            2.  **Generate Message**: Compose a friendly greeting addressed to `@${ISSUE_AUTHOR}`. Include a brief, helpful sentence based on the intent.
-                - For a bug report: "Thank you for reporting this. The team will take a look shortly."
-                - For a feature request: "Thanks for the great suggestion! We'll review it for future consideration."
-                - For anything else: "Thank you for creating this issue."
+            2.  **Generate Message**: Compose a friendly greeting.
+                - **Start the message** by mentioning the issue author. You **MUST use the value from the `${ISSUE_AUTHOR}` environment variable** for the author's username. For example: `Hi @username,`.
+                - **Then, add a helpful sentence** based on the issue's intent.
+                  - For a bug report: "thank you for reporting this. The team will take a look shortly."
+                  - For a feature request: "thanks for the great suggestion! We'll review it for future consideration."
+                  - For anything else: "thank you for creating this issue."
             3.  **Output**: Produce the complete and final Markdown message as your direct output.
 
-      # STEP 2: ワークフローが、生成されたテキストを使ってコメントを投稿する
       - name: 'Post Greeting'
         if: steps.generate_greeting.outputs.summary != ''
         env:
