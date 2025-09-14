@@ -43,10 +43,32 @@ jobs:
     env:
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
       VCPKG_FEATURE_FLAGS: "credentialprovider"
+      VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
 
     steps:
       - name: "Checkout"
         uses: "actions/checkout@v5"
+
+      - name: "Checkout vcpkg repository"
+        uses: "actions/checkout@v5"
+        with:
+          repository: "microsoft/vcpkg"
+          path: "${{ env.VCPKG_ROOT }}"
+
+      - name: "Bootstrap vcpkg"
+        if: runner.os != 'Windows'
+        working-directory: "${{ env.VCPKG_ROOT }}"
+        run: |
+          cd "${{ env.VCPKG_ROOT }}"
+          ./bootstrap-vcpkg.sh
+
+      - name: "Bootstrap vcpkg (Windows)"
+        if: runner.os == 'Windows'
+        working-directory: "${{ env.VCPKG_ROOT }}"
+        shell: "pwsh"
+        run: |
+          cd "${{ env.VCPKG_ROOT }}"
+          .\bootstrap-vcpkg.bat
 
       - name: "Setup .NET"
         uses: "actions/setup-dotnet@v4"
