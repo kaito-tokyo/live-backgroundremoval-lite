@@ -5,6 +5,21 @@ if(EXISTS "${CURRENT_INSTALLED_DIR}/share/opencv3")
   message(FATAL_ERROR "OpenCV 3 is installed, please uninstall and try again:\n    vcpkg remove opencv3")
 endif()
 
+set(
+  DISABLED_OPENCV_MODULES
+  -DBUILD_opencv_calib3d=OFF
+  -DBUILD_opencv_features2d=OFF
+  -DBUILD_opencv_flann=OFF
+  -DBUILD_opencv_highgui=OFF
+  -DBUILD_opencv_ml=OFF
+  -DBUILD_opencv_objdetect=OFF
+  -DBUILD_opencv_photo=OFF
+  -DBUILD_opencv_stitching=OFF
+  -DBUILD_opencv_video=OFF
+  -DBUILD_opencv_videoio=OFF
+  -DWITH_QUIRC=OFF
+)
+
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO opencv/opencv
@@ -188,6 +203,7 @@ vcpkg_cmake_configure(
         ${BUILD_WITH_CONTRIB_FLAG}
         ${FEATURE_OPTIONS}
         ${ADDITIONAL_BUILD_FLAGS}
+        ${DISABLED_OPENCV_MODULES}
 )
 
 vcpkg_cmake_install()
