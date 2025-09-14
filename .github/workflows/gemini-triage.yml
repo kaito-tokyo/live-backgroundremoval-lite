@@ -21,109 +21,145 @@ jobs:
     runs-on: 'ubuntu-latest'
     timeout-minutes: 7
     outputs:
+      selected_labels: '${{ steps.parse_response.outputs.labels_csv }}'
       available_labels: '${{ steps.get_labels.outputs.available_labels }}'
-      selected_labels: '${{ env.SELECTED_LABELS }}'
     permissions:
       contents: 'read'
       id-token: 'write'
-      issues: 'read'
+      issues: 'write'
       pull-requests: 'read'
     steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
       - name: 'Get repository labels'
         id: 'get_labels'
-        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7.0.1
+        uses: 'actions/github-script@v7'
         with:
-          # NOTE: we intentionally do not use the given token. The default
-          # GITHUB_TOKEN provided by the action has enough permissions to read
-          # the labels.
-          script: |-
+          script: |
             const { data: labels } = await github.rest.issues.listLabelsForRepo({
               owner: context.repo.owner,
               repo: context.repo.repo,
             });
-
             if (!labels || labels.length === 0) {
               core.setFailed('There are no issue labels in this repository.')
             }
-
             const labelNames = labels.map(label => label.name).sort();
             core.setOutput('available_labels', labelNames.join(','));
-            core.info(`Found ${labelNames.length} labels: ${labelNames.join(', ')}`);
-            return labelNames;
 
-      - name: 'Run Gemini issue analysis'
-        id: 'gemini_analysis'
-        if: |-
-          ${{ steps.get_labels.outputs.available_labels != '' }}
-        uses: 'google-github-actions/run-gemini-cli@v0' # ratchet:exclude
-        env:
-          GITHUB_TOKEN: '' # Do NOT pass any auth tokens here since this runs on untrusted inputs
-          ISSUE_TITLE: '${{ github.event.issue.title }}'
-          ISSUE_BODY: '${{ github.event.issue.body }}'
-          AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
+      - name: Read Context Files
+        id: read_docs
+        run: |
+          CONTEXT_DATA=""
+          FILES_TO_READ=("README.md" "GEMINI.md" "CONTRIBUTING.md")
+          for FILE in "${FILES_TO_READ[@]}"; do
+            if [[ -f "$FILE" ]]; then
+              CONTEXT_DATA="$CONTEXT_DATA\n\n---\n\n# Content from ${FILE}:\n\n$(cat ${FILE})"
+            fi
+          done
+          echo "context<<EOF" >> $GITHUB_OUTPUT
+          echo "$CONTEXT_DATA" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Detect Language
+        id: detect_lang
+        uses: google-github-actions/run-gemini-cli@v1
         with:
-          gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
-          gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
-          gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
-          gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
-          gcp_service_account: '${{ vars.SERVICE_ACCOUNT_EMAIL }}'
+          model: 'gemini-1.5-flash-latest'
           gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
-          use_vertex_ai: '${{ vars.GOOGLE_GENAI_USE_VERTEXAI }}'
-          google_api_key: '${{ secrets.GOOGLE_API_KEY }}'
-          use_gemini_code_assist: '${{ vars.GOOGLE_GENAI_USE_GCA }}'
-          gemini_debug: '${{ fromJSON(vars.DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
-          settings: |-
-            {
-              "maxSessionTurns": 25,
-              "telemetry": {
-                "enabled": ${{ vars.GOOGLE_CLOUD_PROJECT != '' }},
-                "target": "gcp"
-              },
-              "coreTools": [
-                "run_shell_command(echo)"
-              ]
+          # 他の認証情報（gcp_workload_identity_providerなど）も必要に応じて追加してください
+          prompt: |
+            Analyze the following text and identify its primary language.
+            Respond with ONLY ONE of the following: "Japanese", "English", or "Other".
+            ---
+            Title: ${{ github.event.issue.title }}
+            Body: ${{ github.event.issue.body }}
+
+      - name: Prepare Prompt
+        id: prepare_prompt
+        run: |
+          LANG=$(echo -n "${{ steps.detect_lang.outputs.response }}" | tr -d '[:space:]')
+          AUTHOR="${{ github.event.issue.user.login }}"
+          COMMENT_INSTRUCTIONS=""
+          if [[ "$LANG" == "Japanese" ]]; then
+            COMMENT_INSTRUCTIONS="あなたは親切なAIアシスタントです。日本のユーザーに、丁寧で歓迎されていると感じられるコメントを作成してください。\n\n**コメント生成の指示:**\n1. @${AUTHOR} さんで始める。2. Issue報告への感謝を述べる。3. 内容を理解したことを示し、チームが確認することを伝える。"
+          elif [[ "$LANG" == "English" ]]; then
+            COMMENT_INSTRUCTIONS="You are a friendly AI assistant. Create a welcoming and helpful comment for the user in English.\n\n**Comment Generation Instructions:**\n1. Start with \"Hi @${AUTHOR}\". 2. Thank them for the issue. 3. Acknowledge you understand the report and that the team will review it."
+          else
+            COMMENT_INSTRUCTIONS="You are a friendly AI assistant. Create a polite apology in English as we cannot support the user's language.\n\n**Comment Generation Instructions:**\n1. Thank the user for the report. 2. Apologize and state that we can only support English or Japanese at this time. 3. Ask if they can resubmit in one of those languages."
+          fi
+
+          AVAILABLE_LABELS_JSON=$(echo '${{ steps.get_labels.outputs.available_labels }}' | jq -R 'split(",")' | jq -c '.')
+          LABELS_INSTRUCTION="Available labels are: ${AVAILABLE_LABELS_JSON}"
+          if [[ "$LANG" == "Other" ]]; then
+            LABELS_INSTRUCTION='Choose ONLY from this list: ["needs-translation"]'
+          fi
+
+          FINAL_PROMPT=$(cat <<EOF
+          # Task: Generate two parts: a user-facing comment and a machine-readable list of labels, separated by '---JSON_LABELS---'.
+          
+          # Part 1: The user-facing comment.
+          ${COMMENT_INSTRUCTIONS}
+          
+          # Repository Context for your response:
+          ${{ steps.read_docs.outputs.context }}
+
+          # Issue Details:
+          Author: @${AUTHOR}
+          Title: ${{ github.event.issue.title }}
+          Body: ${{ github.event.issue.body }}
+
+          ---JSON_LABELS---
+
+          # Part 2: Triage Labels in JSON format.
+          # Analyze the issue and choose relevant labels. ${LABELS_INSTRUCTION}
+          # Respond with a valid JSON object like: {"labels": ["bug", "enhancement"]}
+          EOF
+          )
+          echo "full_prompt<<EOF" >> $GITHUB_OUTPUT
+          echo "$FINAL_PROMPT" >> $GITHUB_OUTPUT
+          echo "EOF"
+
+      - name: Generate Response and Labels
+        id: gemini_response
+        uses: google-github-actions/run-gemini-cli@v1
+        with:
+          model: 'gemini-1.5-flash-latest'
+          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          # 他の認証情報も必要に応じて追加
+          prompt: ${{ steps.prepare_prompt.outputs.full_prompt }}
+
+      - name: Parse Response and Post Comment
+        id: parse_response
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const responseBody = `${{ steps.gemini_response.outputs.response }}`;
+            const parts = responseBody.split('---JSON_LABELS---');
+            const comment = parts[0] ? parts[0].trim() : '';
+            const labelsJsonString = parts[1] ? parts[1].trim() : '{"labels": []}';
+            
+            let labels = [];
+            try {
+              const parsedJson = JSON.parse(labelsJsonString);
+              labels = parsedJson.labels || [];
+            } catch (e) {
+              console.error("Failed to parse labels JSON:", e);
+              core.warning("Could not parse labels from Gemini response.");
             }
-          # For reasons beyond my understanding, Gemini CLI cannot set the
-          # GitHub Outputs, but it CAN set the GitHub Env.
-          prompt: |-
-            ## Role
 
-            You are an issue triage assistant. Analyze the current GitHub issue and identify the most appropriate existing labels. Use the available tools to gather information; do not ask for information to be provided.
-
-            ## Guidelines
-
-            - Retrieve the value for environment variables using the "echo" shell command.
-            - Environment variables are specified in the format "${VARIABLE}" (with quotes and braces).
-            - Only use labels that are from the list of available labels.
-            - You can choose multiple labels to apply.
-
-            ## Steps
-
-            1. Retrieve the available labels from the environment variable: "${AVAILABLE_LABELS}".
-
-            2. Retrieve the issue title from the environment variable: "${ISSUE_TITLE}".
-
-            3. Retrieve the issue body from the environment variable: "${ISSUE_BODY}".
-
-            4. Review the issue title, issue body, and available labels.
-
-            5. Based on the issue title and issue body, classify the issue and choose all appropriate labels from the list of available labels.
-
-            5. Classify the issue by identifying the appropriate labels from the list of available labels.
-
-            6. Convert the list of appropriate labels into a comma-separated list (CSV). If there are no appropriate labels, use the empty string.
-
-            7. Use the "echo" shell command to append the CSV labels into the filepath referenced by the environment variable "${GITHUB_ENV}":
-
-                ```
-                echo "SELECTED_LABELS=[APPROPRIATE_LABELS_AS_CSV]" >> "[filepath_for_env]"
-                ```
-
-                for example:
-
-                ```
-                echo "SELECTED_LABELS=bug,enhancement" >> "/tmp/runner/env"
-                ```
+            // Post Comment
+            if (comment) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            }
+            
+            // Set outputs for the next job
+            core.setOutput('labels_csv', labels.join(','));
 
   label:
     runs-on: 'ubuntu-latest'
@@ -136,51 +172,28 @@ jobs:
       issues: 'write'
       pull-requests: 'write'
     steps:
-      - name: 'Mint identity token'
-        id: 'mint_identity_token'
-        if: |-
-          ${{ vars.APP_ID }}
-        uses: 'actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b' # ratchet:actions/create-github-app-token@v2
-        with:
-          app-id: '${{ vars.APP_ID }}'
-          private-key: '${{ secrets.APP_PRIVATE_KEY }}'
-          permission-contents: 'read'
-          permission-issues: 'write'
-          permission-pull-requests: 'write'
-
       - name: 'Apply labels'
         env:
           ISSUE_NUMBER: '${{ github.event.issue.number }}'
           AVAILABLE_LABELS: '${{ needs.triage.outputs.available_labels }}'
           SELECTED_LABELS: '${{ needs.triage.outputs.selected_labels }}'
-        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea' # ratchet:actions/github-script@v7.0.1
+        uses: 'actions/github-script@v7'
         with:
-          # Use the provided token so that the "gemini-cli" is the actor in the
-          # log for what changed the labels.
-          github-token: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
-          script: |-
-            // Parse the available labels
-            const availableLabels = (process.env.AVAILABLE_LABELS || '').split(',')
-              .map((label) => label.trim())
-              .sort()
-
-            // Parse the label as a CSV, reject invalid ones - we do this just
-            // in case someone was able to prompt inject malicious labels.
+          github-token: '${{ secrets.GITHUB_TOKEN }}' # Mint token can also be used here
+          script: |
+            const availableLabels = (process.env.AVAILABLE_LABELS || '').split(',').map(l => l.trim());
             const selectedLabels = (process.env.SELECTED_LABELS || '').split(',')
-              .map((label) => label.trim())
-              .filter((label) => availableLabels.includes(label))
-              .sort()
+              .map(label => label.trim())
+              .filter(label => availableLabels.includes(label));
 
-            // Set the labels
-            const issueNumber = process.env.ISSUE_NUMBER;
-            if (selectedLabels && selectedLabels.length > 0) {
+            if (selectedLabels.length > 0) {
               await github.rest.issues.setLabels({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                issue_number: issueNumber,
+                issue_number: process.env.ISSUE_NUMBER,
                 labels: selectedLabels,
               });
               core.info(`Successfully set labels: ${selectedLabels.join(',')}`);
             } else {
-              core.info(`Failed to determine labels to set. There may not be enough information in the issue or pull request.`)
+              core.info(`No valid labels were selected to set.`);
             }
