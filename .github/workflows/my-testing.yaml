@@ -109,10 +109,10 @@ jobs:
             --password "${{ secrets.GITHUB_TOKEN }}" \
             --store-password-in-clear-text
 
-      - name: "Setup NuGet Credentials on macOS/Linux"
+      - name: "Setup NuGet Credentials on macOS / Linux"
         if: runner.os != 'Windows'
         run: |
-          mono "$(${VCPKG_ROOT-$VCPKG_INSTALLATION_ROOT})/vcpkg fetch nuget)" \
+          mono "$($VCPKG_ROOT/vcpkg fetch nuget)" \
             sources add \
             -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
             -StorePasswordInClearText \
