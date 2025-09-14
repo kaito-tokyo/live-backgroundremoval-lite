@@ -118,10 +118,7 @@ jobs:
             -StorePasswordInClearText \
             -Name "GitHub" \
             -UserName "kaito-tokyo" \
-            -Password "$GITHUB_TOKEN"
-          mono "$(${VCPKG_ROOT-$VCPKG_INSTALLATION_ROOT})/vcpkg fetch nuget)" \
-            setapikey "$GITHUB_TOKEN" \
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
+            -Password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "Configure"
         run: "cmake --preset ${{ matrix.preset }}"
