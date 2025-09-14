@@ -61,7 +61,7 @@ jobs:
       - name: "Install dependencies on macOS"
         if: runner.os == 'macOS'
         run: |
-          brew install mono
+          brew install mono-runtime
 
       - name: "Install dependencies on Ubuntu"
         if: runner.os == 'Linux'
