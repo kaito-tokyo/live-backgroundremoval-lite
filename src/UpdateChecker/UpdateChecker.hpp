@@ -75,7 +75,7 @@ public:
 	const std::string &toString() const noexcept { return version; }
 
 private:
-	const std::string version;
+	std::string version;
 	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
 };
 
