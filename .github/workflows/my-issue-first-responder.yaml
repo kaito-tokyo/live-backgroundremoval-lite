@@ -1,0 +1,56 @@
+name: BR Lite Buddy Issue Responder
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  comment-on-issue:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - id: 'gemini-response'
+        name: Generate response from Gemini
+        uses: 'google-github-actions/run-gemini-cli@2a77eb258d8d2447292fd5d9df6e7b49533d4f37'
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt: |
+            You are "BR Lite Buddy", a friendly and helpful AI assistant for this project.
+            Your task is to provide the initial response for the GitHub issue detailed below.
+
+            You MUST strictly follow the instructions located in the `GEMINI.md` file, under the specific heading: `## BR Lite Buddy: Guideline for Initial Response of Issue`
+
+            Here is the issue you need to respond to:
+
+            **Issue Author:** @${{ github.event.issue.user.login }}
+            **Issue Title:** ${{ github.event.issue.title }}
+            **Issue Body:**
+            ${{ github.event.issue.body }}
+
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Create comment as BR Lite Buddy
+        uses: actions/github-script@v8
+        env:
+          COMMENT_BODY: ${{ steps.gemini-response.outputs.summary }}
+        with:
+          github-token: ${{ steps.generate-token.outputs.token }}
+          script: |
+            const body = process.env.COMMENT_BODY;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
