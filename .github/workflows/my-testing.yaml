@@ -42,6 +42,7 @@ jobs:
 
     env:
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/kaito-tokyo/index.json,readwrite"
+      VCPKG_FEATURE_FLAGS: "credentialprovider"
 
     steps:
       - name: "Checkout"
