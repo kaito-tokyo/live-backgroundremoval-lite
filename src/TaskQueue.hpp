@@ -18,20 +18,18 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
-#include <iostream>
-#include <queue>
-#include <thread>
-#include <mutex>
+#include <atomic>
 #include <condition_variable>
 #include <functional>
-#include <optional>
 #include <memory>
-#include <atomic>
-#include <utility>
+#include <mutex>
+#include <optional>
+#include <queue>
 #include <stdexcept>
+#include <thread>
+#include <utility>
 
-#include "plugin-support.h"
-#include <obs.h>
+#include "obs-bridge-utils/ILogger.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -60,7 +58,11 @@ public:
 	/**
      * @brief Constructor. Starts the worker thread.
      */
-	TaskQueue() : worker(&TaskQueue::workerLoop, this) {}
+	TaskQueue(const kaito_tokyo::obs_bridge_utils::ILogger &_logger)
+		: logger(_logger),
+		  worker(&TaskQueue::workerLoop, this)
+	{
+	}
 
 	/**
      * @brief Destructor. Stops the queue and waits for the worker thread to finish.
@@ -115,9 +117,9 @@ private:
 			try {
 				(*taskOpt)();
 			} catch (const std::exception &e) {
-				obs_log(LOG_ERROR, "TaskQueue: Task threw an exception: %s", e.what());
+				logger.error("TaskQueue: Task threw an exception: {}", e.what());
 			} catch (...) {
-				obs_log(LOG_ERROR, "TaskQueue: Task threw an unknown exception.");
+				logger.error("TaskQueue: Task threw an unknown exception.");
 			}
 		}
 	}
@@ -167,6 +169,7 @@ private:
 
 	using QueuedTask = std::pair<std::function<void()>, CancellationToken>;
 
+	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
 	std::thread worker;
 	std::mutex mtx;
 	std::condition_variable cond;

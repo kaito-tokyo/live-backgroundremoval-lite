@@ -20,6 +20,8 @@
     {
       "name": "cpr",
       "default-features": false
-    }
+    },
+    "neargye-semver",
+    "fmt"
   ]
 }

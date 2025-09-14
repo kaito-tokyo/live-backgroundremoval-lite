@@ -1,5 +1,5 @@
 /*
-OBS Background Removal Lite
+obs-showdraw
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -18,26 +18,35 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <cpr/session.h>
+#include <wolfssl/options.h>
+#include <wolfssl/ssl.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
+namespace kaito_tokyo {
+namespace obs_backgroundremoval_lite {
 
-extern const char *PLUGIN_NAME;
-extern const char *PLUGIN_VERSION;
+inline CURLcode ssl_ctx_callback(CURL *curl, void *ssl_ctx, void *userptr)
+{
+	(void)curl;
+	(void)userptr;
 
-void obs_log(int log_level, const char *format, ...);
+	WOLFSSL_CTX *ctx = (WOLFSSL_CTX *)ssl_ctx;
 
-#ifdef _MSC_VER
-extern __declspec(dllexport) void blogva(int log_level, const char *format, va_list args);
-#else
-extern __attribute__((visibility("default"))) void blogva(int log_level, const char *format, va_list args);
-#endif
+	if (wolfSSL_CTX_load_system_CA_certs(ctx) != WOLFSSL_SUCCESS) {
+		return CURLE_SSL_CACERT_BADFILE;
+	}
 
-#ifdef __cplusplus
+	return CURLE_OK;
 }
-#endif
+
+class MyCprSession : public cpr::Session {
+public:
+	MyCprSession()
+	{
+		CURL *curl = GetCurlHolder()->handle;
+		curl_easy_setopt(curl, CURLOPT_SSL_CTX_FUNCTION, ssl_ctx_callback);
+	}
+};
+
+} // namespace obs_backgroundremoval_lite
+} // namespace kaito_tokyo

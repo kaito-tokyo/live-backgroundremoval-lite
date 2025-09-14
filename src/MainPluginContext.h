@@ -20,8 +20,16 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs.h>
 
+#ifndef PLUGIN_NAME
+#define PLUGIN_NAME "obs-backgroundremoval-lite"
+#endif
+#ifndef PLUGIN_VERSION
+#define PLUGIN_VERSION "0.0.0-alpha"
+#endif
+
 #ifdef __cplusplus
 
+#include <future>
 #include <memory>
 #include <mutex>
 #include <stdint.h>
@@ -29,12 +37,15 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
-#include "obs-bridge-utils/obs-bridge-utils.hpp"
+#include "obs-bridge-utils/gs_unique.hpp"
+#include <obs-bridge-utils/ObsLogger.hpp>
 
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
+#include "MyCprSession.hpp"
 #include "SelfieSegmenter.hpp"
 #include "TaskQueue.hpp"
+#include "UpdateChecker/UpdateChecker.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -43,7 +54,7 @@ class MainPluginContext : public std::enable_shared_from_this<MainPluginContext>
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	~MainPluginContext() noexcept;
-	void shutdown() noexcept { selfieSegmenterTaskQueue.reset(); }
+	void shutdown() noexcept;
 
 	uint32_t getWidth() const noexcept;
 	uint32_t getHeight() const noexcept;
@@ -61,15 +72,19 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
+	const kaito_tokyo::obs_bridge_utils::ILogger &getLogger() const noexcept { return logger; }
+
 private:
 	obs_data_t *settings = nullptr;
 	obs_source_t *source = nullptr;
 
+	kaito_tokyo::obs_bridge_utils::ObsLogger logger;
 	MainEffect mainEffect;
 	SelfieSegmenter selfieSegmenter;
 	std::unique_ptr<TaskQueue> selfieSegmenterTaskQueue;
 	TaskQueue::CancellationToken selfieSegmenterPendingTaskToken;
 	std::mutex selfieSegmenterPendingTaskTokenMutex;
+	UpdateChecker<MyCprSession> updateChecker;
 
 	uint32_t width = 0;
 	uint32_t height = 0;
@@ -81,6 +96,9 @@ private:
 
 	std::unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
 
+	std::shared_future<std::optional<std::string>> futureLatestVersion;
+
+	std::optional<std::string> getLatestVersion() const;
 	void ensureTextures();
 };
 

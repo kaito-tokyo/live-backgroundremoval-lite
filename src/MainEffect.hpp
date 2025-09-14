@@ -20,10 +20,11 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <cstdint>
 
-#include "plugin-support.h"
 #include <obs.h>
 
-#include <obs-bridge-utils/obs-bridge-utils.hpp>
+#include <obs-bridge-utils/gs_unique.hpp>
+#include <obs-bridge-utils/ILogger.hpp>
+#include <obs-bridge-utils/unique_bfree.hpp>
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -54,24 +55,26 @@ struct RenderingGuard {
 	}
 };
 
-inline gs_eparam_t *getEffectParam(const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t &effect, const char *name)
+inline gs_eparam_t *getEffectParam(const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t &effect, const char *name,
+				   const kaito_tokyo::obs_bridge_utils::ILogger &logger)
 {
 	gs_eparam_t *param = gs_effect_get_param_by_name(effect.get(), name);
 
 	if (!param) {
-		obs_log(LOG_ERROR, "Effect parameter %s not found", name);
+		logger.error("Effect parameter {} not found", name);
 		throw std::runtime_error("Effect parameter not found");
 	}
 
 	return param;
 }
 
-inline gs_technique_t *getEffectTech(const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t &effect, const char *name)
+inline gs_technique_t *getEffectTech(const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t &effect, const char *name,
+				     const kaito_tokyo::obs_bridge_utils::ILogger &logger)
 {
 	gs_technique_t *tech = gs_effect_get_technique(effect.get(), name);
 
 	if (!tech) {
-		obs_log(LOG_ERROR, "Effect technique %s not found", name);
+		logger.error("Effect technique {} not found", name);
 		throw std::runtime_error("Effect technique not found");
 	}
 
@@ -82,12 +85,13 @@ inline gs_technique_t *getEffectTech(const kaito_tokyo::obs_bridge_utils::unique
 
 class MainEffect {
 public:
-	explicit MainEffect(const kaito_tokyo::obs_bridge_utils::unique_bfree_t &effectPath)
+	MainEffect(const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &effectPath,
+		   const kaito_tokyo::obs_bridge_utils::ILogger &logger)
 		: effect(kaito_tokyo::obs_bridge_utils::make_unique_gs_effect_from_file(effectPath)),
-		  textureImage(main_effect_detail::getEffectParam(effect, "image")),
-		  textureMask(main_effect_detail::getEffectParam(effect, "mask")),
-		  techDraw(main_effect_detail::getEffectTech(effect, "Draw")),
-		  techDrawWithMask(main_effect_detail::getEffectTech(effect, "DrawWithMask"))
+		  textureImage(main_effect_detail::getEffectParam(effect, "image", logger)),
+		  textureMask(main_effect_detail::getEffectParam(effect, "mask", logger)),
+		  techDraw(main_effect_detail::getEffectTech(effect, "Draw", logger)),
+		  techDrawWithMask(main_effect_detail::getEffectTech(effect, "DrawWithMask", logger))
 	{
 	}
 

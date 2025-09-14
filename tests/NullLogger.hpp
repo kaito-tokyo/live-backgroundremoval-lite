@@ -1,5 +1,5 @@
 /*
-OBS Background Removal Lite
+obs-showdraw
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -16,24 +16,13 @@ You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
-#include <plugin-support.h>
+#include <obs-bridge-utils/ILogger.hpp>
 
-const char *PLUGIN_NAME = "@CMAKE_PROJECT_NAME@";
-const char *PLUGIN_VERSION = "@CMAKE_PROJECT_VERSION@";
-
-void obs_log(int log_level, const char *format, ...)
-{
-	size_t length = 4 + strlen(PLUGIN_NAME) + strlen(format);
-
-	char *template = malloc(length + 1);
-
-	snprintf(template, length, "[%s] %s", PLUGIN_NAME, format);
-
-	va_list(args);
-
-	va_start(args, format);
-	blogva(log_level, template, args);
-	va_end(args);
-
-	free(template);
-}
+class NullLogger final : public kaito_tokyo::obs_bridge_utils::ILogger {
+public:
+	void log(LogLevel level, std::string_view message) const noexcept override
+	{
+		(void)level;
+		(void)message;
+	}
+};
