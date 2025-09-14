@@ -53,10 +53,9 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: "Setup NuGet Credentials"
-        shell: pwsh
+        shell: pwsh # Windows/macOS/Ubuntuで共通して使えるPowerShellを指定
         run: |
-          dotnet nuget add source --name "GitHub" --source "https://nuget.pkg.github.com/kaito-tokyo/index.json" --username "kaito-tokyo" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
-          dotnet nuget update source "GitHub" --username "kaito-tokyo" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
+          dotnet nuget add source "https://nuget.pkg.github.com/kaito-tokyo/index.json" --name "GitHub" --username "kaito-tokyo" --password "${{ secrets.GITHUB_TOKEN }}" --store-password-in-clear-text
       
       - name: "Install dependencies on Ubuntu"
         if: runner.os == 'Linux'
