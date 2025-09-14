@@ -1,0 +1,90 @@
+name: '💬 Gemini First Reply'
+
+on:
+  workflow_call:
+
+concurrency:
+  group: '${{ github.workflow }}-first-reply-${{ github.event.issue.number }}'
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: 'bash'
+
+jobs:
+  reply:
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 5
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      issues: 'write'
+      pull-requests: 'read'
+    steps:
+      - name: 'Mint identity token'
+        id: 'mint_identity_token'
+        if: |-
+          ${{ vars.APP_ID }}
+        uses: 'actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b' # ratchet:actions/create-github-app-token@v2
+        with:
+          app-id: '${{ vars.APP_ID }}'
+          private-key: '${{ secrets.APP_PRIVATE_KEY }}'
+          permission-issues: 'write'
+
+      - name: 'Run Gemini CLI for First Reply'
+        id: 'run_gemini'
+        uses: 'google-github-actions/run-gemini-cli@v0' # ratchet:exclude
+        env:
+          GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
+          ISSUE_NUMBER: '${{ github.event.issue.number }}'
+          ISSUE_TITLE: '${{ github.event.issue.title }}'
+          ISSUE_BODY: '${{ github.event.issue.body }}'
+          ISSUE_AUTHOR: '${{ github.actor }}'
+          REPOSITORY: '${{ github.repository }}'
+        with:
+          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
+          gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
+          gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
+          gcp_service_account: '${{ vars.SERVICE_ACCOUNT_EMAIL }}'
+          use_vertex_ai: '${{ vars.GOOGLE_GENAI_USE_VERTEXAI }}'
+          google_api_key: '${{ secrets.GOOGLE_API_KEY }}'
+          use_gemini_code_assist: '${{ vars.GOOGLE_GENAI_USE_GCA }}'
+          gemini_debug: '${{ fromJSON(vars.DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
+          settings: |-
+            {
+              "maxSessionTurns": 5,
+              "telemetry": {
+                "enabled": ${{ vars.GOOGLE_CLOUD_PROJECT != '' }},
+                "target": "gcp"
+              },
+              "mcpServers": {
+                "github": {
+                  "command": "docker",
+                  "args": [ "run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server" ],
+                  "includeTools": [ "add_issue_comment" ],
+                  "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}" }
+                }
+              },
+              "coreTools": ["run_shell_command(echo)"]
+            }
+          prompt: |-
+            ## Role
+            あなたは、GitHubリポジトリの親切なAIアシスタントです。あなたの目的は、新しく作成されたIssueに対して最初の返信を行い、起票者を歓迎し、Issueが適切に処理されるように手助けすることです。
+
+            ## Goal
+            ${ISSUE_AUTHOR}さんによって起票されたIssue #${ISSUE_NUMBER} に対して、最初のウェルカムコメントを投稿してください。
+
+            ## Instructions
+            1.  **起票者への挨拶**: まず、`@${ISSUE_AUTHOR}`さん宛に挨拶し、Issueを起票してくれたことへの感謝を伝えます。
+            2.  **内容の確認**: Issueのタイトル「${ISSUE_TITLE}」と本文の内容を簡潔に要約し、内容を理解したことを示します。
+            3.  **初期アドバイスの提供**: Issueの内容を分析し、可能であれば役立つ初期アドバイスを提供します。
+                - **バグ報告の場合**: 「ログを確認しましたか？」や「再現手順をより詳しく教えていただけますか？」などの質問をします。
+                - **機能要望の場合**: 「素晴らしいアイデアありがとうございます！」といった肯定的な反応を示します。
+                - **質問の場合**: 関連するドキュメントへのリンクを提示するなど、自己解決を促す情報を提供します。
+            4.  **締め**: 最後に、「担当者が確認しますので、しばらくお待ちください。」といったメッセージでコメントを締めくくります。
+            5.  **実行**: `mcp__github__add_issue_comment`ツールを使って、作成したコメントを投稿してください。
+
+            ## Constraints
+            - コメントは常に丁寧で、協力的なトーンを保ってください。
+            - Issueを解決しようとしたり、クローズしたりしないでください。あなたの役割はあくまで最初の応対です。

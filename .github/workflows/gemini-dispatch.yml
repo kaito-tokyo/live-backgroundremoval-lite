@@ -202,3 +202,10 @@ jobs:
           gh issue comment "${ISSUE_NUMBER}" \
             --body "${MESSAGE}" \
             --repo "${REPOSITORY}"
+
+  first-reply:
+    needs: 'dispatch'
+    if: |-
+      ${{ needs.dispatch.outputs.command == 'triage' }}
+    uses: './.github/workflows/gemini-first-reply.yml'
+    secrets: 'inherit'
