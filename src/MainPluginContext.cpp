@@ -67,7 +67,9 @@ void MainPluginContext::startup() noexcept
 	});
 }
 
-void MainPluginContext::shutdown() noexcept {}
+void MainPluginContext::shutdown() noexcept {
+	renderingContext.reset();
+}
 
 MainPluginContext::~MainPluginContext() noexcept {}
 
@@ -145,19 +147,12 @@ void MainPluginContext::videoRender()
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 try {
 	if (frame->width == 0 || frame->height == 0) {
-		if (renderingContext) {
-			selfieSegmenterTaskQueue.cancelAllAndWait();
-			renderingContext.reset();
-		}
+		renderingContext.reset();
 		return frame;
 	}
 	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height) {
-		if (renderingContext) {
-			selfieSegmenterTaskQueue.cancelAllAndWait();
-			renderingContext.reset();
-		}
 		graphics_context_guard guard;
-		renderingContext = std::make_unique<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
+		renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
 								      selfieSegmenterTaskQueue, frame->width,
 								      frame->height);
 	}

@@ -1,3 +1,21 @@
+/*
+OBS Background Removal Lite
+Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program. If not, see <https://www.gnu.org/licenses/>
+*/
+
 #pragma once
 
 #include <atomic>
@@ -48,10 +66,6 @@ private:
 	std::condition_variable cond;
 	std::queue<QueuedTask> queue;
 	bool stopped = false;
-
-	std::mutex taskMutex;
-	std::condition_variable taskCond;
-	int activeTaskCount = 0;
 
 public:
 	/**
@@ -113,29 +127,6 @@ public:
 		return token;
 	}
 
-	/**
-	 * @brief Cancels all pending tasks and waits for the currently executing task to complete.
-	 */
-	void cancelAllAndWait()
-	{
-		{
-			std::lock_guard<std::mutex> lock(mtx);
-			// Cancel and remove all tasks in the queue.
-			while (!queue.empty()) {
-				if (queue.front().second) {
-					queue.front().second->store(true);
-				}
-				queue.pop();
-			}
-		}
-
-		// Wait for the currently running task to finish.
-		{
-			std::unique_lock<std::mutex> lock(taskMutex);
-			taskCond.wait(lock, [this] { return activeTaskCount == 0; });
-		}
-	}
-
 private:
 	/**
      * @brief The main loop for the worker thread.
@@ -148,11 +139,6 @@ private:
 				break;
 			}
 
-			{
-				std::lock_guard<std::mutex> lock(taskMutex);
-				activeTaskCount++;
-			}
-
 			try {
 				(*taskOpt)();
 			} catch (const std::exception &e) {
@@ -160,12 +146,6 @@ private:
 			} catch (...) {
 				logger.error("ThrottledTaskQueue: Task threw an unknown exception.");
 			}
-
-			{
-				std::lock_guard<std::mutex> lock(taskMutex);
-				activeTaskCount--;
-			}
-			taskCond.notify_all();
 		}
 	}
 
@@ -201,6 +181,7 @@ private:
 			}
 			stopped = true;
 
+			// Cancel all pending tasks in the queue before shutting down.
 			while (!queue.empty()) {
 				if (queue.front().second) {
 					queue.front().second->store(true);

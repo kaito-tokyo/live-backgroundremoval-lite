@@ -62,7 +62,7 @@ private:
 	ncnn::Net selfieSegmenterNet;
 	Preset preset;
 
-	std::unique_ptr<RenderingContext> renderingContext = nullptr;
+	std::shared_ptr<RenderingContext> renderingContext = nullptr;
 	std::shared_future<std::optional<std::string>> futureLatestVersion;
 	std::optional<std::string> getLatestVersion() const;
 
