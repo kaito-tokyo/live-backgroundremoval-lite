@@ -31,30 +31,6 @@ namespace obs_backgroundremoval_lite {
 
 namespace main_effect_detail {
 
-struct RenderingGuard {
-	gs_texture_t *previousRenderTarget;
-	gs_zstencil_t *previousZStencil;
-	gs_color_space previousColorSpace;
-
-	RenderingGuard(gs_texture_t *targetTexture, gs_blend_type srcBlendType = GS_BLEND_ONE,
-		       gs_blend_type dstBlendType = GS_BLEND_ZERO, gs_zstencil_t *targetZStencil = nullptr,
-		       gs_color_space targetColorSpace = GS_CS_SRGB)
-		: previousRenderTarget(gs_get_render_target()),
-		  previousZStencil(gs_get_zstencil_target()),
-		  previousColorSpace(gs_get_color_space())
-	{
-		gs_set_render_target_with_color_space(targetTexture, targetZStencil, targetColorSpace);
-		gs_blend_state_push();
-		gs_blend_function(srcBlendType, dstBlendType);
-	}
-
-	~RenderingGuard()
-	{
-		gs_blend_state_pop();
-		gs_set_render_target_with_color_space(previousRenderTarget, previousZStencil, previousColorSpace);
-	}
-};
-
 inline gs_eparam_t *getEffectParam(const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t &effect, const char *name,
 				   const kaito_tokyo::obs_bridge_utils::ILogger &logger)
 {
@@ -108,7 +84,7 @@ public:
 	gs_technique_t *const techDraw;
 	gs_technique_t *const techDrawWithMask;
 
-	void draw(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) noexcept
+	void draw(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) const noexcept
 	{
 		gs_technique_t *tech = techDraw;
 		std::size_t passes = gs_technique_begin(tech);
@@ -124,7 +100,7 @@ public:
 	}
 
 	void drawWithMask(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
-			  gs_texture_t *maskTexture) noexcept
+			  gs_texture_t *maskTexture) const noexcept
 	{
 		gs_technique_t *tech = techDrawWithMask;
 		std::size_t passes = gs_technique_begin(tech);

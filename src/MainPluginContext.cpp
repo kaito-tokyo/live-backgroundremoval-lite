@@ -25,42 +25,17 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs-bridge-utils/ObsLogger.hpp>
 
 using namespace kaito_tokyo::obs_bridge_utils;
-using namespace kaito_tokyo::obs_backgroundremoval_lite;
-
-namespace {
-
-inline void ensureTexture(unique_gs_texture_t &texture, std::uint32_t width, std::uint32_t height,
-			  gs_color_format format, std::uint32_t flags)
-{
-	if (!texture || gs_texture_get_width(texture.get()) != width ||
-	    gs_texture_get_height(texture.get()) != height) {
-		texture = make_unique_gs_texture(width, height, format, 1, NULL, flags);
-	}
-}
-
-void ensureTextureReader(std::unique_ptr<AsyncTextureReader> &textureReader, std::uint32_t width, std::uint32_t height,
-			 gs_color_format format)
-{
-	if (!textureReader || textureReader->getWidth() != width || textureReader->getHeight() != height) {
-		textureReader = std::make_unique<AsyncTextureReader>(width, height, format);
-	}
-}
-
-} // namespace
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
-MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_source)
-	: settings{_settings},
-	  source{_source},
+MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source)
+	: source{_source},
 	  logger("[" PLUGIN_NAME "] "),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
-	  selfieSegmenter(unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.param"),
-			  unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.bin")),
-	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>(logger)),
 	  updateChecker(logger)
 {
+	update(settings);
 }
 
 void MainPluginContext::startup() noexcept
@@ -73,24 +48,22 @@ void MainPluginContext::startup() noexcept
 			return std::nullopt;
 		}
 	});
-	update(settings);
+}
+
+void MainPluginContext::shutdown() noexcept
+{
 }
 
 MainPluginContext::~MainPluginContext() noexcept {}
 
-void MainPluginContext::shutdown() noexcept
-{
-	selfieSegmenterTaskQueue.reset();
-}
-
 std::uint32_t MainPluginContext::getWidth() const noexcept
 {
-	return width;
+	return renderingContext ? renderingContext->width : 0;
 }
 
 std::uint32_t MainPluginContext::getHeight() const noexcept
 {
-	return height;
+	return renderingContext ? renderingContext->height : 0;
 }
 
 void MainPluginContext::getDefaults(obs_data_t *data)
@@ -115,7 +88,6 @@ obs_properties_t *MainPluginContext::getProperties()
 
 void MainPluginContext::update(obs_data_t *_settings)
 {
-	settings = _settings;
 }
 
 void MainPluginContext::activate() {}
@@ -128,111 +100,23 @@ void MainPluginContext::hide() {}
 
 void MainPluginContext::videoTick(float seconds)
 {
-	UNUSED_PARAMETER(seconds);
+	if (!renderingContext) {
+		logger.debug("Rendering context is not initialized, skipping video tick");
+		return;
+	}
+
+	renderingContext->videoTick(seconds);
 }
 
 void MainPluginContext::videoRender()
 {
-	if (width == 0 || height == 0) {
-		logger.debug("Width or height is zero, skipping video render");
+	if (!renderingContext) {
+		logger.debug("Rendering context is not initialized, skipping video render");
 		obs_source_skip_video_filter(source);
 		return;
 	}
 
-	ensureTextures();
-
-	if (!bgrxSegmenterInput) {
-		logger.error("bgrxSegmenterInput is null, skipping video render");
-		obs_source_skip_video_filter(source);
-		return;
-	}
-
-	if (!bgrxSegmenterInput) {
-		logger.error("bgrxSegmenterInput is null, skipping video render");
-		obs_source_skip_video_filter(source);
-		return;
-	}
-
-	if (readerSegmenterInput) {
-		try {
-			readerSegmenterInput->sync();
-		} catch (const std::exception &e) {
-			logger.error("Failed to sync texture reader: {}", e.what());
-		}
-	}
-
-	gs_texture_t *defaultRenderTarget = gs_get_render_target();
-	gs_zstencil_t *defaultZStencil = gs_get_zstencil_target();
-	gs_color_space defaultColorSpace = gs_get_color_space();
-
-	gs_viewport_push();
-	gs_projection_push();
-	gs_matrix_push();
-
-	gs_set_viewport(0, 0, width, height);
-	gs_ortho(0.0f, (float)width, 0.0f, (float)height, -100.0f, 100.0f);
-	gs_matrix_identity();
-
-	gs_set_render_target_with_color_space(bgrxSourceInput.get(), nullptr, GS_CS_SRGB);
-
-	if (!obs_source_process_filter_begin(source, GS_BGRA, OBS_ALLOW_DIRECT_RENDERING)) {
-		logger.error("Could not begin processing filter");
-		obs_source_skip_video_filter(source);
-		return;
-	}
-
-	obs_source_process_filter_end(source, mainEffect.effect.get(), width, height);
-
-	gs_set_render_target_with_color_space(bgrxSegmenterInput.get(), nullptr, GS_CS_SRGB);
-
-	vec4 black = {0.0f, 0.0f, 0.0f, 1.0f};
-	gs_clear(GS_CLEAR_COLOR, &black, 1.0f, 0);
-
-	double scaleW = static_cast<double>(SelfieSegmenter::INPUT_WIDTH) / static_cast<double>(width);
-	double scaleH = static_cast<double>(SelfieSegmenter::INPUT_HEIGHT) / static_cast<double>(height);
-	double scale = std::min(scaleW, scaleH);
-
-	std::uint32_t scaledW = static_cast<std::uint32_t>(std::round(width * scale));
-	std::uint32_t scaledH = static_cast<std::uint32_t>(std::round(height * scale));
-
-	std::uint32_t offsetX = (SelfieSegmenter::INPUT_WIDTH - scaledW) / 2;
-	std::uint32_t offsetY = (SelfieSegmenter::INPUT_HEIGHT - scaledH) / 2;
-
-	gs_set_viewport(offsetX, offsetY, scaledW, scaledH);
-	gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
-	gs_matrix_identity();
-
-	mainEffect.draw(width, height, bgrxSourceInput.get());
-
-	gs_set_render_target_with_color_space(defaultRenderTarget, defaultZStencil, defaultColorSpace);
-
-	gs_viewport_pop();
-	gs_projection_pop();
-	gs_matrix_pop();
-
-	const auto &maskData = selfieSegmenter.getMask();
-
-	const cv::Mat srcMask(SelfieSegmenter::INPUT_HEIGHT, SelfieSegmenter::INPUT_WIDTH, CV_8UC1,
-			      const_cast<unsigned char *>(maskData.data()));
-
-	const cv::Rect roi(offsetX, offsetY, scaledW, scaledH);
-	const cv::Mat croppedMask = srcMask(roi);
-
-	if (scaledMaskData.size() != static_cast<size_t>(width * height)) {
-		scaledMaskData.resize(width * height);
-	}
-
-	cv::Mat dstMask(height, width, CV_8UC1, scaledMaskData.data());
-
-	cv::resize(croppedMask, dstMask, dstMask.size(), 0, 0, cv::INTER_NEAREST);
-
-	const std::uint8_t *r8Data = scaledMaskData.data();
-	gs_texture_set_image(r8Mask.get(), r8Data, width, 0);
-	mainEffect.drawWithMask(width, height, bgrxSourceInput.get(), r8Mask.get());
-
-	if (readerSegmenterInput && bgrxSegmenterInput) {
-		readerSegmenterInput->stage(bgrxSegmenterInput.get());
-	}
+	renderingContext->videoRender();
 }
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
@@ -241,34 +125,7 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 		renderingContext = std::make_unique<RenderingContext>(frame->width, frame->height, logger);
 	}
 
-	if (selfieSegmenterTaskQueue) {
-		std::lock_guard<std::mutex> lock(selfieSegmenterPendingTaskTokenMutex);
-
-		if (selfieSegmenterPendingTaskToken) {
-			selfieSegmenterPendingTaskToken->store(true);
-		}
-
-		selfieSegmenterPendingTaskToken = selfieSegmenterTaskQueue->push([self = weak_from_this()](
-											 const TaskQueue::CancellationToken
-												 &token) {
-			if (auto s = self.lock()) {
-				if (!token->load()) {
-					s.get()->selfieSegmenter.process(
-						s.get()->readerSegmenterInput->getBuffer().data());
-				} else {
-					s.get()->getLogger().info(
-						"Selfie segmentation task was cancelled, skipping processing");
-				}
-			} else {
-				blog(LOG_INFO,
-				     "MainPluginContext has been destroyed or task was cancelled, skipping processing");
-			}
-		});
-	} else {
-		logger.error("Task queue is not initialized");
-	}
-
-	return frame;
+	return renderingContext->filterVideo(frame);
 }
 
 std::optional<std::string> MainPluginContext::getLatestVersion() const

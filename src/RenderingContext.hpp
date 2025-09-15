@@ -24,24 +24,51 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs-bridge-utils/ILogger.hpp>
 
 #include "AsyncTextureReader.hpp"
+#include "MainEffect.hpp"
+#include "SelfieSegmenter.hpp"
+#include "TaskQueue.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
 class RenderingContext {
-public:
-    const std::uint32_t width;
-    const std::uint32_t height;
-    const kaito_tokyo::obs_bridge_utils::ILogger &logger;
+private:
+	obs_source_t *const source;
+	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
+	const MainEffect &mainEffect;
 
+	AsyncTextureReader readerSegmenterInput;
+	SelfieSegmenter selfieSegmenter;
+
+public:
+	const std::uint32_t width;
+	const std::uint32_t height;
+
+private:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmentorInput;
+
+	const std::uint32_t maskRoiOffsetX;
+	const std::uint32_t maskRoiOffsetY;
+	const std::uint32_t maskRoiWidth;
+	const std::uint32_t maskRoiHeight;
+
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SegmentationMask;
 
-    const AsyncTextureReader readerSegmenterInput;
+	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-    RenderingContext(std::uint32_t width, std::uint32_t height, const kaito_tokyo::obs_bridge_utils::ILogger &logger) noexcept;
-    ~RenderingContext() noexcept;
+public:
+	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,
+			 const MainEffect &mainEffect, std::uint32_t width, std::uint32_t height) noexcept;
+	~RenderingContext() noexcept;
+
+	void videoTick(float seconds);
+	void videoRender();
+	obs_source_frame *filterVideo(obs_source_frame *frame);
+
+private:
+	void renderOriginalImage();
+	void renderSegmenterInput();
 };
 
 } // namespace obs_backgroundremoval_lite

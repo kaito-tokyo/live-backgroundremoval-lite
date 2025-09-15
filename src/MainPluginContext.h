@@ -77,27 +77,16 @@ public:
 	const kaito_tokyo::obs_bridge_utils::ILogger &getLogger() const noexcept { return logger; }
 
 private:
-	obs_data_t *settings = nullptr;
 	obs_source_t *source = nullptr;
-
 	kaito_tokyo::obs_bridge_utils::ObsLogger logger;
 	MainEffect mainEffect;
-	SelfieSegmenter selfieSegmenter;
-	std::unique_ptr<TaskQueue> selfieSegmenterTaskQueue;
-	TaskQueue::CancellationToken selfieSegmenterPendingTaskToken;
-	std::mutex selfieSegmenterPendingTaskTokenMutex;
 	UpdateChecker<MyCprSession> updateChecker;
 
 	std::unique_ptr<RenderingContext> renderingContext = nullptr;
 
-	std::vector<std::uint8_t> scaledMaskData;
-
-	std::unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
-
 	std::shared_future<std::optional<std::string>> futureLatestVersion;
 
 	std::optional<std::string> getLatestVersion() const;
-	void ensureTextures();
 };
 
 } // namespace obs_backgroundremoval_lite
