@@ -103,10 +103,10 @@ cmake --preset ubuntu-x86_64
 cmake --build --preset ubuntu-x86_64
 
 # 3. Install the plugin
-rm -rf ~/.config/obs-studio/obs-backgroundremoval-lite
-mkdir -p ~/.config/obs-studio/obs-backgroundremoval-lite/bin/64bit
-cp build_x86_64/obs-backgroundremoval-lite.so ~/.config/obs-studio/obs-backgroundremoval-lite/bin/64bit
-cp -r data ~/.config/obs-studio/obs-backgroundremoval-lite/data
+rm -rf ~/.config/obs-studio/plugins/obs-backgroundremoval-lite
+mkdir -p ~/.config/obs-studio/plugins/obs-backgroundremoval-lite/bin/64bit
+cp build_x86_64/obs-backgroundremoval-lite.so ~/.config/obs-studio/plugins/obs-backgroundremoval-lite/bin/64bit
+cp -r data ~/.config/obs-studio/plugins/obs-backgroundremoval-lite/data
 ```
 
 ### 5. Verify the Installation
