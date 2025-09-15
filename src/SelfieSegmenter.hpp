@@ -37,34 +37,6 @@ namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
 /**
- * @class NcnnInferenceEngine
- * @brief A class responsible for loading and running ncnn models.
- */
-class NcnnInferenceEngine {
-public:
-	NcnnInferenceEngine(const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &param_path,
-			    const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &bin_path)
-	{
-		if (net.load_param(param_path.get()) != 0) {
-			throw std::runtime_error(std::string("Failed to load ncnn param file: ") + param_path.get());
-		}
-		if (net.load_model(bin_path.get()) != 0) {
-			throw std::runtime_error(std::string("Failed to load ncnn bin file: ") + bin_path.get());
-		}
-	}
-
-	void run(const ncnn::Mat &input, ncnn::Mat &output) const
-	{
-		ncnn::Extractor ex = net.create_extractor();
-		ex.input("in0", input);
-		ex.extract("out0", output);
-	}
-
-private:
-	ncnn::Net net;
-};
-
-/**
  * @class MaskBuffer
  * @brief A thread-safe double buffer for managing mask data.
  */
@@ -115,9 +87,18 @@ public:
 	static constexpr int INPUT_HEIGHT = 256;
 	static constexpr int PIXEL_COUNT = INPUT_WIDTH * INPUT_HEIGHT;
 
-	SelfieSegmenter(const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &param_path,
-			const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &bin_path)
-		: inferenceEngine(param_path, bin_path),
+	static constexpr float MEAN_VALS[3] = {0.0f, 0.0f, 0.0f};
+	static constexpr float NORM_VALS[3] = {1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f};
+
+	const ncnn::Net &selfieSegmenterNet;
+	MaskBuffer maskBuffer;
+
+	// Member variables to reuse memory for ncnn::Mat
+	ncnn::Mat m_inputMat;
+	ncnn::Mat m_outputMat;
+
+	SelfieSegmenter(const ncnn::Net &_selfieSegmenterNet)
+		: selfieSegmenterNet(_selfieSegmenterNet),
 		  maskBuffer(PIXEL_COUNT)
 	{
 		// Pre-allocate memory for the input Mat.
@@ -138,7 +119,9 @@ public:
 		preprocess(bgra_data);
 
 		// 2. Run inference using member Mats
-		inferenceEngine.run(m_inputMat, m_outputMat);
+		ncnn::Extractor ex = selfieSegmenterNet.create_extractor();
+		ex.input("in0", m_inputMat);
+		ex.extract("out0", m_outputMat);
 
 		// 3. Get a reference to the buffer to write to
 		std::vector<std::uint8_t> &maskToWrite = maskBuffer.beginWrite();
@@ -163,8 +146,6 @@ private:
 		float *r_channel = m_inputMat.channel(0);
 		float *g_channel = m_inputMat.channel(1);
 		float *b_channel = m_inputMat.channel(2);
-		m_inputMat.from_pixels(bgra_data, ncnn::Mat::PIXEL_BGRA2RGB, INPUT_WIDTH, INPUT_HEIGHT);
-		m_inputMat.substract_mean_normalize(MEAN_VALS, NORM_VALS);
 
 		for (int i = 0; i < PIXEL_COUNT; i++) {
 			// BGRA layout and normalization formula: (pixel - mean) * norm
@@ -184,16 +165,6 @@ private:
 			mask[i] = static_cast<std::uint8_t>(std::max(0.f, std::min(255.f, src_ptr[i] * 255.f)));
 		}
 	}
-
-	NcnnInferenceEngine inferenceEngine;
-	MaskBuffer maskBuffer;
-
-	// Member variables to reuse memory for ncnn::Mat
-	ncnn::Mat m_inputMat;
-	ncnn::Mat m_outputMat;
-
-	static constexpr float MEAN_VALS[3] = {0.0f, 0.0f, 0.0f};
-	static constexpr float NORM_VALS[3] = {1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f};
 };
 
 } // namespace obs_backgroundremoval_lite

@@ -37,20 +37,33 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
-#include "obs-bridge-utils/gs_unique.hpp"
+#include <obs-bridge-utils/gs_unique.hpp>
 #include <obs-bridge-utils/ObsLogger.hpp>
 
-#include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
 #include "MyCprSession.hpp"
+#include "RenderingContext.hpp"
 #include "SelfieSegmenter.hpp"
-#include "TaskQueue.hpp"
+#include "SelfieSegmenter.hpp"
+#include "ThrottledTaskQueue.hpp"
 #include "UpdateChecker/UpdateChecker.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
+private:
+	obs_source_t *const source = nullptr;
+	const kaito_tokyo::obs_bridge_utils::ObsLogger logger;
+	const MainEffect mainEffect;
+	UpdateChecker<MyCprSession> updateChecker;
+	ThrottledTaskQueue selfieSegmenterTaskQueue;
+	ncnn::Net selfieSegmenterNet;
+
+	std::unique_ptr<RenderingContext> renderingContext = nullptr;
+	std::shared_future<std::optional<std::string>> futureLatestVersion;
+	std::optional<std::string> getLatestVersion() const;
+
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	void startup() noexcept;
@@ -74,34 +87,6 @@ public:
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
 	const kaito_tokyo::obs_bridge_utils::ILogger &getLogger() const noexcept { return logger; }
-
-private:
-	obs_data_t *settings = nullptr;
-	obs_source_t *source = nullptr;
-
-	kaito_tokyo::obs_bridge_utils::ObsLogger logger;
-	MainEffect mainEffect;
-	SelfieSegmenter selfieSegmenter;
-	std::unique_ptr<TaskQueue> selfieSegmenterTaskQueue;
-	TaskQueue::CancellationToken selfieSegmenterPendingTaskToken;
-	std::mutex selfieSegmenterPendingTaskTokenMutex;
-	UpdateChecker<MyCprSession> updateChecker;
-
-	uint32_t width = 0;
-	uint32_t height = 0;
-
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceInput = nullptr;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput = nullptr;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8Mask = nullptr;
-
-	std::vector<std::uint8_t> scaledMaskData;
-
-	std::unique_ptr<AsyncTextureReader> readerSegmenterInput = nullptr;
-
-	std::shared_future<std::optional<std::string>> futureLatestVersion;
-
-	std::optional<std::string> getLatestVersion() const;
-	void ensureTextures();
 };
 
 } // namespace obs_backgroundremoval_lite
