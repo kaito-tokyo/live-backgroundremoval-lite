@@ -35,6 +35,22 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
 	  updateChecker(logger)
 {
+	unique_bfree_char_t paramPath = unique_obs_module_file("models/selfie_segmentation_int8.ncnn.param");
+	if (!paramPath) {
+		throw std::runtime_error("Failed to find model param file");
+	}
+	unique_bfree_char_t binPath = unique_obs_module_file("models/selfie_segmentation_int8.ncnn.bin");
+	if (!binPath) {
+		throw std::runtime_error("Failed to find model bin file");
+	}
+
+	if (selfieSegmenterNet.load_param(paramPath.get()) != 0) {
+		throw std::runtime_error("Failed to load model param");
+	}
+	if (selfieSegmenterNet.load_model(binPath.get()) != 0) {
+		throw std::runtime_error("Failed to load model bin");
+	}
+
 	update(settings);
 }
 
@@ -50,9 +66,7 @@ void MainPluginContext::startup() noexcept
 	});
 }
 
-void MainPluginContext::shutdown() noexcept
-{
-}
+void MainPluginContext::shutdown() noexcept {}
 
 MainPluginContext::~MainPluginContext() noexcept {}
 
@@ -121,12 +135,24 @@ void MainPluginContext::videoRender()
 }
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
-{
-	if (renderingContext->width != frame->width || renderingContext->height != frame->height) {
-		renderingContext = std::make_unique<RenderingContext>(source, logger, mainEffect, frame->width, frame->height);
+try {
+	if (frame->width == 0 || frame->height == 0) {
+		renderingContext.reset();
+		return frame;
+	}
+	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height) {
+		const graphics_context_guard guard;
+		renderingContext = std::make_unique<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
+								      frame->width, frame->height);
 	}
 
-	return renderingContext->filterVideo(frame);
+	return frame;
+} catch (const std::exception &e) {
+	logger.error("Failed to create rendering context: {}", e.what());
+	return frame;
+} catch (...) {
+	logger.error("Failed to create rendering context: unknown error");
+	return frame;
 }
 
 std::optional<std::string> MainPluginContext::getLatestVersion() const

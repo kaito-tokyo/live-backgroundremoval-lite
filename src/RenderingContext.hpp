@@ -20,13 +20,15 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <cstdint>
 
+#include <net.h>
+
 #include <obs-bridge-utils/gs_unique.hpp>
 #include <obs-bridge-utils/ILogger.hpp>
 
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
-#include "SelfieSegmenter.hpp"
 #include "TaskQueue.hpp"
+#include "SelfieSegmenter.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -46,7 +48,7 @@ public:
 
 private:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmentorInput;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
 
 	const std::uint32_t maskRoiOffsetX;
 	const std::uint32_t maskRoiOffsetY;
@@ -59,7 +61,8 @@ private:
 
 public:
 	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,
-			 const MainEffect &mainEffect, std::uint32_t width, std::uint32_t height) noexcept;
+			 const MainEffect &mainEffect, const ncnn::Net &selfieSegmenterNet, std::uint32_t width,
+			 std::uint32_t height);
 	~RenderingContext() noexcept;
 
 	void videoTick(float seconds);

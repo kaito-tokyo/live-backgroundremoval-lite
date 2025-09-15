@@ -81,17 +81,16 @@ namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
-				   std::uint32_t _width, std::uint32_t _height) noexcept
+				   const ncnn::Net &_selfieSegmenterNet, std::uint32_t _width, std::uint32_t _height)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
 	  readerSegmenterInput(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX),
-	  selfieSegmenter(unique_obs_module_file("models/selfie_segmentation.param"),
-			  unique_obs_module_file("models/selfie_segmentation.bin")),
+	  selfieSegmenter(_selfieSegmenterNet),
 	  width(_width),
 	  height(_height),
 	  bgrxOriginalImage(make_unique_gs_texture(width, height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
-	  bgrxSegmentorInput(make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT,
+	  bgrxSegmenterInput(make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT,
 						    GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  maskRoiOffsetX(getMaskRoiDimension(width, height)[0]),
 	  maskRoiOffsetY(getMaskRoiDimension(width, height)[1]),
@@ -103,8 +102,9 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 
 RenderingContext::~RenderingContext() noexcept {}
 
-void RenderingContext::videoTick(float seconds) {
-    UNUSED_PARAMETER(seconds);
+void RenderingContext::videoTick(float seconds)
+{
+	UNUSED_PARAMETER(seconds);
 }
 
 void RenderingContext::renderOriginalImage()
@@ -132,7 +132,7 @@ void RenderingContext::renderSegmenterInput()
 	RenderTargetGuard renderTargetGuard;
 	TransformStateGuard transformStateGuard;
 
-	gs_set_render_target_with_color_space(bgrxSegmentorInput.get(), nullptr, GS_CS_SRGB);
+	gs_set_render_target_with_color_space(bgrxSegmenterInput.get(), nullptr, GS_CS_SRGB);
 
 	gs_clear(GS_CLEAR_COLOR, &blackColor, 1.0f, 0);
 
@@ -159,7 +159,7 @@ void RenderingContext::videoRender()
 	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, width, 0);
 	mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
 
-	readerSegmenterInput.stage(bgrxSegmentorInput.get());
+	readerSegmenterInput.stage(bgrxSegmenterInput.get());
 }
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
