@@ -145,11 +145,18 @@ void MainPluginContext::videoRender()
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 try {
 	if (frame->width == 0 || frame->height == 0) {
-		renderingContext.reset();
+		if (renderingContext) {
+			selfieSegmenterTaskQueue.cancelAllAndWait();
+			renderingContext.reset();
+		}
 		return frame;
 	}
 	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height) {
-		const graphics_context_guard guard;
+		if (renderingContext) {
+			selfieSegmenterTaskQueue.cancelAllAndWait();
+			renderingContext.reset();
+		}
+		graphics_context_guard guard;
 		renderingContext = std::make_unique<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
 								      selfieSegmenterTaskQueue, frame->width,
 								      frame->height);
