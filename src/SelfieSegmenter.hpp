@@ -146,8 +146,6 @@ private:
 		float *r_channel = m_inputMat.channel(0);
 		float *g_channel = m_inputMat.channel(1);
 		float *b_channel = m_inputMat.channel(2);
-		m_inputMat.from_pixels(bgra_data, ncnn::Mat::PIXEL_BGRA2RGB, INPUT_WIDTH, INPUT_HEIGHT);
-		m_inputMat.substract_mean_normalize(MEAN_VALS, NORM_VALS);
 
 		for (int i = 0; i < PIXEL_COUNT; i++) {
 			// BGRA layout and normalization formula: (pixel - mean) * norm

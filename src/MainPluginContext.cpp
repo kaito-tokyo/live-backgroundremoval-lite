@@ -35,11 +35,11 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
 	  updateChecker(logger)
 {
-	unique_bfree_char_t paramPath = unique_obs_module_file("models/selfie_segmentation_int8.ncnn.param");
+	unique_bfree_char_t paramPath = unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.param");
 	if (!paramPath) {
 		throw std::runtime_error("Failed to find model param file");
 	}
-	unique_bfree_char_t binPath = unique_obs_module_file("models/selfie_segmentation_int8.ncnn.bin");
+	unique_bfree_char_t binPath = unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.bin");
 	if (!binPath) {
 		throw std::runtime_error("Failed to find model bin file");
 	}

@@ -156,8 +156,9 @@ void RenderingContext::videoRender()
 
 	const std::uint8_t *segmentationMaskData =
 		selfieSegmenter.getMask().data() + (maskRoiOffsetY * SelfieSegmenter::INPUT_WIDTH + maskRoiOffsetX);
-	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, width, 0);
-	mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
+	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, SelfieSegmenter::INPUT_WIDTH, 0);
+	// mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
+	mainEffect.draw(width, height, r8SegmentationMask.get());
 
 	readerSegmenterInput.stage(bgrxSegmenterInput.get());
 }
