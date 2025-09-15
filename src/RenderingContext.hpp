@@ -50,6 +50,7 @@ public:
 private:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
+	std::vector<std::uint8_t> segmenterInputBuffer;
 
 	const std::uint32_t maskRoiOffsetX;
 	const std::uint32_t maskRoiOffsetY;
