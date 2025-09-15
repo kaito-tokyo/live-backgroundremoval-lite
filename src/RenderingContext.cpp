@@ -165,17 +165,17 @@ void RenderingContext::videoRender()
 
 	// Make a copy of the buffer for the worker thread to ensure data validity
 	auto bufferCopy = readerSegmenterInput.getBuffer();
-	selfieSegmenterTaskQueue.push(
-		[weakSelf = weak_from_this(), buffer = std::move(bufferCopy)](const ThrottledTaskQueue::CancellationToken &token) {
-			if (auto self = weakSelf.lock()) {
-				if (token->load()) {
-					return;
-				}
-				self->selfieSegmenter.process(buffer.data());
-			} else {
-				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
+	selfieSegmenterTaskQueue.push([weakSelf = weak_from_this(), buffer = std::move(bufferCopy)](
+					      const ThrottledTaskQueue::CancellationToken &token) {
+		if (auto self = weakSelf.lock()) {
+			if (token->load()) {
+				return;
 			}
-		});
+			self->selfieSegmenter.process(buffer.data());
+		} else {
+			blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
+		}
+	});
 }
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)

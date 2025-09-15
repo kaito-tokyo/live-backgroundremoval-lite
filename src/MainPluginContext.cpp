@@ -67,7 +67,8 @@ void MainPluginContext::startup() noexcept
 	});
 }
 
-void MainPluginContext::shutdown() noexcept {
+void MainPluginContext::shutdown() noexcept
+{
 	renderingContext.reset();
 }
 
