@@ -40,6 +40,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "obs-bridge-utils/gs_unique.hpp"
 #include <obs-bridge-utils/ObsLogger.hpp>
 
+#include "RenderingContext.hpp"
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
 #include "MyCprSession.hpp"
@@ -87,12 +88,7 @@ private:
 	std::mutex selfieSegmenterPendingTaskTokenMutex;
 	UpdateChecker<MyCprSession> updateChecker;
 
-	uint32_t width = 0;
-	uint32_t height = 0;
-
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSourceInput = nullptr;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput = nullptr;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8Mask = nullptr;
+	std::unique_ptr<RenderingContext> renderingContext = nullptr;
 
 	std::vector<std::uint8_t> scaledMaskData;
 

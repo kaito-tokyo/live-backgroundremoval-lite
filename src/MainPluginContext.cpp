@@ -237,11 +237,8 @@ void MainPluginContext::videoRender()
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 {
-	if (width != frame->width || height != frame->height) {
-		width = frame->width;
-		height = frame->height;
-
-		ensureTextures();
+	if (renderingContext->width != frame->width || renderingContext->height != frame->height) {
+		renderingContext = std::make_unique<RenderingContext>(frame->width, frame->height, logger);
 	}
 
 	if (selfieSegmenterTaskQueue) {
@@ -272,15 +269,6 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 	}
 
 	return frame;
-}
-
-void MainPluginContext::ensureTextures()
-{
-	ensureTexture(bgrxSourceInput, width, height, GS_BGRX, GS_RENDER_TARGET);
-	ensureTexture(bgrxSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX,
-		      GS_RENDER_TARGET);
-	ensureTexture(r8Mask, width, height, GS_R8, GS_DYNAMIC);
-	ensureTextureReader(readerSegmenterInput, SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX);
 }
 
 std::optional<std::string> MainPluginContext::getLatestVersion() const
