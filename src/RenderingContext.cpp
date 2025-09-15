@@ -151,6 +151,8 @@ void RenderingContext::videoRender()
 		logger.error("Failed to sync texture reader: {}", e.what());
 	}
 
+	selfieSegmenter.process(readerSegmenterInput.getBuffer().data());
+
 	renderOriginalImage();
 	renderSegmenterInput();
 
@@ -165,7 +167,6 @@ void RenderingContext::videoRender()
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
-	selfieSegmenter.process(readerSegmenterInput.getBuffer().data());
 	return frame;
 }
 
