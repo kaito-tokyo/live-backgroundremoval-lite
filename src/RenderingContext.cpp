@@ -166,13 +166,15 @@ void RenderingContext::videoRender()
 	// Make a copy of the buffer for the worker thread to ensure data validity
 	auto bufferCopy = readerSegmenterInput.getBuffer();
 	selfieSegmenterTaskQueue.push(
-		[self = shared_from_this(), buffer = std::move(bufferCopy)](const ThrottledTaskQueue::CancellationToken &token) {
-			// Check if the task has been cancelled before starting
-			if (token->load()) {
-				return;
+		[weakSelf = weak_from_this(), buffer = std::move(bufferCopy)](const ThrottledTaskQueue::CancellationToken &token) {
+			if (auto self = weakSelf.lock()) {
+				if (token->load()) {
+					return;
+				}
+				self->selfieSegmenter.process(buffer.data());
+			} else {
+				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
 			}
-
-			self->selfieSegmenter.process(buffer.data());
 		});
 }
 
