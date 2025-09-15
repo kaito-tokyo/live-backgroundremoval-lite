@@ -47,6 +47,7 @@ Next, install the necessary packages for development.
 **For Ubuntu / Debian-based distributions:**
 
 ```bash
+sudo add-apt-repository ppa:obsproject/obs-studio
 sudo apt update
 sudo apt install \
   build-essential \
@@ -101,8 +102,11 @@ cmake --preset ubuntu-x86_64
 # 2. Build the project
 cmake --build --preset ubuntu-x86_64
 
-# 3. Install the plugin (may not work on other Linux than Ubuntu)
-sudo cmake --install --preset ubuntu-x86_64
+# 3. Install the plugin
+rm -rf ~/.config/obs-studio/obs-backgroundremoval-lite
+mkdir -p ~/.config/obs-studio/obs-backgroundremoval-lite/bin/64bit
+cp build_x86_64/obs-backgroundremoval-lite.so ~/.config/obs-studio/obs-backgroundremoval-lite/bin/64bit
+cp -r data ~/.config/obs-studio/obs-backgroundremoval-lite/data
 ```
 
 ### 5. Verify the Installation
@@ -140,8 +144,8 @@ brew install \
 We use vcpkg to manage dependencies. If you already have vcpkg installed, you can skip this step.
 
 ```bash
-git clone https://github.com/microsoft/vcpkg.git
-./vcpkg/bootstrap-vcpkg.sh
+( cd ~ && git clone https://github.com/microsoft/vcpkg.git )
+~/vcpkg/bootstrap-vcpkg.sh
 ```
 
 After installation, you need to set the `VCPKG_ROOT` environment variable to the path where you cloned vcpkg. For example:
