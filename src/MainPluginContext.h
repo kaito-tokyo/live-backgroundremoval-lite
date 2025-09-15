@@ -42,6 +42,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "MainEffect.hpp"
 #include "MyCprSession.hpp"
+#include "Preset.hpp"
 #include "RenderingContext.hpp"
 #include "SelfieSegmenter.hpp"
 #include "SelfieSegmenter.hpp"
@@ -59,6 +60,7 @@ private:
 	UpdateChecker<MyCprSession> updateChecker;
 	ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
+	Preset preset;
 
 	std::unique_ptr<RenderingContext> renderingContext = nullptr;
 	std::shared_future<std::optional<std::string>> futureLatestVersion;
@@ -67,8 +69,8 @@ private:
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	void startup() noexcept;
-	~MainPluginContext() noexcept;
 	void shutdown() noexcept;
+	~MainPluginContext() noexcept;
 
 	uint32_t getWidth() const noexcept;
 	uint32_t getHeight() const noexcept;

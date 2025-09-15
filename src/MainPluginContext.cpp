@@ -83,7 +83,7 @@ std::uint32_t MainPluginContext::getHeight() const noexcept
 
 void MainPluginContext::getDefaults(obs_data_t *data)
 {
-	UNUSED_PARAMETER(data);
+	obs_data_set_default_int(data, "filterLevel", static_cast<int>(FilterLevel::Default));
 }
 
 obs_properties_t *MainPluginContext::getProperties()
@@ -98,12 +98,19 @@ obs_properties_t *MainPluginContext::getProperties()
 
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
+	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
+								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
+				  static_cast<int>(FilterLevel::Default));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
+				  static_cast<int>(FilterLevel::Segmentation));
+
 	return props;
 }
 
 void MainPluginContext::update(obs_data_t *_settings)
 {
-	UNUSED_PARAMETER(_settings);
+	preset.filterLevel = static_cast<FilterLevel>(obs_data_get_int(_settings, "filterLevel"));
 }
 
 void MainPluginContext::activate() {}
