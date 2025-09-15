@@ -23,9 +23,26 @@ Before creating a new issue, please check if a similar one already exists. When 
 
 Here's how to build the project from source on Linux.
 
-### 1. Install Dependencies
+### 1. Install vcpkg
 
-First, install the necessary packages for development.
+We use vcpkg to manage dependencies. If you already have vcpkg installed, you can skip this step.
+
+```bash
+git clone https://github.com/microsoft/vcpkg.git
+./vcpkg/bootstrap-vcpkg.sh
+```
+
+After installation, you need to set the `VCPKG_ROOT` environment variable to the path where you cloned vcpkg. For example:
+
+```bash
+export VCPKG_ROOT=~/vcpkg
+```
+
+*Note: We recommend cloning vcpkg to a common location, for example, your home directory (`~/vcpkg`). You may also want to add the `export` command to your shell's startup file (e.g., `.bashrc`, `.zshrc`) to set the environment variable automatically.*
+
+### 2. Install Dependencies
+
+Next, install the necessary packages for development.
 
 **For Ubuntu / Debian-based distributions:**
 
@@ -46,7 +63,7 @@ sudo apt install \
 ```
 
 **For Arch Linux:**
-*(Note: This package list is untested. We welcome feedback and corrections\!)*
+*(Note: This package list is untested. We welcome feedback and corrections!)*
 
 ```bash
 sudo pacman -S \
@@ -62,7 +79,7 @@ sudo pacman -S \
   qt6-svg
 ```
 
-### 2. Clone the Repository
+### 3. Clone the Repository
 
 Clone the source code to your local machine.
 
@@ -71,7 +88,7 @@ git clone https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
 cd obs-backgroundremoval-lite
 ```
 
-### 3. Build and Install
+### 4. Build and Install
 
 We use CMake presets for building. The preset name contains `ubuntu`, but it should work on other modern Linux distributions as well.
 
@@ -88,7 +105,83 @@ cmake --build --preset ubuntu-x86_64
 sudo cmake --install --preset ubuntu-x86_64
 ```
 
-### 4. Verify the Installation
+### 5. Verify the Installation
 
 Once the installation is complete, launch OBS Studio. The plugin should now be available.
+If you encounter any issues, please feel free to report them by opening an issue.
+
+## Building from Source on macOS
+
+Here's how to build the project from source on macOS.
+
+### 1. Install Dependencies
+
+First, install Xcode Command Line Tools and Homebrew, then install the necessary packages. A developer build of OBS Studio should be installed separately.
+
+```bash
+# Install Xcode Command Line Tools
+xcode-select --install
+
+# Install Homebrew (if you don't have it)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Install packages
+brew install \
+  cmake \
+  git \
+  jq \
+  ninja \
+  pkg-config \
+  qt6
+```
+
+### 2. Install vcpkg
+
+We use vcpkg to manage dependencies. If you already have vcpkg installed, you can skip this step.
+
+```bash
+git clone https://github.com/microsoft/vcpkg.git
+./vcpkg/bootstrap-vcpkg.sh
+```
+
+After installation, you need to set the `VCPKG_ROOT` environment variable to the path where you cloned vcpkg. For example:
+
+```bash
+export VCPKG_ROOT=~/vcpkg
+```
+
+*Note: We recommend cloning vcpkg to a common location, for example, your home directory (`~/vcpkg`). You may also want to add the `export` command to your shell's startup file (e.g., `.zshrc`) to set the environment variable automatically.*
+
+### 3. Clone the Repository
+
+Clone the source code to your local machine.
+
+```bash
+git clone https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
+cd obs-backgroundremoval-lite
+```
+
+### 4. Build and Manually Install
+
+We use the `macos` CMake preset, which automatically creates a universal binary for both Apple Silicon and Intel Macs.
+
+**1. Build the project**
+From the root directory of the repository, run the following commands in order:
+
+```bash
+# Configure the build
+cmake --preset macos
+
+# Build the project
+cmake --build --preset macos
+```
+
+**2. Manually install the plugin**
+After the build is complete, you need to manually copy the plugin to the OBS Studio plugins directory. The built plugin (e.g., `obs-backgroundremoval-lite.plugin`) will be located in the build directory.
+
+Copy the plugin to: `~/Library/Application Support/obs-studio/plugins/`
+
+### 5. Verify the Installation
+
+Once you have copied the plugin, launch OBS Studio. The plugin should now be available.
 If you encounter any issues, please feel free to report them by opening an issue.
