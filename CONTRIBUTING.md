@@ -28,8 +28,8 @@ Here's how to build the project from source on Linux.
 We use vcpkg to manage dependencies. If you already have vcpkg installed, you can skip this step.
 
 ```bash
-git clone https://github.com/microsoft/vcpkg.git
-./vcpkg/bootstrap-vcpkg.sh
+( cd ~ && git clone https://github.com/microsoft/vcpkg.git )
+~/vcpkg/bootstrap-vcpkg.sh
 ```
 
 After installation, you need to set the `VCPKG_ROOT` environment variable to the path where you cloned vcpkg. For example:
@@ -101,7 +101,7 @@ cmake --preset ubuntu-x86_64
 # 2. Build the project
 cmake --build --preset ubuntu-x86_64
 
-# 3. Install the plugin
+# 3. Install the plugin (may not work on other Linux than Ubuntu)
 sudo cmake --install --preset ubuntu-x86_64
 ```
 
