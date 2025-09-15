@@ -85,6 +85,14 @@ inline gs_technique_t *getEffectTech(const kaito_tokyo::obs_bridge_utils::unique
 
 class MainEffect {
 public:
+	const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t effect;
+
+	gs_eparam_t *const textureImage;
+	gs_eparam_t *const textureMask;
+
+	gs_technique_t *const techDraw;
+	gs_technique_t *const techDrawWithMask;
+
 	MainEffect(const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &effectPath,
 		   const kaito_tokyo::obs_bridge_utils::ILogger &logger)
 		: effect(kaito_tokyo::obs_bridge_utils::make_unique_gs_effect_from_file(effectPath)),
@@ -100,15 +108,7 @@ public:
 	MainEffect &operator=(const MainEffect &) = delete;
 	MainEffect &operator=(MainEffect &&) = delete;
 
-	const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t effect;
-
-	gs_eparam_t *const textureImage;
-	gs_eparam_t *const textureMask;
-
-	gs_technique_t *const techDraw;
-	gs_technique_t *const techDrawWithMask;
-
-	void draw(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) noexcept
+	void draw(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) const noexcept
 	{
 		gs_technique_t *tech = techDraw;
 		std::size_t passes = gs_technique_begin(tech);
@@ -124,7 +124,7 @@ public:
 	}
 
 	void drawWithMask(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
-			  gs_texture_t *maskTexture) noexcept
+			  gs_texture_t *maskTexture) const noexcept
 	{
 		gs_technique_t *tech = techDrawWithMask;
 		std::size_t passes = gs_technique_begin(tech);

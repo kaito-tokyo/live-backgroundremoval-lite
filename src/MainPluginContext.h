@@ -43,6 +43,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
 #include "MyCprSession.hpp"
+#include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
 #include "TaskQueue.hpp"
 #include "UpdateChecker/UpdateChecker.hpp"
@@ -52,15 +53,19 @@ namespace obs_backgroundremoval_lite {
 
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
 public:
+	obs_source_t *const source;
+	const kaito_tokyo::obs_bridge_utils::ObsLogger logger;
+	const MainEffect mainEffect;
+
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
-	void startup() noexcept;
+	void startup();
+	void shutdown();
 	~MainPluginContext() noexcept;
-	void shutdown() noexcept;
 
-	uint32_t getWidth() const noexcept;
-	uint32_t getHeight() const noexcept;
+	std::uint32_t getWidth() const noexcept;
+	std::uint32_t getHeight() const noexcept;
 
-	static void getDefaults(obs_data_t *data);
+	static void getDefaults(obs_data_t *data) noexcept;
 
 	obs_properties_t *getProperties();
 	void update(obs_data_t *settings);
@@ -73,14 +78,7 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
-	const kaito_tokyo::obs_bridge_utils::ILogger &getLogger() const noexcept { return logger; }
-
 private:
-	obs_data_t *settings = nullptr;
-	obs_source_t *source = nullptr;
-
-	kaito_tokyo::obs_bridge_utils::ObsLogger logger;
-	MainEffect mainEffect;
 	SelfieSegmenter selfieSegmenter;
 	std::unique_ptr<TaskQueue> selfieSegmenterTaskQueue;
 	TaskQueue::CancellationToken selfieSegmenterPendingTaskToken;

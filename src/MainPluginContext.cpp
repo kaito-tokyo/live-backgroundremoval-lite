@@ -51,9 +51,8 @@ void ensureTextureReader(std::unique_ptr<AsyncTextureReader> &textureReader, std
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
-MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_source)
-	: settings{_settings},
-	  source{_source},
+MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source)
+	: source(_source),
 	  logger("[" PLUGIN_NAME "] "),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
 	  selfieSegmenter(unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.param"),
@@ -61,9 +60,10 @@ MainPluginContext::MainPluginContext(obs_data_t *_settings, obs_source_t *_sourc
 	  selfieSegmenterTaskQueue(std::make_unique<TaskQueue>(logger)),
 	  updateChecker(logger)
 {
+	update(settings);
 }
 
-void MainPluginContext::startup() noexcept
+void MainPluginContext::startup()
 {
 	futureLatestVersion = std::async(std::launch::async, [self = weak_from_this()]() -> std::optional<std::string> {
 		if (auto s = self.lock()) {
@@ -73,15 +73,14 @@ void MainPluginContext::startup() noexcept
 			return std::nullopt;
 		}
 	});
-	update(settings);
 }
 
-MainPluginContext::~MainPluginContext() noexcept {}
-
-void MainPluginContext::shutdown() noexcept
+void MainPluginContext::shutdown()
 {
 	selfieSegmenterTaskQueue.reset();
 }
+
+MainPluginContext::~MainPluginContext() noexcept {}
 
 std::uint32_t MainPluginContext::getWidth() const noexcept
 {
@@ -93,7 +92,7 @@ std::uint32_t MainPluginContext::getHeight() const noexcept
 	return height;
 }
 
-void MainPluginContext::getDefaults(obs_data_t *data)
+void MainPluginContext::getDefaults(obs_data_t *data) noexcept
 {
 	UNUSED_PARAMETER(data);
 }
@@ -110,12 +109,18 @@ obs_properties_t *MainPluginContext::getProperties()
 
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
+	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
+					OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"), 0);
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"), 100);
+
 	return props;
 }
 
-void MainPluginContext::update(obs_data_t *_settings)
+void MainPluginContext::update(obs_data_t *settings)
 {
-	settings = _settings;
+	UNUSED_PARAMETER(settings);
 }
 
 void MainPluginContext::activate() {}
@@ -259,7 +264,7 @@ obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 					s.get()->selfieSegmenter.process(
 						s.get()->readerSegmenterInput->getBuffer().data());
 				} else {
-					s.get()->getLogger().info(
+					s->logger.info(
 						"Selfie segmentation task was cancelled, skipping processing");
 				}
 			} else {
