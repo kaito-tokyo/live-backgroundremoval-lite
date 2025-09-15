@@ -181,6 +181,7 @@ private:
 			}
 			stopped = true;
 
+			// Cancel all pending tasks in the queue before shutting down.
 			while (!queue.empty()) {
 				if (queue.front().second) {
 					queue.front().second->store(true);

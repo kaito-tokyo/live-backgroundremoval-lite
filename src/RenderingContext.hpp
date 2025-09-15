@@ -33,7 +33,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
-class RenderingContext {
+class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 private:
 	obs_source_t *const source;
 	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
@@ -50,6 +50,7 @@ public:
 private:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
+	std::vector<std::uint8_t> segmenterInputBuffer;
 
 	const std::uint32_t maskRoiOffsetX;
 	const std::uint32_t maskRoiOffsetY;

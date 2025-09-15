@@ -87,6 +87,7 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  logger(_logger),
 	  mainEffect(_mainEffect),
 	  readerSegmenterInput(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX),
+	  segmenterInputBuffer(SelfieSegmenter::PIXEL_COUNT * 4),
 	  selfieSegmenter(_selfieSegmenterNet),
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
 	  width(_width),
@@ -163,16 +164,18 @@ void RenderingContext::videoRender()
 
 	readerSegmenterInput.stage(bgrxSegmenterInput.get());
 
-	// Make a copy of the buffer for the worker thread to ensure data validity
-	auto bufferCopy = readerSegmenterInput.getBuffer();
+	auto &readerSegmenterInputBuffer = readerSegmenterInput.getBuffer();
+	std::copy(readerSegmenterInputBuffer.begin(), readerSegmenterInputBuffer.end(), segmenterInputBuffer.begin());
 	selfieSegmenterTaskQueue.push(
-		[this, buffer = std::move(bufferCopy)](const ThrottledTaskQueue::CancellationToken &token) {
-			// Check if the task has been cancelled before starting
-			if (token->load()) {
-				return;
+		[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
+			if (auto self = weakSelf.lock()) {
+				if (token->load()) {
+					return;
+				}
+				self->selfieSegmenter.process(self->segmenterInputBuffer.data());
+			} else {
+				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
 			}
-
-			selfieSegmenter.process(buffer.data());
 		});
 }
 
