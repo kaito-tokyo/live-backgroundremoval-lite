@@ -103,7 +103,9 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 
 RenderingContext::~RenderingContext() noexcept {}
 
-void RenderingContext::videoTick(float seconds) {}
+void RenderingContext::videoTick(float seconds) {
+    UNUSED_PARAMETER(seconds);
+}
 
 void RenderingContext::renderOriginalImage()
 {
