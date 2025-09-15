@@ -61,13 +61,23 @@ inline gs_technique_t *getEffectTech(const kaito_tokyo::obs_bridge_utils::unique
 
 class MainEffect {
 public:
+	const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t effect = nullptr;
+
+	gs_eparam_t *const textureImage = nullptr;
+	gs_eparam_t *const textureMask = nullptr;
+
+	gs_technique_t *const techDraw = nullptr;
+	gs_technique_t *const techDrawWithMask = nullptr;
+	gs_technique_t *const techConvertToGrayscale = nullptr;
+
 	MainEffect(const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &effectPath,
 		   const kaito_tokyo::obs_bridge_utils::ILogger &logger)
 		: effect(kaito_tokyo::obs_bridge_utils::make_unique_gs_effect_from_file(effectPath)),
 		  textureImage(main_effect_detail::getEffectParam(effect, "image", logger)),
 		  textureMask(main_effect_detail::getEffectParam(effect, "mask", logger)),
 		  techDraw(main_effect_detail::getEffectTech(effect, "Draw", logger)),
-		  techDrawWithMask(main_effect_detail::getEffectTech(effect, "DrawWithMask", logger))
+		  techDrawWithMask(main_effect_detail::getEffectTech(effect, "DrawWithMask", logger)),
+		  techConvertToGrayscale(main_effect_detail::getEffectTech(effect, "ConvertToGrayscale", logger))
 	{
 	}
 
@@ -75,14 +85,6 @@ public:
 	MainEffect(MainEffect &&) = delete;
 	MainEffect &operator=(const MainEffect &) = delete;
 	MainEffect &operator=(MainEffect &&) = delete;
-
-	const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t effect;
-
-	gs_eparam_t *const textureImage;
-	gs_eparam_t *const textureMask;
-
-	gs_technique_t *const techDraw;
-	gs_technique_t *const techDrawWithMask;
 
 	void draw(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) const noexcept
 	{
@@ -108,6 +110,21 @@ public:
 			if (gs_technique_begin_pass(tech, i)) {
 				gs_effect_set_texture(textureImage, sourceTexture);
 				gs_effect_set_texture(textureMask, maskTexture);
+
+				gs_draw_sprite(nullptr, 0, width, height);
+				gs_technique_end_pass(tech);
+			}
+		}
+		gs_technique_end(tech);
+	}
+
+	void convertToGrayscale(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) const noexcept
+	{
+		gs_technique_t *tech = techConvertToGrayscale;
+		std::size_t passes = gs_technique_begin(tech);
+		for (std::size_t i = 0; i < passes; i++) {
+			if (gs_technique_begin_pass(tech, i)) {
+				gs_effect_set_texture(textureImage, sourceTexture);
 
 				gs_draw_sprite(nullptr, 0, width, height);
 				gs_technique_end_pass(tech);

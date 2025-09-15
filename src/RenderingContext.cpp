@@ -160,7 +160,40 @@ void RenderingContext::videoRender()
 	const std::uint8_t *segmentationMaskData =
 		selfieSegmenter.getMask().data() + (maskRoiOffsetY * SelfieSegmenter::INPUT_WIDTH + maskRoiOffsetX);
 	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, SelfieSegmenter::INPUT_WIDTH, 0);
-	mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
+
+	// int radius = 8;
+	int subsamplingRate = 4;
+	// double eps = 0.02 * 0.02;
+	// int radiusSub = radius / subsamplingRate;
+	int widthSub = width / subsamplingRate;
+	int heightSub = height / subsamplingRate;
+
+	unique_gs_texture_t r8Grayscale =
+		make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8GrayscaleSub =
+		make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8MeanISub =
+		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8MeanPSub =
+		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+
+	{
+		RenderTargetGuard renderTargetGuard;
+		TransformStateGuard transformStateGuard;
+
+		gs_set_render_target_with_color_space(r8GrayscaleSub.get(), nullptr, GS_CS_SRGB);
+
+		gs_set_viewport(0, 0, width, height);
+		gs_ortho(0.0f, (float)width, 0.0f, (float)height, -100.0f, 100.0f);
+		gs_matrix_identity();
+
+		mainEffect.convertToGrayscale(width, height, bgrxOriginalImage.get());
+	}
+
+	// box filter r8GrayscaleSub r8MeanISub
+	// box filter r8SegmentationMask r8MeanPSub
+
+	mainEffect.drawWithMask(width, height, r8GrayscaleSub.get(), r8SegmentationMask.get());
 
 	readerSegmenterInput.stage(bgrxSegmenterInput.get());
 

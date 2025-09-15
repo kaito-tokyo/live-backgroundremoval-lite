@@ -38,6 +38,13 @@ float4 PSDrawWithMask(VertInOut vert_in) : TARGET
 	return final_color;
 }
 
+float4 PSConvertToGrayscale(VertInOut vert_in) : TARGET
+{
+	float4 color = image.Sample(def_sampler, vert_in.uv);
+	float luma = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
+	return float4(luma, luma, luma, 1.0f);
+}
+
 technique Draw
 {
 	pass
@@ -53,5 +60,14 @@ technique DrawWithMask
 	{
 		vertex_shader = VSDefault(vert_in);
 		pixel_shader = PSDrawWithMask(vert_in);
+	}
+}
+
+technique ConvertToGrayscale
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSConvertToGrayscale(vert_in);
 	}
 }
