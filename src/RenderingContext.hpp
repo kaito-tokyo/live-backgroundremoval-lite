@@ -27,8 +27,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
-#include "TaskQueue.hpp"
 #include "SelfieSegmenter.hpp"
+#include "ThrottledTaskQueue.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -41,6 +41,7 @@ private:
 
 	AsyncTextureReader readerSegmenterInput;
 	SelfieSegmenter selfieSegmenter;
+	ThrottledTaskQueue &selfieSegmenterTaskQueue;
 
 public:
 	const std::uint32_t width;
@@ -61,8 +62,8 @@ private:
 
 public:
 	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,
-			 const MainEffect &mainEffect, const ncnn::Net &selfieSegmenterNet, std::uint32_t width,
-			 std::uint32_t height);
+			 const MainEffect &mainEffect, const ncnn::Net &selfieSegmenterNet,
+			 ThrottledTaskQueue &selfieSegmenterTaskQueue, std::uint32_t width, std::uint32_t height);
 	~RenderingContext() noexcept;
 
 	void videoTick(float seconds);

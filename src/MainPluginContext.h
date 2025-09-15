@@ -37,16 +37,16 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
-#include "obs-bridge-utils/gs_unique.hpp"
+#include <obs-bridge-utils/gs_unique.hpp>
 #include <obs-bridge-utils/ObsLogger.hpp>
 
-#include "RenderingContext.hpp"
 #include "MainEffect.hpp"
 #include "MyCprSession.hpp"
+#include "RenderingContext.hpp"
 #include "SelfieSegmenter.hpp"
-#include "TaskQueue.hpp"
+#include "SelfieSegmenter.hpp"
+#include "ThrottledTaskQueue.hpp"
 #include "UpdateChecker/UpdateChecker.hpp"
-#include "SelfieSegmenter.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -57,6 +57,7 @@ private:
 	const kaito_tokyo::obs_bridge_utils::ObsLogger logger;
 	const MainEffect mainEffect;
 	UpdateChecker<MyCprSession> updateChecker;
+	ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
 
 	std::unique_ptr<RenderingContext> renderingContext = nullptr;

@@ -33,7 +33,8 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 	: source{_source},
 	  logger("[" PLUGIN_NAME "] "),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
-	  updateChecker(logger)
+	  updateChecker(logger),
+	  selfieSegmenterTaskQueue(logger, 1)
 {
 	unique_bfree_char_t paramPath = unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.param");
 	if (!paramPath) {
@@ -143,7 +144,8 @@ try {
 	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height) {
 		const graphics_context_guard guard;
 		renderingContext = std::make_unique<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
-								      frame->width, frame->height);
+								      selfieSegmenterTaskQueue, frame->width,
+								      frame->height);
 	}
 
 	return frame;

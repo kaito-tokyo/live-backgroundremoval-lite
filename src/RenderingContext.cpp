@@ -81,12 +81,14 @@ namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
-				   const ncnn::Net &_selfieSegmenterNet, std::uint32_t _width, std::uint32_t _height)
+				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
+				   std::uint32_t _width, std::uint32_t _height)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
 	  readerSegmenterInput(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX),
 	  selfieSegmenter(_selfieSegmenterNet),
+	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
 	  width(_width),
 	  height(_height),
 	  bgrxOriginalImage(make_unique_gs_texture(width, height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
@@ -151,8 +153,6 @@ void RenderingContext::videoRender()
 		logger.error("Failed to sync texture reader: {}", e.what());
 	}
 
-	selfieSegmenter.process(readerSegmenterInput.getBuffer().data());
-
 	renderOriginalImage();
 	renderSegmenterInput();
 
@@ -162,6 +162,18 @@ void RenderingContext::videoRender()
 	mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
 
 	readerSegmenterInput.stage(bgrxSegmenterInput.get());
+
+	// Make a copy of the buffer for the worker thread to ensure data validity
+	auto bufferCopy = readerSegmenterInput.getBuffer();
+	selfieSegmenterTaskQueue.push(
+		[this, buffer = std::move(bufferCopy)](const ThrottledTaskQueue::CancellationToken &token) {
+			// Check if the task has been cancelled before starting
+			if (token->load()) {
+				return;
+			}
+
+			selfieSegmenter.process(buffer.data());
+		});
 }
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
