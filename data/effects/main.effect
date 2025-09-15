@@ -1,5 +1,10 @@
 uniform float4x4 ViewProj;
 uniform texture2d image;
+
+uniform float texelWidth;
+uniform float texelHeight;
+uniform int kernelSize;
+
 uniform texture2d mask;
 
 sampler_state def_sampler
@@ -43,6 +48,22 @@ float4 PSConvertToGrayscale(VertInOut vert_in) : TARGET
 	float4 color = image.Sample(def_sampler, vert_in.uv);
 	float luma = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
 	return float4(luma, luma, luma, 1.0f);
+}
+
+float PSBoxFilterR8(VertInOut vert_in) : TARGET
+{
+	int radius = kernelSize / 2;
+	float sum = 0.0;
+
+	for (int y = -radius; y <= radius; ++y)
+	{
+		for (int x = -radius; x <= radius; ++x)
+		{
+			sum += image.Sample(def_sampler, vert_in.uv + float2(x * texelWidth, y * texelHeight)).r;
+		}
+	}
+
+	return sum / (kernelSize * kernelSize);
 }
 
 technique Draw

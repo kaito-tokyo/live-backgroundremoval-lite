@@ -70,6 +70,7 @@ void MainPluginContext::startup() noexcept
 void MainPluginContext::shutdown() noexcept
 {
 	renderingContext.reset();
+	selfieSegmenterTaskQueue.shutdown();
 }
 
 MainPluginContext::~MainPluginContext() noexcept {}
