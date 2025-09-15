@@ -88,6 +88,7 @@ obs_properties_t *MainPluginContext::getProperties()
 
 void MainPluginContext::update(obs_data_t *_settings)
 {
+	UNUSED_PARAMETER(_settings);
 }
 
 void MainPluginContext::activate() {}
@@ -122,7 +123,7 @@ void MainPluginContext::videoRender()
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 {
 	if (renderingContext->width != frame->width || renderingContext->height != frame->height) {
-		renderingContext = std::make_unique<RenderingContext>(frame->width, frame->height, logger);
+		renderingContext = std::make_unique<RenderingContext>(source, logger, mainEffect, frame->width, frame->height);
 	}
 
 	return renderingContext->filterVideo(frame);
