@@ -14,6 +14,20 @@ sampler_state def_sampler
 	AddressV = Clamp;
 };
 
+sampler_state linear_sampler
+{
+	Filter = Linear;
+	AddressU = Clamp;
+	AddressV = Clamp;
+};
+
+sampler_state point_sampler
+{
+	Filter = Point;
+	AddressU = Clamp;
+	AddressV = Clamp;
+};
+
 struct VertInOut {
 	float4 pos : POSITION;
 	float2 uv : TEXCOORD0;
@@ -50,20 +64,42 @@ float4 PSConvertToGrayscale(VertInOut vert_in) : TARGET
 	return float4(luma, luma, luma, 1.0f);
 }
 
-float PSBoxFilterR8(VertInOut vert_in) : TARGET
+float4 PSHorizontalBoxFilterR8(VertInOut vert_in) : TARGET
 {
+	float2 uv = vert_in.uv;
 	int radius = kernelSize / 2;
-	float sum = 0.0;
 
-	for (int y = -radius; y <= radius; ++y)
-	{
-		for (int x = -radius; x <= radius; ++x)
-		{
-			sum += image.Sample(def_sampler, vert_in.uv + float2(x * texelWidth, y * texelHeight)).r;
-		}
+	float bilinear_sum = 0.0f;
+    for (int i = 1; i <= radius / 2; i++) {
+		float2 offset = float2((float(i * 2) - 0.5f) * texelWidth, 0.0f);
+		bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
+		bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
 	}
 
-	return sum / (kernelSize * kernelSize);
+	float sum = image.Sample(linear_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
+
+	float luma = sum / float(kernelSize);
+
+	return float4(luma, luma, luma, 1.0f);
+}
+
+float4 PSVerticalBoxFilterR8(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+	int radius = kernelSize / 2;
+
+	float bilinear_sum = 0.0f;
+    for (int i = 1; i <= radius / 2; i++) {
+		float2 offset = float2(0.0f, (float(i * 2) - 0.5f) * texelHeight);
+		bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
+		bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
+	}
+
+	float sum = image.Sample(linear_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
+
+	float luma = sum / float(kernelSize);
+
+	return float4(luma, luma, luma, 1.0f);
 }
 
 technique Draw
@@ -92,3 +128,22 @@ technique ConvertToGrayscale
 		pixel_shader = PSConvertToGrayscale(vert_in);
 	}
 }
+
+technique HorizontalBoxFilterR8
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSHorizontalBoxFilterR8(vert_in);
+	}
+}
+
+technique VerticalBoxFilterR8
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSVerticalBoxFilterR8(vert_in);
+	}
+}
+

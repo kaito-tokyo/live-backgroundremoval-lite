@@ -59,25 +59,70 @@ inline gs_technique_t *getEffectTech(const kaito_tokyo::obs_bridge_utils::unique
 
 } // namespace main_effect_detail
 
+struct TransformStateGuard {
+	TransformStateGuard()
+	{
+		gs_viewport_push();
+		gs_projection_push();
+		gs_matrix_push();
+	}
+	~TransformStateGuard()
+	{
+		gs_matrix_pop();
+		gs_projection_pop();
+		gs_viewport_pop();
+	}
+};
+
+struct RenderTargetGuard {
+	gs_texture_t *previousRenderTarget;
+	gs_zstencil_t *previousZStencil;
+	gs_color_space previousColorSpace;
+
+	RenderTargetGuard()
+		: previousRenderTarget(gs_get_render_target()),
+		  previousZStencil(gs_get_zstencil_target()),
+		  previousColorSpace(gs_get_color_space())
+	{
+	}
+
+	~RenderTargetGuard()
+	{
+		gs_set_render_target_with_color_space(previousRenderTarget, previousZStencil, previousColorSpace);
+	}
+};
+
 class MainEffect {
 public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_effect_t effect = nullptr;
 
 	gs_eparam_t *const textureImage = nullptr;
+
+	gs_eparam_t *const floatTexelWidth = nullptr;
+	gs_eparam_t *const floatTexelHeight = nullptr;
+	gs_eparam_t *const intKernelSize = nullptr;
+
 	gs_eparam_t *const textureMask = nullptr;
 
 	gs_technique_t *const techDraw = nullptr;
 	gs_technique_t *const techDrawWithMask = nullptr;
 	gs_technique_t *const techConvertToGrayscale = nullptr;
+	gs_technique_t *const techHorizontalBoxFilterR8 = nullptr;
+	gs_technique_t *const techVerticalBoxFilterR8 = nullptr;
 
 	MainEffect(const kaito_tokyo::obs_bridge_utils::unique_bfree_char_t &effectPath,
 		   const kaito_tokyo::obs_bridge_utils::ILogger &logger)
 		: effect(kaito_tokyo::obs_bridge_utils::make_unique_gs_effect_from_file(effectPath)),
 		  textureImage(main_effect_detail::getEffectParam(effect, "image", logger)),
+		  floatTexelWidth(main_effect_detail::getEffectParam(effect, "texelWidth", logger)),
+		  floatTexelHeight(main_effect_detail::getEffectParam(effect, "texelHeight", logger)),
+		  intKernelSize(main_effect_detail::getEffectParam(effect, "kernelSize", logger)),
 		  textureMask(main_effect_detail::getEffectParam(effect, "mask", logger)),
 		  techDraw(main_effect_detail::getEffectTech(effect, "Draw", logger)),
 		  techDrawWithMask(main_effect_detail::getEffectTech(effect, "DrawWithMask", logger)),
-		  techConvertToGrayscale(main_effect_detail::getEffectTech(effect, "ConvertToGrayscale", logger))
+		  techConvertToGrayscale(main_effect_detail::getEffectTech(effect, "ConvertToGrayscale", logger)),
+		  techHorizontalBoxFilterR8(main_effect_detail::getEffectTech(effect, "HorizontalBoxFilterR8", logger)),
+		  techVerticalBoxFilterR8(main_effect_detail::getEffectTech(effect, "VerticalBoxFilterR8", logger))
 	{
 	}
 
@@ -131,6 +176,49 @@ public:
 			}
 		}
 		gs_technique_end(tech);
+	}
+
+	void applyBoxFilterR8(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture, gs_texture_t *targetTexture, int kernelSize, gs_texture_t *temporaryTexture1) const noexcept
+	{
+		RenderTargetGuard renderTargetGuard;
+		TransformStateGuard transformStateGuard;
+
+		gs_set_viewport(0, 0, width, height);
+		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
+		gs_matrix_identity();
+	
+		const float texelWidth = 1.0f / static_cast<float>(width);
+		const float texelHeight = 1.0f / static_cast<float>(height);
+
+		gs_set_render_target_with_color_space(temporaryTexture1, nullptr, GS_CS_SRGB);
+		std::size_t passesHorizontal = gs_technique_begin(techHorizontalBoxFilterR8);
+		for (std::size_t i = 0; i < passesHorizontal; i++) {
+			if (gs_technique_begin_pass(techHorizontalBoxFilterR8, i)) {
+				gs_effect_set_texture(textureImage, sourceTexture);
+
+				gs_effect_set_float(floatTexelWidth, texelWidth);
+				gs_effect_set_int(intKernelSize, kernelSize);
+
+				gs_draw_sprite(nullptr, 0, width, height);
+				gs_technique_end_pass(techHorizontalBoxFilterR8);
+			}
+		}
+		gs_technique_end(techHorizontalBoxFilterR8);
+
+		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
+		std::size_t passesVertical = gs_technique_begin(techVerticalBoxFilterR8);
+		for (std::size_t i = 0; i < passesVertical; i++) {
+			if (gs_technique_begin_pass(techVerticalBoxFilterR8, i)) {
+				gs_effect_set_texture(textureImage, temporaryTexture1);
+
+				gs_effect_set_float(floatTexelHeight, texelHeight);
+				gs_effect_set_int(intKernelSize, kernelSize);
+
+				gs_draw_sprite(nullptr, 0, width, height);
+				gs_technique_end_pass(techVerticalBoxFilterR8);
+			}
+		}
+		gs_technique_end(techVerticalBoxFilterR8);
 	}
 };
 

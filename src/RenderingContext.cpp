@@ -25,39 +25,6 @@ using namespace kaito_tokyo::obs_bridge_utils;
 
 namespace {
 
-struct TransformStateGuard {
-	TransformStateGuard()
-	{
-		gs_viewport_push();
-		gs_projection_push();
-		gs_matrix_push();
-	}
-	~TransformStateGuard()
-	{
-		gs_matrix_pop();
-		gs_projection_pop();
-		gs_viewport_pop();
-	}
-};
-
-struct RenderTargetGuard {
-	gs_texture_t *previousRenderTarget;
-	gs_zstencil_t *previousZStencil;
-	gs_color_space previousColorSpace;
-
-	RenderTargetGuard()
-		: previousRenderTarget(gs_get_render_target()),
-		  previousZStencil(gs_get_zstencil_target()),
-		  previousColorSpace(gs_get_color_space())
-	{
-	}
-
-	~RenderTargetGuard()
-	{
-		gs_set_render_target_with_color_space(previousRenderTarget, previousZStencil, previousColorSpace);
-	}
-};
-
 std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
 {
 	using namespace kaito_tokyo::obs_backgroundremoval_lite;
@@ -161,7 +128,8 @@ void RenderingContext::videoRender()
 		selfieSegmenter.getMask().data() + (maskRoiOffsetY * SelfieSegmenter::INPUT_WIDTH + maskRoiOffsetX);
 	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, SelfieSegmenter::INPUT_WIDTH, 0);
 
-	// int radius = 8;
+	int radius = 8;
+	int kernelSize = radius * 2 + 1;
 	int subsamplingRate = 4;
 	// double eps = 0.02 * 0.02;
 	// int radiusSub = radius / subsamplingRate;
@@ -171,10 +139,12 @@ void RenderingContext::videoRender()
 	unique_gs_texture_t r8Grayscale =
 		make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
 	unique_gs_texture_t r8GrayscaleSub =
-		make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
+		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
 	unique_gs_texture_t r8MeanISub =
 		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
 	unique_gs_texture_t r8MeanPSub =
+		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8TemporarySub1 =
 		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
 
 	{
@@ -183,17 +153,18 @@ void RenderingContext::videoRender()
 
 		gs_set_render_target_with_color_space(r8GrayscaleSub.get(), nullptr, GS_CS_SRGB);
 
-		gs_set_viewport(0, 0, width, height);
-		gs_ortho(0.0f, (float)width, 0.0f, (float)height, -100.0f, 100.0f);
+		gs_set_viewport(0, 0, widthSub, heightSub);
+		gs_ortho(0.0f, (float)widthSub, 0.0f, (float)heightSub, -100.0f, 100.0f);
 		gs_matrix_identity();
 
-		mainEffect.convertToGrayscale(width, height, bgrxOriginalImage.get());
+		mainEffect.convertToGrayscale(widthSub, heightSub, bgrxOriginalImage.get());
 	}
 
-	// box filter r8GrayscaleSub r8MeanISub
-	// box filter r8SegmentationMask r8MeanPSub
+	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8GrayscaleSub.get(), r8MeanISub.get(), kernelSize, r8TemporarySub1.get());
 
-	mainEffect.drawWithMask(width, height, r8GrayscaleSub.get(), r8SegmentationMask.get());
+	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8SegmentationMask.get(), r8MeanPSub.get(), kernelSize, r8TemporarySub1.get());
+
+	mainEffect.drawWithMask(width, height, r8MeanISub.get(), r8MeanPSub.get());
 
 	readerSegmenterInput.stage(bgrxSegmenterInput.get());
 
