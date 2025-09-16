@@ -52,6 +52,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
+class DebugWindow;
+
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
 private:
 	obs_source_t *const source = nullptr;
@@ -67,6 +69,9 @@ private:
 	std::int64_t frameCountBeforeContextSwitch = 0;
 
 	std::shared_future<std::optional<std::string>> futureLatestVersion;
+
+	std::unique_ptr<DebugWindow> debugWindow = nullptr;
+
 	std::optional<std::string> getLatestVersion() const;
 
 public:

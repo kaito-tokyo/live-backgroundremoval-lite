@@ -90,8 +90,6 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 {
 	logger.info("Creating RenderingContext: {}x{}, filterLevel={}, gfRadius={}, gfEps={}, gfSubsamplingRate={}",
 		    width, height, static_cast<int>(filterLevel), gfRadius, gfEps, gfSubsamplingRate);
-
-	bgrxOriginalImageReader = std::make_unique<AsyncTextureReader>(width, height, GS_BGRX);
 }
 
 RenderingContext::~RenderingContext() noexcept {}
@@ -209,9 +207,6 @@ void RenderingContext::videoRender()
 	}
 
 	renderOriginalImage();
-	if (bgrxOriginalImageReader) {
-		bgrxOriginalImageReader->stage(bgrxOriginalImage.get());
-	}
 
 	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
 		renderOriginalGrayscale(bgrxOriginalImage.get());

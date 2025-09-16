@@ -26,6 +26,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs-bridge-utils/ILogger.hpp>
 
 #include "AsyncTextureReader.hpp"
+#include "DebugWindow.hpp"
 #include "MainEffect.hpp"
 #include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
@@ -35,9 +36,6 @@ namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
-public:
-	std::unique_ptr<AsyncTextureReader> bgrxOriginalImageReader;
-
 private:
 	obs_source_t *const source;
 	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
