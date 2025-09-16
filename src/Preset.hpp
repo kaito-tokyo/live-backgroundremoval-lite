@@ -31,7 +31,6 @@ enum class FilterLevel : int {
 struct Preset {
 	FilterLevel filterLevel;
 
-	int gfRadius;
 	float gfEps;
 	int gfSubsamplingRate;
 };

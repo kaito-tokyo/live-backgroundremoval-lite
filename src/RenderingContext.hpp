@@ -66,7 +66,6 @@ public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SegmentationMask;
 
 public:
-	const int gfRadius;
 	const float gfEps;
 	const int gfSubsamplingRate;
 	const std::uint32_t gfWidthSub;
@@ -93,7 +92,7 @@ public:
 	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,
 			 const MainEffect &mainEffect, const ncnn::Net &selfieSegmenterNet,
 			 ThrottledTaskQueue &selfieSegmenterTaskQueue, std::uint32_t width, std::uint32_t height,
-			 FilterLevel filterLevel, int gfRadius, float gfEps, int gfSubsamplingRate);
+			 FilterLevel filterLevel, float gfEps, int gfSubsamplingRate);
 	~RenderingContext() noexcept;
 
 	void videoTick(float seconds);
