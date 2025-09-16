@@ -60,7 +60,7 @@ function Package {
 
     Log-Group "Archiving ${ProductName}..."
 
-    $SourceDir = "${ProjectRoot}/release/${Configuration}"
+    $SourceDir = "${ProjectRoot}/release/${Configuration}/${ProductName}"
     $StagingDir = "${ProjectRoot}/release/staging-${Target}"
 
     if ( Test-Path -Path $StagingDir ) {
@@ -73,10 +73,10 @@ function Package {
     $DataPluginDir = New-Item -Path "$StagingDir/data/obs-plugins/$ProductName" -ItemType Directory -Force
 
     # Copy plugin binaries
-    Copy-Item -Path "$SourceDir/obs-plugins/64bit/*" -Destination $ObsPluginDir -Recurse
+    Copy-Item -Path "$SourceDir/bin/64bit/*" -Destination $ObsPluginDir -Recurse
 
     # Copy data files
-    Copy-Item -Path "$SourceDir/data/obs-plugins/*" -Destination $DataPluginDir -Recurse
+    Copy-Item -Path "$SourceDir/data/*" -Destination $DataPluginDir -Recurse
 
     $CompressArgs = @{
         Path            = (Get-ChildItem -Path $StagingDir).FullName
