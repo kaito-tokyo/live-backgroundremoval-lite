@@ -130,20 +130,27 @@ void RenderingContext::videoRender()
 
 	int radius = 8;
 	int kernelSize = radius * 2 + 1;
-	int subsamplingRate = 4;
+	int subsamplingRate = 8;
 	// double eps = 0.02 * 0.02;
 	// int radiusSub = radius / subsamplingRate;
 	int widthSub = width / subsamplingRate;
 	int heightSub = height / subsamplingRate;
 
-	unique_gs_texture_t r8Grayscale =
-		make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8Grayscale = make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
 	unique_gs_texture_t r8GrayscaleSub =
 		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8MeanISub =
+	unique_gs_texture_t r8MeanISub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8MeanPSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8IMulPSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8IMulISub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8MeanIpSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8MeanIISub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8GuidedFilterASub =
 		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8MeanPSub =
+	unique_gs_texture_t r8GuidedFilterBSub =
 		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8GuidedFilterResult =
+		make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
 	unique_gs_texture_t r8TemporarySub1 =
 		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
 
@@ -160,11 +167,27 @@ void RenderingContext::videoRender()
 		mainEffect.convertToGrayscale(widthSub, heightSub, bgrxOriginalImage.get());
 	}
 
-	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8GrayscaleSub.get(), r8MeanISub.get(), kernelSize, r8TemporarySub1.get());
+	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8GrayscaleSub.get(), r8MeanISub.get(), kernelSize,
+				    r8TemporarySub1.get());
+	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8SegmentationMask.get(), r8MeanPSub.get(), kernelSize,
+				    r8TemporarySub1.get());
 
-	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8SegmentationMask.get(), r8MeanPSub.get(), kernelSize, r8TemporarySub1.get());
+	mainEffect.applyMultiplyR8(widthSub, heightSub, r8GrayscaleSub.get(), r8SegmentationMask.get(),
+				   r8IMulPSub.get());
+	mainEffect.applySquareR8(widthSub, heightSub, r8GrayscaleSub.get(), r8IMulISub.get());
 
-	mainEffect.drawWithMask(width, height, r8MeanISub.get(), r8MeanPSub.get());
+	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8IMulPSub.get(), r8MeanIpSub.get(), kernelSize,
+				    r8TemporarySub1.get());
+	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8IMulISub.get(), r8MeanIISub.get(), kernelSize,
+				    r8TemporarySub1.get());
+
+	mainEffect.calculateGuidedFilterAAndB(widthSub, heightSub, r8GuidedFilterASub.get(), r8GuidedFilterBSub.get(),
+					      r8MeanIISub.get(), r8MeanISub.get(), r8MeanIpSub.get(), r8MeanPSub.get());
+
+	mainEffect.finalizeGuidedFilter(width, height, r8GuidedFilterResult.get(), r8GrayscaleSub.get(),
+					r8GuidedFilterASub.get(), r8GuidedFilterBSub.get());
+
+	mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8GuidedFilterResult.get());
 
 	readerSegmenterInput.stage(bgrxSegmenterInput.get());
 
