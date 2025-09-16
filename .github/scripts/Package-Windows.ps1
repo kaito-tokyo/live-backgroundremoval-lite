@@ -61,6 +61,7 @@ function Package {
     Log-Group "Archiving ${ProductName}..."
 
     $SourceDir = "${ProjectRoot}/release/${Configuration}"
+    Get-ChildItem -Recurse -Path $SourceDir
     $StagingDir = "${ProjectRoot}/release/staging-${Target}"
 
     if ( Test-Path -Path $StagingDir ) {
