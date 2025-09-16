@@ -51,7 +51,7 @@ target_sources(
 )
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs cpr::cpr Eigen3::Eigen fmt::fmt ncnn opencv_core opencv_imgproc opencv_imgcodecs semver::semver
+  PUBLIC OBS::libobs cpr::cpr fmt::fmt ncnn semver::semver
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
