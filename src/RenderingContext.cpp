@@ -149,8 +149,6 @@ void RenderingContext::renderSegmentationMask()
 
 void RenderingContext::renderGuidedFilter(gs_texture_t *r8OriginalGrayscale, gs_texture_t *r8SegmentationMask)
 {
-	int kernelSize = 2 * gfRadius + 1;
-
 	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFGuideSub.get(), r8OriginalGrayscale);
 
 	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFSourceSub.get(), r8SegmentationMask);
