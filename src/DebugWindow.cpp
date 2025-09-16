@@ -47,6 +47,45 @@ constexpr char textureR16fGFASub[] = "r16fGFASub";
 constexpr char textureR16fGFBSub[] = "r16fGFBSub";
 constexpr char textureR8GFResult[] = "r8GFResult";
 
+inline double float16_to_double(uint16_t h)
+{
+	const uint16_t sign_h = (h >> 15) & 0x0001;
+	const uint16_t exp_h = (h >> 10) & 0x001f;
+	const uint16_t frac_h = h & 0x03ff;
+
+	uint64_t sign_d = static_cast<uint64_t>(sign_h) << 63;
+	uint64_t exp_d;
+	uint64_t frac_d;
+
+	if (exp_h == 0) {
+		if (frac_h == 0) {
+			uint64_t result_bits = sign_d;
+			double result;
+			std::memcpy(&result, &result_bits, sizeof(double));
+			return result;
+		} else {
+			int n = 0;
+			uint16_t temp_frac = frac_h;
+			while (!((temp_frac <<= 1) & 0x0400)) {
+				n++;
+			}
+			exp_d = static_cast<uint64_t>(1023 - 15 - n + 1);
+			frac_d = static_cast<uint64_t>((temp_frac & 0x03ff)) << 42;
+		}
+	} else if (exp_h == 0x1f) {
+		exp_d = 0x7ff;
+		frac_d = (frac_h == 0) ? 0 : (static_cast<uint64_t>(frac_h) << 42);
+	} else {
+		exp_d = static_cast<uint64_t>(exp_h - 15 + 1023);
+		frac_d = static_cast<uint64_t>(frac_h) << 42;
+	}
+
+	uint64_t result_bits = sign_d | (exp_d << 52) | frac_d;
+	double result;
+	std::memcpy(&result, &result_bits, sizeof(double));
+	return result;
+}
+
 } // namespace
 
 namespace kaito_tokyo {
@@ -230,44 +269,6 @@ void DebugWindow::videoRender()
 	}
 }
 
-float half_to_float(uint16_t h)
-{
-	// IEEE 754 half-precision format:
-	// 1 sign bit, 5 exponent bits, 10 mantissa bits
-	uint32_t s = (h >> 15) & 0x0001; // 符号
-	uint32_t e = (h >> 10) & 0x001f; // 指数
-	uint32_t m = h & 0x03ff;         // 仮数
-
-	uint32_t result_e, result_m;
-
-	if (e == 0) { // 非正規化数またはゼロ
-		if (m == 0) {
-			// プラス/マイナスのゼロ
-			return s ? -0.0f : 0.0f;
-		} else {
-			// 非正規化数を正規化数に変換
-			while ((m & 0x0400) == 0) {
-				m <<= 1;
-				e--;
-			}
-			e++;
-			m &= ~0x0400;
-		}
-	} else if (e == 31) { // 無限大またはNaN
-		return s ? -INFINITY : INFINITY;
-	}
-
-	// 正規化数の変換
-	// 指数部をfloatのバイアス(127)に合わせる
-	result_e = e + (127 - 15);
-	// 仮数部をfloatの23ビットに合わせる
-	result_m = m << 13;
-
-	// ビットを結合して32ビットfloatを作成
-	uint32_t result = (s << 31) | (result_e << 23) | result_m;
-	return *reinterpret_cast<float *>(&result);
-}
-
 void DebugWindow::updatePreview()
 {
 	auto currentTexture = previewTextureSelector->currentText();
@@ -307,7 +308,7 @@ void DebugWindow::updatePreview()
 		auto r16fDataView = reinterpret_cast<std::uint16_t *>(readerR16fSub->getBuffer().data());
 		bufferSubR8.resize(readerR16fSub->width * readerR16fSub->height);
 		for (std::uint32_t i = 0; i < readerR16fSub->width * readerR16fSub->height; ++i) {
-			bufferSubR8[i] = static_cast<std::uint8_t>(half_to_float(r16fDataView[i]) * 255);
+			bufferSubR8[i] = static_cast<std::uint8_t>(float16_to_double(r16fDataView[i]) * 255);
 		}
 
 		image = QImage(bufferSubR8.data(), readerR16fSub->width, readerR16fSub->height,
