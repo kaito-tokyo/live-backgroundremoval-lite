@@ -27,9 +27,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <algorithm>
 
 #include <net.h>
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-#include <opencv2/imgcodecs.hpp>
 
 #include "obs-bridge-utils/unique_bfree.hpp"
 
