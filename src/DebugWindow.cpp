@@ -22,7 +22,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <QLabel>
 #include <QPixmap>
 #include <QTimer>
-#include <QVBoxLayout>
 
 #include "AsyncTextureReader.hpp"
 #include "MainPluginContext.h"
@@ -31,12 +30,39 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
-DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _mainPluginContext, QWidget *parent)
-	: QDialog(parent), mainPluginContext(std::move(_mainPluginContext))
+DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext, QWidget *parent)
+	: QDialog(parent), weakMainPluginContext(std::move(_weakMainPluginContext)),
+	layout(new QVBoxLayout(this)),
+	previewImageLabel(new QLabel(this))
 {
+	layout->addWidget(previewImageLabel);
+	previewImageLabel->setText("No image");
+
+	setLayout(layout);
 }
 
 DebugWindow::~DebugWindow() noexcept {}
+
+void DebugWindow::videoRender()
+{
+	if (auto mainPluginContext = weakMainPluginContext.lock()) {
+		if (!readerBgrx) {
+			auto renderingContext = weakMainPluginContext.lock()->getRenderingContext();
+			readerBgrx = std::make_unique<AsyncTextureReader>(renderingContext->width, renderingContext->height,
+									   GS_BGRX);
+		}
+
+		if (readerBgrx) {
+			readerBgrx->sync();
+			if (auto mainPluginContext = weakMainPluginContext.lock()) {
+				auto renderingContext = mainPluginContext->getRenderingContext();
+				readerBgrx->stage(renderingContext->bgrxOriginalImage.get());
+			}
+		}
+
+		auto bgrxData = readerBgrx->getBuffer();
+	}
+}
 
 } // namespace obs_backgroundremoval_lite
 } // namespace kaito_tokyo

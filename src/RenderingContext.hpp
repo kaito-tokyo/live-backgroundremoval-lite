@@ -26,7 +26,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs-bridge-utils/ILogger.hpp>
 
 #include "AsyncTextureReader.hpp"
-#include "DebugWindow.hpp"
 #include "MainEffect.hpp"
 #include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
@@ -50,10 +49,12 @@ public:
 	const std::uint32_t height;
 	const FilterLevel filterLevel;
 
-private:
+public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8OriginalGrayscale;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
+
+private:
 	std::vector<std::uint8_t> segmenterInputBuffer;
 
 	const std::uint32_t maskRoiOffsetX;

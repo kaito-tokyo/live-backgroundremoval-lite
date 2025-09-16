@@ -25,12 +25,13 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs-bridge-utils/ObsLogger.hpp>
 
+#include "DebugWindow.hpp"
+#include "RenderingContext.hpp"
+
 using namespace kaito_tokyo::obs_bridge_utils;
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
-
-class DebugWindow;
 
 MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source)
 	: source{_source},
@@ -124,10 +125,12 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_int_slider(props, "gfSubsamplingRate", obs_module_text("gfSubsamplingRate"), 1, 16, 1);
 
 	obs_properties_add_button2(props, "showDebugWindow", obs_module_text("showDebugWindow"), 
-				    [](obs_properties_t *props, obs_property_t *p, void *data) {
+				    [](obs_properties_t *, obs_property_t *, void *data) {
 						auto _this = static_cast<MainPluginContext *>(data);
 						auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
 						_this->debugWindow = std::make_unique<DebugWindow>(_this->weak_from_this(), parent);
+						_this->debugWindow->show();
+						return false;
 				    },
 				    this);
 
@@ -172,6 +175,10 @@ void MainPluginContext::videoRender()
 
 	if (nextRenderingContext) {
 		nextRenderingContext->videoRender();
+	}
+
+	if (debugWindow) {
+		debugWindow->videoRender();
 	}
 }
 

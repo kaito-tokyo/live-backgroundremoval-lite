@@ -21,20 +21,32 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <memory>
 
 #include <QDialog>
+#include <QVBoxLayout>
+#include <QLabel>
 
-#include "MainPluginContext.h"
+#include "AsyncTextureReader.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
+class MainPluginContext;
+
 class DebugWindow : public QDialog {
 	Q_OBJECT
 public:
-	explicit DebugWindow(std::weak_ptr<MainPluginContext> mainPluginContext, QWidget *parent = nullptr);
+	explicit DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
 	~DebugWindow() noexcept override;
 
+    void videoRender();
+
 private:
-	std::weak_ptr<MainPluginContext> mainPluginContext;
+	std::weak_ptr<MainPluginContext> weakMainPluginContext;
+
+    QVBoxLayout *layout;
+    QLabel *previewImageLabel;
+
+
+    std::unique_ptr<AsyncTextureReader> readerBgrx;
 };
 
 } // namespace obs_backgroundremoval_lite

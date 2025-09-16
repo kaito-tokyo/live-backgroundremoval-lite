@@ -43,8 +43,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "MainEffect.hpp"
 #include "MyCprSession.hpp"
 #include "Preset.hpp"
-#include "RenderingContext.hpp"
-#include "SelfieSegmenter.hpp"
 #include "SelfieSegmenter.hpp"
 #include "ThrottledTaskQueue.hpp"
 #include "UpdateChecker/UpdateChecker.hpp"
@@ -53,6 +51,7 @@ namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
 class DebugWindow;
+class RenderingContext;
 
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
 private:
@@ -64,13 +63,13 @@ private:
 	ncnn::Net selfieSegmenterNet;
 	Preset preset;
 
-	std::shared_ptr<RenderingContext> renderingContext = nullptr;
-	std::shared_ptr<RenderingContext> nextRenderingContext = nullptr;
+	std::shared_ptr<RenderingContext> renderingContext;
+	std::shared_ptr<RenderingContext> nextRenderingContext;
 	std::int64_t frameCountBeforeContextSwitch = 0;
 
 	std::shared_future<std::optional<std::string>> futureLatestVersion;
 
-	std::unique_ptr<DebugWindow> debugWindow = nullptr;
+	std::unique_ptr<DebugWindow> debugWindow;
 
 	std::optional<std::string> getLatestVersion() const;
 
@@ -98,7 +97,7 @@ public:
 
 	const kaito_tokyo::obs_bridge_utils::ILogger &getLogger() const noexcept { return logger; }
 
-	const RenderingContext &getRenderingContext() const noexcept { return *renderingContext; }
+	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept { return renderingContext; }
 };
 
 } // namespace obs_backgroundremoval_lite
