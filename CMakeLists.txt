@@ -47,7 +47,7 @@ target_compile_definitions(
 
 target_sources(
   ${CMAKE_PROJECT_NAME}
-  PRIVATE src/MainPluginContext_c.cpp src/MainPluginContext.cpp src/RenderingContext.cpp src/plugin-main.c
+  PRIVATE src/MainPluginContext_c.cpp src/MainPluginContext.cpp src/RenderingContext.cpp src/DebugWindow.cpp src/plugin-main.c
 )
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}

@@ -35,6 +35,9 @@ namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
+public:
+	std::unique_ptr<AsyncTextureReader> bgrxOriginalImageReader;
+
 private:
 	obs_source_t *const source;
 	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
@@ -71,6 +74,7 @@ private:
 	const std::uint32_t gfWidthSub;
 	const std::uint32_t gfHeightSub;
 
+public:
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFGuideSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFSourceSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSub;
@@ -81,9 +85,10 @@ private:
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSqSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFASub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFBSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFTemporary1Sub;
-
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFResult;
+
+private:
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFTemporary1Sub;
 
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 

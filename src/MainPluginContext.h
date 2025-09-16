@@ -92,6 +92,8 @@ public:
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
 	const kaito_tokyo::obs_bridge_utils::ILogger &getLogger() const noexcept { return logger; }
+
+	const RenderingContext &getRenderingContext() const noexcept { return *renderingContext; }
 };
 
 } // namespace obs_backgroundremoval_lite
