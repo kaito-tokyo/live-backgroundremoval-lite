@@ -272,6 +272,7 @@ void DebugWindow::videoRender()
 void DebugWindow::updatePreview()
 {
 	auto currentTexture = previewTextureSelector->currentText();
+	auto currentTextureStd = currentTexture.toStdString();
 
 	const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
 	const std::vector<std::string> r8Textures = {textureR8OriginalGrayscale, textureR8GFResult};
@@ -288,23 +289,24 @@ void DebugWindow::updatePreview()
 						       textureR16fGFBSub};
 
 	QImage image;
-	if (std::find(bgrxTextures.begin(), bgrxTextures.end(), currentTexture) != bgrxTextures.end()) {
+	if (std::find(bgrxTextures.begin(), bgrxTextures.end(), currentTextureStd) != bgrxTextures.end()) {
 		image = QImage(readerBgrx->getBuffer().data(), readerBgrx->width, readerBgrx->height,
 			       QImage::Format_RGB32);
-	} else if (std::find(r8Textures.begin(), r8Textures.end(), currentTexture) != r8Textures.end()) {
+	} else if (std::find(r8Textures.begin(), r8Textures.end(), currentTextureStd) != r8Textures.end()) {
 		image = QImage(readerR8->getBuffer().data(), readerR8->width, readerR8->height,
 			       QImage::Format_Grayscale8);
-	} else if (std::find(bgrx256Textures.begin(), bgrx256Textures.end(), currentTexture) != bgrx256Textures.end()) {
+	} else if (std::find(bgrx256Textures.begin(), bgrx256Textures.end(), currentTextureStd) !=
+		   bgrx256Textures.end()) {
 		image = QImage(reader256Bgrx->getBuffer().data(), reader256Bgrx->width, reader256Bgrx->height,
 			       QImage::Format_RGB32);
-	} else if (std::find(r8MaskRoiTextures.begin(), r8MaskRoiTextures.end(), currentTexture) !=
+	} else if (std::find(r8MaskRoiTextures.begin(), r8MaskRoiTextures.end(), currentTextureStd) !=
 		   r8MaskRoiTextures.end()) {
 		image = QImage(readerMaskRoiR8->getBuffer().data(), readerMaskRoiR8->width, readerMaskRoiR8->height,
 			       QImage::Format_Grayscale8);
-	} else if (std::find(subR8Textures.begin(), subR8Textures.end(), currentTexture) != subR8Textures.end()) {
+	} else if (std::find(subR8Textures.begin(), subR8Textures.end(), currentTextureStd) != subR8Textures.end()) {
 		image = QImage(readerSubR8->getBuffer().data(), readerSubR8->width, readerSubR8->height,
 			       QImage::Format_Grayscale8);
-	} else if (std::find(r16fTextures.begin(), r16fTextures.end(), currentTexture) != r16fTextures.end()) {
+	} else if (std::find(r16fTextures.begin(), r16fTextures.end(), currentTextureStd) != r16fTextures.end()) {
 		auto r16fDataView = reinterpret_cast<std::uint16_t *>(readerR16fSub->getBuffer().data());
 		bufferSubR8.resize(readerR16fSub->width * readerR16fSub->height);
 		for (std::uint32_t i = 0; i < readerR16fSub->width * readerR16fSub->height; ++i) {
