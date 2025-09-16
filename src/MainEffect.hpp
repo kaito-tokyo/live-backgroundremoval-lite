@@ -182,7 +182,7 @@ public:
 	}
 
 	void downsampleByNearestR8(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
-					gs_texture_t *targetTexture) const noexcept
+				   gs_texture_t *targetTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
@@ -205,7 +205,8 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void convertToGrayscale(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture, gs_texture_t *sourceTexture) const noexcept
+	void convertToGrayscale(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
+				gs_texture_t *sourceTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;

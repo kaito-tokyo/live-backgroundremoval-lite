@@ -137,10 +137,8 @@ void RenderingContext::videoRender()
 	int heightSub = height / subsamplingRate;
 
 	unique_gs_texture_t r8Grayscale = make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8GuideSub =
-		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8SourceSub =
-		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8GuideSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	unique_gs_texture_t r8SourceSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
 	unique_gs_texture_t r8MeanISub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
 	unique_gs_texture_t r8MeanPSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
 	unique_gs_texture_t r8IMulPSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
@@ -165,8 +163,7 @@ void RenderingContext::videoRender()
 	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8SourceSub.get(), r8MeanPSub.get(), kernelSize,
 				    r8TemporarySub1.get());
 
-	mainEffect.applyMultiplyR8(widthSub, heightSub, r8GuideSub.get(), r8SourceSub.get(),
-				   r8IMulPSub.get());
+	mainEffect.applyMultiplyR8(widthSub, heightSub, r8GuideSub.get(), r8SourceSub.get(), r8IMulPSub.get());
 	mainEffect.applySquareR8(widthSub, heightSub, r8GuideSub.get(), r8IMulISub.get());
 
 	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8IMulPSub.get(), r8MeanIpSub.get(), kernelSize,
