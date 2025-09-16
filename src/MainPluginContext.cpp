@@ -168,11 +168,12 @@ try {
 	}
 	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height ||
 	    renderingContext->filterLevel != preset.filterLevel || renderingContext->gfRadius != preset.gfRadius ||
-	    renderingContext->gfEps != preset.gfEps || renderingContext->gfSubsamplingRate != preset.gfSubsamplingRate) {
+	    renderingContext->gfEps != preset.gfEps ||
+	    renderingContext->gfSubsamplingRate != preset.gfSubsamplingRate) {
 		graphics_context_guard guard;
-		renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
-								      selfieSegmenterTaskQueue, frame->width,
-								      frame->height, preset.filterLevel, preset.gfRadius, preset.gfEps, preset.gfSubsamplingRate);
+		renderingContext = std::make_shared<RenderingContext>(
+			source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, frame->width,
+			frame->height, preset.filterLevel, preset.gfRadius, preset.gfEps, preset.gfSubsamplingRate);
 	}
 
 	return frame;

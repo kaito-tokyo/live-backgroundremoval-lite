@@ -49,8 +49,8 @@ namespace obs_backgroundremoval_lite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
 				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-				   std::uint32_t _width, std::uint32_t _height, FilterLevel _filterLevel, int _gfRadius, float _gfEps,
-				   int _gfSubsamplingRate)
+				   std::uint32_t _width, std::uint32_t _height, FilterLevel _filterLevel, int _gfRadius,
+				   float _gfEps, int _gfSubsamplingRate)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
