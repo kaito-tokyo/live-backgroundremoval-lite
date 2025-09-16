@@ -63,6 +63,9 @@ private:
 	Preset preset;
 
 	std::shared_ptr<RenderingContext> renderingContext = nullptr;
+	std::shared_ptr<RenderingContext> nextRenderingContext = nullptr;
+	std::int64_t frameCountBeforeContextSwitch = 0;
+
 	std::shared_future<std::optional<std::string>> futureLatestVersion;
 	std::optional<std::string> getLatestVersion() const;
 

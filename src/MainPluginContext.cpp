@@ -158,6 +158,10 @@ void MainPluginContext::videoRender()
 	}
 
 	renderingContext->videoRender();
+
+	if (nextRenderingContext) {
+		nextRenderingContext->videoRender();
+	}
 }
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
@@ -166,14 +170,28 @@ try {
 		renderingContext.reset();
 		return frame;
 	}
+
+	if (frameCountBeforeContextSwitch > 0) {
+		--frameCountBeforeContextSwitch;
+		if (frameCountBeforeContextSwitch == 0 && nextRenderingContext) {
+			graphics_context_guard guard;
+			renderingContext = std::move(nextRenderingContext);
+			nextRenderingContext.reset();
+			logger.info("Switched to new rendering context");
+			gs_unique::drain();
+		}
+	}
+
 	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height ||
 	    renderingContext->filterLevel != preset.filterLevel || renderingContext->gfRadius != preset.gfRadius ||
 	    renderingContext->gfEps != preset.gfEps ||
 	    renderingContext->gfSubsamplingRate != preset.gfSubsamplingRate) {
 		graphics_context_guard guard;
-		renderingContext = std::make_shared<RenderingContext>(
+		nextRenderingContext = std::make_shared<RenderingContext>(
 			source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, frame->width,
 			frame->height, preset.filterLevel, preset.gfRadius, preset.gfEps, preset.gfSubsamplingRate);
+		frameCountBeforeContextSwitch = 1;
+		gs_unique::drain();
 	}
 
 	return frame;
