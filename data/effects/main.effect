@@ -143,6 +143,42 @@ float4 PSVerticalBoxFilterR8(VertInOut vert_in) : TARGET
 }
 
 /**
+ * @brief Applies an optimized 1D horizontal box filter with a fixed kernel size of 17.
+ * (Pass 1 of a separable filter)
+ */
+float4 PSHorizontalBoxFilterR8KS17(VertInOut vert_in) : TARGET
+{
+    float2 uv = vert_in.uv;
+    float sum = 0.0f;
+
+    for (int i = -8; i <= 8; i++) {
+        sum += image.Sample(point_sampler, uv + float2(i * texelWidth, 0.0f)).r;
+    }
+
+    float luma = sum / 17.0f;
+
+    return float4(luma, luma, luma, 1.0f);
+}
+
+/**
+ * @brief Applies an optimized 1D vertical box filter with a fixed kernel size of 17.
+ * (Pass 2 of a separable filter)
+ */
+float4 PSVerticalBoxFilterR8KS17(VertInOut vert_in) : TARGET
+{
+    float2 uv = vert_in.uv;
+    float sum = 0.0f;
+
+    for (int i = -8; i <= 8; i++) {
+        sum += image.Sample(point_sampler, uv + float2(0.0f, i * texelHeight)).r;
+    }
+
+    float luma = sum / 17.0f;
+
+    return float4(luma, luma, luma, 1.0f);
+}
+
+/**
  * @brief Performs per-element multiplication of the R channels of 'image' and 'image1'.
  * @note 'image' and 'image1' must be the same size.
  */

@@ -155,19 +155,19 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r8OriginalGrayscale, gs_
 
 	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFSourceSub.get(), r8SegmentationMask);
 
-	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanGuideSub.get(), r8GFGuideSub.get(), kernelSize,
-				    r16fGFTemporary1Sub.get());
-	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanSourceSub.get(), r8GFSourceSub.get(), kernelSize,
-				    r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSub.get(), r8GFGuideSub.get(),
+					r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanSourceSub.get(), r8GFSourceSub.get(),
+					r16fGFTemporary1Sub.get());
 
 	mainEffect.multiplyR8(gfWidthSub, gfHeightSub, r16fGFGuideSourceSub.get(), r8GFGuideSub.get(),
 			      r8GFSourceSub.get());
 	mainEffect.squareR8(gfWidthSub, gfHeightSub, r16fGFGuideSqSub.get(), r8GFGuideSub.get());
 
-	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanGuideSourceSub.get(), r16fGFGuideSourceSub.get(),
-				    kernelSize, r16fGFTemporary1Sub.get());
-	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanGuideSqSub.get(), r16fGFGuideSqSub.get(),
-				    kernelSize, r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSourceSub.get(),
+					r16fGFGuideSourceSub.get(), r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSqSub.get(), r16fGFGuideSqSub.get(),
+					r16fGFTemporary1Sub.get());
 
 	mainEffect.calculateGuidedFilterAAndB(gfWidthSub, gfHeightSub, r16fGFASub.get(), r16fGFBSub.get(),
 					      r16fGFMeanGuideSqSub.get(), r16fGFMeanGuideSub.get(),
