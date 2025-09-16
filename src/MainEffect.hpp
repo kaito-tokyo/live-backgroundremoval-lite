@@ -108,6 +108,7 @@ public:
 
 	gs_technique_t *const techDraw = nullptr;
 	gs_technique_t *const techDrawWithMask = nullptr;
+	gs_technique_t *const techDownsampleByNearestR8 = nullptr;
 	gs_technique_t *const techConvertToGrayscale = nullptr;
 	gs_technique_t *const techHorizontalBoxFilterR8 = nullptr;
 	gs_technique_t *const techVerticalBoxFilterR8 = nullptr;
@@ -129,6 +130,7 @@ public:
 		  textureImage3(main_effect_detail::getEffectParam(effect, "image3", logger)),
 		  techDraw(main_effect_detail::getEffectTech(effect, "Draw", logger)),
 		  techDrawWithMask(main_effect_detail::getEffectTech(effect, "DrawWithMask", logger)),
+		  techDownsampleByNearestR8(main_effect_detail::getEffectTech(effect, "DownsampleByNearestR8", logger)),
 		  techConvertToGrayscale(main_effect_detail::getEffectTech(effect, "ConvertToGrayscale", logger)),
 		  techHorizontalBoxFilterR8(main_effect_detail::getEffectTech(effect, "HorizontalBoxFilterR8", logger)),
 		  techVerticalBoxFilterR8(main_effect_detail::getEffectTech(effect, "VerticalBoxFilterR8", logger)),
@@ -179,8 +181,40 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void convertToGrayscale(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) const noexcept
+	void downsampleByNearestR8(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
+					gs_texture_t *targetTexture) const noexcept
 	{
+		RenderTargetGuard renderTargetGuard;
+		TransformStateGuard transformStateGuard;
+
+		gs_set_viewport(0, 0, width, height);
+		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
+		gs_matrix_identity();
+
+		gs_technique_t *tech = techDownsampleByNearestR8; // Use the NearestDownsampleR8 technique
+		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
+		std::size_t passes = gs_technique_begin(tech);
+		for (std::size_t i = 0; i < passes; i++) {
+			if (gs_technique_begin_pass(tech, i)) {
+				gs_effect_set_texture(textureImage, sourceTexture);
+
+				gs_draw_sprite(nullptr, 0, width, height);
+				gs_technique_end_pass(tech);
+			}
+		}
+		gs_technique_end(tech);
+	}
+
+	void convertToGrayscale(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture, gs_texture_t *sourceTexture) const noexcept
+	{
+		RenderTargetGuard renderTargetGuard;
+		TransformStateGuard transformStateGuard;
+
+		gs_set_viewport(0, 0, width, height);
+		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
+		gs_matrix_identity();
+
+		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
 		gs_technique_t *tech = techConvertToGrayscale;
 		std::size_t passes = gs_technique_begin(tech);
 		for (std::size_t i = 0; i < passes; i++) {
@@ -321,7 +355,7 @@ public:
 			if (gs_technique_begin_pass(techCalculateGuidedFilterB, i)) {
 				gs_effect_set_texture(textureImage, targetATexture);
 				gs_effect_set_texture(textureImage1, sourceMeanPTexture);
-				gs_effect_set_texture(textureImage2, sourceMeanIITexture);
+				gs_effect_set_texture(textureImage2, sourceMeanITexture);
 
 				gs_draw_sprite(nullptr, 0, width, height);
 				gs_technique_end_pass(techCalculateGuidedFilterB);

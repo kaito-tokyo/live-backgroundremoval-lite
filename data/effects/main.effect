@@ -69,7 +69,7 @@ VertInOut VSDefault(VertInOut vert_in)
  */
 float4 PSDraw(VertInOut vert_in) : TARGET
 {
-    return image.Sample(linear_sampler, vert_in.uv);
+    return image.Sample(point_sampler, vert_in.uv);
 }
 
 /**
@@ -83,10 +83,15 @@ float4 PSDrawWithMask(VertInOut vert_in) : TARGET
     float2 uv = vert_in.uv;
     float4 final_color;
 
-    final_color.rgb = image.Sample(linear_sampler, uv).rgb;
-    final_color.a = image1.Sample(linear_sampler, uv).r;
+    final_color.rgb = image.Sample(point_sampler, uv).rgb;
+    final_color.a = image1.Sample(point_sampler, uv).r;
 
     return final_color;
+}
+
+float PSDownsampleByNearestR8(VertInOut vert_in) : TARGET
+{
+	return image.Sample(point_sampler, vert_in.uv).r;
 }
 
 /**
@@ -107,15 +112,12 @@ float4 PSHorizontalBoxFilterR8(VertInOut vert_in) : TARGET
 {
     float2 uv = vert_in.uv;
     int radius = kernelSize / 2;
-    float bilinear_sum = 0.0f;
+	float sum = 0.0f;
 
-    for (int i = 1; i <= radius / 2; i++) {
-        float2 offset = float2((float(i * 2) - 0.5f) * texelWidth, 0.0f);
-        bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
-        bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
+    for (int i = -radius; i <= radius; i++) {
+        sum += image.Sample(point_sampler, uv + float2(i * texelWidth, 0.0f)).r;
     }
 
-    float sum = image.Sample(linear_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
     float luma = sum / float(kernelSize);
 
     return float4(luma, luma, luma, 1.0f);
@@ -129,15 +131,13 @@ float4 PSVerticalBoxFilterR8(VertInOut vert_in) : TARGET
 {
     float2 uv = vert_in.uv;
     int radius = kernelSize / 2;
-    float bilinear_sum = 0.0f;
+    float sum = 0.0f;
 
-    for (int i = 1; i <= radius / 2; i++) {
-        float2 offset = float2(0.0f, (float(i * 2) - 0.5f) * texelHeight);
-        bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
-        bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
+    for (int i = -radius; i <= radius; i++) {
+        float2 offset = float2(0.0f, i * texelHeight);
+        sum += image.Sample(point_sampler, uv + offset).r;
     }
 
-    float sum = image.Sample(linear_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
     float luma = sum / float(kernelSize);
 
     return float4(luma, luma, luma, 1.0f);
@@ -221,10 +221,9 @@ float4 PSCalculateGuidedFilterB(VertInOut vert_in) : TARGET
  * The low-resolution coefficients 'a' and 'b' are upsampled using linear interpolation
  * and applied to the full-resolution guide image 'I'.
  * @param image  Input texture (the full-resolution guide image I).
- * @param image1 Input texture (the upsampled coefficient 'a').
- * @param image2 Input texture (the upsampled coefficient 'b').
+ * @param image1 Input texture (the subsampled coefficient 'a').
+ * @param image2 Input texture (the subsampled coefficient 'b').
  * @return The final filtered pixel value.
- * @note 'image1'(a) and 'image2'(b) must be the same (subsampled) size. 'image'(guide) should be at the final, full resolution.
  */
 float4 PSFinalizeGuidedFilter(VertInOut vert_in) : TARGET
 {
@@ -256,6 +255,15 @@ technique DrawWithMask
         vertex_shader = VSDefault(vert_in);
         pixel_shader = PSDrawWithMask(vert_in);
     }
+}
+
+technique DownsampleByNearestR8
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSDownsampleByNearestR8(vert_in);
+	}
 }
 
 technique ConvertToGrayscale
