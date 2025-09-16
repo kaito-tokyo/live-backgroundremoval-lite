@@ -84,19 +84,24 @@ public:
 	/**
      * @brief Destructor. Stops the queue and waits for the worker thread to finish.
      */
-	~ThrottledTaskQueue()
-	{
-		if (worker.joinable()) {
-			stop();
-			worker.join();
-		}
-	}
+	~ThrottledTaskQueue() { shutdown(); }
 
 	// Forbid copy and move semantics to keep ownership simple.
 	ThrottledTaskQueue(const ThrottledTaskQueue &) = delete;
 	ThrottledTaskQueue &operator=(const ThrottledTaskQueue &) = delete;
 	ThrottledTaskQueue(ThrottledTaskQueue &&) = delete;
 	ThrottledTaskQueue &operator=(ThrottledTaskQueue &&) = delete;
+
+	/**
+	 * @brief Stops the queue and waits for the worker thread to finish.
+	 */
+	void shutdown()
+	{
+		if (worker.joinable()) {
+			stop();
+			worker.join();
+		}
+	}
 
 	/**
      * @brief Pushes a cancellable task to the queue.

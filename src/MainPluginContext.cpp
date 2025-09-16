@@ -70,6 +70,7 @@ void MainPluginContext::startup() noexcept
 void MainPluginContext::shutdown() noexcept
 {
 	renderingContext.reset();
+	selfieSegmenterTaskQueue.shutdown();
 }
 
 MainPluginContext::~MainPluginContext() noexcept {}
@@ -87,6 +88,9 @@ std::uint32_t MainPluginContext::getHeight() const noexcept
 void MainPluginContext::getDefaults(obs_data_t *data)
 {
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(FilterLevel::Default));
+	obs_data_set_default_int(data, "gfRadius", 8);
+	obs_data_set_default_double(data, "gfEps", 0.0004);
+	obs_data_set_default_int(data, "gfSubsamplingRate", 4);
 }
 
 obs_properties_t *MainPluginContext::getProperties()
@@ -105,15 +109,26 @@ obs_properties_t *MainPluginContext::getProperties()
 								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
 				  static_cast<int>(FilterLevel::Default));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelPassthrough"),
+				  static_cast<int>(FilterLevel::Passthrough));
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
 				  static_cast<int>(FilterLevel::Segmentation));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
+				  static_cast<int>(FilterLevel::GuidedFilter));
+
+	obs_properties_add_int_slider(props, "gfRadius", obs_module_text("gfRadius"), 0, 16, 2);
+	obs_properties_add_float_slider(props, "gfEps", obs_module_text("gfEps"), 0.000001f, 0.0004f, 0.000001f);
+	obs_properties_add_int_slider(props, "gfSubsamplingRate", obs_module_text("gfSubsamplingRate"), 1, 16, 1);
 
 	return props;
 }
 
-void MainPluginContext::update(obs_data_t *_settings)
+void MainPluginContext::update(obs_data_t *settings)
 {
-	preset.filterLevel = static_cast<FilterLevel>(obs_data_get_int(_settings, "filterLevel"));
+	preset.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+	preset.gfRadius = static_cast<int>(obs_data_get_int(settings, "gfRadius"));
+	preset.gfEps = static_cast<float>(obs_data_get_double(settings, "gfEps"));
+	preset.gfSubsamplingRate = static_cast<int>(obs_data_get_int(settings, "gfSubsamplingRate"));
 }
 
 void MainPluginContext::activate() {}
@@ -151,11 +166,14 @@ try {
 		renderingContext.reset();
 		return frame;
 	}
-	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height) {
+	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height ||
+	    renderingContext->filterLevel != preset.filterLevel || renderingContext->gfRadius != preset.gfRadius ||
+	    renderingContext->gfEps != preset.gfEps ||
+	    renderingContext->gfSubsamplingRate != preset.gfSubsamplingRate) {
 		graphics_context_guard guard;
-		renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
-								      selfieSegmenterTaskQueue, frame->width,
-								      frame->height);
+		renderingContext = std::make_shared<RenderingContext>(
+			source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, frame->width,
+			frame->height, preset.filterLevel, preset.gfRadius, preset.gfEps, preset.gfSubsamplingRate);
 	}
 
 	return frame;

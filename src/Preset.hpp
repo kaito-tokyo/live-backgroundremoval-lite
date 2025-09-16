@@ -23,11 +23,17 @@ namespace obs_backgroundremoval_lite {
 
 enum class FilterLevel : int {
 	Default = 0,
-	Segmentation = 100,
+	Passthrough = 100,
+	Segmentation = 200,
+	GuidedFilter = 300,
 };
 
 struct Preset {
 	FilterLevel filterLevel;
+
+	int gfRadius;
+	float gfEps;
+	int gfSubsamplingRate;
 };
 
 } // namespace obs_backgroundremoval_lite
