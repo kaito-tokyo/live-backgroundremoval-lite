@@ -36,36 +36,36 @@ class MainPluginContext;
 class DebugWindow : public QDialog {
 	Q_OBJECT
 public:
-    static constexpr int PREVIEW_WIDTH = 640;
-    static constexpr int PREVIEW_HEIGHT = 480;
+	static constexpr int PREVIEW_WIDTH = 640;
+	static constexpr int PREVIEW_HEIGHT = 480;
 
 	explicit DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
 	~DebugWindow() noexcept override;
 
-    void videoRender();
+	void videoRender();
 
 signals:
-    void readerReady();
+	void readerReady();
 
 private slots:
-    void updatePreview();
+	void updatePreview();
 
 private:
 	std::weak_ptr<MainPluginContext> weakMainPluginContext;
 
-    QVBoxLayout *layout;
-    QComboBox *previewTextureSelector;
-    QLabel *previewImageLabel;
-    QTimer *updateTimer;
+	QVBoxLayout *layout;
+	QComboBox *previewTextureSelector;
+	QLabel *previewImageLabel;
+	QTimer *updateTimer;
 
-    std::unique_ptr<AsyncTextureReader> readerBgrx;
-    std::unique_ptr<AsyncTextureReader> readerR8;
-    std::unique_ptr<AsyncTextureReader> reader256Bgrx;
-    std::unique_ptr<AsyncTextureReader> readerMaskRoiR8;
-    std::unique_ptr<AsyncTextureReader> readerSubR8;
-    std::unique_ptr<AsyncTextureReader> readerR16fSub;
+	std::unique_ptr<AsyncTextureReader> readerBgrx;
+	std::unique_ptr<AsyncTextureReader> readerR8;
+	std::unique_ptr<AsyncTextureReader> reader256Bgrx;
+	std::unique_ptr<AsyncTextureReader> readerMaskRoiR8;
+	std::unique_ptr<AsyncTextureReader> readerSubR8;
+	std::unique_ptr<AsyncTextureReader> readerR16fSub;
 
-    std::vector<std::uint8_t> bufferSubR8;
+	std::vector<std::uint8_t> bufferSubR8;
 };
 
 } // namespace obs_backgroundremoval_lite

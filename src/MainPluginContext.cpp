@@ -124,15 +124,16 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_float_slider(props, "gfEps", obs_module_text("gfEps"), 0.000001f, 0.0004f, 0.000001f);
 	obs_properties_add_int_slider(props, "gfSubsamplingRate", obs_module_text("gfSubsamplingRate"), 1, 16, 1);
 
-	obs_properties_add_button2(props, "showDebugWindow", obs_module_text("showDebugWindow"), 
-				    [](obs_properties_t *, obs_property_t *, void *data) {
-						auto _this = static_cast<MainPluginContext *>(data);
-						auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
-						_this->debugWindow = std::make_unique<DebugWindow>(_this->weak_from_this(), parent);
-						_this->debugWindow->show();
-						return false;
-				    },
-				    this);
+	obs_properties_add_button2(
+		props, "showDebugWindow", obs_module_text("showDebugWindow"),
+		[](obs_properties_t *, obs_property_t *, void *data) {
+			auto _this = static_cast<MainPluginContext *>(data);
+			auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
+			_this->debugWindow = std::make_unique<DebugWindow>(_this->weak_from_this(), parent);
+			_this->debugWindow->show();
+			return false;
+		},
+		this);
 
 	return props;
 }
