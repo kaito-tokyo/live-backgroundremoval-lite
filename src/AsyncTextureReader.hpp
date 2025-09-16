@@ -115,9 +115,9 @@ public:
      */
 	AsyncTextureReader(const std::uint32_t width, const std::uint32_t height,
 			   const gs_color_format format = GS_BGRA)
-		: width{width},
-		  height{height},
-		  bufferLinesize{(width * async_texture_reader_detail::getBytesPerPixel(format) + 3) & ~3u},
+		: width(width),
+		  height(height),
+		  bufferLinesize((width * async_texture_reader_detail::getBytesPerPixel(format) + 3) & ~3u),
 		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
 			     std::vector<std::uint8_t>(height * bufferLinesize)},
 		  stagesurfs{obs_bridge_utils::make_unique_gs_stagesurf(width, height, format),
@@ -214,11 +214,12 @@ public:
      */
 	std::uint32_t getBufferLinesize() const noexcept { return bufferLinesize; }
 
-private:
+public:
 	const std::uint32_t width;
 	const std::uint32_t height;
 	const std::uint32_t bufferLinesize;
 
+private:
 	std::array<std::vector<std::uint8_t>, 2> cpuBuffers;
 	std::atomic<std::size_t> activeCpuBufferIndex = {0};
 

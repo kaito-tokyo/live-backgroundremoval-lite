@@ -20,9 +20,11 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <memory>
 
+#include <QComboBox>
 #include <QDialog>
-#include <QVBoxLayout>
 #include <QLabel>
+#include <QTimer>
+#include <QVBoxLayout>
 
 #include "AsyncTextureReader.hpp"
 
@@ -34,19 +36,31 @@ class MainPluginContext;
 class DebugWindow : public QDialog {
 	Q_OBJECT
 public:
+    static constexpr int PREVIEW_WIDTH = 640;
+    static constexpr int PREVIEW_HEIGHT = 480;
+
 	explicit DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
 	~DebugWindow() noexcept override;
 
     void videoRender();
 
+signals:
+    void readerReady();
+
+private slots:
+    void updatePreview();
+
 private:
 	std::weak_ptr<MainPluginContext> weakMainPluginContext;
 
     QVBoxLayout *layout;
+    QComboBox *previewTextureSelector;
     QLabel *previewImageLabel;
-
+    QTimer *updateTimer;
 
     std::unique_ptr<AsyncTextureReader> readerBgrx;
+    std::unique_ptr<AsyncTextureReader> readerR8;
+    std::unique_ptr<AsyncTextureReader> reader256Bgrx;
 };
 
 } // namespace obs_backgroundremoval_lite
