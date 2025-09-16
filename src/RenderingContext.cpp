@@ -49,7 +49,8 @@ namespace obs_backgroundremoval_lite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
 				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-				   std::uint32_t _width, std::uint32_t _height)
+				   std::uint32_t _width, std::uint32_t _height, FilterLevel _filterLevel, int _gfRadius, float _gfEps,
+				   int _gfSubsamplingRate)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
@@ -59,15 +60,36 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
 	  width(_width),
 	  height(_height),
+	  filterLevel(_filterLevel),
 	  bgrxOriginalImage(make_unique_gs_texture(width, height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
+	  r8OriginalGrayscale(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  bgrxSegmenterInput(make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT,
 						    GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  maskRoiOffsetX(getMaskRoiDimension(width, height)[0]),
 	  maskRoiOffsetY(getMaskRoiDimension(width, height)[1]),
 	  maskRoiWidth(getMaskRoiDimension(width, height)[2]),
 	  maskRoiHeight(getMaskRoiDimension(width, height)[3]),
-	  r8SegmentationMask(make_unique_gs_texture(maskRoiWidth, maskRoiHeight, GS_R8, 1, NULL, GS_DYNAMIC))
+	  r8SegmentationMask(make_unique_gs_texture(maskRoiWidth, maskRoiHeight, GS_R8, 1, NULL, GS_DYNAMIC)),
+	  gfRadius(_gfRadius),
+	  gfEps(_gfEps),
+	  gfSubsamplingRate(_gfSubsamplingRate),
+	  gfWidthSub(width / gfSubsamplingRate),
+	  gfHeightSub(height / gfSubsamplingRate),
+	  r8GFGuideSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r8GFSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r16fGFMeanGuideSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
+	  r16fGFMeanSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
+	  r16fGFGuideSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
+	  r16fGFGuideSqSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
+	  r16fGFMeanGuideSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
+	  r16fGFMeanGuideSqSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
+	  r16fGFASub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
+	  r16fGFBSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
+	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r16fGFTemporary1Sub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET))
 {
+	logger.info("Creating RenderingContext: {}x{}, filterLevel={}, gfRadius={}, gfEps={}, gfSubsamplingRate={}",
+		    width, height, static_cast<int>(filterLevel), gfRadius, gfEps, gfSubsamplingRate);
 }
 
 RenderingContext::~RenderingContext() noexcept {}
@@ -97,7 +119,12 @@ void RenderingContext::renderOriginalImage()
 	obs_source_process_filter_end(source, mainEffect.effect.get(), width, height);
 }
 
-void RenderingContext::renderSegmenterInput()
+void RenderingContext::renderOriginalGrayscale(gs_texture_t *bgrxOriginalImage)
+{
+	mainEffect.convertToGrayscale(width, height, r8OriginalGrayscale.get(), bgrxOriginalImage);
+}
+
+void RenderingContext::renderSegmenterInput(gs_texture_t *bgrxOriginalImage)
 {
 	RenderTargetGuard renderTargetGuard;
 	TransformStateGuard transformStateGuard;
@@ -110,77 +137,48 @@ void RenderingContext::renderSegmenterInput()
 	gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
 	gs_matrix_identity();
 
-	mainEffect.draw(width, height, bgrxOriginalImage.get());
+	mainEffect.draw(width, height, bgrxOriginalImage);
 }
 
-void RenderingContext::videoRender()
+void RenderingContext::renderSegmentationMask()
 {
-	try {
-		readerSegmenterInput.sync();
-	} catch (const std::exception &e) {
-		logger.error("Failed to sync texture reader: {}", e.what());
-	}
-
-	renderOriginalImage();
-	renderSegmenterInput();
-
 	const std::uint8_t *segmentationMaskData =
 		selfieSegmenter.getMask().data() + (maskRoiOffsetY * SelfieSegmenter::INPUT_WIDTH + maskRoiOffsetX);
 	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, SelfieSegmenter::INPUT_WIDTH, 0);
+}
 
-	int radius = 8;
-	int kernelSize = radius * 2 + 1;
-	int subsamplingRate = 8;
-	// double eps = 0.02 * 0.02;
-	// int radiusSub = radius / subsamplingRate;
-	int widthSub = width / subsamplingRate;
-	int heightSub = height / subsamplingRate;
+void RenderingContext::renderGuidedFilter(gs_texture_t *r8OriginalGrayscale, gs_texture_t *r8SegmentationMask)
+{
+	int kernelSize = 2 * gfRadius + 1;
 
-	unique_gs_texture_t r8Grayscale = make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8GuideSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8SourceSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8MeanISub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8MeanPSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8IMulPSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8IMulISub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8MeanIpSub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8MeanIISub = make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8GuidedFilterASub =
-		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8GuidedFilterBSub =
-		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8GuidedFilterResult =
-		make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET);
-	unique_gs_texture_t r8TemporarySub1 =
-		make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET);
+	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFGuideSub.get(), r8OriginalGrayscale);
 
-	mainEffect.convertToGrayscale(width, height, r8Grayscale.get(), bgrxOriginalImage.get());
-	mainEffect.downsampleByNearestR8(widthSub, heightSub, r8Grayscale.get(), r8GuideSub.get());
-	mainEffect.downsampleByNearestR8(widthSub, heightSub, r8SegmentationMask.get(), r8SourceSub.get());
+	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFSourceSub.get(), r8SegmentationMask);
 
-	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8GuideSub.get(), r8MeanISub.get(), kernelSize,
-				    r8TemporarySub1.get());
-	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8SourceSub.get(), r8MeanPSub.get(), kernelSize,
-				    r8TemporarySub1.get());
+	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanGuideSub.get(), r8GFGuideSub.get(), kernelSize,
+				    r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanSourceSub.get(), r8GFSourceSub.get(), kernelSize,
+				    r16fGFTemporary1Sub.get());
 
-	mainEffect.applyMultiplyR8(widthSub, heightSub, r8GuideSub.get(), r8SourceSub.get(), r8IMulPSub.get());
-	mainEffect.applySquareR8(widthSub, heightSub, r8GuideSub.get(), r8IMulISub.get());
+	mainEffect.multiplyR8(gfWidthSub, gfHeightSub, r16fGFGuideSourceSub.get(), r8GFGuideSub.get(),
+			      r8GFSourceSub.get());
+	mainEffect.squareR8(gfWidthSub, gfHeightSub, r16fGFGuideSqSub.get(), r8GFGuideSub.get());
 
-	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8IMulPSub.get(), r8MeanIpSub.get(), kernelSize,
-				    r8TemporarySub1.get());
-	mainEffect.applyBoxFilterR8(widthSub, heightSub, r8IMulISub.get(), r8MeanIISub.get(), kernelSize,
-				    r8TemporarySub1.get());
+	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanGuideSourceSub.get(), r16fGFGuideSourceSub.get(),
+				    kernelSize, r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanGuideSqSub.get(), r16fGFGuideSqSub.get(),
+				    kernelSize, r16fGFTemporary1Sub.get());
 
-	mainEffect.calculateGuidedFilterAAndB(widthSub, heightSub, r8GuidedFilterASub.get(), r8GuidedFilterBSub.get(),
-					      r8MeanIISub.get(), r8MeanISub.get(), r8MeanIpSub.get(), r8MeanPSub.get());
+	mainEffect.calculateGuidedFilterAAndB(gfWidthSub, gfHeightSub, r16fGFASub.get(), r16fGFBSub.get(),
+					      r16fGFMeanGuideSqSub.get(), r16fGFMeanGuideSub.get(),
+					      r16fGFMeanGuideSourceSub.get(), r16fGFMeanSourceSub.get(), gfEps);
 
-	mainEffect.finalizeGuidedFilter(width, height, r8GuidedFilterResult.get(), r8Grayscale.get(),
-					r8GuidedFilterASub.get(), r8GuidedFilterBSub.get());
+	mainEffect.finalizeGuidedFilter(width, height, r8GFResult.get(), r8OriginalGrayscale, r16fGFASub.get(),
+					r16fGFBSub.get());
+}
 
-	mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8GuidedFilterResult.get());
-
-	readerSegmenterInput.stage(bgrxSegmenterInput.get());
-
+void RenderingContext::kickSegmentationTask()
+{
 	auto &readerSegmenterInputBuffer = readerSegmenterInput.getBuffer();
 	std::copy(readerSegmenterInputBuffer.begin(), readerSegmenterInputBuffer.end(), segmenterInputBuffer.begin());
 	selfieSegmenterTaskQueue.push(
@@ -194,6 +192,50 @@ void RenderingContext::videoRender()
 				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
 			}
 		});
+}
+
+void RenderingContext::videoRender()
+{
+	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::Segmentation : filterLevel;
+
+	if (actualFilterLevel >= FilterLevel::Segmentation) {
+		try {
+			readerSegmenterInput.sync();
+		} catch (const std::exception &e) {
+			logger.error("Failed to sync texture reader: {}", e.what());
+		}
+	}
+
+	renderOriginalImage();
+
+	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
+		renderOriginalGrayscale(bgrxOriginalImage.get());
+	}
+
+	if (actualFilterLevel >= FilterLevel::Segmentation) {
+		renderSegmenterInput(bgrxOriginalImage.get());
+		renderSegmentationMask();
+	}
+
+	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
+		renderGuidedFilter(r8OriginalGrayscale.get(), r8SegmentationMask.get());
+	}
+
+	if (actualFilterLevel == FilterLevel::Passthrough) {
+		mainEffect.draw(width, height, bgrxOriginalImage.get());
+	} else if (actualFilterLevel == FilterLevel::Segmentation) {
+		mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
+	} else if (actualFilterLevel == FilterLevel::GuidedFilter) {
+		mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8GFResult.get());
+	} else {
+		obs_source_skip_video_filter(source);
+		return;
+	}
+
+	if (actualFilterLevel >= FilterLevel::Segmentation) {
+		readerSegmenterInput.stage(bgrxSegmenterInput.get());
+		kickSegmentationTask();
+	}
 }
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)

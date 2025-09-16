@@ -106,9 +106,11 @@ public:
 	gs_eparam_t *const textureImage2 = nullptr;
 	gs_eparam_t *const textureImage3 = nullptr;
 
+	gs_eparam_t *const floatEps = nullptr;
+
 	gs_technique_t *const techDraw = nullptr;
 	gs_technique_t *const techDrawWithMask = nullptr;
-	gs_technique_t *const techDownsampleByNearestR8 = nullptr;
+	gs_technique_t *const techResampleByNearestR8 = nullptr;
 	gs_technique_t *const techConvertToGrayscale = nullptr;
 	gs_technique_t *const techHorizontalBoxFilterR8 = nullptr;
 	gs_technique_t *const techVerticalBoxFilterR8 = nullptr;
@@ -128,9 +130,10 @@ public:
 		  textureImage1(main_effect_detail::getEffectParam(effect, "image1", logger)),
 		  textureImage2(main_effect_detail::getEffectParam(effect, "image2", logger)),
 		  textureImage3(main_effect_detail::getEffectParam(effect, "image3", logger)),
+		  floatEps(main_effect_detail::getEffectParam(effect, "eps", logger)),
 		  techDraw(main_effect_detail::getEffectTech(effect, "Draw", logger)),
 		  techDrawWithMask(main_effect_detail::getEffectTech(effect, "DrawWithMask", logger)),
-		  techDownsampleByNearestR8(main_effect_detail::getEffectTech(effect, "DownsampleByNearestR8", logger)),
+		  techResampleByNearestR8(main_effect_detail::getEffectTech(effect, "ResampleByNearestR8", logger)),
 		  techConvertToGrayscale(main_effect_detail::getEffectTech(effect, "ConvertToGrayscale", logger)),
 		  techHorizontalBoxFilterR8(main_effect_detail::getEffectTech(effect, "HorizontalBoxFilterR8", logger)),
 		  techVerticalBoxFilterR8(main_effect_detail::getEffectTech(effect, "VerticalBoxFilterR8", logger)),
@@ -181,24 +184,25 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void downsampleByNearestR8(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
-				   gs_texture_t *targetTexture) const noexcept
+	void resampleByNearestR8(std::uint32_t targetWidth, std::uint32_t targetHeight, gs_texture_t *targetTexture,
+				 gs_texture_t *sourceTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
 
-		gs_set_viewport(0, 0, width, height);
-		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
+		gs_set_viewport(0, 0, targetWidth, targetHeight);
+		gs_ortho(0.0f, static_cast<float>(targetWidth), 0.0f, static_cast<float>(targetHeight), -100.0f,
+			 100.0f);
 		gs_matrix_identity();
 
-		gs_technique_t *tech = techDownsampleByNearestR8; // Use the NearestDownsampleR8 technique
 		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
+		gs_technique_t *tech = techResampleByNearestR8;
 		std::size_t passes = gs_technique_begin(tech);
 		for (std::size_t i = 0; i < passes; i++) {
 			if (gs_technique_begin_pass(tech, i)) {
 				gs_effect_set_texture(textureImage, sourceTexture);
 
-				gs_draw_sprite(nullptr, 0, width, height);
+				gs_draw_sprite(nullptr, 0, targetWidth, targetHeight);
 				gs_technique_end_pass(tech);
 			}
 		}
@@ -229,8 +233,8 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void applyBoxFilterR8(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
-			      gs_texture_t *targetTexture, int kernelSize,
+	void applyBoxFilterR8(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
+			      gs_texture_t *sourceTexture, int kernelSize,
 			      gs_texture_t *temporaryTexture1) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
@@ -274,8 +278,8 @@ public:
 		gs_technique_end(techVerticalBoxFilterR8);
 	}
 
-	void applyMultiplyR8(std::uint32_t width, std::uint32_t height, gs_texture_t *firstSourceTexture,
-			     gs_texture_t *secondSourceTexture, gs_texture_t *targetTexture) const noexcept
+	void multiplyR8(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
+			gs_texture_t *firstSourceTexture, gs_texture_t *secondSourceTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
@@ -299,8 +303,8 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void applySquareR8(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
-			   gs_texture_t *targetTexture) const noexcept
+	void squareR8(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
+		      gs_texture_t *sourceTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
@@ -324,9 +328,10 @@ public:
 	}
 
 	void calculateGuidedFilterAAndB(std::uint32_t width, std::uint32_t height, gs_texture_t *targetATexture,
-					gs_texture_t *targetBTexture, gs_texture_t *sourceMeanIITexture,
-					gs_texture_t *sourceMeanITexture, gs_texture_t *sourceMeanIpTexture,
-					gs_texture_t *sourceMeanPTexture) const noexcept
+					gs_texture_t *targetBTexture, gs_texture_t *sourceMeanGuideSqTexture,
+					gs_texture_t *sourceMeanGuideTexture,
+					gs_texture_t *sourceMeanGuideSourceTexture,
+					gs_texture_t *sourceMeanSourceTexture, float eps) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
@@ -339,10 +344,11 @@ public:
 		std::size_t passesA = gs_technique_begin(techCalculateGuidedFilterA);
 		for (std::size_t i = 0; i < passesA; i++) {
 			if (gs_technique_begin_pass(techCalculateGuidedFilterA, i)) {
-				gs_effect_set_texture(textureImage, sourceMeanIITexture);
-				gs_effect_set_texture(textureImage1, sourceMeanITexture);
-				gs_effect_set_texture(textureImage2, sourceMeanIpTexture);
-				gs_effect_set_texture(textureImage3, sourceMeanPTexture);
+				gs_effect_set_texture(textureImage, sourceMeanGuideSqTexture);
+				gs_effect_set_texture(textureImage1, sourceMeanGuideTexture);
+				gs_effect_set_texture(textureImage2, sourceMeanGuideSourceTexture);
+				gs_effect_set_texture(textureImage3, sourceMeanSourceTexture);
+				gs_effect_set_float(floatEps, eps);
 
 				gs_draw_sprite(nullptr, 0, width, height);
 				gs_technique_end_pass(techCalculateGuidedFilterA);
@@ -355,8 +361,8 @@ public:
 		for (std::size_t i = 0; i < passesB; i++) {
 			if (gs_technique_begin_pass(techCalculateGuidedFilterB, i)) {
 				gs_effect_set_texture(textureImage, targetATexture);
-				gs_effect_set_texture(textureImage1, sourceMeanPTexture);
-				gs_effect_set_texture(textureImage2, sourceMeanITexture);
+				gs_effect_set_texture(textureImage1, sourceMeanSourceTexture);
+				gs_effect_set_texture(textureImage2, sourceMeanGuideTexture);
 
 				gs_draw_sprite(nullptr, 0, width, height);
 				gs_technique_end_pass(techCalculateGuidedFilterB);

@@ -27,6 +27,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
+#include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
 #include "ThrottledTaskQueue.hpp"
 
@@ -46,9 +47,11 @@ private:
 public:
 	const std::uint32_t width;
 	const std::uint32_t height;
+	const FilterLevel filterLevel;
 
 private:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8OriginalGrayscale;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
 	std::vector<std::uint8_t> segmenterInputBuffer;
 
@@ -59,12 +62,36 @@ private:
 
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SegmentationMask;
 
+public:
+	const int gfRadius;
+	const float gfEps;
+	const int gfSubsamplingRate;
+
+private:
+	const std::uint32_t gfWidthSub;
+	const std::uint32_t gfHeightSub;
+
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFGuideSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFSourceSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanSourceSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFGuideSourceSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFGuideSqSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSourceSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSqSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFASub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFBSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFTemporary1Sub;
+
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFResult;
+
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 public:
 	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,
 			 const MainEffect &mainEffect, const ncnn::Net &selfieSegmenterNet,
-			 ThrottledTaskQueue &selfieSegmenterTaskQueue, std::uint32_t width, std::uint32_t height);
+			 ThrottledTaskQueue &selfieSegmenterTaskQueue, std::uint32_t width, std::uint32_t height,
+			 FilterLevel filterLevel, int gfRadius, float gfEps, int gfSubsamplingRate);
 	~RenderingContext() noexcept;
 
 	void videoTick(float seconds);
@@ -73,7 +100,11 @@ public:
 
 private:
 	void renderOriginalImage();
-	void renderSegmenterInput();
+	void renderOriginalGrayscale(gs_texture_t *bgrxOriginalImage);
+	void renderSegmenterInput(gs_texture_t *bgrxOriginalImage);
+	void renderSegmentationMask();
+	void renderGuidedFilter(gs_texture_t *r8OriginalGrayscale, gs_texture_t *r8SegmentationMask);
+	void kickSegmentationTask();
 };
 
 } // namespace obs_backgroundremoval_lite
