@@ -57,6 +57,7 @@ public:
 private:
 	std::vector<std::uint8_t> segmenterInputBuffer;
 
+public:
 	const std::uint32_t maskRoiOffsetX;
 	const std::uint32_t maskRoiOffsetY;
 	const std::uint32_t maskRoiWidth;
@@ -68,12 +69,9 @@ public:
 	const int gfRadius;
 	const float gfEps;
 	const int gfSubsamplingRate;
-
-private:
 	const std::uint32_t gfWidthSub;
 	const std::uint32_t gfHeightSub;
 
-public:
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFGuideSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFSourceSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSub;

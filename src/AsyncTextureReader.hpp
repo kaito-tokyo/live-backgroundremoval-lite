@@ -42,14 +42,14 @@ inline std::uint32_t getBytesPerPixel(const gs_color_format format)
 		return 1;
 	case GS_R8G8:
 	case GS_RG16:
+	case GS_R16:
+	case GS_R16F:
 		return 2;
 	case GS_RGBA:
 	case GS_BGRX:
 	case GS_BGRA:
-	case GS_R16:
-	case GS_R16F:
-		return 4;
 	case GS_R10G10B10A2:
+		return 4;
 	case GS_RGBA16:
 	case GS_RGBA16F:
 		return 8;
