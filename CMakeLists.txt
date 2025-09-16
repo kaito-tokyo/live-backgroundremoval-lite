@@ -36,10 +36,8 @@ if(ENABLE_QT)
 endif()
 
 find_package(cpr CONFIG REQUIRED)
-find_package(Eigen3 CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(ncnn CONFIG REQUIRED)
-find_package(OpenCV CONFIG REQUIRED core imgproc imgcodecs)
 find_package(semver CONFIG REQUIRED)
 
 target_compile_definitions(
