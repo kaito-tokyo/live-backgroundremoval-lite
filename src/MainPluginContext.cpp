@@ -174,6 +174,7 @@ try {
 		renderingContext = std::make_shared<RenderingContext>(
 			source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, frame->width,
 			frame->height, preset.filterLevel, preset.gfRadius, preset.gfEps, preset.gfSubsamplingRate);
+		gs_unique::drain();
 	}
 
 	return frame;

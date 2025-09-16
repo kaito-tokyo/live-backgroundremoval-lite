@@ -231,7 +231,6 @@ try {
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	obs_source_frame *result = self->get()->filterVideo(frame);
-	gs_unique::drain();
 	return result;
 } catch (const std::exception &e) {
 	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to filter video in main plugin context: %s", e.what());
