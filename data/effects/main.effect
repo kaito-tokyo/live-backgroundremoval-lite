@@ -2,6 +2,7 @@
  * @file main.effect
  * @brief Guided Image Filter and related utility shaders.
  * @date 2025-09-16
+ * @author Kaito Udagawa
  *
  * This effect file contains all the necessary pixel shaders and techniques
  * for grayscale conversion, box filtering, and a multi-pass implementation
@@ -14,9 +15,9 @@ uniform float4x4 ViewProj;  ///< View-projection matrix for the vertex shader.
 uniform texture2d image;     ///< Primary input texture. Its role varies per pass.
 
 // Parameters for the box filter
-uniform float texelWidth;    ///< The width of a single texel (1.0 / texture_width).
-uniform float texelHeight;   ///< The height of a single texel (1.0 / texture_height).
-uniform int kernelSize;      ///< The kernel size for the box filter (an odd number is recommended).
+uniform float texelWidth;  ///< The width of a single texel (1.0 / texture_width).
+uniform float texelHeight; ///< The height of a single texel (1.0 / texture_height).
+uniform int kernelSize;    ///< The kernel size for the box filter (an odd number is recommended).
 
 // Textures for multi-pass operations
 uniform texture2d image1;    ///< Secondary input texture.
@@ -35,15 +36,6 @@ sampler_state linear_sampler
     AddressU = Clamp;
     AddressV = Clamp;
 };
-
-// Note: 'def_sampler' is identical to 'linear_sampler' and can be consolidated.
-sampler_state def_sampler
-{
-    Filter = Linear;
-    AddressU = Clamp;
-    AddressV = Clamp;
-};
-
 
 /// @brief Sampler without interpolation (Nearest Neighbor). Used for precise data access.
 sampler_state point_sampler
@@ -77,7 +69,7 @@ VertInOut VSDefault(VertInOut vert_in)
  */
 float4 PSDraw(VertInOut vert_in) : TARGET
 {
-    return image.Sample(def_sampler, vert_in.uv);
+    return image.Sample(linear_sampler, vert_in.uv);
 }
 
 /**
@@ -91,8 +83,8 @@ float4 PSDrawWithMask(VertInOut vert_in) : TARGET
     float2 uv = vert_in.uv;
     float4 final_color;
 
-    final_color.rgb = image.Sample(def_sampler, uv).rgb;
-    final_color.a = image1.Sample(def_sampler, uv).r;
+    final_color.rgb = image.Sample(linear_sampler, uv).rgb;
+    final_color.a = image1.Sample(linear_sampler, uv).r;
 
     return final_color;
 }
@@ -115,21 +107,15 @@ float4 PSHorizontalBoxFilterR8(VertInOut vert_in) : TARGET
 {
     float2 uv = vert_in.uv;
     int radius = kernelSize / 2;
-
     float bilinear_sum = 0.0f;
+
     for (int i = 1; i <= radius / 2; i++) {
         float2 offset = float2((float(i * 2) - 0.5f) * texelWidth, 0.0f);
-        //! @bug The optimization is non-functional because 'point_sampler' does not perform bilinear interpolation.
-        // [SUGGESTED FIX] bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
-        bilinear_sum += image.Sample(point_sampler, uv + offset).r;
-        // [SUGGESTED FIX] bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
-        bilinear_sum += image.Sample(point_sampler, uv - offset).r;
+        bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
+        bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
     }
 
-    //! @bug The center pixel should also use 'linear_sampler' for consistency.
-    // [SUGGESTED FIX] float sum = image.Sample(linear_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
-    float sum = image.Sample(point_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
-
+    float sum = image.Sample(linear_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
     float luma = sum / float(kernelSize);
 
     return float4(luma, luma, luma, 1.0f);
@@ -143,26 +129,19 @@ float4 PSVerticalBoxFilterR8(VertInOut vert_in) : TARGET
 {
     float2 uv = vert_in.uv;
     int radius = kernelSize / 2;
-
     float bilinear_sum = 0.0f;
+
     for (int i = 1; i <= radius / 2; i++) {
         float2 offset = float2(0.0f, (float(i * 2) - 0.5f) * texelHeight);
-        //! @bug The optimization is non-functional because 'point_sampler' does not perform bilinear interpolation.
-        // [SUGGESTED FIX] bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
-        bilinear_sum += image.Sample(point_sampler, uv + offset).r;
-        // [SUGGESTED FIX] bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
-        bilinear_sum += image.Sample(point_sampler, uv - offset).r;
+        bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
+        bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
     }
 
-    //! @bug The center pixel should also use 'linear_sampler' for consistency.
-    // [SUGGESTED FIX] float sum = image.Sample(linear_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
-    float sum = image.Sample(point_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
-
+    float sum = image.Sample(linear_sampler, vert_in.uv).r + bilinear_sum * 2.0f;
     float luma = sum / float(kernelSize);
 
     return float4(luma, luma, luma, 1.0f);
 }
-
 
 /**
  * @brief Performs per-element multiplication of the R channels of 'image' and 'image1'.
@@ -188,13 +167,15 @@ float4 PSSquareR8(VertInOut vert_in) : TARGET
 
 /**
  * @brief Calculates the Guided Filter coefficient 'a'.
- * @details Calculates a = cov_Ip / (var_I + eps) from pre-computed mean textures.
- * @param image  Input texture (mean_II: mean of I*I).
- * @param image1 Input texture (mean_I: mean of I).
- * @param image2 Input texture (mean_Ip: mean of I*p).
- * @param image3 Input texture (mean_p: mean of p).
+ * @details Calculates coefficient 'a' based on the formula: a = cov(I, p) / (var(I) + eps),
+ * where 'I' is the guide image and 'p' is the input image to be filtered.
+ * This is equivalent to: (mean(I*p) - mean(I)*mean(p)) / (mean(I*I) - mean(I)*mean(I) + eps).
+ * @param image  Input texture (mean_II: the mean of I*I).
+ * @param image1 Input texture (mean_I: the mean of guide image I).
+ * @param image2 Input texture (mean_Ip: the mean of I*p).
+ * @param image3 Input texture (mean_p: the mean of input image p).
  * @return The calculated coefficient 'a' as a grayscale value.
- * @note All four input textures must be the same size (the subsampled resolution).
+ * @note All four input textures must be the same (subsampled) resolution.
  */
 float4 PSCalculateGuidedFilterA(VertInOut vert_in) : TARGET
 {
@@ -214,13 +195,13 @@ float4 PSCalculateGuidedFilterA(VertInOut vert_in) : TARGET
 
 /**
  * @brief Calculates the Guided Filter coefficient 'b'.
- * @details Calculates b = mean_I - a * mean_p.
+ * @details Calculates coefficient 'b' based on the formula: b = mean(p) - a * mean(I),
+ * where 'I' is the guide image and 'p' is the input image.
  * @param image  Input texture (coefficient 'a').
- * @param image1 Input texture (mean_p: mean of p).
- * @param image2 Input texture (mean_I: mean of I).
+ * @param image1 Input texture (mean_p: the mean of input image p).
+ * @param image2 Input texture (mean_I: the mean of guide image I).
  * @return The calculated coefficient 'b' as a grayscale value.
- * @note All three input textures must be the same size (the subsampled resolution).
- * @warning The current implementation calculates 'mean_p - a * mean_I', which differs from the standard definition.
+ * @note All three input textures must be the same (subsampled) resolution.
  */
 float4 PSCalculateGuidedFilterB(VertInOut vert_in) : TARGET
 {
@@ -230,21 +211,20 @@ float4 PSCalculateGuidedFilterB(VertInOut vert_in) : TARGET
     float mean_p = image1.Sample(point_sampler, uv).r;
     float mean_I = image2.Sample(point_sampler, uv).r;
 
-    //! @bug The standard definition is b = mean_I - a * mean_p.
-    // [SUGGESTED FIX] float value = mean_I - a * mean_p;
     float value = mean_p - a * mean_I;
-
     return float4(value, value, value, 1.0f);
 }
 
 /**
- * @brief Calculates the final Guided Filter result.
- * @details Calculates output = a * guide + b. The coefficients 'a' and 'b' are sampled with linear interpolation for smoothing.
- * @param image  Input texture (the guide image).
- * @param image1 Input texture (the smoothed coefficient 'a').
- * @param image2 Input texture (the smoothed coefficient 'b').
+ * @brief Calculates the final result of the Guided Filter.
+ * @details Constructs the final output image using the formula: output = a * I + b.
+ * The low-resolution coefficients 'a' and 'b' are upsampled using linear interpolation
+ * and applied to the full-resolution guide image 'I'.
+ * @param image  Input texture (the full-resolution guide image I).
+ * @param image1 Input texture (the upsampled coefficient 'a').
+ * @param image2 Input texture (the upsampled coefficient 'b').
  * @return The final filtered pixel value.
- * @note 'image1' (a) and 'image2' (b) must be the same (subsampled) size. 'image' (guide) is typically at the full, final resolution.
+ * @note 'image1'(a) and 'image2'(b) must be the same (subsampled) size. 'image'(guide) should be at the final, full resolution.
  */
 float4 PSFinalizeGuidedFilter(VertInOut vert_in) : TARGET
 {
@@ -255,10 +235,8 @@ float4 PSFinalizeGuidedFilter(VertInOut vert_in) : TARGET
     float b = image2.Sample(linear_sampler, uv).r;
 
     float value = a * guide + b;
-
     return float4(value, value, value, 1.0f);
 }
-
 
 // --- Techniques (Shader pass definitions) ---
 
