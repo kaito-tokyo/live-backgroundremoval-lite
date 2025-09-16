@@ -68,15 +68,27 @@ function Package {
     }
     New-Item -Path $StagingDir -ItemType Directory | Out-Null
 
+    # Define source paths
+    $SourcePluginPath = "$SourceDir/obs-plugins/64bit/$ProductName"
+    $SourceDataPath = "$SourceDir/data/obs-plugins"
+
+    # Check if source paths exist
+    if ( ! (Test-Path -Path $SourcePluginPath) ) {
+        throw "Cannot find plugin source directory: $SourcePluginPath"
+    }
+    if ( ! (Test-Path -Path $SourceDataPath) ) {
+        throw "Cannot find data source directory: $SourceDataPath"
+    }
+
     # Create OBS plugin structure
     $ObsPluginDir = New-Item -Path "$StagingDir/obs-plugins/64bit" -ItemType Directory -Force
     $DataPluginDir = New-Item -Path "$StagingDir/data/obs-plugins/$ProductName" -ItemType Directory -Force
 
     # Copy plugin binaries
-    Copy-Item -Path "$SourceDir/obs-plugins/64bit/*" -Destination $ObsPluginDir -Recurse
+    Copy-Item -Path "$SourcePluginPath/*" -Destination $ObsPluginDir -Recurse
 
     # Copy data files
-    Copy-Item -Path "$SourceDir/data/obs-plugins/*" -Destination $DataPluginDir -Recurse
+    Copy-Item -Path "$SourceDataPath/*" -Destination $DataPluginDir -Recurse
 
     $CompressArgs = @{
         Path            = (Get-ChildItem -Path $StagingDir).FullName
