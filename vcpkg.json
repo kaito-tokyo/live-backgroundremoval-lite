@@ -14,15 +14,6 @@
     "fmt",
     "gtest",
     "ncnn",
-    "neargye-semver",
-    {
-      "name": "opencv4",
-      "default-features": false,
-      "features": [
-        "jpeg",
-        "png"
-      ]
-    },
-    "eigen3"
+    "neargye-semver"
   ]
 }
