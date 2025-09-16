@@ -49,12 +49,15 @@ public:
 	const std::uint32_t height;
 	const FilterLevel filterLevel;
 
-private:
+public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8OriginalGrayscale;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
+
+private:
 	std::vector<std::uint8_t> segmenterInputBuffer;
 
+public:
 	const std::uint32_t maskRoiOffsetX;
 	const std::uint32_t maskRoiOffsetY;
 	const std::uint32_t maskRoiWidth;
@@ -66,8 +69,6 @@ public:
 	const int gfRadius;
 	const float gfEps;
 	const int gfSubsamplingRate;
-
-private:
 	const std::uint32_t gfWidthSub;
 	const std::uint32_t gfHeightSub;
 
@@ -81,9 +82,10 @@ private:
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSqSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFASub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFBSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFTemporary1Sub;
-
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFResult;
+
+private:
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFTemporary1Sub;
 
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
