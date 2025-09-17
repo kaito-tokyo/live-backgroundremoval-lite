@@ -112,13 +112,16 @@ float4 PSConvertToGrayscale(VertInOut vert_in) : TARGET
 float4 PSHorizontalBoxFilterR8KS17(VertInOut vert_in) : TARGET
 {
     float2 uv = vert_in.uv;
-    float sum = 0.0f;
+    float halfTexelWidth = texelWidth / 2.0f;
 
-    for (int i = -8; i <= 8; i++) {
-        sum += image.Sample(point_sampler, uv + float2(i * texelWidth, 0.0f)).r;
+    float bilinear_sum = 0.0f;
+    for (int i = 1; i <= 4; i++) {
+        float2 offset = float2((i * 4 - 1) * halfTexelWidth, 0.0f);
+        bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
+        bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
     }
 
-    float luma = sum / 17.0f;
+    float luma = (image.Sample(linear_sampler, uv).r + bilinear_sum * 2.0f) / 17.0f;
 
     return float4(luma, luma, luma, 1.0f);
 }
@@ -130,13 +133,16 @@ float4 PSHorizontalBoxFilterR8KS17(VertInOut vert_in) : TARGET
 float4 PSVerticalBoxFilterR8KS17(VertInOut vert_in) : TARGET
 {
     float2 uv = vert_in.uv;
-    float sum = 0.0f;
+    float halfTexelHeight = texelHeight / 2.0f;
 
-    for (int i = -8; i <= 8; i++) {
-        sum += image.Sample(point_sampler, uv + float2(0.0f, i * texelHeight)).r;
+    float bilinear_sum = 0.0f;
+    for (int i = 1; i <= 4; i++) {
+        float2 offset = float2(0.0f, (i * 4 - 1) * halfTexelHeight);
+        bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
+        bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
     }
 
-    float luma = sum / 17.0f;
+    float luma = (image.Sample(linear_sampler, uv).r + bilinear_sum * 2.0f) / 17.0f;
 
     return float4(luma, luma, luma, 1.0f);
 }
