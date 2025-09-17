@@ -62,7 +62,7 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  height(_height),
 	  filterLevel(_filterLevel),
 	  bgrxOriginalImage(make_unique_gs_texture(width, height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
-	  r8OriginalGrayscale(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r16fOriginalGrayscale(make_unique_gs_texture(width, height, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
 	  bgrxSegmenterInput(make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT,
 						    GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  maskRoiOffsetX(getMaskRoiDimension(width, height)[0]),
@@ -118,7 +118,7 @@ void RenderingContext::renderOriginalImage()
 
 void RenderingContext::renderOriginalGrayscale(gs_texture_t *bgrxOriginalImage)
 {
-	mainEffect.convertToGrayscale(width, height, r8OriginalGrayscale.get(), bgrxOriginalImage);
+	mainEffect.convertToGrayscale(width, height, r16fOriginalGrayscale.get(), bgrxOriginalImage);
 }
 
 void RenderingContext::renderSegmenterInput(gs_texture_t *bgrxOriginalImage)
@@ -144,9 +144,9 @@ void RenderingContext::renderSegmentationMask()
 	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, SelfieSegmenter::INPUT_WIDTH, 0);
 }
 
-void RenderingContext::renderGuidedFilter(gs_texture_t *r8OriginalGrayscale, gs_texture_t *r8SegmentationMask)
+void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask)
 {
-	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFGuideSub.get(), r8OriginalGrayscale);
+	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFGuideSub.get(), r16fOriginalGrayscale);
 
 	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFSourceSub.get(), r8SegmentationMask);
 
@@ -164,7 +164,7 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r8OriginalGrayscale, gs_
 					      r16fGFMeanGuideSqSub.get(), r16fGFMeanGuideSub.get(),
 					      r16fGFMeanGuideSourceSub.get(), r16fGFMeanSourceSub.get(), gfEps);
 
-	mainEffect.finalizeGuidedFilter(width, height, r8GFResult.get(), r8OriginalGrayscale, r16fGFASub.get(),
+	mainEffect.finalizeGuidedFilter(width, height, r8GFResult.get(), r16fOriginalGrayscale, r16fGFASub.get(),
 					r16fGFBSub.get());
 }
 
@@ -209,7 +209,7 @@ void RenderingContext::videoRender()
 	}
 
 	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
-		renderGuidedFilter(r8OriginalGrayscale.get(), r8SegmentationMask.get());
+		renderGuidedFilter(r16fOriginalGrayscale.get(), r8SegmentationMask.get());
 	}
 
 	if (actualFilterLevel == FilterLevel::Passthrough) {

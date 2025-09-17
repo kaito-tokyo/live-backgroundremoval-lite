@@ -32,7 +32,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 namespace {
 
 constexpr char textureBgrxOriginalImage[] = "bgrxOriginalImage";
-constexpr char textureR8OriginalGrayscale[] = "r8OriginalGrayscale";
+constexpr char textureR16fOriginalGrayscale[] = "r16fOriginalGrayscale";
 constexpr char textureBgrxSegmenterInput[] = "bgrxSegmenterInput";
 constexpr char textureR8SegmentationMask[] = "r8SegmentationMask";
 constexpr char textureR8GFGuideSub[] = "r8GFGuideSub";
@@ -44,6 +44,20 @@ constexpr char textureR16fGFMeanGuideSqSub[] = "r16fGFMeanGuideSqSub";
 constexpr char textureR16fGFASub[] = "r16fGFASub";
 constexpr char textureR16fGFBSub[] = "r16fGFBSub";
 constexpr char textureR8GFResult[] = "r8GFResult";
+
+const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
+const std::vector<std::string> r8Textures = {textureR8GFResult};
+const std::vector<std::string> r16fTextures = {textureR16fOriginalGrayscale};
+const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
+const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
+const std::vector<std::string> subR8Textures = {textureR8GFGuideSub, textureR8GFSourceSub};
+const std::vector<std::string> subR16fTextures = {textureR16fOriginalGrayscale,
+						  textureR16fGFMeanGuideSub,
+						  textureR16fGFMeanSourceSub,
+						  textureR16fGFMeanGuideSourceSub,
+						  textureR16fGFMeanGuideSqSub,
+						  textureR16fGFASub,
+						  textureR16fGFBSub};
 
 inline double float16_to_double(uint16_t h)
 {
@@ -98,7 +112,7 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext
 	  updateTimer(new QTimer(this))
 {
 	previewTextureSelector->addItem(textureBgrxOriginalImage);
-	previewTextureSelector->addItem(textureR8OriginalGrayscale);
+	previewTextureSelector->addItem(textureR16fOriginalGrayscale);
 	previewTextureSelector->addItem(textureBgrxSegmenterInput);
 	previewTextureSelector->addItem(textureR8SegmentationMask);
 	previewTextureSelector->addItem(textureR8GFGuideSub);
@@ -149,6 +163,12 @@ void DebugWindow::videoRender()
 									renderingContext->height, GS_R8);
 		}
 
+		if (!readerR16f || readerR16f->width != renderingContext->width ||
+		    readerR16f->height != renderingContext->height) {
+			readerR16f = std::make_unique<AsyncTextureReader>(renderingContext->width,
+									  renderingContext->height, GS_R16F);
+		}
+
 		if (!readerMaskRoiR8 || readerMaskRoiR8->width != renderingContext->maskRoiWidth ||
 		    readerMaskRoiR8->height != renderingContext->maskRoiHeight) {
 			readerMaskRoiR8 = std::make_unique<AsyncTextureReader>(renderingContext->maskRoiWidth,
@@ -178,11 +198,11 @@ void DebugWindow::videoRender()
 				readerBgrx->sync();
 				readerBgrx->stage(renderingContext->bgrxOriginalImage.get());
 			}
-		} else if (currentTexture == textureR8OriginalGrayscale) {
-			if (readerR8 && readerR8->width == renderingContext->width &&
-			    readerR8->height == renderingContext->height) {
-				readerR8->sync();
-				readerR8->stage(renderingContext->r8OriginalGrayscale.get());
+		} else if (currentTexture == textureR16fOriginalGrayscale) {
+			if (readerR16f && readerR16f->width == renderingContext->width &&
+			    readerR16f->height == renderingContext->height) {
+				readerR16f->sync();
+				readerR16f->stage(renderingContext->r16fOriginalGrayscale.get());
 			}
 		} else if (currentTexture == textureBgrxSegmenterInput) {
 			if (reader256Bgrx) {
@@ -258,15 +278,6 @@ void DebugWindow::updatePreview()
 	auto currentTexture = previewTextureSelector->currentText();
 	auto currentTextureStd = currentTexture.toStdString();
 
-	const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
-	const std::vector<std::string> r8Textures = {textureR8OriginalGrayscale, textureR8GFResult};
-	const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
-	const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
-	const std::vector<std::string> subR8Textures = {textureR8GFGuideSub, textureR8GFSourceSub};
-	const std::vector<std::string> r16fTextures = {
-		textureR16fGFMeanGuideSub,   textureR16fGFMeanSourceSub, textureR16fGFMeanGuideSourceSub,
-		textureR16fGFMeanGuideSqSub, textureR16fGFASub,          textureR16fGFBSub};
-
 	QImage image;
 	if (std::find(bgrxTextures.begin(), bgrxTextures.end(), currentTextureStd) != bgrxTextures.end()) {
 		image = QImage(readerBgrx->getBuffer().data(), readerBgrx->width, readerBgrx->height,
@@ -274,6 +285,14 @@ void DebugWindow::updatePreview()
 	} else if (std::find(r8Textures.begin(), r8Textures.end(), currentTextureStd) != r8Textures.end()) {
 		image = QImage(readerR8->getBuffer().data(), readerR8->width, readerR8->height,
 			       QImage::Format_Grayscale8);
+	} else if (std::find(r16fTextures.begin(), r16fTextures.end(), currentTextureStd) != r16fTextures.end()) {
+		auto r16fDataView = reinterpret_cast<std::uint16_t *>(readerR16f->getBuffer().data());
+		bufferR8.resize(readerR16f->width * readerR16f->height);
+		for (std::uint32_t i = 0; i < readerR16f->width * readerR16f->height; ++i) {
+			bufferR8[i] = static_cast<std::uint8_t>(float16_to_double(r16fDataView[i]) * 255);
+		}
+
+		image = QImage(bufferR8.data(), readerR16f->width, readerR16f->height, QImage::Format_Grayscale8);
 	} else if (std::find(bgrx256Textures.begin(), bgrx256Textures.end(), currentTextureStd) !=
 		   bgrx256Textures.end()) {
 		image = QImage(reader256Bgrx->getBuffer().data(), reader256Bgrx->width, reader256Bgrx->height,
@@ -285,7 +304,8 @@ void DebugWindow::updatePreview()
 	} else if (std::find(subR8Textures.begin(), subR8Textures.end(), currentTextureStd) != subR8Textures.end()) {
 		image = QImage(readerSubR8->getBuffer().data(), readerSubR8->width, readerSubR8->height,
 			       QImage::Format_Grayscale8);
-	} else if (std::find(r16fTextures.begin(), r16fTextures.end(), currentTextureStd) != r16fTextures.end()) {
+	} else if (std::find(subR16fTextures.begin(), subR16fTextures.end(), currentTextureStd) !=
+		   subR16fTextures.end()) {
 		auto r16fDataView = reinterpret_cast<std::uint16_t *>(readerR16fSub->getBuffer().data());
 		bufferSubR8.resize(readerR16fSub->width * readerR16fSub->height);
 		for (std::uint32_t i = 0; i < readerR16fSub->width * readerR16fSub->height; ++i) {

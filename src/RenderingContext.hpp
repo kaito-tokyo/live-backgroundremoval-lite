@@ -51,7 +51,7 @@ public:
 
 public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8OriginalGrayscale;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fOriginalGrayscale;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
 
 private:
@@ -102,7 +102,7 @@ private:
 	void renderOriginalGrayscale(gs_texture_t *bgrxOriginalImage);
 	void renderSegmenterInput(gs_texture_t *bgrxOriginalImage);
 	void renderSegmentationMask();
-	void renderGuidedFilter(gs_texture_t *r8OriginalGrayscale, gs_texture_t *r8SegmentationMask);
+	void renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask);
 	void kickSegmentationTask();
 };
 
