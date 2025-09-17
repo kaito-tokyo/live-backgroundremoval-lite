@@ -50,8 +50,8 @@ namespace obs_backgroundremoval_lite {
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
 				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
 				   std::uint32_t _width, std::uint32_t _height, const FilterLevel &_filterLevel,
-				   const double &_gfEps, const double &_maskGamma, const double &_maskLowerBound,
-				   const double &_maskUpperBound)
+				   const int &_selfieSegmenterFps, const double &_gfEps, const double &_maskGamma,
+				   const double &_maskLowerBound, const double &_maskUpperBound)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
@@ -83,6 +83,7 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r32fGFTemporary1Sub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  filterLevel(_filterLevel),
+	  selfieSegmenterFps(_selfieSegmenterFps),
 	  gfEps(_gfEps),
 	  maskGamma(_maskGamma),
 	  maskLowerBound(_maskLowerBound),
@@ -229,7 +230,6 @@ void RenderingContext::videoRender()
 
 	if (actualFilterLevel >= FilterLevel::Segmentation) {
 		readerSegmenterInput.stage(bgrxSegmenterInput.get());
-		kickSegmentationTask();
 	}
 }
 

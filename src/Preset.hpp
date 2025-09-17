@@ -33,6 +33,8 @@ enum class FilterLevel : int {
 struct Preset {
 	FilterLevel filterLevel;
 
+	int selfieSegmenterFps;
+
 	double gfEpsDb;
 	double gfEps;
 
