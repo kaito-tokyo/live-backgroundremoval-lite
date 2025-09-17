@@ -92,8 +92,12 @@ std::uint32_t MainPluginContext::getHeight() const noexcept
 void MainPluginContext::getDefaults(obs_data_t *data)
 {
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(FilterLevel::Default));
-	obs_data_set_default_double(data, "gfEps", 0.0004);
-	obs_data_set_default_int(data, "gfSubsamplingRate", 4);
+
+	obs_data_set_default_double(data, "gfEps", -40.0);
+
+	obs_data_set_default_double(data, "maskGamma", 1.5);
+	obs_data_set_default_double(data, "maskLowerBoundDb", -25.0);
+	obs_data_set_default_double(data, "maskUpperBoundMarginDb", -25.0);
 }
 
 obs_properties_t *MainPluginContext::getProperties()
@@ -119,8 +123,13 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
 				  static_cast<int>(FilterLevel::GuidedFilter));
 
-	obs_properties_add_float_slider(props, "gfEps", obs_module_text("gfEps"), 0.000001f, 0.0004f, 0.000001f);
-	obs_properties_add_int_slider(props, "gfSubsamplingRate", obs_module_text("gfSubsamplingRate"), 1, 16, 1);
+	obs_properties_add_float_slider(props, "gfEpsDb", obs_module_text("gfEpsFb"), -60.0, -20.0, 0.1);
+
+	obs_properties_add_float_slider(props, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0, 0.01);
+	obs_properties_add_float_slider(props, "maskLowerBoundDb", obs_module_text("maskLowerBoundDb"), -80.0, -10.0,
+					0.1);
+	obs_properties_add_float_slider(props, "maskUpperBoundMarginDb", obs_module_text("maskUpperBoundMarginDb"),
+					-80.0, -10.0, 0.1);
 
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
@@ -139,8 +148,15 @@ obs_properties_t *MainPluginContext::getProperties()
 void MainPluginContext::update(obs_data_t *settings)
 {
 	preset.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
-	preset.gfEps = static_cast<float>(obs_data_get_double(settings, "gfEps"));
-	preset.gfSubsamplingRate = static_cast<int>(obs_data_get_int(settings, "gfSubsamplingRate"));
+
+	preset.gfEpsDb = obs_data_get_double(settings, "gfEpsDb");
+	preset.gfEps = Preset::dbToLinearPow(preset.gfEpsDb);
+
+	preset.maskGamma = obs_data_get_double(settings, "maskGamma");
+	preset.maskLowerBoundDb = obs_data_get_double(settings, "maskLowerBoundDb");
+	preset.maskLowerBound = Preset::dbToLinearAmp(preset.maskLowerBoundDb);
+	preset.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
+	preset.maskUpperBound = 1.0 - Preset::dbToLinearAmp(preset.maskUpperBoundMarginDb);
 }
 
 void MainPluginContext::activate() {}
@@ -198,13 +214,12 @@ try {
 		}
 	}
 
-	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height ||
-	    renderingContext->filterLevel != preset.filterLevel || renderingContext->gfEps != preset.gfEps ||
-	    renderingContext->gfSubsamplingRate != preset.gfSubsamplingRate) {
+	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height) {
 		graphics_context_guard guard;
 		nextRenderingContext = std::make_shared<RenderingContext>(
 			source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, frame->width,
-			frame->height, preset.filterLevel, preset.gfEps, preset.gfSubsamplingRate);
+			frame->height, preset.filterLevel, preset.gfEps, preset.maskGamma, preset.maskLowerBound,
+			preset.maskUpperBound);
 		frameCountBeforeContextSwitch = 1;
 		gs_unique::drain();
 	}

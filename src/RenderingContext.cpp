@@ -49,8 +49,9 @@ namespace obs_backgroundremoval_lite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
 				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-				   std::uint32_t _width, std::uint32_t _height, FilterLevel _filterLevel, float _gfEps,
-				   int _gfSubsamplingRate)
+				   std::uint32_t _width, std::uint32_t _height, const FilterLevel &_filterLevel,
+				   const double &_gfEps, const double &_maskGamma, const double &_maskLowerBound,
+				   const double &_maskUpperBound)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
@@ -60,7 +61,6 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
 	  width(_width),
 	  height(_height),
-	  filterLevel(_filterLevel),
 	  bgrxOriginalImage(make_unique_gs_texture(width, height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  r16fOriginalGrayscale(make_unique_gs_texture(width, height, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
 	  bgrxSegmenterInput(make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT,
@@ -70,10 +70,8 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  maskRoiWidth(getMaskRoiDimension(width, height)[2]),
 	  maskRoiHeight(getMaskRoiDimension(width, height)[3]),
 	  r8SegmentationMask(make_unique_gs_texture(maskRoiWidth, maskRoiHeight, GS_R8, 1, NULL, GS_DYNAMIC)),
-	  gfEps(_gfEps),
-	  gfSubsamplingRate(_gfSubsamplingRate),
-	  gfWidthSub(width / gfSubsamplingRate),
-	  gfHeightSub(height / gfSubsamplingRate),
+	  gfWidthSub(width / SUBSAMPLING_RATE),
+	  gfHeightSub(height / SUBSAMPLING_RATE),
 	  r8GFGuideSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r8GFSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r32fGFMeanGuideSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
@@ -83,10 +81,14 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r32fGFASub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fGFBSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGFTemporary1Sub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET))
+	  r32fGFTemporary1Sub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  filterLevel(_filterLevel),
+	  gfEps(_gfEps),
+	  maskGamma(_maskGamma),
+	  maskLowerBound(_maskLowerBound),
+	  maskUpperBound(_maskUpperBound)
+
 {
-	logger.info("Creating RenderingContext: {}x{}, filterLevel={}, gfEps={}, gfSubsamplingRate={}", width, height,
-		    static_cast<int>(filterLevel), gfEps, gfSubsamplingRate);
 }
 
 RenderingContext::~RenderingContext() noexcept {}
