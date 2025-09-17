@@ -47,7 +47,6 @@ private:
 public:
 	const std::uint32_t width;
 	const std::uint32_t height;
-	const FilterLevel filterLevel;
 
 public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
@@ -66,8 +65,6 @@ public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SegmentationMask;
 
 public:
-	const float gfEps;
-	const int gfSubsamplingRate;
 	const std::uint32_t gfWidthSub;
 	const std::uint32_t gfHeightSub;
 
@@ -84,13 +81,22 @@ public:
 private:
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFTemporary1Sub;
 
+	const FilterLevel &filterLevel;
+	const double &gfEps;
+	const double &maskGamma;
+	const double &maskLowerBound;
+	const double &maskUpperBound;
+
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
+
+	static constexpr int SUBSAMPLING_RATE = 4;
 
 public:
 	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,
 			 const MainEffect &mainEffect, const ncnn::Net &selfieSegmenterNet,
 			 ThrottledTaskQueue &selfieSegmenterTaskQueue, std::uint32_t width, std::uint32_t height,
-			 FilterLevel filterLevel, float gfEps, int gfSubsamplingRate);
+			 const FilterLevel &filterLevel, const double &gfEps, const double &maskGamma,
+			 const double &maskLowerBound, const double &maskUpperBound);
 	~RenderingContext() noexcept;
 
 	void videoTick(float seconds);

@@ -24,6 +24,10 @@ uniform texture2d image1; ///< Secondary input texture.
 uniform texture2d image2; ///< Tertiary input texture.
 uniform texture2d image3; ///< Quaternary input texture.
 
+uniform float gamma;
+uniform float lowerBound;
+uniform float upperBound;
+
 // Parameters for the Guided Filter
 uniform float eps; ///< A small epsilon value to prevent division by zero when calculating coefficient 'a'.
 
@@ -89,6 +93,40 @@ float4 PSDrawWithMask(VertInOut vert_in) : TARGET
 	return final_color;
 }
 
+/**
+ * @brief Composites the final image using a perceptually refined alpha matte.
+ * @details This shader takes a source color texture and a raw, soft alpha matte.
+ * It then applies a two-stage finishing process to the matte before the
+ * final composition. First, a gamma correction (`pow`) is applied to control
+ * the hardness and falloff of the edges. Second, a contrast enhancement
+ * (`smoothstep`) is used to solidify the core of the matte and remove halos,
+ * resulting in a clean, sharp, and natural-looking composite.
+ * @param image The source texture for RGB color (e.g., the original full-resolution image).
+ * @param image1 The source texture for the raw alpha matte (e.g., the soft output from a Guided Filter).
+ * @param gamma A uniform float controlling edge hardness. >1.0 makes edges sharper/thinner (choke), <1.0 makes them softer/thicker (spread). A typical value is 1.5-2.5.
+ * @param lowerBound A uniform float for the lower threshold of the smoothstep. Values in the matte below this become fully transparent (0.0). Controls halo removal. A typical value is 0.05-0.2.
+ * @param upperBound A uniform float for the upper threshold of the smoothstep. Values in the matte above this become fully opaque (1.0). Controls core solidity. A typical value is 0.8-0.95.
+ * @return The final composited pixel color (RGBA).
+ * @note The textures 'image' and 'image1' are expected to be the same size.
+ */
+float4 PSDrawWithRefinedMask(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+
+	// 1. Get the original color and the raw mask value
+	float3 final_rgb = image.Sample(point_sampler, uv).rgb;
+	float raw_mask = image1.Sample(point_sampler, uv).r;
+
+	// 2. Apply gamma correction to adjust the edge falloff
+	float gamma_corrected_mask = pow(saturate(raw_mask), gamma);
+
+	// 3. Enhance contrast to solidify the core and remove halos
+	float final_alpha = smoothstep(lowerBound, upperBound, gamma_corrected_mask);
+
+	// 4. Return the final composited color
+	return float4(final_rgb, final_alpha);
+}
+
 float4 PSResampleByNearestR8(VertInOut vert_in) : TARGET
 {
 	float value = image.Sample(point_sampler, vert_in.uv).r;
@@ -135,21 +173,21 @@ float4 PSHorizontalBoxFilterWithMulR8KS17(VertInOut vert_in) : TARGET
 {
 	float2 uv = vert_in.uv;
 
-    float sum = image.Sample(point_sampler, uv).r * image1.Sample(point_sampler, uv).r;
-    for (int i = 1; i <= 8; i++) {
-        float2 offset = float2(i * texelWidth, 0.0f);
-        sum += image.Sample(point_sampler, uv + offset).r * image1.Sample(point_sampler, uv + offset).r;
-        sum += image.Sample(point_sampler, uv - offset).r * image1.Sample(point_sampler, uv - offset).r;
-    }
+	float sum = image.Sample(point_sampler, uv).r * image1.Sample(point_sampler, uv).r;
+	for (int i = 1; i <= 8; i++) {
+		float2 offset = float2(i * texelWidth, 0.0f);
+		sum += image.Sample(point_sampler, uv + offset).r * image1.Sample(point_sampler, uv + offset).r;
+		sum += image.Sample(point_sampler, uv - offset).r * image1.Sample(point_sampler, uv - offset).r;
+	}
 
 	float luma = sum / 17.0f;
 
 	return float4(luma, luma, luma, 1.0f);
 }
 
-
-float square(float x) {
-    return x * x;
+float square(float x)
+{
+	return x * x;
 }
 
 /**
@@ -161,12 +199,12 @@ float4 PSHorizontalBoxFilterWithSqR8KS17(VertInOut vert_in) : TARGET
 {
 	float2 uv = vert_in.uv;
 
-    float sum = square(image.Sample(point_sampler, uv).r);
-    for (int i = 1; i <= 8; i++) {
-        float2 offset = float2(i * texelWidth, 0.0f);
-        sum += square(image.Sample(point_sampler, uv + offset).r);
-        sum += square(image.Sample(point_sampler, uv - offset).r);
-    }
+	float sum = square(image.Sample(point_sampler, uv).r);
+	for (int i = 1; i <= 8; i++) {
+		float2 offset = float2(i * texelWidth, 0.0f);
+		sum += square(image.Sample(point_sampler, uv + offset).r);
+		sum += square(image.Sample(point_sampler, uv - offset).r);
+	}
 
 	float luma = sum / 17.0f;
 
@@ -284,6 +322,15 @@ technique DrawWithMask
 	{
 		vertex_shader = VSDefault(vert_in);
 		pixel_shader = PSDrawWithMask(vert_in);
+	}
+}
+
+technique DrawWithRefinedMask
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSDrawWithRefinedMask(vert_in);
 	}
 }
 
