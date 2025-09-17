@@ -127,6 +127,51 @@ float4 PSHorizontalBoxFilterR8KS17(VertInOut vert_in) : TARGET
 }
 
 /**
+ * @brief Applies an optimized 1D horizontal box filter with a fixed kernel size of 17.
+ * (Pass 1 of a separable filter)
+ */
+float4 PSHorizontalBoxFilterWithMulR8KS17(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+
+    float sum = image.Sample(linear_sampler, uv).r * image1.Sample(linear_sampler, uv).r;
+    for (int i = 1; i <= 8; i++) {
+        float2 offset = float2(i * texelWidth, 0.0f);
+        sum += image.Sample(point_sampler, uv + offset).r * image1.Sample(linear_sampler, uv + offset).r;
+        sum += image.Sample(point_sampler, uv - offset).r * image1.Sample(linear_sampler, uv - offset).r;
+    }
+
+	float luma = sum / 17.0f;
+
+	return float4(luma, luma, luma, 1.0f);
+}
+
+
+float square(float x) {
+    return x * x;
+}
+
+/**
+ * @brief Applies an optimized 1D horizontal box filter with a fixed kernel size of 17.
+ * (Pass 1 of a separable filter)
+ */
+float4 PSHorizontalBoxFilterWithSqR8KS17(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+
+    float sum = square(image.Sample(linear_sampler, uv).r);
+    for (int i = 1; i <= 8; i++) {
+        float2 offset = float2(i * texelWidth, 0.0f);
+        sum += square(image.Sample(point_sampler, uv + offset).r);
+        sum += square(image.Sample(point_sampler, uv - offset).r);
+    }
+
+	float luma = sum / 17.0f;
+
+	return float4(luma, luma, luma, 1.0f);
+}
+
+/**
  * @brief Applies an optimized 1D vertical box filter with a fixed kernel size of 17.
  * (Pass 2 of a separable filter)
  */
