@@ -92,8 +92,8 @@ private:
 
 private:
 	selfie_segmenter::NullFrameExtractor nullFrameExtractor;
-    selfie_segmenter::UyvyLimitedRec709FrameExtractor uyvyLimitedRec709FrameExtractor;
-    selfie_segmenter::UyvyFullRec709FrameExtractor uyvyFullRec709FrameExtractor;
+	selfie_segmenter::UyvyLimitedRec709FrameExtractor uyvyLimitedRec709FrameExtractor;
+	selfie_segmenter::UyvyFullRec709FrameExtractor uyvyFullRec709FrameExtractor;
 
 public:
 	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,

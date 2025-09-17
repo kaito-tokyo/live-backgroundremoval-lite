@@ -69,14 +69,14 @@ using DataType = const void **VIDEO_FRAME_EXTRACTOR_RESTRICT;
  */
 class IVideoFrameExtractor {
 public:
-    /**
+	/**
      * @brief Virtual destructor.
      * @details Ensures that instances of derived classes are safely destroyed when
      * deleted via a base class pointer.
      */
-    virtual ~IVideoFrameExtractor() = default;
+	virtual ~IVideoFrameExtractor() = default;
 
-    /**
+	/**
      * @brief Processes video frame data and converts it to RGB channels.
      * @details This is a pure virtual function to be implemented by derived classes.
      * It reads the source data, converts it to RGB, and stores the result
@@ -90,15 +90,15 @@ public:
      * @param[in]  height   The logical height of the frame in pixels.
      * @param[in]  linesize The number of bytes in one horizontal line of the source data (the stride). Due to memory alignment, this may differ from width * bytes_per_pixel.
      */
-    virtual void operator()(ChannelType dstR, ChannelType dstG, ChannelType dstB, DataType srcdata,
-                std::size_t width, std::size_t height, std::size_t linesize) = 0;
+	virtual void operator()(ChannelType dstR, ChannelType dstG, ChannelType dstB, DataType srcdata,
+				std::size_t width, std::size_t height, std::size_t linesize) = 0;
 };
 
 class NullFrameExtractor : public IVideoFrameExtractor {
 public:
-    void operator()(ChannelType, ChannelType, ChannelType, DataType,
-                std::size_t, std::size_t, std::size_t) override {
-    }
+	void operator()(ChannelType, ChannelType, ChannelType, DataType, std::size_t, std::size_t, std::size_t) override
+	{
+	}
 };
 
 } // namespace selfie_segmenter

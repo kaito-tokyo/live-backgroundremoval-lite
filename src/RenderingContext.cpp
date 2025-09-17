@@ -223,8 +223,8 @@ obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
 	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
 
-	logger.info("Received frame: {}x{}, format={}, full_range={}", frame->width, frame->height,
-		    (int)frame->format, frame->full_range);
+	logger.info("Received frame: {}x{}, format={}, full_range={}", frame->width, frame->height, (int)frame->format,
+		    frame->full_range);
 
 	selfie_segmenter::IVideoFrameExtractor *frameExtractor = &nullFrameExtractor;
 
@@ -239,10 +239,10 @@ obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 
 	if (actualFilterLevel >= FilterLevel::Segmentation) {
 		frameExtractor->operator()((selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(0),
-		  (selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(1),
-		  (selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(2),
-		  (selfie_segmenter::DataType)frame->data, frame->width, frame->height,
-		  frame->linesize[0]);
+					   (selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(1),
+					   (selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(2),
+					   (selfie_segmenter::DataType)frame->data, frame->width, frame->height,
+					   frame->linesize[0]);
 		kickSegmentationTask();
 	}
 

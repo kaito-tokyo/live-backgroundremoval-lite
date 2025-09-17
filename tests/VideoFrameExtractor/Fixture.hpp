@@ -74,29 +74,30 @@ constexpr ColorYUV rgb_to_yuv(const ColorRGBA &c)
 		static_cast<std::uint8_t>(v < 0 ? 0 : (v > 255 ? 255 : v))};
 }
 
-constexpr auto generate_uyvy_data() {
-    std::array<std::uint8_t, WIDTH * HEIGHT * 2> uyvy_data{};
-    for (std::size_t y = 0; y < HEIGHT; ++y) {
-        for (std::size_t x = 0; x < WIDTH; x += 2) { // 2ピクセルずつ処理
-            // 元のピクセルを取得
-            const auto& rgba0 = TEST_IMAGE0_ROW_PATTERN[x];
-            const auto& rgba1 = TEST_IMAGE0_ROW_PATTERN[x + 1];
+constexpr auto generate_uyvy_data()
+{
+	std::array<std::uint8_t, WIDTH * HEIGHT * 2> uyvy_data{};
+	for (std::size_t y = 0; y < HEIGHT; ++y) {
+		for (std::size_t x = 0; x < WIDTH; x += 2) { // 2ピクセルずつ処理
+			// 元のピクセルを取得
+			const auto &rgba0 = TEST_IMAGE0_ROW_PATTERN[x];
+			const auto &rgba1 = TEST_IMAGE0_ROW_PATTERN[x + 1];
 
-            // YUVに変換
-            const auto yuv0 = rgb_to_yuv(rgba0);
-            const auto yuv1 = rgb_to_yuv(rgba1);
+			// YUVに変換
+			const auto yuv0 = rgb_to_yuv(rgba0);
+			const auto yuv1 = rgb_to_yuv(rgba1);
 
-            // UとVを2ピクセルで平均化 (4:2:2 subsampling)
-            const std::uint8_t u_avg = (yuv0.u + yuv1.u) / 2;
-            const std::uint8_t v_avg = (yuv0.v + yuv1.v) / 2;
+			// UとVを2ピクセルで平均化 (4:2:2 subsampling)
+			const std::uint8_t u_avg = (yuv0.u + yuv1.u) / 2;
+			const std::uint8_t v_avg = (yuv0.v + yuv1.v) / 2;
 
-            // UYVYフォーマットで格納
-            const std::size_t i = (y * WIDTH + x) * 2;
-            uyvy_data[i + 0] = u_avg;
-            uyvy_data[i + 1] = yuv0.y;
-            uyvy_data[i + 2] = v_avg;
-            uyvy_data[i + 3] = yuv1.y;
-        }
-    }
-    return uyvy_data;
+			// UYVYフォーマットで格納
+			const std::size_t i = (y * WIDTH + x) * 2;
+			uyvy_data[i + 0] = u_avg;
+			uyvy_data[i + 1] = yuv0.y;
+			uyvy_data[i + 2] = v_avg;
+			uyvy_data[i + 3] = yuv1.y;
+		}
+	}
+	return uyvy_data;
 }
