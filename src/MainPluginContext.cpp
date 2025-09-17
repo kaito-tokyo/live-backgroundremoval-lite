@@ -230,7 +230,11 @@ try {
 		gs_unique::drain();
 	}
 
-	return frame;
+	if (renderingContext) {
+		return renderingContext->filterVideo(frame);
+	} else {
+		return frame;
+	}
 } catch (const std::exception &e) {
 	logger.error("Failed to create rendering context: {}", e.what());
 	return frame;

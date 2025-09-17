@@ -43,6 +43,7 @@ private:
 	AsyncTextureReader readerSegmenterInput;
 	SelfieSegmenter selfieSegmenter;
 	ThrottledTaskQueue &selfieSegmenterTaskQueue;
+	std::uint64_t previousSelfieSegmenterTimestamp = 0;
 
 public:
 	const std::uint32_t width;
