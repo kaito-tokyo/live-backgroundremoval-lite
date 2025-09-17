@@ -17,108 +17,160 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
 /**
- * @file UYVYFrameExtractor.hpp
- * @brief Defines the implementation of the frame extractor for the UYVY video format.
+ * @file UyvyFrameExtractor.hpp
+ * @brief Defines a set of header-only classes for extracting RGB data from UYVY video frames.
+ * @details This file contains a policy-based base class and concrete implementations
+ * for Rec. 709/Rec. 601 standards and Limited/Full color ranges.
  */
 
 #pragma once
 
 #include "IFrameExtractor.hpp"
 #include <cstdint>
+#include <algorithm> // For std::clamp
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 
+//==============================================================================
+// 1. Policy Definitions
+//==============================================================================
+
+// --- 1a. Color Space Coefficients Policies ---
+namespace coefficients {
+    struct Rec709 {
+        static constexpr float CR_TO_R = 1.5748f;
+        static constexpr float CB_TO_G = -0.1873f;
+        static constexpr float CR_TO_G = -0.4681f;
+        static constexpr float CB_TO_B = 1.8556f;
+    };
+    struct Rec601 {
+        static constexpr float CR_TO_R = 1.402f;
+        static constexpr float CB_TO_G = -0.34414f;
+        static constexpr float CR_TO_G = -0.71414f;
+        static constexpr float CB_TO_B = 1.772f;
+    };
+} // namespace coefficients
+
+// --- 1b. Color Range Scaling Policies ---
+namespace range {
+    /**
+     * @struct Limited
+     * @brief Scales YCbCr values from limited range (Y:16-235, C:16-240) to full range float.
+     */
+    struct Limited {
+        static inline float scale_y(uint8_t y_val) {
+            constexpr float Y_OFFSET = 16.0f;
+            constexpr float Y_SCALE = 255.0f / (235.0f - 16.0f);
+            return (static_cast<float>(y_val) - Y_OFFSET) * Y_SCALE;
+        }
+        static inline float scale_c(uint8_t c_val) {
+            constexpr float C_OFFSET = 16.0f;
+            constexpr float C_SCALE = 255.0f / (240.0f - 16.0f);
+            return (static_cast<float>(c_val) - C_OFFSET) * C_SCALE;
+        }
+    };
+
+    /**
+     * @struct Full
+     * @brief Scales YCbCr values from full range (0-255) to full range float (identity operation).
+     */
+    struct Full {
+        static inline float scale_y(uint8_t y_val) {
+            return static_cast<float>(y_val);
+        }
+        static inline float scale_c(uint8_t c_val) {
+            return static_cast<float>(c_val);
+        }
+    };
+} // namespace range
+
+
+//==============================================================================
+// 2. Templated Base Class (now with two policies)
+//==============================================================================
+
 /**
- * @class UYVYFrameExtractor
- * @brief An extractor that converts frame data from the UYVY (YUV 4:2:2) video format to RGB.
- * @details This is a concrete implementation of the IVideoFrameExtractor interface.
- * This class reads pixel data in UYVY format (representing 2 pixels in 4 bytes)
- * and converts it into separate R, G, B channel data at high speed using
- * optimized integer arithmetic.
+ * @class BaseUyvyFrameExtractor
+ * @brief A policy-based base class for converting UYVY to RGB.
+ * @tparam TColorCoefficients A policy class for YCbCr-to-RGB matrix coefficients.
+ * @tparam TRangePolicy A policy class for scaling Y/Cb/Cr values from their source range.
  */
-class UYVYFrameExtractor : public IVideoFrameExtractor {
+template <typename TColorCoefficients, typename TRangePolicy>
+class BaseUyvyFrameExtractor : public IVideoFrameExtractor {
 private:
-    /**
-     * @brief Fixed-point coefficients for YUV-to-RGB conversion (original coefficient * 256).
-     * @details These are used to avoid floating-point operations and perform calculations
-     * with high-speed integer arithmetic and bit shifts.
-     */
-    static constexpr int COEFF_R_V = 359;
-    static constexpr int COEFF_G_U = -88;
-    static constexpr int COEFF_G_V = -183;
-    static constexpr int COEFF_B_U = 454;
-
-    /// @brief A compile-time constant for normalizing 0-255 values to [0.0f, 1.0f] (1.0f / 255.0f).
-    static constexpr float INV_255 = 1.0f / 255.0f;
-
-    /**
-     * @brief Clamps an integer value to the [0, 255] range.
-     * @param[in] value The integer value to be clamped.
-     * @return An unsigned 8-bit integer clamped to the range 0 to 255.
-     */
-    inline std::uint8_t clamp_u8(int value) {
-        if (value < 0) return 0;
-        if (value > 255) return 255;
-        return static_cast<std::uint8_t>(value);
+    static inline float clamp_and_normalize(float val) {
+        return std::clamp(val, 0.0f, 255.0f) / 255.0f;
     }
 
 public:
-    /**
-     * @brief Processes a UYVY formatted frame and converts it to RGB channels.
-     * @details This is the implementation of IVideoFrameExtractor::operator().
-     * Since UYVY data constitutes 2 pixels in 4 bytes, it reads 4 bytes at a time
-     * within the loop, simultaneously calculates the RGB values for two pixels,
-     * and writes them to the output buffers.
-     * @copydoc IVideoFrameExtractor::operator()
-     */
-    void operator()(ChannelType rChannel, ChannelType gChannel, ChannelType bChannel, DataType data, std::size_t width, std::size_t height, std::size_t linesize) override {
-        // Cast the generic 'const void*' from DataType to the specific 'const uint8_t*' needed for UYVY processing.
-        const auto *uyvy_base_ptr = static_cast<const std::uint8_t *>(data[0]);
+    BaseUyvyFrameExtractor() = default;
+    ~BaseUyvyFrameExtractor() override = default;
+
+    void operator()(ChannelType dstR, ChannelType dstG, ChannelType dstB, DataType srcdata,
+                std::size_t width, std::size_t height, std::size_t linesize) override {
+        const auto *src = static_cast<const uint8_t *>(srcdata[0]);
 
         for (std::size_t y = 0; y < height; ++y) {
-            const std::uint8_t *uyvy_row = uyvy_base_ptr + y * linesize;
+            const uint8_t *row_ptr = src + y * linesize;
             
-            const std::size_t row_offset = y * width;
-            float *r_ptr = rChannel + row_offset;
-            float *g_ptr = gChannel + row_offset;
-            float *b_ptr = bChannel + row_offset;
+            for (std::size_t x = 0; x < width; x += 2) {
+                const uint8_t u_val  = row_ptr[x * 2 + 0];
+                const uint8_t y0_val = row_ptr[x * 2 + 1];
+                const uint8_t v_val  = row_ptr[x * 2 + 2];
+                const uint8_t y1_val = row_ptr[x * 2 + 3];
 
-            for (std::size_t x = 0; x < width / 2; ++x) {
-                const int u  = static_cast<int>(uyvy_row[x * 4 + 0]);
-                const int y0 = static_cast<int>(uyvy_row[x * 4 + 1]);
-                const int v  = static_cast<int>(uyvy_row[x * 4 + 2]);
-                const int y1 = static_cast<int>(uyvy_row[x * 4 + 3]);
+                // 色範囲ポリシーを使ってYとCをスケーリング
+                const float y0_f = TRangePolicy::scale_y(y0_val);
+                const float y1_f = TRangePolicy::scale_y(y1_val);
+                const float cb_f = TRangePolicy::scale_c(u_val);
+                const float cr_f = TRangePolicy::scale_c(v_val);
+
+                const float cb_centered = cb_f - 128.0f;
+                const float cr_centered = cr_f - 128.0f;
+
+                // 色空間係数ポリシーから係数を取得
+                const float r_component = TColorCoefficients::CR_TO_R * cr_centered;
+                const float g_component = TColorCoefficients::CB_TO_G * cb_centered + TColorCoefficients::CR_TO_G * cr_centered;
+                const float b_component = TColorCoefficients::CB_TO_B * cb_centered;
+
+                const float r0 = y0_f + r_component;
+                const float g0 = y0_f + g_component;
+                const float b0 = y0_f + b_component;
                 
-                const int c_b = u - 128;
-                const int c_r = v - 128;
+                const std::size_t idx0 = y * width + x;
+                dstR[idx0] = clamp_and_normalize(r0);
+                dstG[idx0] = clamp_and_normalize(g0);
+                dstB[idx0] = clamp_and_normalize(b0);
 
-                const int term_r = COEFF_R_V * c_r;
-                const int term_g = COEFF_G_U * c_b + COEFF_G_V * c_r;
-                const int term_b = COEFF_B_U * c_b;
-                
-                const int scaled_y0 = y0 << 8;
-                const int scaled_y1 = y1 << 8;
-
-                const int r0_i = (scaled_y0 + term_r) >> 8;
-                const int g0_i = (scaled_y0 + term_g) >> 8;
-                const int b0_i = (scaled_y0 + term_b) >> 8;
-
-                const int r1_i = (scaled_y1 + term_r) >> 8;
-                const int g1_i = (scaled_y1 + term_g) >> 8;
-                const int b1_i = (scaled_y1 + term_b) >> 8;
-
-                *r_ptr++ = clamp_u8(r0_i) * INV_255;
-                *g_ptr++ = clamp_u8(g0_i) * INV_255;
-                *b_ptr++ = clamp_u8(b0_i) * INV_255;
-
-                *r_ptr++ = clamp_u8(r1_i) * INV_255;
-                *g_ptr++ = clamp_u8(g1_i) * INV_255;
-                *b_ptr++ = clamp_u8(b1_i) * INV_255;
+                if (x + 1 < width) {
+                    const float r1 = y1_f + r_component;
+                    const float g1 = y1_f + g_component;
+                    const float b1 = y1_f + b_component;
+                    
+                    const std::size_t idx1 = y * width + x + 1;
+                    dstR[idx1] = clamp_and_normalize(r1);
+                    dstG[idx1] = clamp_and_normalize(g1);
+                    dstB[idx1] = clamp_and_normalize(b1);
+                }
             }
         }
     }
 };
+
+
+//==============================================================================
+// 3. Concrete Implementations (4 combinations)
+//==============================================================================
+
+// --- Rec. 709 based extractors ---
+using UyvyLimitedRec709FrameExtractor = BaseUyvyFrameExtractor<coefficients::Rec709, range::Limited>;
+using UyvyFullRec709FrameExtractor    = BaseUyvyFrameExtractor<coefficients::Rec709, range::Full>;
+
+// --- Rec. 601 based extractors ---
+using UyvyLimitedRec601FrameExtractor = BaseUyvyFrameExtractor<coefficients::Rec601, range::Limited>;
+using UyvyFullRec601FrameExtractor    = BaseUyvyFrameExtractor<coefficients::Rec601, range::Full>;
+
 
 } // namespace obs_backgroundremoval_lite
 } // namespace kaito_tokyo

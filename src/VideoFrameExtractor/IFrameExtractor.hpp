@@ -26,23 +26,23 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <cstddef>
 
 #if defined(__GNUC__) || defined(__clang__)
-    /**
+/**
      * @def VIDEO_FRAME_EXTRACTOR_RESTRICT
      * @brief A macro that defines the __restrict__ keyword for GCC/Clang compilers.
      */
-    #define VIDEO_FRAME_EXTRACTOR_RESTRICT __restrict__
+#define VIDEO_FRAME_EXTRACTOR_RESTRICT __restrict__
 #elif defined(_MSC_VER)
-    /**
+/**
      * @def VIDEO_FRAME_EXTRACTOR_RESTRICT
      * @brief A macro that defines __declspec(restrict) for the MSVC compiler.
      */
-    #define VIDEO_FRAME_EXTRACTOR_RESTRICT __declspec(restrict)
+#define VIDEO_FRAME_EXTRACTOR_RESTRICT __declspec(restrict)
 #else
-    /**
+/**
      * @def VIDEO_FRAME_EXTRACTOR_RESTRICT
      * @brief A macro that expands to nothing for unsupported compilers.
      */
-    #define VIDEO_FRAME_EXTRACTOR_RESTRICT
+#define VIDEO_FRAME_EXTRACTOR_RESTRICT
 #endif
 
 namespace kaito_tokyo {
@@ -80,15 +80,16 @@ public:
      * It reads the source data, converts it to RGB, and stores the result
      * in the respective channel buffers.
      *
-     * @param[out] rChannel A pointer to the destination buffer for the Red channel. Values will be normalized to the range [0.0f, 1.0f].
-     * @param[out] gChannel A pointer to the destination buffer for the Green channel. Values will be normalized to the range [0.0f, 1.0f].
-     * @param[out] bChannel A pointer to the destination buffer for the Blue channel. Values will be normalized to the range [0.0f, 1.0f].
-     * @param[in]  data     An array of pointers to the source video frame data planes. Depending on the format, data[0] could be the luma (Y) plane, data[1] the chroma (UV) plane, etc.
+     * @param[out] dstR     A pointer to the destination buffer for the Red channel. Values will be normalized to the range [0.0f, 1.0f].
+     * @param[out] dstG     A pointer to the destination buffer for the Green channel. Values will be normalized to the range [0.0f, 1.0f].
+     * @param[out] dstB     A pointer to the destination buffer for the Blue channel. Values will be normalized to the range [0.0f, 1.0f].
+     * @param[in]  srcdata  An array of pointers to the source video frame data planes. Depending on the format, srcdata[0] could be the luma (Y) plane, srcdata[1] the chroma (UV) plane, etc.
      * @param[in]  width    The logical width of the frame in pixels.
      * @param[in]  height   The logical height of the frame in pixels.
      * @param[in]  linesize The number of bytes in one horizontal line of the source data (the stride). Due to memory alignment, this may differ from width * bytes_per_pixel.
      */
-    virtual void operator()(ChannelType rChannel, ChannelType gChannel, ChannelType bChannel, DataType data, std::size_t width, std::size_t height, std::size_t linesize) = 0;
+    virtual void operator()(ChannelType dstR, ChannelType dstG, ChannelType dstB, DataType srcdata,
+                std::size_t width, std::size_t height, std::size_t linesize) = 0;
 };
 
 } // namespace obs_backgroundremoval_lite

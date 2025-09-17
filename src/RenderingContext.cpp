@@ -235,7 +235,11 @@ void RenderingContext::videoRender()
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
-	logger.info("frame format: {}, size: {}x{}", (int)frame->format, frame->width, frame->height);
+	logger.info("colormatrix {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}", frame->color_matrix[0], frame->color_matrix[1],
+		    frame->color_matrix[2], frame->color_matrix[3], frame->color_matrix[4], frame->color_matrix[5],
+		    frame->color_matrix[6], frame->color_matrix[7], frame->color_matrix[8], frame->color_matrix[9],
+		    frame->color_matrix[10], frame->color_matrix[11], frame->color_matrix[12], frame->color_matrix[13],
+		    frame->color_matrix[14], frame->color_matrix[15]);
 	return frame;
 }
 
