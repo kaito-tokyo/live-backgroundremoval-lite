@@ -40,6 +40,8 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 	  updateChecker(logger),
 	  selfieSegmenterTaskQueue(logger, 1)
 {
+	selfieSegmenterNet.opt.num_threads = 2;
+
 	unique_bfree_char_t paramPath = unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.param");
 	if (!paramPath) {
 		throw std::runtime_error("Failed to find model param file");
