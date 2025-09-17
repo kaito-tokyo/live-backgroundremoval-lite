@@ -96,7 +96,17 @@ RenderingContext::~RenderingContext() noexcept {}
 
 void RenderingContext::videoTick(float seconds)
 {
-	UNUSED_PARAMETER(seconds);
+	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
+
+	if (actualFilterLevel >= FilterLevel::Segmentation) {
+		timeSinceLastSelfieSegmentation += seconds;
+		const float interval = 1.0f / static_cast<float>(selfieSegmenterFps);
+
+		if (timeSinceLastSelfieSegmentation >= interval) {
+			timeSinceLastSelfieSegmentation -= interval;
+			kickSegmentationTask();
+		}
+	}
 }
 
 void RenderingContext::renderOriginalImage()
@@ -235,19 +245,6 @@ void RenderingContext::videoRender()
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
-	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
-	logger.info("Frame timestamp: {}, next segmentation timestamp: {}", frame->timestamp,
-		    previousSelfieSegmenterTimestamp);
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
-		const auto nextSelfieSegmenterTimestamp =
-			previousSelfieSegmenterTimestamp + (1000000000 / selfieSegmenterFps);
-
-		if (frame->timestamp >= nextSelfieSegmenterTimestamp) {
-			previousSelfieSegmenterTimestamp = frame->timestamp;
-			kickSegmentationTask();
-		}
-	}
-
 	return frame;
 }
 

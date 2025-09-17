@@ -43,7 +43,6 @@ private:
 	AsyncTextureReader readerSegmenterInput;
 	SelfieSegmenter selfieSegmenter;
 	ThrottledTaskQueue &selfieSegmenterTaskQueue;
-	std::uint64_t previousSelfieSegmenterTimestamp = 0;
 
 public:
 	const std::uint32_t width;
@@ -88,6 +87,8 @@ private:
 	const double &maskGamma;
 	const double &maskLowerBound;
 	const double &maskUpperBound;
+
+	float timeSinceLastSelfieSegmentation = 0.0f;
 
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
