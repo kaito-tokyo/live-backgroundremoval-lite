@@ -73,16 +73,16 @@ public:
 
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFGuideSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFSourceSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanSourceSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSourceSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSqSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFASub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFBSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFMeanGuideSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFMeanSourceSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFMeanGuideSourceSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFMeanGuideSqSub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFASub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFBSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFResult;
 
 private:
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFTemporary1Sub;
+	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFTemporary1Sub;
 
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 

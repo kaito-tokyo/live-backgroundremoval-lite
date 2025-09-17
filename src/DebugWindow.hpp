@@ -26,6 +26,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include <obs-bridge-utils/ILogger.hpp>
+
 #include "AsyncTextureReader.hpp"
 
 namespace kaito_tokyo {
@@ -39,7 +41,7 @@ public:
 	static constexpr int PREVIEW_WIDTH = 640;
 	static constexpr int PREVIEW_HEIGHT = 480;
 
-	explicit DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
+	DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
 	~DebugWindow() noexcept override;
 
 	void videoRender();
@@ -64,7 +66,7 @@ private:
 	std::unique_ptr<AsyncTextureReader> reader256Bgrx;
 	std::unique_ptr<AsyncTextureReader> readerMaskRoiR8;
 	std::unique_ptr<AsyncTextureReader> readerSubR8;
-	std::unique_ptr<AsyncTextureReader> readerR16fSub;
+	std::unique_ptr<AsyncTextureReader> readerR32fSub;
 
 	std::vector<std::uint8_t> bufferR8;
 	std::vector<std::uint8_t> bufferSubR8;
