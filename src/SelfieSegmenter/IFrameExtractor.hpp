@@ -23,7 +23,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
+#include <utility>
 
 #if defined(__GNUC__) || defined(__clang__)
 /**
@@ -47,6 +49,12 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
+namespace selfie_segmenter {
+
+/// @brief A type alias for a pointer to a destination channel buffer, qualified with restrict.
+using ChannelType = float *VIDEO_FRAME_EXTRACTOR_RESTRICT;
+/// @brief A type alias for the source video data planes, qualified with restrict.
+using DataType = const void **VIDEO_FRAME_EXTRACTOR_RESTRICT;
 
 /**
  * @class IVideoFrameExtractor
@@ -60,12 +68,6 @@ namespace obs_backgroundremoval_lite {
  * (or a compatible feature) to inform the compiler that pointers do not alias.
  */
 class IVideoFrameExtractor {
-protected:
-    /// @brief A type alias for a pointer to a destination channel buffer, qualified with restrict.
-    using ChannelType = float *VIDEO_FRAME_EXTRACTOR_RESTRICT;
-    /// @brief A type alias for the source video data planes, qualified with restrict.
-    using DataType = const void *VIDEO_FRAME_EXTRACTOR_RESTRICT[8];
-
 public:
     /**
      * @brief Virtual destructor.
@@ -92,5 +94,13 @@ public:
                 std::size_t width, std::size_t height, std::size_t linesize) = 0;
 };
 
+class NullFrameExtractor : public IVideoFrameExtractor {
+public:
+    void operator()(ChannelType, ChannelType, ChannelType, DataType,
+                std::size_t, std::size_t, std::size_t) override {
+    }
+};
+
+} // namespace selfie_segmenter
 } // namespace obs_backgroundremoval_lite
 } // namespace kaito_tokyo

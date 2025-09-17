@@ -25,10 +25,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs-bridge-utils/gs_unique.hpp>
 #include <obs-bridge-utils/ILogger.hpp>
 
-#include "AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
 #include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
+#include "SelfieSegmenter/FrameExtractors.hpp"
 #include "ThrottledTaskQueue.hpp"
 
 namespace kaito_tokyo {
@@ -40,7 +40,6 @@ private:
 	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
 	const MainEffect &mainEffect;
 
-	AsyncTextureReader readerSegmenterInput;
 	SelfieSegmenter selfieSegmenter;
 	ThrottledTaskQueue &selfieSegmenterTaskQueue;
 
@@ -90,6 +89,11 @@ private:
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 	static constexpr int SUBSAMPLING_RATE = 4;
+
+private:
+	selfie_segmenter::NullFrameExtractor nullFrameExtractor;
+    selfie_segmenter::UyvyLimitedRec709FrameExtractor uyvyLimitedRec709FrameExtractor;
+    selfie_segmenter::UyvyFullRec709FrameExtractor uyvyFullRec709FrameExtractor;
 
 public:
 	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,

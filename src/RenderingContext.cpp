@@ -21,6 +21,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "RenderingContext.hpp"
 #include "SelfieSegmenter.hpp"
 
+#include "SelfieSegmenter/UyvyFrameExtractor.hpp"
+
 using namespace kaito_tokyo::obs_bridge_utils;
 
 namespace {
@@ -55,7 +57,6 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
-	  readerSegmenterInput(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX),
 	  segmenterInputBuffer(SelfieSegmenter::PIXEL_COUNT * 4),
 	  selfieSegmenter(_selfieSegmenterNet),
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
@@ -173,15 +174,13 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, g
 
 void RenderingContext::kickSegmentationTask()
 {
-	auto &readerSegmenterInputBuffer = readerSegmenterInput.getBuffer();
-	std::copy(readerSegmenterInputBuffer.begin(), readerSegmenterInputBuffer.end(), segmenterInputBuffer.begin());
 	selfieSegmenterTaskQueue.push(
 		[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
 			if (auto self = weakSelf.lock()) {
 				if (token->load()) {
 					return;
 				}
-				self->selfieSegmenter.process(self->segmenterInputBuffer.data());
+				self->selfieSegmenter.process();
 			} else {
 				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
 			}
@@ -191,14 +190,6 @@ void RenderingContext::kickSegmentationTask()
 void RenderingContext::videoRender()
 {
 	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
-
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
-		try {
-			readerSegmenterInput.sync();
-		} catch (const std::exception &e) {
-			logger.error("Failed to sync texture reader: {}", e.what());
-		}
-	}
 
 	renderOriginalImage();
 
@@ -226,20 +217,35 @@ void RenderingContext::videoRender()
 		obs_source_skip_video_filter(source);
 		return;
 	}
-
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
-		readerSegmenterInput.stage(bgrxSegmenterInput.get());
-		kickSegmentationTask();
-	}
 }
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
-	logger.info("colormatrix {} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}", frame->color_matrix[0], frame->color_matrix[1],
-		    frame->color_matrix[2], frame->color_matrix[3], frame->color_matrix[4], frame->color_matrix[5],
-		    frame->color_matrix[6], frame->color_matrix[7], frame->color_matrix[8], frame->color_matrix[9],
-		    frame->color_matrix[10], frame->color_matrix[11], frame->color_matrix[12], frame->color_matrix[13],
-		    frame->color_matrix[14], frame->color_matrix[15]);
+	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
+
+	logger.info("Received frame: {}x{}, format={}, full_range={}", frame->width, frame->height,
+		    (int)frame->format, frame->full_range);
+
+	selfie_segmenter::IVideoFrameExtractor *frameExtractor = &nullFrameExtractor;
+
+	if (frame->format == VIDEO_FORMAT_UYVY) {
+		if (frame->full_range) {
+			frameExtractor = &uyvyFullRec709FrameExtractor;
+		} else {
+			logger.info("aaa");
+			frameExtractor = &uyvyLimitedRec709FrameExtractor;
+		}
+	}
+
+	if (actualFilterLevel >= FilterLevel::Segmentation) {
+		frameExtractor->operator()((selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(0),
+		  (selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(1),
+		  (selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(2),
+		  (selfie_segmenter::DataType)frame->data, frame->width, frame->height,
+		  frame->linesize[0]);
+		kickSegmentationTask();
+	}
+
 	return frame;
 }
 

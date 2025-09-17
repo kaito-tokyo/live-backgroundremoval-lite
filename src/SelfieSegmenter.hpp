@@ -104,29 +104,21 @@ public:
 
 	/**
      * @brief Generates a segmentation mask from BGRA image data (executed on the inference thread).
-     * @param bgra_data A pointer to the 256x256 BGRA image data.
      */
-	void process(const std::uint8_t *bgra_data)
+	void process()
 	{
-		if (!bgra_data) {
-			return;
-		}
-
-		// 1. Pre-process data into the pre-allocated member Mat
-		preprocess(bgra_data);
-
-		// 2. Run inference using member Mats
+		// 1. Run inference using member Mats
 		ncnn::Extractor ex = selfieSegmenterNet.create_extractor();
 		ex.input("in0", m_inputMat);
 		ex.extract("out0", m_outputMat);
 
-		// 3. Get a reference to the buffer to write to
+		// 2. Get a reference to the buffer to write to
 		std::vector<std::uint8_t> &maskToWrite = maskBuffer.beginWrite();
 
-		// 4. Post-process the result directly into the back buffer
+		// 3. Post-process the result directly into the back buffer
 		postprocess(maskToWrite);
 
-		// 5. Commit the write, making the buffer available for reading
+		// 4. Commit the write, making the buffer available for reading
 		maskBuffer.commitWrite();
 	}
 
