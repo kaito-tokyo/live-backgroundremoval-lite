@@ -274,21 +274,21 @@ technique ConvertToGrayscale
     }
 }
 
-technique HorizontalBoxFilterR8
+technique HorizontalBoxFilterR8KS17
 {
     pass
     {
         vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSHorizontalBoxFilterR8(vert_in);
+        pixel_shader = PSHorizontalBoxFilterR8KS17(vert_in);
     }
 }
 
-technique VerticalBoxFilterR8
+technique VerticalBoxFilterR8KS17
 {
     pass
     {
         vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSVerticalBoxFilterR8(vert_in);
+        pixel_shader = PSVerticalBoxFilterR8KS17(vert_in);
     }
 }
 
