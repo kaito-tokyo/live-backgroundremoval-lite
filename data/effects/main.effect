@@ -127,6 +127,53 @@ float4 PSHorizontalBoxFilterR8KS17(VertInOut vert_in) : TARGET
 }
 
 /**
+ * @brief Combines per-element multiplication and a 1D horizontal box filter (KS=17).
+ * (Pass 1 of a separable filter)
+ * @note This shader combines the operations of PSMultiplyR8 and PSHorizontalBoxFilterR8KS17.
+ */
+float4 PSHorizontalBoxFilterWithMulR8KS17(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+
+    float sum = image.Sample(point_sampler, uv).r * image1.Sample(point_sampler, uv).r;
+    for (int i = 1; i <= 8; i++) {
+        float2 offset = float2(i * texelWidth, 0.0f);
+        sum += image.Sample(point_sampler, uv + offset).r * image1.Sample(point_sampler, uv + offset).r;
+        sum += image.Sample(point_sampler, uv - offset).r * image1.Sample(point_sampler, uv - offset).r;
+    }
+
+	float luma = sum / 17.0f;
+
+	return float4(luma, luma, luma, 1.0f);
+}
+
+
+float square(float x) {
+    return x * x;
+}
+
+/**
+ * @brief Combines squaring and a 1D horizontal box filter (KS=17).
+ * (Pass 1 of a separable filter)
+ * @note This shader combines the operations of PSSquareR8 and PSHorizontalBoxFilterR8KS17.
+ */
+float4 PSHorizontalBoxFilterWithSqR8KS17(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+
+    float sum = square(image.Sample(point_sampler, uv).r);
+    for (int i = 1; i <= 8; i++) {
+        float2 offset = float2(i * texelWidth, 0.0f);
+        sum += square(image.Sample(point_sampler, uv + offset).r);
+        sum += square(image.Sample(point_sampler, uv - offset).r);
+    }
+
+	float luma = sum / 17.0f;
+
+	return float4(luma, luma, luma, 1.0f);
+}
+
+/**
  * @brief Applies an optimized 1D vertical box filter with a fixed kernel size of 17.
  * (Pass 2 of a separable filter)
  */
@@ -145,28 +192,6 @@ float4 PSVerticalBoxFilterR8KS17(VertInOut vert_in) : TARGET
 	float luma = (image.Sample(linear_sampler, uv).r + bilinear_sum * 2.0f) / 17.0f;
 
 	return float4(luma, luma, luma, 1.0f);
-}
-
-/**
- * @brief Performs per-element multiplication of the R channels of 'image' and 'image1'.
- * @note 'image' and 'image1' must be the same size.
- */
-float4 PSMultiplyR8(VertInOut vert_in) : TARGET
-{
-	float2 uv = vert_in.uv;
-	float value = image.Sample(point_sampler, uv).r * image1.Sample(point_sampler, uv).r;
-	return float4(value, value, value, 1.0f);
-}
-
-/**
- * @brief Calculates the square of the R channel of the 'image' texture.
- */
-float4 PSSquareR8(VertInOut vert_in) : TARGET
-{
-	float2 uv = vert_in.uv;
-	float r = image.Sample(point_sampler, uv).r;
-	float value = r * r;
-	return float4(value, value, value, 1.0f);
 }
 
 /**
@@ -289,30 +314,30 @@ technique HorizontalBoxFilterR8KS17
 	}
 }
 
+technique HorizontalBoxFilterWithMulR8KS17
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSHorizontalBoxFilterWithMulR8KS17(vert_in);
+	}
+}
+
+technique HorizontalBoxFilterWithSqR8KS17
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSHorizontalBoxFilterWithSqR8KS17(vert_in);
+	}
+}
+
 technique VerticalBoxFilterR8KS17
 {
 	pass
 	{
 		vertex_shader = VSDefault(vert_in);
 		pixel_shader = PSVerticalBoxFilterR8KS17(vert_in);
-	}
-}
-
-technique MultiplyR8
-{
-	pass
-	{
-		vertex_shader = VSDefault(vert_in);
-		pixel_shader = PSMultiplyR8(vert_in);
-	}
-}
-
-technique SquareR8
-{
-	pass
-	{
-		vertex_shader = VSDefault(vert_in);
-		pixel_shader = PSSquareR8(vert_in);
 	}
 }
 

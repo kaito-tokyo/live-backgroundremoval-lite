@@ -112,6 +112,8 @@ public:
 	gs_technique_t *const techResampleByNearestR8 = nullptr;
 	gs_technique_t *const techConvertToGrayscale = nullptr;
 	gs_technique_t *const techHorizontalBoxFilterR8KS17 = nullptr;
+	gs_technique_t *const techHorizontalBoxFilterWithMulR8KS17 = nullptr;
+	gs_technique_t *const techHorizontalBoxFilterWithSqR8KS17 = nullptr;
 	gs_technique_t *const techVerticalBoxFilterR8KS17 = nullptr;
 	gs_technique_t *const techMultiplyR8 = nullptr;
 	gs_technique_t *const techSquareR8 = nullptr;
@@ -135,10 +137,12 @@ public:
 		  techConvertToGrayscale(main_effect_detail::getEffectTech(effect, "ConvertToGrayscale", logger)),
 		  techHorizontalBoxFilterR8KS17(
 			  main_effect_detail::getEffectTech(effect, "HorizontalBoxFilterR8KS17", logger)),
+		  techHorizontalBoxFilterWithMulR8KS17(
+			  main_effect_detail::getEffectTech(effect, "HorizontalBoxFilterWithMulR8KS17", logger)),
+		  techHorizontalBoxFilterWithSqR8KS17(
+			  main_effect_detail::getEffectTech(effect, "HorizontalBoxFilterWithSqR8KS17", logger)),
 		  techVerticalBoxFilterR8KS17(
 			  main_effect_detail::getEffectTech(effect, "VerticalBoxFilterR8KS17", logger)),
-		  techMultiplyR8(main_effect_detail::getEffectTech(effect, "MultiplyR8", logger)),
-		  techSquareR8(main_effect_detail::getEffectTech(effect, "SquareR8", logger)),
 		  techCalculateGuidedFilterA(
 			  main_effect_detail::getEffectTech(effect, "CalculateGuidedFilterA", logger)),
 		  techCalculateGuidedFilterB(
@@ -275,8 +279,9 @@ public:
 		gs_technique_end(techVerticalBoxFilterR8KS17);
 	}
 
-	void multiplyR8(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
-			gs_texture_t *firstSourceTexture, gs_texture_t *secondSourceTexture) const noexcept
+	void applyBoxFilterWithMulR8KS17(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
+					 gs_texture_t *source1Texture, gs_texture_t *source2Texture,
+					 gs_texture_t *temporaryTexture1) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
@@ -285,23 +290,41 @@ public:
 		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
 		gs_matrix_identity();
 
-		gs_technique_t *tech = techMultiplyR8;
-		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
-		std::size_t passes = gs_technique_begin(tech);
-		for (std::size_t i = 0; i < passes; i++) {
-			if (gs_technique_begin_pass(tech, i)) {
-				gs_effect_set_texture(textureImage, firstSourceTexture);
-				gs_effect_set_texture(textureImage1, secondSourceTexture);
+		const float texelWidth = 1.0f / static_cast<float>(width);
+		const float texelHeight = 1.0f / static_cast<float>(height);
+
+		gs_set_render_target_with_color_space(temporaryTexture1, nullptr, GS_CS_SRGB);
+		std::size_t passesHorizontal = gs_technique_begin(techHorizontalBoxFilterWithMulR8KS17);
+		for (std::size_t i = 0; i < passesHorizontal; i++) {
+			if (gs_technique_begin_pass(techHorizontalBoxFilterWithMulR8KS17, i)) {
+				gs_effect_set_texture(textureImage, source1Texture);
+				gs_effect_set_texture(textureImage1, source2Texture);
+
+				gs_effect_set_float(floatTexelWidth, texelWidth);
 
 				gs_draw_sprite(nullptr, 0, width, height);
-				gs_technique_end_pass(tech);
+				gs_technique_end_pass(techHorizontalBoxFilterWithMulR8KS17);
 			}
 		}
-		gs_technique_end(tech);
+		gs_technique_end(techHorizontalBoxFilterWithMulR8KS17);
+
+		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
+		std::size_t passesVertical = gs_technique_begin(techVerticalBoxFilterR8KS17);
+		for (std::size_t i = 0; i < passesVertical; i++) {
+			if (gs_technique_begin_pass(techVerticalBoxFilterR8KS17, i)) {
+				gs_effect_set_texture(textureImage, temporaryTexture1);
+
+				gs_effect_set_float(floatTexelHeight, texelHeight);
+
+				gs_draw_sprite(nullptr, 0, width, height);
+				gs_technique_end_pass(techVerticalBoxFilterR8KS17);
+			}
+		}
+		gs_technique_end(techVerticalBoxFilterR8KS17);
 	}
 
-	void squareR8(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
-		      gs_texture_t *sourceTexture) const noexcept
+	void applyBoxFilterWithSqR8KS17(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
+					gs_texture_t *sourceTexture, gs_texture_t *temporaryTexture1) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
@@ -310,18 +333,36 @@ public:
 		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
 		gs_matrix_identity();
 
-		gs_technique_t *tech = techSquareR8;
-		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
-		std::size_t passes = gs_technique_begin(tech);
-		for (std::size_t i = 0; i < passes; i++) {
-			if (gs_technique_begin_pass(tech, i)) {
+		const float texelWidth = 1.0f / static_cast<float>(width);
+		const float texelHeight = 1.0f / static_cast<float>(height);
+
+		gs_set_render_target_with_color_space(temporaryTexture1, nullptr, GS_CS_SRGB);
+		std::size_t passesHorizontal = gs_technique_begin(techHorizontalBoxFilterWithSqR8KS17);
+		for (std::size_t i = 0; i < passesHorizontal; i++) {
+			if (gs_technique_begin_pass(techHorizontalBoxFilterWithSqR8KS17, i)) {
 				gs_effect_set_texture(textureImage, sourceTexture);
 
+				gs_effect_set_float(floatTexelWidth, texelWidth);
+
 				gs_draw_sprite(nullptr, 0, width, height);
-				gs_technique_end_pass(tech);
+				gs_technique_end_pass(techHorizontalBoxFilterWithSqR8KS17);
 			}
 		}
-		gs_technique_end(tech);
+		gs_technique_end(techHorizontalBoxFilterWithSqR8KS17);
+
+		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
+		std::size_t passesVertical = gs_technique_begin(techVerticalBoxFilterR8KS17);
+		for (std::size_t i = 0; i < passesVertical; i++) {
+			if (gs_technique_begin_pass(techVerticalBoxFilterR8KS17, i)) {
+				gs_effect_set_texture(textureImage, temporaryTexture1);
+
+				gs_effect_set_float(floatTexelHeight, texelHeight);
+
+				gs_draw_sprite(nullptr, 0, width, height);
+				gs_technique_end_pass(techVerticalBoxFilterR8KS17);
+			}
+		}
+		gs_technique_end(techVerticalBoxFilterR8KS17);
 	}
 
 	void calculateGuidedFilterAAndB(std::uint32_t width, std::uint32_t height, gs_texture_t *targetATexture,
