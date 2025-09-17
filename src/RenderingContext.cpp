@@ -164,7 +164,8 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, g
 
 	mainEffect.calculateGuidedFilterAAndB(gfWidthSub, gfHeightSub, r32fGFASub.get(), r32fGFBSub.get(),
 					      r32fGFMeanGuideSqSub.get(), r32fGFMeanGuideSub.get(),
-					      r32fGFMeanGuideSourceSub.get(), r32fGFMeanSourceSub.get(), gfEps);
+					      r32fGFMeanGuideSourceSub.get(), r32fGFMeanSourceSub.get(),
+					      static_cast<float>(gfEps));
 
 	mainEffect.finalizeGuidedFilter(width, height, r8GFResult.get(), r16fOriginalGrayscale, r32fGFASub.get(),
 					r32fGFBSub.get());

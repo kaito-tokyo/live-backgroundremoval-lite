@@ -207,9 +207,9 @@ public:
 				gs_effect_set_texture(textureImage, sourceTexture);
 				gs_effect_set_texture(textureImage1, maskTexture);
 
-				gs_effect_set_float(floatGamma, gamma);
-				gs_effect_set_float(floatLowerBound, lowerBound);
-				gs_effect_set_float(floatUpperBound, upperBound);
+				gs_effect_set_float(floatGamma, static_cast<float>(gamma));
+				gs_effect_set_float(floatLowerBound, static_cast<float>(lowerBound));
+				gs_effect_set_float(floatUpperBound, static_cast<float>(upperBound));
 
 				gs_draw_sprite(nullptr, 0, width, height);
 				gs_technique_end_pass(tech);
