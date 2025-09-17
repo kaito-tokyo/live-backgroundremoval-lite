@@ -52,8 +52,8 @@ const std::vector<std::string> r8Textures = {textureR8GFResult};
 const std::vector<std::string> r32fTextures = {textureR32fOriginalGrayscale};
 const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
 const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
-const std::vector<std::string> subR8Textures = {textureR8SubGFGuide, textureR8SubGFSource};
-const std::vector<std::string> subR32fTextures = {textureR32fSubOriginalGrayscale,
+const std::vector<std::string> r8SubTextures = {textureR8SubGFGuide, textureR8SubGFSource};
+const std::vector<std::string> r32fSubTextures = {textureR32fSubOriginalGrayscale,
 						  textureR32fSubLastOriginalGrayscale,
 						  textureR32fSubGFMeanGuide,
 						  textureR32fSubGFMeanSource,
@@ -201,8 +201,8 @@ void DebugWindow::videoRender()
 			readerBgrx->sync();
 			readerBgrx->stage(renderingContext->bgrxOriginalImage.get());
 		} else if (currentTexture == textureR32fOriginalGrayscale) {
-			readerR32fSub->sync();
-			readerR32fSub->stage(renderingContext->r32fOriginalGrayscale.get());
+			readerR32f->sync();
+			readerR32f->stage(renderingContext->r32fOriginalGrayscale.get());
 		} else if (currentTexture == textureR32fSubOriginalGrayscale) {
 			readerR32fSub->sync();
 			readerR32fSub->stage(renderingContext->r32fSubOriginalGrayscale.get());
@@ -275,11 +275,11 @@ void DebugWindow::updatePreview()
 		   r8MaskRoiTextures.end()) {
 		image = QImage(readerMaskRoiR8->getBuffer().data(), readerMaskRoiR8->width, readerMaskRoiR8->height,
 			       QImage::Format_Grayscale8);
-	} else if (std::find(subR8Textures.begin(), subR8Textures.end(), currentTextureStd) != subR8Textures.end()) {
+	} else if (std::find(r8SubTextures.begin(), r8SubTextures.end(), currentTextureStd) != r8SubTextures.end()) {
 		image = QImage(readerSubR8->getBuffer().data(), readerSubR8->width, readerSubR8->height,
 			       QImage::Format_Grayscale8);
-	} else if (std::find(subR32fTextures.begin(), subR32fTextures.end(), currentTextureStd) !=
-		   subR32fTextures.end()) {
+	} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), currentTextureStd) !=
+		   r32fSubTextures.end()) {
 		auto r32fDataView = reinterpret_cast<float *>(readerR32fSub->getBuffer().data());
 		bufferSubR8.resize(readerR32fSub->width * readerR32fSub->height);
 		for (std::uint32_t i = 0; i < readerR32fSub->width * readerR32fSub->height; ++i) {
