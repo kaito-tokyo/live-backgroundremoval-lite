@@ -164,27 +164,27 @@ void RenderingContext::renderSegmentationMask()
 
 void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask)
 {
-	mainEffect.resampleByNearestR8(widthSub, heightSub, r8GFGuideSub.get(), r16fOriginalGrayscale);
+	mainEffect.resampleByNearestR8(widthSub, heightSub, r8SubGFGuide.get(), r16fOriginalGrayscale);
 
-	mainEffect.resampleByNearestR8(widthSub, heightSub, r8GFSourceSub.get(), r8SegmentationMask);
+	mainEffect.resampleByNearestR8(widthSub, heightSub, r8SubGFSource.get(), r8SegmentationMask);
 
-	mainEffect.applyBoxFilterR8KS17(widthSub, heightSub, r32fGFMeanGuideSub.get(), r8GFGuideSub.get(),
+	mainEffect.applyBoxFilterR8KS17(widthSub, heightSub, r32fSubGFMeanGuide.get(), r8SubGFGuide.get(),
 					r32fGFTemporary1Sub.get());
-	mainEffect.applyBoxFilterR8KS17(widthSub, heightSub, r32fGFMeanSourceSub.get(), r8GFSourceSub.get(),
+	mainEffect.applyBoxFilterR8KS17(widthSub, heightSub, r32fSubGFMeanSource.get(), r8SubGFSource.get(),
 					r32fGFTemporary1Sub.get());
 
-	mainEffect.applyBoxFilterWithMulR8KS17(widthSub, heightSub, r32fGFMeanGuideSourceSub.get(),
-					       r8GFGuideSub.get(), r8GFSourceSub.get(), r32fGFTemporary1Sub.get());
-	mainEffect.applyBoxFilterWithSqR8KS17(widthSub, heightSub, r32fGFMeanGuideSqSub.get(), r8GFGuideSub.get(),
+	mainEffect.applyBoxFilterWithMulR8KS17(widthSub, heightSub, r32fSubGFMeanGuideSource.get(),
+					       r8SubGFGuide.get(), r8SubGFSource.get(), r32fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterWithSqR8KS17(widthSub, heightSub, r32fSubGFMeanGuideSq.get(), r8SubGFGuide.get(),
 					      r32fGFTemporary1Sub.get());
 
-	mainEffect.calculateGuidedFilterAAndB(widthSub, heightSub, r32fGFASub.get(), r32fGFBSub.get(),
-					      r32fGFMeanGuideSqSub.get(), r32fGFMeanGuideSub.get(),
-					      r32fGFMeanGuideSourceSub.get(), r32fGFMeanSourceSub.get(),
+	mainEffect.calculateGuidedFilterAAndB(widthSub, heightSub, r32fSubGFA.get(), r32fSubGFB.get(),
+					      r32fSubGFMeanGuideSq.get(), r32fSubGFMeanGuide.get(),
+					      r32fSubGFMeanGuideSource.get(), r32fSubGFMeanSource.get(),
 					      static_cast<float>(gfEps));
 
-	mainEffect.finalizeGuidedFilter(width, height, r8GFResult.get(), r16fOriginalGrayscale, r32fGFASub.get(),
-					r32fGFBSub.get());
+	mainEffect.finalizeGuidedFilter(width, height, r8GFResult.get(), r16fOriginalGrayscale, r32fSubGFA.get(),
+					r32fSubGFB.get());
 }
 
 void RenderingContext::kickSegmentationTask()

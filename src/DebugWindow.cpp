@@ -211,30 +211,30 @@ void DebugWindow::videoRender()
 		} else if (currentTexture == textureR8SegmentationMask) {
 			readerMaskRoiR8->sync();
 			readerMaskRoiR8->stage(renderingContext->r8SegmentationMask.get());
-		} else if (currentTexture == textureR8GFGuideSub) {
+		} else if (currentTexture == textureR8SubGFGuide) {
 			readerSubR8->sync();
-			readerSubR8->stage(renderingContext->r8GFGuideSub.get());
-		} else if (currentTexture == textureR8GFSourceSub) {
+			readerSubR8->stage(renderingContext->r8SubGFGuide.get());
+		} else if (currentTexture == textureR8SubGFSource) {
 			readerSubR8->sync();
-			readerSubR8->stage(renderingContext->r8GFSourceSub.get());
-		} else if (currentTexture == textureR32fGFMeanGuideSub) {
+			readerSubR8->stage(renderingContext->r8SubGFSource.get());
+		} else if (currentTexture == textureR32fSubGFMeanGuide) {
 			readerR32fSub->sync();
-			readerR32fSub->stage(renderingContext->r32fGFMeanGuideSub.get());
-		} else if (currentTexture == textureR32fGFMeanSourceSub) {
+			readerR32fSub->stage(renderingContext->r32fSubGFMeanGuide.get());
+		} else if (currentTexture == textureR32fSubGFMeanSource) {
 			readerR32fSub->sync();
-			readerR32fSub->stage(renderingContext->r32fGFMeanSourceSub.get());
-		} else if (currentTexture == textureR32fGFMeanGuideSourceSub) {
+			readerR32fSub->stage(renderingContext->r32fSubGFMeanSource.get());
+		} else if (currentTexture == textureR16fSubGFMeanGuideSource) {
 			readerR32fSub->sync();
-			readerR32fSub->stage(renderingContext->r32fGFMeanGuideSourceSub.get());
-		} else if (currentTexture == textureR32fGFMeanGuideSqSub) {
+			readerR32fSub->stage(renderingContext->r32fSubGFMeanGuideSource.get());
+		} else if (currentTexture == textureR32fSubGFMeanGuideSq) {
 			readerR32fSub->sync();
-			readerR32fSub->stage(renderingContext->r32fGFMeanGuideSqSub.get());
-		} else if (currentTexture == textureR32fGFASub) {
+			readerR32fSub->stage(renderingContext->r32fSubGFMeanGuideSq.get());
+		} else if (currentTexture == textureR32fSubGFA) {
 			readerR32fSub->sync();
-			readerR32fSub->stage(renderingContext->r32fGFASub.get());
-		} else if (currentTexture == textureR32fGFBSub) {
+			readerR32fSub->stage(renderingContext->r32fSubGFA.get());
+		} else if (currentTexture == textureR32fSubGFB) {
 			readerR32fSub->sync();
-			readerR32fSub->stage(renderingContext->r32fGFBSub.get());
+			readerR32fSub->stage(renderingContext->r32fSubGFB.get());
 		} else if (currentTexture == textureR8GFResult) {
 			readerR8->sync();
 			readerR8->stage(renderingContext->r8GFResult.get());
