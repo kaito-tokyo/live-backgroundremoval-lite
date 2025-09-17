@@ -111,20 +111,20 @@ float4 PSDrawWithMask(VertInOut vert_in) : TARGET
  */
 float4 PSDrawWithRefinedMask(VertInOut vert_in) : TARGET
 {
-    float2 uv = vert_in.uv;
+	float2 uv = vert_in.uv;
 
-    // 1. Get the original color and the raw mask value
-    float3 final_rgb = image.Sample(point_sampler, uv).rgb;
-    float raw_mask = image1.Sample(point_sampler, uv).r;
+	// 1. Get the original color and the raw mask value
+	float3 final_rgb = image.Sample(point_sampler, uv).rgb;
+	float raw_mask = image1.Sample(point_sampler, uv).r;
 
-    // 2. Apply gamma correction to adjust the edge falloff
-    float gamma_corrected_mask = pow(saturate(raw_mask), gamma);
+	// 2. Apply gamma correction to adjust the edge falloff
+	float gamma_corrected_mask = pow(saturate(raw_mask), gamma);
 
-    // 3. Enhance contrast to solidify the core and remove halos
-    float final_alpha = smoothstep(lowerBound, upperBound, gamma_corrected_mask);
+	// 3. Enhance contrast to solidify the core and remove halos
+	float final_alpha = smoothstep(lowerBound, upperBound, gamma_corrected_mask);
 
-    // 4. Return the final composited color
-    return float4(final_rgb, final_alpha);
+	// 4. Return the final composited color
+	return float4(final_rgb, final_alpha);
 }
 
 float4 PSResampleByNearestR8(VertInOut vert_in) : TARGET
@@ -173,21 +173,21 @@ float4 PSHorizontalBoxFilterWithMulR8KS17(VertInOut vert_in) : TARGET
 {
 	float2 uv = vert_in.uv;
 
-    float sum = image.Sample(point_sampler, uv).r * image1.Sample(point_sampler, uv).r;
-    for (int i = 1; i <= 8; i++) {
-        float2 offset = float2(i * texelWidth, 0.0f);
-        sum += image.Sample(point_sampler, uv + offset).r * image1.Sample(point_sampler, uv + offset).r;
-        sum += image.Sample(point_sampler, uv - offset).r * image1.Sample(point_sampler, uv - offset).r;
-    }
+	float sum = image.Sample(point_sampler, uv).r * image1.Sample(point_sampler, uv).r;
+	for (int i = 1; i <= 8; i++) {
+		float2 offset = float2(i * texelWidth, 0.0f);
+		sum += image.Sample(point_sampler, uv + offset).r * image1.Sample(point_sampler, uv + offset).r;
+		sum += image.Sample(point_sampler, uv - offset).r * image1.Sample(point_sampler, uv - offset).r;
+	}
 
 	float luma = sum / 17.0f;
 
 	return float4(luma, luma, luma, 1.0f);
 }
 
-
-float square(float x) {
-    return x * x;
+float square(float x)
+{
+	return x * x;
 }
 
 /**
@@ -199,12 +199,12 @@ float4 PSHorizontalBoxFilterWithSqR8KS17(VertInOut vert_in) : TARGET
 {
 	float2 uv = vert_in.uv;
 
-    float sum = square(image.Sample(point_sampler, uv).r);
-    for (int i = 1; i <= 8; i++) {
-        float2 offset = float2(i * texelWidth, 0.0f);
-        sum += square(image.Sample(point_sampler, uv + offset).r);
-        sum += square(image.Sample(point_sampler, uv - offset).r);
-    }
+	float sum = square(image.Sample(point_sampler, uv).r);
+	for (int i = 1; i <= 8; i++) {
+		float2 offset = float2(i * texelWidth, 0.0f);
+		sum += square(image.Sample(point_sampler, uv + offset).r);
+		sum += square(image.Sample(point_sampler, uv - offset).r);
+	}
 
 	float luma = sum / 17.0f;
 
