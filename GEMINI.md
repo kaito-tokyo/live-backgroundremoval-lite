@@ -8,6 +8,7 @@
 - OBS team maintains the CMake and GitHub Actions so we don't need to improve these parts. However, you can modify workflows start with `my-`.
 - The default branch of this project is `main`.
 - There must be a empty newline at the end of the file. The build will fail if this rule is not followed.
+- Run clang-format-19 when you get no newline at end of file error first.
 
 ## How to build and run tests on macOS
 
