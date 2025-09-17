@@ -106,9 +106,13 @@ public:
 	gs_eparam_t *const textureImage3 = nullptr;
 
 	gs_eparam_t *const floatEps = nullptr;
+	gs_eparam_t *const floatGamma = nullptr;
+	gs_eparam_t *const floatLowerBound = nullptr;
+	gs_eparam_t *const floatUpperBound = nullptr;
 
 	gs_technique_t *const techDraw = nullptr;
 	gs_technique_t *const techDrawWithMask = nullptr;
+	gs_technique_t *const techDrawWithRefinedMask = nullptr;
 	gs_technique_t *const techResampleByNearestR8 = nullptr;
 	gs_technique_t *const techConvertToGrayscale = nullptr;
 	gs_technique_t *const techHorizontalBoxFilterR8KS17 = nullptr;
@@ -131,8 +135,12 @@ public:
 		  textureImage2(main_effect_detail::getEffectParam(effect, "image2", logger)),
 		  textureImage3(main_effect_detail::getEffectParam(effect, "image3", logger)),
 		  floatEps(main_effect_detail::getEffectParam(effect, "eps", logger)),
+		  floatGamma(main_effect_detail::getEffectParam(effect, "gamma", logger)),
+		  floatLowerBound(main_effect_detail::getEffectParam(effect, "lowerBound", logger)),
+		  floatUpperBound(main_effect_detail::getEffectParam(effect, "upperBound", logger)),
 		  techDraw(main_effect_detail::getEffectTech(effect, "Draw", logger)),
 		  techDrawWithMask(main_effect_detail::getEffectTech(effect, "DrawWithMask", logger)),
+		  techDrawWithRefinedMask(main_effect_detail::getEffectTech(effect, "DrawWithRefinedMask", logger)),
 		  techResampleByNearestR8(main_effect_detail::getEffectTech(effect, "ResampleByNearestR8", logger)),
 		  techConvertToGrayscale(main_effect_detail::getEffectTech(effect, "ConvertToGrayscale", logger)),
 		  techHorizontalBoxFilterR8KS17(
@@ -180,6 +188,28 @@ public:
 			if (gs_technique_begin_pass(tech, i)) {
 				gs_effect_set_texture(textureImage, sourceTexture);
 				gs_effect_set_texture(textureImage1, maskTexture);
+
+				gs_draw_sprite(nullptr, 0, width, height);
+				gs_technique_end_pass(tech);
+			}
+		}
+		gs_technique_end(tech);
+	}
+
+	void drawWithRefinedMask(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
+				 gs_texture_t *maskTexture, double gamma, double lowerBound,
+				 double upperBound) const noexcept
+	{
+		gs_technique_t *tech = techDrawWithRefinedMask;
+		std::size_t passes = gs_technique_begin(tech);
+		for (std::size_t i = 0; i < passes; i++) {
+			if (gs_technique_begin_pass(tech, i)) {
+				gs_effect_set_texture(textureImage, sourceTexture);
+				gs_effect_set_texture(textureImage1, maskTexture);
+
+				gs_effect_set_float(floatGamma, gamma);
+				gs_effect_set_float(floatLowerBound, lowerBound);
+				gs_effect_set_float(floatUpperBound, upperBound);
 
 				gs_draw_sprite(nullptr, 0, width, height);
 				gs_technique_end_pass(tech);

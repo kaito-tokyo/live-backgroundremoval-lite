@@ -93,9 +93,9 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 {
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(FilterLevel::Default));
 
-	obs_data_set_default_double(data, "gfEps", -40.0);
+	obs_data_set_default_double(data, "gfEpsDb", -40.0);
 
-	obs_data_set_default_double(data, "maskGamma", 1.5);
+	obs_data_set_default_double(data, "maskGamma", 2.5);
 	obs_data_set_default_double(data, "maskLowerBoundDb", -25.0);
 	obs_data_set_default_double(data, "maskUpperBoundMarginDb", -25.0);
 }

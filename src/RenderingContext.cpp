@@ -189,7 +189,7 @@ void RenderingContext::kickSegmentationTask()
 
 void RenderingContext::videoRender()
 {
-	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::Segmentation : filterLevel;
+	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
 
 	if (actualFilterLevel >= FilterLevel::Segmentation) {
 		try {
@@ -219,7 +219,8 @@ void RenderingContext::videoRender()
 	} else if (actualFilterLevel == FilterLevel::Segmentation) {
 		mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
 	} else if (actualFilterLevel == FilterLevel::GuidedFilter) {
-		mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8GFResult.get());
+		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(), maskGamma,
+					       maskLowerBound, maskUpperBound);
 	} else {
 		obs_source_skip_video_filter(source);
 		return;
