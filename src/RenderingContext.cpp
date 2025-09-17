@@ -235,6 +235,7 @@ void RenderingContext::videoRender()
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
+	logger.info("frame format: {}, size: {}x{}", (int)frame->format, frame->width, frame->height);
 	return frame;
 }
 
