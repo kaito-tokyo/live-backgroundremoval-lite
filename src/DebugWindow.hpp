@@ -62,7 +62,7 @@ private:
 
 	std::unique_ptr<AsyncTextureReader> readerBgrx;
 	std::unique_ptr<AsyncTextureReader> readerR8;
-	std::unique_ptr<AsyncTextureReader> readerR16f;
+	std::unique_ptr<AsyncTextureReader> readerR32f;
 	std::unique_ptr<AsyncTextureReader> reader256Bgrx;
 	std::unique_ptr<AsyncTextureReader> readerMaskRoiR8;
 	std::unique_ptr<AsyncTextureReader> readerSubR8;

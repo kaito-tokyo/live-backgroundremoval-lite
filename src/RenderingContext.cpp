@@ -61,8 +61,12 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
 	  width(_width),
 	  height(_height),
+	  widthSub(width / subsamplingRate),
+	  heightSub(height / subsamplingRate),
 	  bgrxOriginalImage(make_unique_gs_texture(width, height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
-	  r16fOriginalGrayscale(make_unique_gs_texture(width, height, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fOriginalGrayscale(make_unique_gs_texture(width, height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubOriginalGrayscale(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubLastOriginalGrayscale(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, 0)),
 	  bgrxSegmenterInput(make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT,
 						    GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  maskRoiOffsetX(getMaskRoiDimension(width, height)[0]),
@@ -70,18 +74,16 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  maskRoiWidth(getMaskRoiDimension(width, height)[2]),
 	  maskRoiHeight(getMaskRoiDimension(width, height)[3]),
 	  r8SegmentationMask(make_unique_gs_texture(maskRoiWidth, maskRoiHeight, GS_R8, 1, NULL, GS_DYNAMIC)),
-	  gfWidthSub(width / SUBSAMPLING_RATE),
-	  gfHeightSub(height / SUBSAMPLING_RATE),
-	  r8GFGuideSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
-	  r8GFSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGFMeanGuideSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGFMeanSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGFMeanGuideSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGFMeanGuideSqSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGFASub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGFBSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r8GFGuideSub(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r8GFSourceSub(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r32fGFMeanGuideSub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fGFMeanSourceSub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fGFMeanGuideSourceSub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fGFMeanGuideSqSub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fGFASub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fGFBSub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGFTemporary1Sub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fGFTemporary1Sub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  filterLevel(_filterLevel),
 	  selfieSegmenterFps(_selfieSegmenterFps),
 	  gfEps(_gfEps),
@@ -131,7 +133,10 @@ void RenderingContext::renderOriginalImage()
 
 void RenderingContext::renderOriginalGrayscale(gs_texture_t *bgrxOriginalImage)
 {
-	mainEffect.convertToGrayscale(width, height, r16fOriginalGrayscale.get(), bgrxOriginalImage);
+	gs_copy_texture(r32fSubLastOriginalGrayscale.get(), r32fSubOriginalGrayscale.get());
+
+	mainEffect.convertToGrayscale(width, height, r32fOriginalGrayscale.get(), bgrxOriginalImage);
+	mainEffect.resampleByNearestR8(widthSub, heightSub, r32fSubOriginalGrayscale.get(), r32fOriginalGrayscale.get());
 }
 
 void RenderingContext::renderSegmenterInput(gs_texture_t *bgrxOriginalImage)
@@ -159,21 +164,21 @@ void RenderingContext::renderSegmentationMask()
 
 void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask)
 {
-	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFGuideSub.get(), r16fOriginalGrayscale);
+	mainEffect.resampleByNearestR8(widthSub, heightSub, r8GFGuideSub.get(), r16fOriginalGrayscale);
 
-	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFSourceSub.get(), r8SegmentationMask);
+	mainEffect.resampleByNearestR8(widthSub, heightSub, r8GFSourceSub.get(), r8SegmentationMask);
 
-	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r32fGFMeanGuideSub.get(), r8GFGuideSub.get(),
+	mainEffect.applyBoxFilterR8KS17(widthSub, heightSub, r32fGFMeanGuideSub.get(), r8GFGuideSub.get(),
 					r32fGFTemporary1Sub.get());
-	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r32fGFMeanSourceSub.get(), r8GFSourceSub.get(),
+	mainEffect.applyBoxFilterR8KS17(widthSub, heightSub, r32fGFMeanSourceSub.get(), r8GFSourceSub.get(),
 					r32fGFTemporary1Sub.get());
 
-	mainEffect.applyBoxFilterWithMulR8KS17(gfWidthSub, gfHeightSub, r32fGFMeanGuideSourceSub.get(),
+	mainEffect.applyBoxFilterWithMulR8KS17(widthSub, heightSub, r32fGFMeanGuideSourceSub.get(),
 					       r8GFGuideSub.get(), r8GFSourceSub.get(), r32fGFTemporary1Sub.get());
-	mainEffect.applyBoxFilterWithSqR8KS17(gfWidthSub, gfHeightSub, r32fGFMeanGuideSqSub.get(), r8GFGuideSub.get(),
+	mainEffect.applyBoxFilterWithSqR8KS17(widthSub, heightSub, r32fGFMeanGuideSqSub.get(), r8GFGuideSub.get(),
 					      r32fGFTemporary1Sub.get());
 
-	mainEffect.calculateGuidedFilterAAndB(gfWidthSub, gfHeightSub, r32fGFASub.get(), r32fGFBSub.get(),
+	mainEffect.calculateGuidedFilterAAndB(widthSub, heightSub, r32fGFASub.get(), r32fGFBSub.get(),
 					      r32fGFMeanGuideSqSub.get(), r32fGFMeanGuideSub.get(),
 					      r32fGFMeanGuideSourceSub.get(), r32fGFMeanSourceSub.get(),
 					      static_cast<float>(gfEps));
@@ -223,7 +228,7 @@ void RenderingContext::videoRender()
 	}
 
 	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
-		renderGuidedFilter(r16fOriginalGrayscale.get(), r8SegmentationMask.get());
+		renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get());
 	}
 
 	if (actualFilterLevel == FilterLevel::Passthrough) {
