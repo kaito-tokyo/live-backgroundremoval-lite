@@ -93,6 +93,8 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 {
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(FilterLevel::Default));
 
+	obs_data_set_default_int(data, "selfieSegmenterFps", 10);
+
 	obs_data_set_default_double(data, "gfEpsDb", -40.0);
 
 	obs_data_set_default_double(data, "maskGamma", 2.5);
@@ -123,6 +125,8 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
 				  static_cast<int>(FilterLevel::GuidedFilter));
 
+	obs_properties_add_int_slider(props, "selfieSegmenterFps", obs_module_text("selfieSegmenterFps"), 1, 30, 1);
+
 	obs_properties_add_float_slider(props, "gfEpsDb", obs_module_text("gfEpsFb"), -60.0, -20.0, 0.1);
 
 	obs_properties_add_float_slider(props, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0, 0.01);
@@ -148,6 +152,8 @@ obs_properties_t *MainPluginContext::getProperties()
 void MainPluginContext::update(obs_data_t *settings)
 {
 	preset.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+
+	preset.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
 
 	preset.gfEpsDb = obs_data_get_double(settings, "gfEpsDb");
 	preset.gfEps = Preset::dbToLinearPow(preset.gfEpsDb);
@@ -218,13 +224,17 @@ try {
 		graphics_context_guard guard;
 		nextRenderingContext = std::make_shared<RenderingContext>(
 			source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, frame->width,
-			frame->height, preset.filterLevel, preset.gfEps, preset.maskGamma, preset.maskLowerBound,
-			preset.maskUpperBound);
+			frame->height, preset.filterLevel, preset.selfieSegmenterFps, preset.gfEps, preset.maskGamma,
+			preset.maskLowerBound, preset.maskUpperBound);
 		frameCountBeforeContextSwitch = 1;
 		gs_unique::drain();
 	}
 
-	return frame;
+	if (renderingContext) {
+		return renderingContext->filterVideo(frame);
+	} else {
+		return frame;
+	}
 } catch (const std::exception &e) {
 	logger.error("Failed to create rendering context: {}", e.what());
 	return frame;
