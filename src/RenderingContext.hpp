@@ -36,7 +36,6 @@ namespace obs_backgroundremoval_lite {
 
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 private:
-
 	obs_source_t *const source;
 	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
 	const MainEffect &mainEffect;

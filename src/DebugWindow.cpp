@@ -37,14 +37,14 @@ constexpr char textureR32fSubOriginalGrayscale[] = "r32fSubOriginalGrayscale";
 constexpr char textureR32fSubLastOriginalGrayscale[] = "r32fSubLastOriginalGrayscale";
 constexpr char textureBgrxSegmenterInput[] = "bgrxSegmenterInput";
 constexpr char textureR8SegmentationMask[] = "r8SegmentationMask";
-constexpr char textureR8GFGuideSub[] = "r8GFGuideSub";
-constexpr char textureR8GFSourceSub[] = "r8GFSourceSub";
-constexpr char textureR32fGFMeanGuideSub[] = "r32fGFMeanGuideSub";
-constexpr char textureR32fGFMeanSourceSub[] = "r32fGFMeanSourceSub";
-constexpr char textureR32fGFMeanGuideSourceSub[] = "r16fGFMeanGuideSourceSub";
-constexpr char textureR32fGFMeanGuideSqSub[] = "r32fGFMeanGuideSqSub";
-constexpr char textureR32fGFASub[] = "r32fGFASub";
-constexpr char textureR32fGFBSub[] = "r32fGFBSub";
+constexpr char textureR8SubGFGuide[] = "r8SubGFGuide";
+constexpr char textureR8SubGFSource[] = "r8SubGFSource";
+constexpr char textureR32fSubGFMeanGuide[] = "r32fSubGFMeanGuide";
+constexpr char textureR32fSubGFMeanSource[] = "r32fSubGFMeanSource";
+constexpr char textureR16fSubGFMeanGuideSource[] = "r16fSubGFMeanGuideSource";
+constexpr char textureR32fSubGFMeanGuideSq[] = "r32fSubGFMeanGuideSq";
+constexpr char textureR32fSubGFA[] = "r32fSubGFA";
+constexpr char textureR32fSubGFB[] = "r32fSubGFB";
 constexpr char textureR8GFResult[] = "r8GFResult";
 
 const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
@@ -52,11 +52,15 @@ const std::vector<std::string> r8Textures = {textureR8GFResult};
 const std::vector<std::string> r32fTextures = {textureR32fOriginalGrayscale};
 const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
 const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
-const std::vector<std::string> subR8Textures = {textureR8GFGuideSub, textureR8GFSourceSub};
-const std::vector<std::string> subR32fTextures = {
-	textureR32fSubOriginalGrayscale, textureR32fSubLastOriginalGrayscale,
-	textureR32fGFMeanGuideSub,   textureR32fGFMeanSourceSub, textureR32fGFMeanGuideSourceSub,
-	textureR32fGFMeanGuideSqSub, textureR32fGFASub,          textureR32fGFBSub};
+const std::vector<std::string> subR8Textures = {textureR8SubGFGuide, textureR8SubGFSource};
+const std::vector<std::string> subR32fTextures = {textureR32fSubOriginalGrayscale,
+						  textureR32fSubLastOriginalGrayscale,
+						  textureR32fSubGFMeanGuide,
+						  textureR32fSubGFMeanSource,
+						  textureR16fSubGFMeanGuideSource,
+						  textureR32fSubGFMeanGuideSq,
+						  textureR32fSubGFA,
+						  textureR32fSubGFB};
 
 inline double float16_to_double(uint16_t h)
 {
@@ -116,14 +120,14 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext
 	previewTextureSelector->addItem(textureR32fSubLastOriginalGrayscale);
 	previewTextureSelector->addItem(textureBgrxSegmenterInput);
 	previewTextureSelector->addItem(textureR8SegmentationMask);
-	previewTextureSelector->addItem(textureR8GFGuideSub);
-	previewTextureSelector->addItem(textureR8GFSourceSub);
-	previewTextureSelector->addItem(textureR32fGFMeanGuideSub);
-	previewTextureSelector->addItem(textureR32fGFMeanSourceSub);
-	previewTextureSelector->addItem(textureR32fGFMeanGuideSourceSub);
-	previewTextureSelector->addItem(textureR32fGFMeanGuideSqSub);
-	previewTextureSelector->addItem(textureR32fGFASub);
-	previewTextureSelector->addItem(textureR32fGFBSub);
+	previewTextureSelector->addItem(textureR8SubGFGuide);
+	previewTextureSelector->addItem(textureR8SubGFSource);
+	previewTextureSelector->addItem(textureR32fSubGFMeanGuide);
+	previewTextureSelector->addItem(textureR32fSubGFMeanSource);
+	previewTextureSelector->addItem(textureR16fSubGFMeanGuideSource);
+	previewTextureSelector->addItem(textureR32fSubGFMeanGuideSq);
+	previewTextureSelector->addItem(textureR32fSubGFA);
+	previewTextureSelector->addItem(textureR32fSubGFB);
 	previewTextureSelector->addItem(textureR8GFResult);
 
 	layout->addWidget(previewTextureSelector);
