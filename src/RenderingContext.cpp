@@ -90,7 +90,6 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  maskGamma(_maskGamma),
 	  maskLowerBound(_maskLowerBound),
 	  maskUpperBound(_maskUpperBound)
-
 {
 }
 
