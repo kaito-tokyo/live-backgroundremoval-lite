@@ -110,7 +110,7 @@ public:
 	BaseUyvyFrameExtractor() = default;
 	~BaseUyvyFrameExtractor() override = default;
 
-	void operator()(ChannelType dstR, ChannelType dstG, ChannelType dstB, DataType srcdata, std::size_t width,
+	void operator()(ChannelType dstR, ChannelType dstG, ChannelType dstB, DataArrayType srcdata, std::size_t width,
 			std::size_t height, std::size_t linesize) override
 	{
 

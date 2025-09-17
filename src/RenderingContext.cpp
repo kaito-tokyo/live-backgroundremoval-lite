@@ -241,7 +241,7 @@ obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 		frameExtractor->operator()((selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(0),
 					   (selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(1),
 					   (selfie_segmenter::ChannelType)selfieSegmenter.m_inputMat.channel(2),
-					   (selfie_segmenter::DataType)frame->data, frame->width, frame->height,
+					   (selfie_segmenter::DataArrayType)frame->data, frame->width, frame->height,
 					   frame->linesize[0]);
 		kickSegmentationTask();
 	}

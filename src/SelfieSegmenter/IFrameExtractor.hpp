@@ -27,34 +27,25 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <cstddef>
 #include <utility>
 
-#if defined(__GNUC__) || defined(__clang__)
-/**
-     * @def VIDEO_FRAME_EXTRACTOR_RESTRICT
-     * @brief A macro that defines the __restrict__ keyword for GCC/Clang compilers.
-     */
-#define VIDEO_FRAME_EXTRACTOR_RESTRICT __restrict__
-#elif defined(_MSC_VER)
-/**
-     * @def VIDEO_FRAME_EXTRACTOR_RESTRICT
-     * @brief A macro that defines __declspec(restrict) for the MSVC compiler.
-     */
-#define VIDEO_FRAME_EXTRACTOR_RESTRICT __declspec(restrict)
-#else
-/**
-     * @def VIDEO_FRAME_EXTRACTOR_RESTRICT
-     * @brief A macro that expands to nothing for unsupported compilers.
-     */
-#define VIDEO_FRAME_EXTRACTOR_RESTRICT
-#endif
-
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
 namespace selfie_segmenter {
 
-/// @brief A type alias for a pointer to a destination channel buffer, qualified with restrict.
-using ChannelType = VIDEO_FRAME_EXTRACTOR_RESTRICT float *;
-/// @brief A type alias for the source video data planes, qualified with restrict.
-using DataType = VIDEO_FRAME_EXTRACTOR_RESTRICT const void **;
+#if defined(__GNUC__) || defined(__clang__)
+#define SELFIE_SEGMENTER_RESTRICT __restrict__
+#elif defined(_MSC_VER)
+#define SELFIE_SEGMENTER_RESTRICT __restrict
+#else
+#define SELFIE_SEGMENTER_RESTRICT
+#endif
+
+using ChannelType = float *SELFIE_SEGMENTER_RESTRICT;
+
+typedef const void *SELFIE_SEGMENTER_RESTRICT RestrictedDataPtr;
+
+using DataArrayType = RestrictedDataPtr *;
+
+#undef SELFIE_SEGMENTER_RESTRICT
 
 /**
  * @class IVideoFrameExtractor
@@ -90,13 +81,14 @@ public:
      * @param[in]  height   The logical height of the frame in pixels.
      * @param[in]  linesize The number of bytes in one horizontal line of the source data (the stride). Due to memory alignment, this may differ from width * bytes_per_pixel.
      */
-	virtual void operator()(ChannelType dstR, ChannelType dstG, ChannelType dstB, DataType srcdata,
+	virtual void operator()(ChannelType dstR, ChannelType dstG, ChannelType dstB, DataArrayType srcdata,
 				std::size_t width, std::size_t height, std::size_t linesize) = 0;
 };
 
 class NullFrameExtractor : public IVideoFrameExtractor {
 public:
-	void operator()(ChannelType, ChannelType, ChannelType, DataType, std::size_t, std::size_t, std::size_t) override
+	void operator()(ChannelType, ChannelType, ChannelType, DataArrayType, std::size_t, std::size_t,
+			std::size_t) override
 	{
 	}
 };
