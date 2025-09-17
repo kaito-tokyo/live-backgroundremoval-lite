@@ -32,28 +32,35 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 namespace {
 
 constexpr char textureBgrxOriginalImage[] = "bgrxOriginalImage";
-constexpr char textureR16fOriginalGrayscale[] = "r16fOriginalGrayscale";
+constexpr char textureR32fOriginalGrayscale[] = "r32fOriginalGrayscale";
+constexpr char textureR32fSubOriginalGrayscale[] = "r32fSubOriginalGrayscale";
+constexpr char textureR32fSubLastOriginalGrayscale[] = "r32fSubLastOriginalGrayscale";
 constexpr char textureBgrxSegmenterInput[] = "bgrxSegmenterInput";
 constexpr char textureR8SegmentationMask[] = "r8SegmentationMask";
-constexpr char textureR8GFGuideSub[] = "r8GFGuideSub";
-constexpr char textureR8GFSourceSub[] = "r8GFSourceSub";
-constexpr char textureR32fGFMeanGuideSub[] = "r32fGFMeanGuideSub";
-constexpr char textureR32fGFMeanSourceSub[] = "r32fGFMeanSourceSub";
-constexpr char textureR32fGFMeanGuideSourceSub[] = "r16fGFMeanGuideSourceSub";
-constexpr char textureR32fGFMeanGuideSqSub[] = "r32fGFMeanGuideSqSub";
-constexpr char textureR32fGFASub[] = "r32fGFASub";
-constexpr char textureR32fGFBSub[] = "r32fGFBSub";
+constexpr char textureR8SubGFGuide[] = "r8SubGFGuide";
+constexpr char textureR8SubGFSource[] = "r8SubGFSource";
+constexpr char textureR32fSubGFMeanGuide[] = "r32fSubGFMeanGuide";
+constexpr char textureR32fSubGFMeanSource[] = "r32fSubGFMeanSource";
+constexpr char textureR16fSubGFMeanGuideSource[] = "r16fSubGFMeanGuideSource";
+constexpr char textureR32fSubGFMeanGuideSq[] = "r32fSubGFMeanGuideSq";
+constexpr char textureR32fSubGFA[] = "r32fSubGFA";
+constexpr char textureR32fSubGFB[] = "r32fSubGFB";
 constexpr char textureR8GFResult[] = "r8GFResult";
 
 const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
 const std::vector<std::string> r8Textures = {textureR8GFResult};
-const std::vector<std::string> r16fTextures = {textureR16fOriginalGrayscale};
+const std::vector<std::string> r32fTextures = {textureR32fOriginalGrayscale};
 const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
 const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
-const std::vector<std::string> subR8Textures = {textureR8GFGuideSub, textureR8GFSourceSub};
-const std::vector<std::string> subR32fTextures = {
-	textureR32fGFMeanGuideSub,   textureR32fGFMeanSourceSub, textureR32fGFMeanGuideSourceSub,
-	textureR32fGFMeanGuideSqSub, textureR32fGFASub,          textureR32fGFBSub};
+const std::vector<std::string> r8SubTextures = {textureR8SubGFGuide, textureR8SubGFSource};
+const std::vector<std::string> r32fSubTextures = {textureR32fSubOriginalGrayscale,
+						  textureR32fSubLastOriginalGrayscale,
+						  textureR32fSubGFMeanGuide,
+						  textureR32fSubGFMeanSource,
+						  textureR16fSubGFMeanGuideSource,
+						  textureR32fSubGFMeanGuideSq,
+						  textureR32fSubGFA,
+						  textureR32fSubGFB};
 
 inline double float16_to_double(uint16_t h)
 {
@@ -108,17 +115,19 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext
 	  updateTimer(new QTimer(this))
 {
 	previewTextureSelector->addItem(textureBgrxOriginalImage);
-	previewTextureSelector->addItem(textureR16fOriginalGrayscale);
+	previewTextureSelector->addItem(textureR32fOriginalGrayscale);
+	previewTextureSelector->addItem(textureR32fSubOriginalGrayscale);
+	previewTextureSelector->addItem(textureR32fSubLastOriginalGrayscale);
 	previewTextureSelector->addItem(textureBgrxSegmenterInput);
 	previewTextureSelector->addItem(textureR8SegmentationMask);
-	previewTextureSelector->addItem(textureR8GFGuideSub);
-	previewTextureSelector->addItem(textureR8GFSourceSub);
-	previewTextureSelector->addItem(textureR32fGFMeanGuideSub);
-	previewTextureSelector->addItem(textureR32fGFMeanSourceSub);
-	previewTextureSelector->addItem(textureR32fGFMeanGuideSourceSub);
-	previewTextureSelector->addItem(textureR32fGFMeanGuideSqSub);
-	previewTextureSelector->addItem(textureR32fGFASub);
-	previewTextureSelector->addItem(textureR32fGFBSub);
+	previewTextureSelector->addItem(textureR8SubGFGuide);
+	previewTextureSelector->addItem(textureR8SubGFSource);
+	previewTextureSelector->addItem(textureR32fSubGFMeanGuide);
+	previewTextureSelector->addItem(textureR32fSubGFMeanSource);
+	previewTextureSelector->addItem(textureR16fSubGFMeanGuideSource);
+	previewTextureSelector->addItem(textureR32fSubGFMeanGuideSq);
+	previewTextureSelector->addItem(textureR32fSubGFA);
+	previewTextureSelector->addItem(textureR32fSubGFB);
 	previewTextureSelector->addItem(textureR8GFResult);
 
 	layout->addWidget(previewTextureSelector);
@@ -159,10 +168,10 @@ void DebugWindow::videoRender()
 									renderingContext->height, GS_R8);
 		}
 
-		if (!readerR16f || readerR16f->width != renderingContext->width ||
-		    readerR16f->height != renderingContext->height) {
-			readerR16f = std::make_unique<AsyncTextureReader>(renderingContext->width,
-									  renderingContext->height, GS_R16F);
+		if (!readerR32f || readerR32f->width != renderingContext->width ||
+		    readerR32f->height != renderingContext->height) {
+			readerR32f = std::make_unique<AsyncTextureReader>(renderingContext->width,
+									  renderingContext->height, GS_R32F);
 		}
 
 		if (!readerMaskRoiR8 || readerMaskRoiR8->width != renderingContext->maskRoiWidth ||
@@ -175,96 +184,64 @@ void DebugWindow::videoRender()
 			reader256Bgrx = std::make_unique<AsyncTextureReader>(256, 256, GS_BGRX);
 		}
 
-		if (!readerSubR8 || readerSubR8->width != renderingContext->gfWidthSub ||
-		    readerSubR8->height != renderingContext->gfHeightSub) {
-			readerSubR8 = std::make_unique<AsyncTextureReader>(renderingContext->gfWidthSub,
-									   renderingContext->gfHeightSub, GS_R8);
+		if (!readerSubR8 || readerSubR8->width != renderingContext->widthSub ||
+		    readerSubR8->height != renderingContext->heightSub) {
+			readerSubR8 = std::make_unique<AsyncTextureReader>(renderingContext->widthSub,
+									   renderingContext->heightSub, GS_R8);
 		}
 
-		if (!readerR32fSub || readerR32fSub->width != renderingContext->gfWidthSub ||
-		    readerR32fSub->height != renderingContext->gfHeightSub) {
-			readerR32fSub = std::make_unique<AsyncTextureReader>(renderingContext->gfWidthSub,
-									     renderingContext->gfHeightSub, GS_R32F);
+		if (!readerR32fSub || readerR32fSub->width != renderingContext->widthSub ||
+		    readerR32fSub->height != renderingContext->heightSub) {
+			readerR32fSub = std::make_unique<AsyncTextureReader>(renderingContext->widthSub,
+									     renderingContext->heightSub, GS_R32F);
 		}
 
 		auto currentTexture = previewTextureSelector->currentText();
 		if (currentTexture == textureBgrxOriginalImage) {
-			if (readerBgrx && readerBgrx->width == renderingContext->width &&
-			    readerBgrx->height == renderingContext->height) {
-				readerBgrx->sync();
-				readerBgrx->stage(renderingContext->bgrxOriginalImage.get());
-			}
-		} else if (currentTexture == textureR16fOriginalGrayscale) {
-			if (readerR16f && readerR16f->width == renderingContext->width &&
-			    readerR16f->height == renderingContext->height) {
-				readerR16f->sync();
-				readerR16f->stage(renderingContext->r16fOriginalGrayscale.get());
-			}
+			readerBgrx->sync();
+			readerBgrx->stage(renderingContext->bgrxOriginalImage.get());
+		} else if (currentTexture == textureR32fOriginalGrayscale) {
+			readerR32f->sync();
+			readerR32f->stage(renderingContext->r32fOriginalGrayscale.get());
+		} else if (currentTexture == textureR32fSubOriginalGrayscale) {
+			readerR32fSub->sync();
+			readerR32fSub->stage(renderingContext->r32fSubOriginalGrayscale.get());
+		} else if (currentTexture == textureR32fSubLastOriginalGrayscale) {
+			readerR32fSub->sync();
+			readerR32fSub->stage(renderingContext->r32fSubLastOriginalGrayscale.get());
 		} else if (currentTexture == textureBgrxSegmenterInput) {
-			if (reader256Bgrx) {
-				reader256Bgrx->sync();
-				reader256Bgrx->stage(renderingContext->bgrxSegmenterInput.get());
-			}
+			reader256Bgrx->sync();
+			reader256Bgrx->stage(renderingContext->bgrxSegmenterInput.get());
 		} else if (currentTexture == textureR8SegmentationMask) {
-			if (readerMaskRoiR8 && readerMaskRoiR8->width == renderingContext->maskRoiWidth &&
-			    readerMaskRoiR8->height == renderingContext->maskRoiHeight) {
-				readerMaskRoiR8->sync();
-				readerMaskRoiR8->stage(renderingContext->r8SegmentationMask.get());
-			}
-		} else if (currentTexture == textureR8GFGuideSub) {
-			if (readerSubR8 && readerSubR8->width == renderingContext->gfWidthSub &&
-			    readerSubR8->height == renderingContext->gfHeightSub) {
-				readerSubR8->sync();
-				readerSubR8->stage(renderingContext->r8GFGuideSub.get());
-			}
-		} else if (currentTexture == textureR8GFSourceSub) {
-			if (readerSubR8 && readerSubR8->width == renderingContext->gfWidthSub &&
-			    readerSubR8->height == renderingContext->gfHeightSub) {
-				readerSubR8->sync();
-				readerSubR8->stage(renderingContext->r8GFSourceSub.get());
-			}
-		} else if (currentTexture == textureR32fGFMeanGuideSub) {
-			if (readerR32fSub && readerR32fSub->width == renderingContext->gfWidthSub &&
-			    readerR32fSub->height == renderingContext->gfHeightSub) {
-				readerR32fSub->sync();
-				readerR32fSub->stage(renderingContext->r32fGFMeanGuideSub.get());
-			}
-		} else if (currentTexture == textureR32fGFMeanSourceSub) {
-			if (readerR32fSub && readerR32fSub->width == renderingContext->gfWidthSub &&
-			    readerR32fSub->height == renderingContext->gfHeightSub) {
-				readerR32fSub->sync();
-				readerR32fSub->stage(renderingContext->r32fGFMeanSourceSub.get());
-			}
-		} else if (currentTexture == textureR32fGFMeanGuideSourceSub) {
-			if (readerR32fSub && readerR32fSub->width == renderingContext->gfWidthSub &&
-			    readerR32fSub->height == renderingContext->gfHeightSub) {
-				readerR32fSub->sync();
-				readerR32fSub->stage(renderingContext->r32fGFMeanGuideSourceSub.get());
-			}
-		} else if (currentTexture == textureR32fGFMeanGuideSqSub) {
-			if (readerR32fSub && readerR32fSub->width == renderingContext->gfWidthSub &&
-			    readerR32fSub->height == renderingContext->gfHeightSub) {
-				readerR32fSub->sync();
-				readerR32fSub->stage(renderingContext->r32fGFMeanGuideSqSub.get());
-			}
-		} else if (currentTexture == textureR32fGFASub) {
-			if (readerR32fSub && readerR32fSub->width == renderingContext->gfWidthSub &&
-			    readerR32fSub->height == renderingContext->gfHeightSub) {
-				readerR32fSub->sync();
-				readerR32fSub->stage(renderingContext->r32fGFASub.get());
-			}
-		} else if (currentTexture == textureR32fGFBSub) {
-			if (readerR32fSub && readerR32fSub->width == renderingContext->gfWidthSub &&
-			    readerR32fSub->height == renderingContext->gfHeightSub) {
-				readerR32fSub->sync();
-				readerR32fSub->stage(renderingContext->r32fGFBSub.get());
-			}
+			readerMaskRoiR8->sync();
+			readerMaskRoiR8->stage(renderingContext->r8SegmentationMask.get());
+		} else if (currentTexture == textureR8SubGFGuide) {
+			readerSubR8->sync();
+			readerSubR8->stage(renderingContext->r8SubGFGuide.get());
+		} else if (currentTexture == textureR8SubGFSource) {
+			readerSubR8->sync();
+			readerSubR8->stage(renderingContext->r8SubGFSource.get());
+		} else if (currentTexture == textureR32fSubGFMeanGuide) {
+			readerR32fSub->sync();
+			readerR32fSub->stage(renderingContext->r32fSubGFMeanGuide.get());
+		} else if (currentTexture == textureR32fSubGFMeanSource) {
+			readerR32fSub->sync();
+			readerR32fSub->stage(renderingContext->r32fSubGFMeanSource.get());
+		} else if (currentTexture == textureR16fSubGFMeanGuideSource) {
+			readerR32fSub->sync();
+			readerR32fSub->stage(renderingContext->r32fSubGFMeanGuideSource.get());
+		} else if (currentTexture == textureR32fSubGFMeanGuideSq) {
+			readerR32fSub->sync();
+			readerR32fSub->stage(renderingContext->r32fSubGFMeanGuideSq.get());
+		} else if (currentTexture == textureR32fSubGFA) {
+			readerR32fSub->sync();
+			readerR32fSub->stage(renderingContext->r32fSubGFA.get());
+		} else if (currentTexture == textureR32fSubGFB) {
+			readerR32fSub->sync();
+			readerR32fSub->stage(renderingContext->r32fSubGFB.get());
 		} else if (currentTexture == textureR8GFResult) {
-			if (readerR8 && readerR8->width == renderingContext->width &&
-			    readerR8->height == renderingContext->height) {
-				readerR8->sync();
-				readerR8->stage(renderingContext->r8GFResult.get());
-			}
+			readerR8->sync();
+			readerR8->stage(renderingContext->r8GFResult.get());
 		}
 	}
 }
@@ -282,14 +259,14 @@ void DebugWindow::updatePreview()
 	} else if (std::find(r8Textures.begin(), r8Textures.end(), currentTextureStd) != r8Textures.end()) {
 		image = QImage(readerR8->getBuffer().data(), readerR8->width, readerR8->height,
 			       QImage::Format_Grayscale8);
-	} else if (std::find(r16fTextures.begin(), r16fTextures.end(), currentTextureStd) != r16fTextures.end()) {
-		auto r16fDataView = reinterpret_cast<std::uint16_t *>(readerR16f->getBuffer().data());
-		bufferR8.resize(readerR16f->width * readerR16f->height);
-		for (std::uint32_t i = 0; i < readerR16f->width * readerR16f->height; ++i) {
-			bufferR8[i] = static_cast<std::uint8_t>(float16_to_double(r16fDataView[i]) * 255);
+	} else if (std::find(r32fTextures.begin(), r32fTextures.end(), currentTextureStd) != r32fTextures.end()) {
+		auto r32fDataView = reinterpret_cast<float *>(readerR32f->getBuffer().data());
+		bufferR8.resize(readerR32f->width * readerR32f->height);
+		for (std::uint32_t i = 0; i < readerR32f->width * readerR32f->height; ++i) {
+			bufferR8[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);
 		}
 
-		image = QImage(bufferR8.data(), readerR16f->width, readerR16f->height, QImage::Format_Grayscale8);
+		image = QImage(bufferR8.data(), readerR32f->width, readerR32f->height, QImage::Format_Grayscale8);
 	} else if (std::find(bgrx256Textures.begin(), bgrx256Textures.end(), currentTextureStd) !=
 		   bgrx256Textures.end()) {
 		image = QImage(reader256Bgrx->getBuffer().data(), reader256Bgrx->width, reader256Bgrx->height,
@@ -298,11 +275,11 @@ void DebugWindow::updatePreview()
 		   r8MaskRoiTextures.end()) {
 		image = QImage(readerMaskRoiR8->getBuffer().data(), readerMaskRoiR8->width, readerMaskRoiR8->height,
 			       QImage::Format_Grayscale8);
-	} else if (std::find(subR8Textures.begin(), subR8Textures.end(), currentTextureStd) != subR8Textures.end()) {
+	} else if (std::find(r8SubTextures.begin(), r8SubTextures.end(), currentTextureStd) != r8SubTextures.end()) {
 		image = QImage(readerSubR8->getBuffer().data(), readerSubR8->width, readerSubR8->height,
 			       QImage::Format_Grayscale8);
-	} else if (std::find(subR32fTextures.begin(), subR32fTextures.end(), currentTextureStd) !=
-		   subR32fTextures.end()) {
+	} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), currentTextureStd) !=
+		   r32fSubTextures.end()) {
 		auto r32fDataView = reinterpret_cast<float *>(readerR32fSub->getBuffer().data());
 		bufferSubR8.resize(readerR32fSub->width * readerR32fSub->height);
 		for (std::uint32_t i = 0; i < readerR32fSub->width * readerR32fSub->height; ++i) {

@@ -47,10 +47,15 @@ private:
 public:
 	const std::uint32_t width;
 	const std::uint32_t height;
+	const std::uint32_t subsamplingRate = 4;
+	const std::uint32_t widthSub;
+	const std::uint32_t heightSub;
 
 public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fOriginalGrayscale;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fOriginalGrayscale;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubOriginalGrayscale;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubLastOriginalGrayscale;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
 
 private:
@@ -64,19 +69,15 @@ public:
 
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SegmentationMask;
 
-public:
-	const std::uint32_t gfWidthSub;
-	const std::uint32_t gfHeightSub;
-
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFGuideSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFSourceSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFMeanGuideSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFMeanSourceSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFMeanGuideSourceSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFMeanGuideSqSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFASub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFBSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFResult;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFGuide;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFSource;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFMeanGuide;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFMeanSource;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFMeanGuideSource;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFMeanGuideSq;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFA;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFB;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFResult;
 
 private:
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFTemporary1Sub;
@@ -91,8 +92,6 @@ private:
 	float timeSinceLastSelfieSegmentation = 0.0f;
 
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
-
-	static constexpr int SUBSAMPLING_RATE = 4;
 
 public:
 	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,
