@@ -49,8 +49,8 @@ namespace obs_backgroundremoval_lite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
 				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-				   std::uint32_t _width, std::uint32_t _height, FilterLevel _filterLevel, int _gfRadius,
-				   float _gfEps, int _gfSubsamplingRate)
+				   std::uint32_t _width, std::uint32_t _height, FilterLevel _filterLevel, float _gfEps,
+				   int _gfSubsamplingRate)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
@@ -70,7 +70,6 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  maskRoiWidth(getMaskRoiDimension(width, height)[2]),
 	  maskRoiHeight(getMaskRoiDimension(width, height)[3]),
 	  r8SegmentationMask(make_unique_gs_texture(maskRoiWidth, maskRoiHeight, GS_R8, 1, NULL, GS_DYNAMIC)),
-	  gfRadius(_gfRadius),
 	  gfEps(_gfEps),
 	  gfSubsamplingRate(_gfSubsamplingRate),
 	  gfWidthSub(width / gfSubsamplingRate),
@@ -88,8 +87,8 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r16fGFTemporary1Sub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET))
 {
-	logger.info("Creating RenderingContext: {}x{}, filterLevel={}, gfRadius={}, gfEps={}, gfSubsamplingRate={}",
-		    width, height, static_cast<int>(filterLevel), gfRadius, gfEps, gfSubsamplingRate);
+	logger.info("Creating RenderingContext: {}x{}, filterLevel={}, gfEps={}, gfSubsamplingRate={}", width, height,
+		    static_cast<int>(filterLevel), gfEps, gfSubsamplingRate);
 }
 
 RenderingContext::~RenderingContext() noexcept {}
@@ -149,25 +148,23 @@ void RenderingContext::renderSegmentationMask()
 
 void RenderingContext::renderGuidedFilter(gs_texture_t *r8OriginalGrayscale, gs_texture_t *r8SegmentationMask)
 {
-	int kernelSize = 2 * gfRadius + 1;
-
 	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFGuideSub.get(), r8OriginalGrayscale);
 
 	mainEffect.resampleByNearestR8(gfWidthSub, gfHeightSub, r8GFSourceSub.get(), r8SegmentationMask);
 
-	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanGuideSub.get(), r8GFGuideSub.get(), kernelSize,
-				    r16fGFTemporary1Sub.get());
-	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanSourceSub.get(), r8GFSourceSub.get(), kernelSize,
-				    r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSub.get(), r8GFGuideSub.get(),
+					r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanSourceSub.get(), r8GFSourceSub.get(),
+					r16fGFTemporary1Sub.get());
 
 	mainEffect.multiplyR8(gfWidthSub, gfHeightSub, r16fGFGuideSourceSub.get(), r8GFGuideSub.get(),
 			      r8GFSourceSub.get());
 	mainEffect.squareR8(gfWidthSub, gfHeightSub, r16fGFGuideSqSub.get(), r8GFGuideSub.get());
 
-	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanGuideSourceSub.get(), r16fGFGuideSourceSub.get(),
-				    kernelSize, r16fGFTemporary1Sub.get());
-	mainEffect.applyBoxFilterR8(gfWidthSub, gfHeightSub, r16fGFMeanGuideSqSub.get(), r16fGFGuideSqSub.get(),
-				    kernelSize, r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSourceSub.get(),
+					r16fGFGuideSourceSub.get(), r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSqSub.get(), r16fGFGuideSqSub.get(),
+					r16fGFTemporary1Sub.get());
 
 	mainEffect.calculateGuidedFilterAAndB(gfWidthSub, gfHeightSub, r16fGFASub.get(), r16fGFBSub.get(),
 					      r16fGFMeanGuideSqSub.get(), r16fGFMeanGuideSub.get(),

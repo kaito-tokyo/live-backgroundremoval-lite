@@ -92,7 +92,6 @@ std::uint32_t MainPluginContext::getHeight() const noexcept
 void MainPluginContext::getDefaults(obs_data_t *data)
 {
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(FilterLevel::Default));
-	obs_data_set_default_int(data, "gfRadius", 8);
 	obs_data_set_default_double(data, "gfEps", 0.0004);
 	obs_data_set_default_int(data, "gfSubsamplingRate", 4);
 }
@@ -120,7 +119,6 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
 				  static_cast<int>(FilterLevel::GuidedFilter));
 
-	obs_properties_add_int_slider(props, "gfRadius", obs_module_text("gfRadius"), 0, 16, 2);
 	obs_properties_add_float_slider(props, "gfEps", obs_module_text("gfEps"), 0.000001f, 0.0004f, 0.000001f);
 	obs_properties_add_int_slider(props, "gfSubsamplingRate", obs_module_text("gfSubsamplingRate"), 1, 16, 1);
 
@@ -141,7 +139,6 @@ obs_properties_t *MainPluginContext::getProperties()
 void MainPluginContext::update(obs_data_t *settings)
 {
 	preset.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
-	preset.gfRadius = static_cast<int>(obs_data_get_int(settings, "gfRadius"));
 	preset.gfEps = static_cast<float>(obs_data_get_double(settings, "gfEps"));
 	preset.gfSubsamplingRate = static_cast<int>(obs_data_get_int(settings, "gfSubsamplingRate"));
 }
@@ -202,13 +199,12 @@ try {
 	}
 
 	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height ||
-	    renderingContext->filterLevel != preset.filterLevel || renderingContext->gfRadius != preset.gfRadius ||
-	    renderingContext->gfEps != preset.gfEps ||
+	    renderingContext->filterLevel != preset.filterLevel || renderingContext->gfEps != preset.gfEps ||
 	    renderingContext->gfSubsamplingRate != preset.gfSubsamplingRate) {
 		graphics_context_guard guard;
 		nextRenderingContext = std::make_shared<RenderingContext>(
 			source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, frame->width,
-			frame->height, preset.filterLevel, preset.gfRadius, preset.gfEps, preset.gfSubsamplingRate);
+			frame->height, preset.filterLevel, preset.gfEps, preset.gfSubsamplingRate);
 		frameCountBeforeContextSwitch = 1;
 		gs_unique::drain();
 	}
