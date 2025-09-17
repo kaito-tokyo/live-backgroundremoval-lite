@@ -39,8 +39,6 @@ constexpr char textureR8GFGuideSub[] = "r8GFGuideSub";
 constexpr char textureR8GFSourceSub[] = "r8GFSourceSub";
 constexpr char textureR16fGFMeanGuideSub[] = "r16fGFMeanGuideSub";
 constexpr char textureR16fGFMeanSourceSub[] = "r16fGFMeanSourceSub";
-constexpr char textureR16fGFGuideSourceSub[] = "r16fGFGuideSourceSub";
-constexpr char textureR16fGFGuideSqSub[] = "r16fGFGuideSqSub";
 constexpr char textureR16fGFMeanGuideSourceSub[] = "r16fGFMeanGuideSourceSub";
 constexpr char textureR16fGFMeanGuideSqSub[] = "r16fGFMeanGuideSqSub";
 constexpr char textureR16fGFASub[] = "r16fGFASub";
@@ -107,8 +105,6 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext
 	previewTextureSelector->addItem(textureR8GFSourceSub);
 	previewTextureSelector->addItem(textureR16fGFMeanGuideSub);
 	previewTextureSelector->addItem(textureR16fGFMeanSourceSub);
-	previewTextureSelector->addItem(textureR16fGFGuideSourceSub);
-	previewTextureSelector->addItem(textureR16fGFGuideSqSub);
 	previewTextureSelector->addItem(textureR16fGFMeanGuideSourceSub);
 	previewTextureSelector->addItem(textureR16fGFMeanGuideSqSub);
 	previewTextureSelector->addItem(textureR16fGFASub);
@@ -223,18 +219,6 @@ void DebugWindow::videoRender()
 				readerR16fSub->sync();
 				readerR16fSub->stage(renderingContext->r16fGFMeanSourceSub.get());
 			}
-		} else if (currentTexture == textureR16fGFGuideSourceSub) {
-			if (readerR16fSub && readerR16fSub->width == renderingContext->gfWidthSub &&
-			    readerR16fSub->height == renderingContext->gfHeightSub) {
-				readerR16fSub->sync();
-				readerR16fSub->stage(renderingContext->r16fGFGuideSourceSub.get());
-			}
-		} else if (currentTexture == textureR16fGFGuideSqSub) {
-			if (readerR16fSub && readerR16fSub->width == renderingContext->gfWidthSub &&
-			    readerR16fSub->height == renderingContext->gfHeightSub) {
-				readerR16fSub->sync();
-				readerR16fSub->stage(renderingContext->r16fGFGuideSqSub.get());
-			}
 		} else if (currentTexture == textureR16fGFMeanGuideSourceSub) {
 			if (readerR16fSub && readerR16fSub->width == renderingContext->gfWidthSub &&
 			    readerR16fSub->height == renderingContext->gfHeightSub) {
@@ -279,14 +263,9 @@ void DebugWindow::updatePreview()
 	const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
 	const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
 	const std::vector<std::string> subR8Textures = {textureR8GFGuideSub, textureR8GFSourceSub};
-	const std::vector<std::string> r16fTextures = {textureR16fGFMeanGuideSub,
-						       textureR16fGFMeanSourceSub,
-						       textureR16fGFGuideSourceSub,
-						       textureR16fGFGuideSqSub,
-						       textureR16fGFMeanGuideSourceSub,
-						       textureR16fGFMeanGuideSqSub,
-						       textureR16fGFASub,
-						       textureR16fGFBSub};
+	const std::vector<std::string> r16fTextures = {
+		textureR16fGFMeanGuideSub,   textureR16fGFMeanSourceSub, textureR16fGFMeanGuideSourceSub,
+		textureR16fGFMeanGuideSqSub, textureR16fGFASub,          textureR16fGFBSub};
 
 	QImage image;
 	if (std::find(bgrxTextures.begin(), bgrxTextures.end(), currentTextureStd) != bgrxTextures.end()) {

@@ -75,8 +75,6 @@ public:
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFSourceSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanSourceSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFGuideSourceSub;
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFGuideSqSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSourceSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFMeanGuideSqSub;
 	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r16fGFASub;

@@ -78,8 +78,6 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r8GFSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r16fGFMeanGuideSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
 	  r16fGFMeanSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
-	  r16fGFGuideSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
-	  r16fGFGuideSqSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
 	  r16fGFMeanGuideSourceSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
 	  r16fGFMeanGuideSqSub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
 	  r16fGFASub(make_unique_gs_texture(gfWidthSub, gfHeightSub, GS_R16F, 1, NULL, GS_RENDER_TARGET)),
@@ -157,14 +155,10 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r8OriginalGrayscale, gs_
 	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanSourceSub.get(), r8GFSourceSub.get(),
 					r16fGFTemporary1Sub.get());
 
-	mainEffect.multiplyR8(gfWidthSub, gfHeightSub, r16fGFGuideSourceSub.get(), r8GFGuideSub.get(),
-			      r8GFSourceSub.get());
-	mainEffect.squareR8(gfWidthSub, gfHeightSub, r16fGFGuideSqSub.get(), r8GFGuideSub.get());
-
-	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSourceSub.get(),
-					r16fGFGuideSourceSub.get(), r16fGFTemporary1Sub.get());
-	mainEffect.applyBoxFilterR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSqSub.get(), r16fGFGuideSqSub.get(),
-					r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterWithMulR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSourceSub.get(),
+					       r8GFGuideSub.get(), r8GFSourceSub.get(), r16fGFTemporary1Sub.get());
+	mainEffect.applyBoxFilterWithSqR8KS17(gfWidthSub, gfHeightSub, r16fGFMeanGuideSqSub.get(), r8GFGuideSub.get(),
+					      r16fGFTemporary1Sub.get());
 
 	mainEffect.calculateGuidedFilterAAndB(gfWidthSub, gfHeightSub, r16fGFASub.get(), r16fGFBSub.get(),
 					      r16fGFMeanGuideSqSub.get(), r16fGFMeanGuideSub.get(),
