@@ -52,9 +52,9 @@ namespace obs_backgroundremoval_lite {
 namespace selfie_segmenter {
 
 /// @brief A type alias for a pointer to a destination channel buffer, qualified with restrict.
-using ChannelType = float *VIDEO_FRAME_EXTRACTOR_RESTRICT;
+using ChannelType = VIDEO_FRAME_EXTRACTOR_RESTRICT float *;
 /// @brief A type alias for the source video data planes, qualified with restrict.
-using DataType = const void **VIDEO_FRAME_EXTRACTOR_RESTRICT;
+using DataType = VIDEO_FRAME_EXTRACTOR_RESTRICT const void **;
 
 /**
  * @class IVideoFrameExtractor
