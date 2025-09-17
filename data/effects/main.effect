@@ -11,8 +11,8 @@
 
 // --- Uniforms (Variables set from the host application) ---
 
-uniform float4x4 ViewProj;  ///< View-projection matrix for the vertex shader.
-uniform texture2d image;     ///< Primary input texture. Its role varies per pass.
+uniform float4x4 ViewProj; ///< View-projection matrix for the vertex shader.
+uniform texture2d image;   ///< Primary input texture. Its role varies per pass.
 
 // Parameters for the box filter
 uniform float texelWidth;  ///< The width of a single texel (1.0 / texture_width).
@@ -20,9 +20,9 @@ uniform float texelHeight; ///< The height of a single texel (1.0 / texture_heig
 uniform int kernelSize;    ///< The kernel size for the box filter (an odd number is recommended).
 
 // Textures for multi-pass operations
-uniform texture2d image1;    ///< Secondary input texture.
-uniform texture2d image2;    ///< Tertiary input texture.
-uniform texture2d image3;    ///< Quaternary input texture.
+uniform texture2d image1; ///< Secondary input texture.
+uniform texture2d image2; ///< Tertiary input texture.
+uniform texture2d image3; ///< Quaternary input texture.
 
 // Parameters for the Guided Filter
 uniform float eps; ///< A small epsilon value to prevent division by zero when calculating coefficient 'a'.
@@ -32,25 +32,25 @@ uniform float eps; ///< A small epsilon value to prevent division by zero when c
 /// @brief Sampler with linear interpolation (Bilinear). Used for filtering and smooth scaling.
 sampler_state linear_sampler
 {
-    Filter = Linear;
-    AddressU = Clamp;
-    AddressV = Clamp;
+	Filter = Linear;
+	AddressU = Clamp;
+	AddressV = Clamp;
 };
 
 /// @brief Sampler without interpolation (Nearest Neighbor). Used for precise data access.
 sampler_state point_sampler
 {
-    Filter = Point;
-    AddressU = Clamp;
-    AddressV = Clamp;
+	Filter = Point;
+	AddressU = Clamp;
+	AddressV = Clamp;
 };
 
 /**
  * @brief Data structure passed from the vertex shader to the pixel shader.
  */
 struct VertInOut {
-    float4 pos : POSITION; ///< Clip-space position.
-    float2 uv : TEXCOORD0; ///< UV texture coordinate.
+	float4 pos : POSITION; ///< Clip-space position.
+	float2 uv : TEXCOORD0; ///< UV texture coordinate.
 };
 
 /**
@@ -58,10 +58,10 @@ struct VertInOut {
  */
 VertInOut VSDefault(VertInOut vert_in)
 {
-    VertInOut vert_out;
-    vert_out.pos = mul(float4(vert_in.pos.xyz, 1.0), ViewProj);
-    vert_out.uv = vert_in.uv;
-    return vert_out;
+	VertInOut vert_out;
+	vert_out.pos = mul(float4(vert_in.pos.xyz, 1.0), ViewProj);
+	vert_out.uv = vert_in.uv;
+	return vert_out;
 }
 
 /**
@@ -69,7 +69,7 @@ VertInOut VSDefault(VertInOut vert_in)
  */
 float4 PSDraw(VertInOut vert_in) : TARGET
 {
-    return image.Sample(point_sampler, vert_in.uv);
+	return image.Sample(point_sampler, vert_in.uv);
 }
 
 /**
@@ -80,13 +80,13 @@ float4 PSDraw(VertInOut vert_in) : TARGET
  */
 float4 PSDrawWithMask(VertInOut vert_in) : TARGET
 {
-    float2 uv = vert_in.uv;
-    float4 final_color;
+	float2 uv = vert_in.uv;
+	float4 final_color;
 
-    final_color.rgb = image.Sample(point_sampler, uv).rgb;
-    final_color.a = image1.Sample(point_sampler, uv).r;
+	final_color.rgb = image.Sample(point_sampler, uv).rgb;
+	final_color.a = image1.Sample(point_sampler, uv).r;
 
-    return final_color;
+	return final_color;
 }
 
 float4 PSResampleByNearestR8(VertInOut vert_in) : TARGET
@@ -100,9 +100,9 @@ float4 PSResampleByNearestR8(VertInOut vert_in) : TARGET
  */
 float4 PSConvertToGrayscale(VertInOut vert_in) : TARGET
 {
-    float4 color = image.Sample(point_sampler, vert_in.uv);
-    float luma = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
-    return float4(luma, luma, luma, 1.0f);
+	float4 color = image.Sample(point_sampler, vert_in.uv);
+	float luma = dot(color.rgb, float3(0.2126, 0.7152, 0.0722));
+	return float4(luma, luma, luma, 1.0f);
 }
 
 /**
@@ -111,19 +111,19 @@ float4 PSConvertToGrayscale(VertInOut vert_in) : TARGET
  */
 float4 PSHorizontalBoxFilterR8KS17(VertInOut vert_in) : TARGET
 {
-    float2 uv = vert_in.uv;
-    float halfTexelWidth = texelWidth / 2.0f;
+	float2 uv = vert_in.uv;
+	float halfTexelWidth = texelWidth / 2.0f;
 
-    float bilinear_sum = 0.0f;
-    for (int i = 1; i <= 4; i++) {
-        float2 offset = float2((i * 4 - 1) * halfTexelWidth, 0.0f);
-        bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
-        bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
-    }
+	float bilinear_sum = 0.0f;
+	for (int i = 1; i <= 4; i++) {
+		float2 offset = float2((i * 4 - 1) * halfTexelWidth, 0.0f);
+		bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
+		bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
+	}
 
-    float luma = (image.Sample(linear_sampler, uv).r + bilinear_sum * 2.0f) / 17.0f;
+	float luma = (image.Sample(linear_sampler, uv).r + bilinear_sum * 2.0f) / 17.0f;
 
-    return float4(luma, luma, luma, 1.0f);
+	return float4(luma, luma, luma, 1.0f);
 }
 
 /**
@@ -132,19 +132,19 @@ float4 PSHorizontalBoxFilterR8KS17(VertInOut vert_in) : TARGET
  */
 float4 PSVerticalBoxFilterR8KS17(VertInOut vert_in) : TARGET
 {
-    float2 uv = vert_in.uv;
-    float halfTexelHeight = texelHeight / 2.0f;
+	float2 uv = vert_in.uv;
+	float halfTexelHeight = texelHeight / 2.0f;
 
-    float bilinear_sum = 0.0f;
-    for (int i = 1; i <= 4; i++) {
-        float2 offset = float2(0.0f, (i * 4 - 1) * halfTexelHeight);
-        bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
-        bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
-    }
+	float bilinear_sum = 0.0f;
+	for (int i = 1; i <= 4; i++) {
+		float2 offset = float2(0.0f, (i * 4 - 1) * halfTexelHeight);
+		bilinear_sum += image.Sample(linear_sampler, uv + offset).r;
+		bilinear_sum += image.Sample(linear_sampler, uv - offset).r;
+	}
 
-    float luma = (image.Sample(linear_sampler, uv).r + bilinear_sum * 2.0f) / 17.0f;
+	float luma = (image.Sample(linear_sampler, uv).r + bilinear_sum * 2.0f) / 17.0f;
 
-    return float4(luma, luma, luma, 1.0f);
+	return float4(luma, luma, luma, 1.0f);
 }
 
 /**
@@ -153,9 +153,9 @@ float4 PSVerticalBoxFilterR8KS17(VertInOut vert_in) : TARGET
  */
 float4 PSMultiplyR8(VertInOut vert_in) : TARGET
 {
-    float2 uv = vert_in.uv;
-    float value = image.Sample(point_sampler, uv).r * image1.Sample(point_sampler, uv).r;
-    return float4(value, value, value, 1.0f);
+	float2 uv = vert_in.uv;
+	float value = image.Sample(point_sampler, uv).r * image1.Sample(point_sampler, uv).r;
+	return float4(value, value, value, 1.0f);
 }
 
 /**
@@ -163,10 +163,10 @@ float4 PSMultiplyR8(VertInOut vert_in) : TARGET
  */
 float4 PSSquareR8(VertInOut vert_in) : TARGET
 {
-    float2 uv = vert_in.uv;
-    float r = image.Sample(point_sampler, uv).r;
-    float value = r * r;
-    return float4(value, value, value, 1.0f);
+	float2 uv = vert_in.uv;
+	float r = image.Sample(point_sampler, uv).r;
+	float value = r * r;
+	return float4(value, value, value, 1.0f);
 }
 
 /**
@@ -183,19 +183,19 @@ float4 PSSquareR8(VertInOut vert_in) : TARGET
  */
 float4 PSCalculateGuidedFilterA(VertInOut vert_in) : TARGET
 {
-    float2 uv = vert_in.uv;
+	float2 uv = vert_in.uv;
 
-    float mean_guide_sq = image.Sample(point_sampler, uv).r;
-    float mean_guide = image1.Sample(point_sampler, uv).r;
-    float mean_guide_source = image2.Sample(point_sampler, uv).r;
-    float mean_source = image3.Sample(point_sampler, uv).r;
+	float mean_guide_sq = image.Sample(point_sampler, uv).r;
+	float mean_guide = image1.Sample(point_sampler, uv).r;
+	float mean_guide_source = image2.Sample(point_sampler, uv).r;
+	float mean_source = image3.Sample(point_sampler, uv).r;
 
-    float cov_guide_source = mean_guide_source - mean_guide * mean_source;
-    float var_guide = mean_guide_sq - mean_guide * mean_guide;
+	float cov_guide_source = mean_guide_source - mean_guide * mean_source;
+	float var_guide = mean_guide_sq - mean_guide * mean_guide;
 
-    float value = cov_guide_source / (var_guide + eps);
+	float value = cov_guide_source / (var_guide + eps);
 
-    return float4(value, value, value, 1.0f);
+	return float4(value, value, value, 1.0f);
 }
 
 /**
@@ -210,14 +210,14 @@ float4 PSCalculateGuidedFilterA(VertInOut vert_in) : TARGET
  */
 float4 PSCalculateGuidedFilterB(VertInOut vert_in) : TARGET
 {
-    float2 uv = vert_in.uv;
+	float2 uv = vert_in.uv;
 
-    float a = image.Sample(point_sampler, uv).r;
-    float mean_source = image1.Sample(point_sampler, uv).r;
-    float mean_guide = image2.Sample(point_sampler, uv).r;
+	float a = image.Sample(point_sampler, uv).r;
+	float mean_source = image1.Sample(point_sampler, uv).r;
+	float mean_guide = image2.Sample(point_sampler, uv).r;
 
-    float value = mean_source - a * mean_guide;
-    return float4(value, value, value, 1.0f);
+	float value = mean_source - a * mean_guide;
+	return float4(value, value, value, 1.0f);
 }
 
 /**
@@ -232,34 +232,34 @@ float4 PSCalculateGuidedFilterB(VertInOut vert_in) : TARGET
  */
 float4 PSFinalizeGuidedFilter(VertInOut vert_in) : TARGET
 {
-    float2 uv = vert_in.uv;
+	float2 uv = vert_in.uv;
 
-    float guide = image.Sample(point_sampler, uv).r;
-    float a = image1.Sample(linear_sampler, uv).r;
-    float b = image2.Sample(linear_sampler, uv).r;
+	float guide = image.Sample(point_sampler, uv).r;
+	float a = image1.Sample(linear_sampler, uv).r;
+	float b = image2.Sample(linear_sampler, uv).r;
 
-    float value = a * guide + b;
-    return float4(value, value, value, 1.0f);
+	float value = a * guide + b;
+	return float4(value, value, value, 1.0f);
 }
 
 // --- Techniques (Shader pass definitions) ---
 
 technique Draw
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSDraw(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSDraw(vert_in);
+	}
 }
 
 technique DrawWithMask
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSDrawWithMask(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSDrawWithMask(vert_in);
+	}
 }
 
 technique ResampleByNearestR8
@@ -273,72 +273,72 @@ technique ResampleByNearestR8
 
 technique ConvertToGrayscale
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSConvertToGrayscale(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSConvertToGrayscale(vert_in);
+	}
 }
 
 technique HorizontalBoxFilterR8KS17
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSHorizontalBoxFilterR8KS17(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSHorizontalBoxFilterR8KS17(vert_in);
+	}
 }
 
 technique VerticalBoxFilterR8KS17
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSVerticalBoxFilterR8KS17(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSVerticalBoxFilterR8KS17(vert_in);
+	}
 }
 
 technique MultiplyR8
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSMultiplyR8(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSMultiplyR8(vert_in);
+	}
 }
 
 technique SquareR8
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSSquareR8(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSSquareR8(vert_in);
+	}
 }
 
 technique CalculateGuidedFilterA
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSCalculateGuidedFilterA(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSCalculateGuidedFilterA(vert_in);
+	}
 }
 
 technique CalculateGuidedFilterB
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSCalculateGuidedFilterB(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSCalculateGuidedFilterB(vert_in);
+	}
 }
 
 technique FinalizeGuidedFilter
 {
-    pass
-    {
-        vertex_shader = VSDefault(vert_in);
-        pixel_shader = PSFinalizeGuidedFilter(vert_in);
-    }
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSFinalizeGuidedFilter(vert_in);
+	}
 }
