@@ -241,7 +241,8 @@ void RenderingContext::videoRender()
 {
 	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
 
-	if (doesNextVideoRenderReceiveNewFrame) {
+	const bool needNewFrame = doesNextVideoRenderReceiveNewFrame;
+	if (needNewFrame) {
 		doesNextVideoRenderReceiveNewFrame = false;
 
 		if (actualFilterLevel >= FilterLevel::Segmentation) {
@@ -282,7 +283,7 @@ void RenderingContext::videoRender()
 		return;
 	}
 
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
+	if (needNewFrame && actualFilterLevel >= FilterLevel::Segmentation) {
 		readerSegmenterInput.stage(bgrxSegmenterInput.get());
 		readerReducedDifferenceWithMask.stage(r32fSubDifferenceWithMaskReductionPyramid.back().get());
 	}
