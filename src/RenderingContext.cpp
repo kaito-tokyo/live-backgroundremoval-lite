@@ -121,8 +121,6 @@ RenderingContext::~RenderingContext() noexcept {}
 void RenderingContext::videoTick(float seconds)
 {
 	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
-	logger.info("Difference {}",
-		    reinterpret_cast<const float *>(readerReducedDifferenceWithMask.getBuffer().data())[0]);
 
 	if (actualFilterLevel >= FilterLevel::Segmentation) {
 		timeSinceLastSelfieSegmentation += seconds;
@@ -241,7 +239,8 @@ void RenderingContext::videoRender()
 {
 	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
 
-	if (doesNextVideoRenderReceiveNewFrame) {
+	const bool needNewFrame = doesNextVideoRenderReceiveNewFrame;
+	if (needNewFrame) {
 		doesNextVideoRenderReceiveNewFrame = false;
 
 		if (actualFilterLevel >= FilterLevel::Segmentation) {
@@ -282,7 +281,7 @@ void RenderingContext::videoRender()
 		return;
 	}
 
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
+	if (needNewFrame && actualFilterLevel >= FilterLevel::Segmentation) {
 		readerSegmenterInput.stage(bgrxSegmenterInput.get());
 		readerReducedDifferenceWithMask.stage(r32fSubDifferenceWithMaskReductionPyramid.back().get());
 	}
