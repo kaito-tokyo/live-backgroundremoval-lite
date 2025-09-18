@@ -93,10 +93,13 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  maskRoiWidth(getMaskRoiDimension(width, height)[2]),
 	  maskRoiHeight(getMaskRoiDimension(width, height)[3]),
 	  r8SegmentationMask(make_unique_gs_texture(maskRoiWidth, maskRoiHeight, GS_R8, 1, NULL, GS_DYNAMIC)),
-	  r32fSubOriginalGrayscale(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubLastOriginalGrayscale(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, 0)),
+	  r32fSubOriginalGrayscales{
+		  make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET),
+		  make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET),
+	  },
 	  r32fSubDifferenceWithMask(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubReductionPyramid(createReductionPyramid(widthSub, heightSub, GS_R32F)),
+	  r32fSubDifferenceWithMaskReductionPyramid(createReductionPyramid(widthSub, heightSub, GS_R32F)),
+	  readerReducedSubDifferenceWithMask(1, 1, GS_R32F),
 	  r8SubGFGuide(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r8SubGFSource(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFMeanGuide(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
@@ -155,10 +158,8 @@ void RenderingContext::renderOriginalImage()
 
 void RenderingContext::renderOriginalGrayscale(gs_texture_t *bgrxOriginalImage)
 {
-	gs_copy_texture(r32fSubLastOriginalGrayscale.get(), r32fSubOriginalGrayscale.get());
-
 	mainEffect.convertToGrayscale(width, height, r32fOriginalGrayscale.get(), bgrxOriginalImage);
-	mainEffect.resampleByNearestR8(widthSub, heightSub, r32fSubOriginalGrayscale.get(),
+	mainEffect.resampleByNearestR8(widthSub, heightSub, r32fSubOriginalGrayscales[0].get(),
 				       r32fOriginalGrayscale.get());
 }
 
@@ -187,8 +188,12 @@ void RenderingContext::renderSegmentationMask()
 
 void RenderingContext::calculateDifferenceWithMask()
 {
-	mainEffect.calculateDifferenceWithMask(widthSub, heightSub, r32fSubDifferenceWithMask, r32fSubOriginalGrayscale,
-					       r32fSubLastOriginalGrayscale, r8SegmentationMask);
+	mainEffect.calculateDifferenceWithMask(widthSub, heightSub, r32fSubDifferenceWithMask,
+					       r32fSubOriginalGrayscales[0], r32fSubOriginalGrayscales[1],
+					       r8SegmentationMask);
+	mainEffect.reduce(r32fSubDifferenceWithMaskReductionPyramid, r32fSubDifferenceWithMask);
+
+	std::swap(r32fSubOriginalGrayscales[0], r32fSubOriginalGrayscales[1]);
 }
 
 void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask)
@@ -243,6 +248,15 @@ void RenderingContext::videoRender()
 		} catch (const std::exception &e) {
 			logger.error("Failed to sync texture reader: {}", e.what());
 		}
+
+		try {
+			readerReducedSubDifferenceWithMask.sync();
+			const auto reducedSubDifferenceWithMaskBuffer =
+				reinterpret_cast<float *>(readerReducedSubDifferenceWithMask.getBuffer().data());
+			logger.info("Difference {}", reducedSubDifferenceWithMaskBuffer[0]);
+		} catch (const std::exception &e) {
+			logger.error("Failed to sync texture reader: {}", e.what());
+		}
 	}
 
 	renderOriginalImage();
@@ -275,6 +289,7 @@ void RenderingContext::videoRender()
 
 	if (actualFilterLevel >= FilterLevel::Segmentation) {
 		readerSegmenterInput.stage(bgrxSegmenterInput.get());
+		readerReducedSubDifferenceWithMask.stage(r32fSubDifferenceWithMaskReductionPyramid.back().get());
 	}
 }
 

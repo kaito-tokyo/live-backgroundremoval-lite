@@ -35,8 +35,8 @@ constexpr char textureBgrxOriginalImage[] = "bgrxOriginalImage";
 constexpr char textureR32fOriginalGrayscale[] = "r32fOriginalGrayscale";
 constexpr char textureBgrxSegmenterInput[] = "bgrxSegmenterInput";
 constexpr char textureR8SegmentationMask[] = "r8SegmentationMask";
-constexpr char textureR32fSubOriginalGrayscale[] = "r32fSubOriginalGrayscale";
-constexpr char textureR32fSubLastOriginalGrayscale[] = "r32fSubLastOriginalGrayscale";
+constexpr char textureR32fSubOriginalGrayscales0[] = "r32fSubOriginalGrayscales[0]";
+constexpr char textureR32fSubOriginalGrayscales1[] = "r32fSubOriginalGrayscales[1]";
 constexpr char textureR32fSubDifferenceWithMask[] = "r32fSubDifferenceWithMask";
 constexpr char textureR8SubGFGuide[] = "r8SubGFGuide";
 constexpr char textureR8SubGFSource[] = "r8SubGFSource";
@@ -54,8 +54,8 @@ const std::vector<std::string> r32fTextures = {textureR32fOriginalGrayscale};
 const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
 const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
 const std::vector<std::string> r8SubTextures = {textureR8SubGFGuide, textureR8SubGFSource};
-const std::vector<std::string> r32fSubTextures = {textureR32fSubOriginalGrayscale,
-						  textureR32fSubLastOriginalGrayscale,
+const std::vector<std::string> r32fSubTextures = {textureR32fSubOriginalGrayscales0,
+						  textureR32fSubOriginalGrayscales1,
 						  textureR32fSubDifferenceWithMask,
 						  textureR32fSubGFMeanGuide,
 						  textureR32fSubGFMeanSource,
@@ -120,8 +120,8 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext
 	previewTextureSelector->addItem(textureR32fOriginalGrayscale);
 	previewTextureSelector->addItem(textureBgrxSegmenterInput);
 	previewTextureSelector->addItem(textureR8SegmentationMask);
-	previewTextureSelector->addItem(textureR32fSubOriginalGrayscale);
-	previewTextureSelector->addItem(textureR32fSubLastOriginalGrayscale);
+	previewTextureSelector->addItem(textureR32fSubOriginalGrayscales0);
+	previewTextureSelector->addItem(textureR32fSubOriginalGrayscales1);
 	previewTextureSelector->addItem(textureR32fSubDifferenceWithMask);
 	previewTextureSelector->addItem(textureR8SubGFGuide);
 	previewTextureSelector->addItem(textureR8SubGFSource);
@@ -143,7 +143,7 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext
 	setLayout(layout);
 
 	connect(updateTimer, &QTimer::timeout, this, &DebugWindow::updatePreview);
-	updateTimer->start(100); // 約30fpsで更新
+	updateTimer->start(1000 / 60); // 約30fpsで更新
 
 	connect(this, &DebugWindow::readerReady, this, &DebugWindow::updatePreview);
 }
@@ -212,12 +212,12 @@ void DebugWindow::videoRender()
 		} else if (currentTexture == textureR8SegmentationMask) {
 			readerMaskRoiR8->sync();
 			readerMaskRoiR8->stage(renderingContext->r8SegmentationMask.get());
-		} else if (currentTexture == textureR32fSubOriginalGrayscale) {
+		} else if (currentTexture == textureR32fSubOriginalGrayscales0) {
 			readerR32fSub->sync();
-			readerR32fSub->stage(renderingContext->r32fSubOriginalGrayscale.get());
-		} else if (currentTexture == textureR32fSubLastOriginalGrayscale) {
+			readerR32fSub->stage(renderingContext->r32fSubOriginalGrayscales[0].get());
+		} else if (currentTexture == textureR32fSubOriginalGrayscales1) {
 			readerR32fSub->sync();
-			readerR32fSub->stage(renderingContext->r32fSubLastOriginalGrayscale.get());
+			readerR32fSub->stage(renderingContext->r32fSubOriginalGrayscales[1].get());
 		} else if (currentTexture == textureR32fSubDifferenceWithMask) {
 			readerR32fSub->sync();
 			readerR32fSub->stage(renderingContext->r32fSubDifferenceWithMask.get());

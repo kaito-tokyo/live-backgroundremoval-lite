@@ -302,10 +302,8 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void reduce(
-		std::uint32_t width, std::uint32_t height,
-		const std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> &reductionPyramidTextures,
-		const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t &sourceTexture) const noexcept
+	void reduce(const std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> &reductionPyramidTextures,
+		    const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
@@ -321,7 +319,8 @@ public:
 
 			gs_set_render_target_with_color_space(currentTarget, nullptr, GS_CS_SRGB);
 			gs_set_viewport(0, 0, targetWidth, targetHeight);
-			gs_ortho(0.0f, static_cast<float>(targetWidth), 0.0f, static_cast<float>(targetHeight), -100.0f, 100.0f);
+			gs_ortho(0.0f, static_cast<float>(targetWidth), 0.0f, static_cast<float>(targetHeight), -100.0f,
+				 100.0f);
 			gs_matrix_identity();
 
 			std::size_t passes = gs_technique_begin(tech);
@@ -330,7 +329,7 @@ public:
 					gs_effect_set_texture(textureImage, currentSource);
 
 					gs_draw_sprite(nullptr, 0, targetWidth, targetHeight);
-					
+
 					gs_technique_end_pass(tech);
 				}
 			}

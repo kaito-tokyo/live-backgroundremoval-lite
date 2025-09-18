@@ -18,6 +18,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include <net.h>
@@ -68,10 +69,10 @@ public:
 
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SegmentationMask;
 
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubOriginalGrayscale;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubLastOriginalGrayscale;
+	std::array<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t, 2> r32fSubOriginalGrayscales;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubDifferenceWithMask;
-	const std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> r32fSubReductionPyramid;
+	const std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
+	AsyncTextureReader readerReducedSubDifferenceWithMask;
 
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFGuide;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFSource;
