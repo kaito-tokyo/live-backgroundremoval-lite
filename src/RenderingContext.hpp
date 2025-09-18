@@ -19,6 +19,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #pragma once
 
 #include <array>
+#include <atomic>
 #include <cstdint>
 
 #include <net.h>
@@ -72,8 +73,11 @@ public:
 	std::array<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t, 2> r32fSubOriginalGrayscales;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubDifferenceWithMask;
 	const std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
-	AsyncTextureReader readerReducedSubDifferenceWithMask;
 
+private:
+	AsyncTextureReader readerReducedDifferenceWithMask;
+
+public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFGuide;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFSource;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFMeanGuide;
@@ -95,6 +99,8 @@ private:
 	const double &maskUpperBound;
 
 	float timeSinceLastSelfieSegmentation = 0.0f;
+	std::uint64_t lastFrameTimestamp = 0;
+	std::atomic<bool> doesNextVideoRenderReceiveNewFrame = false;
 
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 

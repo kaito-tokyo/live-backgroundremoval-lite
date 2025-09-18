@@ -17,7 +17,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
 #include <array>
-#include <vector>
 
 #include "RenderingContext.hpp"
 #include "SelfieSegmenter.hpp"
@@ -26,7 +25,7 @@ using namespace kaito_tokyo::obs_bridge_utils;
 
 namespace {
 
-inline std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
+std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
 {
 	using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
@@ -43,8 +42,8 @@ inline std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std
 	return {offsetX, offsetY, scaledWidth, scaledHeight};
 }
 
-inline std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t>
-createReductionPyramid(std::uint32_t width, std::uint32_t height, gs_color_format format)
+inline std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
+											      std::uint32_t height)
 {
 	using namespace kaito_tokyo::obs_bridge_utils;
 	std::vector<unique_gs_texture_t> pyramid;
@@ -57,7 +56,7 @@ createReductionPyramid(std::uint32_t width, std::uint32_t height, gs_color_forma
 		currentHeight = std::max(1u, (currentHeight + 1) / 2);
 
 		pyramid.push_back(
-			make_unique_gs_texture(currentWidth, currentHeight, format, 1, NULL, GS_RENDER_TARGET));
+			make_unique_gs_texture(currentWidth, currentHeight, GS_R32F, 1, NULL, GS_RENDER_TARGET));
 	}
 
 	return pyramid;
@@ -93,13 +92,11 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  maskRoiWidth(getMaskRoiDimension(width, height)[2]),
 	  maskRoiHeight(getMaskRoiDimension(width, height)[3]),
 	  r8SegmentationMask(make_unique_gs_texture(maskRoiWidth, maskRoiHeight, GS_R8, 1, NULL, GS_DYNAMIC)),
-	  r32fSubOriginalGrayscales{
-		  make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET),
-		  make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET),
-	  },
+	  r32fSubOriginalGrayscales{make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET),
+				    make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)},
 	  r32fSubDifferenceWithMask(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubDifferenceWithMaskReductionPyramid(createReductionPyramid(widthSub, heightSub, GS_R32F)),
-	  readerReducedSubDifferenceWithMask(1, 1, GS_R32F),
+	  r32fSubDifferenceWithMaskReductionPyramid(createReductionPyramid(widthSub, heightSub)),
+	  readerReducedDifferenceWithMask(1, 1, GS_R32F),
 	  r8SubGFGuide(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r8SubGFSource(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFMeanGuide(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
@@ -124,6 +121,8 @@ RenderingContext::~RenderingContext() noexcept {}
 void RenderingContext::videoTick(float seconds)
 {
 	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
+	logger.info("Difference {}",
+		    reinterpret_cast<const float *>(readerReducedDifferenceWithMask.getBuffer().data())[0]);
 
 	if (actualFilterLevel >= FilterLevel::Segmentation) {
 		timeSinceLastSelfieSegmentation += seconds;
@@ -191,8 +190,8 @@ void RenderingContext::calculateDifferenceWithMask()
 	mainEffect.calculateDifferenceWithMask(widthSub, heightSub, r32fSubDifferenceWithMask,
 					       r32fSubOriginalGrayscales[0], r32fSubOriginalGrayscales[1],
 					       r8SegmentationMask);
-	mainEffect.reduce(r32fSubDifferenceWithMaskReductionPyramid, r32fSubDifferenceWithMask);
 
+	mainEffect.reduce(r32fSubDifferenceWithMaskReductionPyramid, r32fSubDifferenceWithMask);
 	std::swap(r32fSubOriginalGrayscales[0], r32fSubOriginalGrayscales[1]);
 }
 
@@ -242,37 +241,33 @@ void RenderingContext::videoRender()
 {
 	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
 
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
-		try {
-			readerSegmenterInput.sync();
-		} catch (const std::exception &e) {
-			logger.error("Failed to sync texture reader: {}", e.what());
+	if (doesNextVideoRenderReceiveNewFrame) {
+		doesNextVideoRenderReceiveNewFrame = false;
+
+		if (actualFilterLevel >= FilterLevel::Segmentation) {
+			try {
+				readerSegmenterInput.sync();
+				readerReducedDifferenceWithMask.sync();
+			} catch (const std::exception &e) {
+				logger.error("Failed to sync texture reader: {}", e.what());
+			}
 		}
 
-		try {
-			readerReducedSubDifferenceWithMask.sync();
-			const auto reducedSubDifferenceWithMaskBuffer =
-				reinterpret_cast<float *>(readerReducedSubDifferenceWithMask.getBuffer().data());
-			logger.info("Difference {}", reducedSubDifferenceWithMaskBuffer[0]);
-		} catch (const std::exception &e) {
-			logger.error("Failed to sync texture reader: {}", e.what());
+		renderOriginalImage();
+
+		if (actualFilterLevel >= FilterLevel::GuidedFilter) {
+			renderOriginalGrayscale(bgrxOriginalImage.get());
 		}
-	}
 
-	renderOriginalImage();
+		if (actualFilterLevel >= FilterLevel::Segmentation) {
+			renderSegmenterInput(bgrxOriginalImage.get());
+			renderSegmentationMask();
+			calculateDifferenceWithMask();
+		}
 
-	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
-		renderOriginalGrayscale(bgrxOriginalImage.get());
-	}
-
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
-		renderSegmenterInput(bgrxOriginalImage.get());
-		renderSegmentationMask();
-		calculateDifferenceWithMask();
-	}
-
-	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
-		renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get());
+		if (actualFilterLevel >= FilterLevel::GuidedFilter) {
+			renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get());
+		}
 	}
 
 	if (actualFilterLevel == FilterLevel::Passthrough) {
@@ -289,12 +284,21 @@ void RenderingContext::videoRender()
 
 	if (actualFilterLevel >= FilterLevel::Segmentation) {
 		readerSegmenterInput.stage(bgrxSegmenterInput.get());
-		readerReducedSubDifferenceWithMask.stage(r32fSubDifferenceWithMaskReductionPyramid.back().get());
+		readerReducedDifferenceWithMask.stage(r32fSubDifferenceWithMaskReductionPyramid.back().get());
 	}
 }
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
+	if (!frame) {
+		return nullptr;
+	}
+
+	if (frame->timestamp > lastFrameTimestamp) {
+		doesNextVideoRenderReceiveNewFrame = true;
+		lastFrameTimestamp = frame->timestamp;
+	}
+
 	return frame;
 }
 
