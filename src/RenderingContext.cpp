@@ -121,6 +121,8 @@ RenderingContext::~RenderingContext() noexcept {}
 void RenderingContext::videoTick(float seconds)
 {
 	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
+	logger.info("Difference {}",
+		    reinterpret_cast<const float *>(readerReducedDifferenceWithMask.getBuffer().data())[0]);
 
 	if (actualFilterLevel >= FilterLevel::Segmentation) {
 		timeSinceLastSelfieSegmentation += seconds;
