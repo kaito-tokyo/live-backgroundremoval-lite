@@ -208,27 +208,31 @@ void RenderingContext::videoRender()
 {
 	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
 
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
-		try {
-			readerSegmenterInput.sync();
-		} catch (const std::exception &e) {
-			logger.error("Failed to sync texture reader: {}", e.what());
+	if (doesNextVideoRenderReceiveNewFrame) {
+		doesNextVideoRenderReceiveNewFrame = false;
+
+		if (actualFilterLevel >= FilterLevel::Segmentation) {
+			try {
+				readerSegmenterInput.sync();
+			} catch (const std::exception &e) {
+				logger.error("Failed to sync texture reader: {}", e.what());
+			}
 		}
-	}
 
-	renderOriginalImage();
+		renderOriginalImage();
 
-	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
-		renderOriginalGrayscale(bgrxOriginalImage.get());
-	}
+		if (actualFilterLevel >= FilterLevel::GuidedFilter) {
+			renderOriginalGrayscale(bgrxOriginalImage.get());
+		}
 
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
-		renderSegmenterInput(bgrxOriginalImage.get());
-		renderSegmentationMask();
-	}
+		if (actualFilterLevel >= FilterLevel::Segmentation) {
+			renderSegmenterInput(bgrxOriginalImage.get());
+			renderSegmentationMask();
+		}
 
-	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
-		renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get());
+		if (actualFilterLevel >= FilterLevel::GuidedFilter) {
+			renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get());
+		}
 	}
 
 	if (actualFilterLevel == FilterLevel::Passthrough) {
@@ -250,6 +254,15 @@ void RenderingContext::videoRender()
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
+	if (!frame) {
+		return nullptr;
+	}
+
+	if (frame->timestamp > lastFrameTimestamp) {
+		doesNextVideoRenderReceiveNewFrame = true;
+		lastFrameTimestamp = frame->timestamp;
+	}
+
 	return frame;
 }
 

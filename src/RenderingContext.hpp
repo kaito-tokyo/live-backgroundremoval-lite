@@ -90,6 +90,8 @@ private:
 	const double &maskUpperBound;
 
 	float timeSinceLastSelfieSegmentation = 0.0f;
+	std::uint64_t lastFrameTimestamp = 0;
+	bool doesNextVideoRenderReceiveNewFrame = false;
 
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
