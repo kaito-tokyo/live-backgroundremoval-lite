@@ -18,6 +18,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include <net.h>
@@ -54,8 +55,7 @@ public:
 public:
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fOriginalGrayscale;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubOriginalGrayscale;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubLastOriginalGrayscale;
+
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
 
 private:
@@ -68,6 +68,11 @@ public:
 	const std::uint32_t maskRoiHeight;
 
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SegmentationMask;
+
+	std::array<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t, 2> r32fSubOriginalGrayscales;
+	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubDifferenceWithMask;
+	const std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
+	AsyncTextureReader readerReducedSubDifferenceWithMask;
 
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFGuide;
 	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFSource;
@@ -112,6 +117,7 @@ private:
 	void renderOriginalGrayscale(gs_texture_t *bgrxOriginalImage);
 	void renderSegmenterInput(gs_texture_t *bgrxOriginalImage);
 	void renderSegmentationMask();
+	void calculateDifferenceWithMask();
 	void renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask);
 	void kickSegmentationTask();
 };
