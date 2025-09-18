@@ -115,6 +115,8 @@ public:
 	gs_technique_t *const techDrawWithRefinedMask = nullptr;
 	gs_technique_t *const techResampleByNearestR8 = nullptr;
 	gs_technique_t *const techConvertToGrayscale = nullptr;
+	gs_technique_t *const techCalculateDifferenceWithMask = nullptr;
+	gs_technique_t *const techReduce = nullptr;
 	gs_technique_t *const techHorizontalBoxFilterR8KS17 = nullptr;
 	gs_technique_t *const techHorizontalBoxFilterWithMulR8KS17 = nullptr;
 	gs_technique_t *const techHorizontalBoxFilterWithSqR8KS17 = nullptr;
@@ -143,6 +145,9 @@ public:
 		  techDrawWithRefinedMask(main_effect_detail::getEffectTech(effect, "DrawWithRefinedMask", logger)),
 		  techResampleByNearestR8(main_effect_detail::getEffectTech(effect, "ResampleByNearestR8", logger)),
 		  techConvertToGrayscale(main_effect_detail::getEffectTech(effect, "ConvertToGrayscale", logger)),
+		  techReduce(main_effect_detail::getEffectTech(effect, "Reduce", logger)),
+		  techCalculateDifferenceWithMask(
+			  main_effect_detail::getEffectTech(effect, "CalculateDifferenceWithMask", logger)),
 		  techHorizontalBoxFilterR8KS17(
 			  main_effect_detail::getEffectTech(effect, "HorizontalBoxFilterR8KS17", logger)),
 		  techHorizontalBoxFilterWithMulR8KS17(
@@ -265,6 +270,74 @@ public:
 			}
 		}
 		gs_technique_end(tech);
+	}
+
+	void calculateDifferenceWithMask(
+		std::uint32_t width, std::uint32_t height,
+		const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t &targetTexture,
+		const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t &currentGrayscaleTexture,
+		const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t &lastGrayscaleTexture,
+		const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t &segmentationMaskTexture) const noexcept
+	{
+		RenderTargetGuard renderTargetGuard;
+		TransformStateGuard transformStateGuard;
+
+		gs_set_viewport(0, 0, width, height);
+		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
+		gs_matrix_identity();
+
+		gs_set_render_target_with_color_space(targetTexture.get(), nullptr, GS_CS_SRGB);
+		gs_technique_t *tech = techCalculateDifferenceWithMask;
+		std::size_t passes = gs_technique_begin(tech);
+		for (std::size_t i = 0; i < passes; i++) {
+			if (gs_technique_begin_pass(tech, i)) {
+				gs_effect_set_texture(textureImage, currentGrayscaleTexture.get());
+				gs_effect_set_texture(textureImage1, lastGrayscaleTexture.get());
+				gs_effect_set_texture(textureImage2, segmentationMaskTexture.get());
+
+				gs_draw_sprite(nullptr, 0, width, height);
+				gs_technique_end_pass(tech);
+			}
+		}
+		gs_technique_end(tech);
+	}
+
+	void reduce(
+		std::uint32_t width, std::uint32_t height,
+		const std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> &reductionPyramidTextures,
+		const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t &sourceTexture) const noexcept
+	{
+		RenderTargetGuard renderTargetGuard;
+		TransformStateGuard transformStateGuard;
+
+		gs_technique_t *tech = techReduce;
+
+		gs_texture_t *currentSource = sourceTexture.get();
+
+		for (const auto &currentTargetTexture : reductionPyramidTextures) {
+			gs_texture_t *currentTarget = currentTargetTexture.get();
+			const std::uint32_t targetWidth = gs_texture_get_width(currentTarget);
+			const std::uint32_t targetHeight = gs_texture_get_height(currentTarget);
+
+			gs_set_render_target_with_color_space(currentTarget, nullptr, GS_CS_SRGB);
+			gs_set_viewport(0, 0, targetWidth, targetHeight);
+			gs_ortho(0.0f, static_cast<float>(targetWidth), 0.0f, static_cast<float>(targetHeight), -100.0f, 100.0f);
+			gs_matrix_identity();
+
+			std::size_t passes = gs_technique_begin(tech);
+			for (std::size_t i = 0; i < passes; i++) {
+				if (gs_technique_begin_pass(tech, i)) {
+					gs_effect_set_texture(textureImage, currentSource);
+
+					gs_draw_sprite(nullptr, 0, targetWidth, targetHeight);
+					
+					gs_technique_end_pass(tech);
+				}
+			}
+			gs_technique_end(tech);
+
+			currentSource = currentTarget;
+		}
 	}
 
 	void applyBoxFilterR8KS17(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,

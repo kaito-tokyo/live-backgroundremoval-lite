@@ -17,6 +17,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
 #include <array>
+#include <vector>
 
 #include "RenderingContext.hpp"
 #include "SelfieSegmenter.hpp"
@@ -25,7 +26,7 @@ using namespace kaito_tokyo::obs_bridge_utils;
 
 namespace {
 
-std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
+inline std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
 {
 	using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
@@ -40,6 +41,26 @@ std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint3
 	std::uint32_t offsetY = (SelfieSegmenter::INPUT_HEIGHT - scaledHeight) / 2;
 
 	return {offsetX, offsetY, scaledWidth, scaledHeight};
+}
+
+inline std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t>
+createReductionPyramid(std::uint32_t width, std::uint32_t height, gs_color_format format)
+{
+	using namespace kaito_tokyo::obs_bridge_utils;
+	std::vector<unique_gs_texture_t> pyramid;
+
+	std::uint32_t currentWidth = width;
+	std::uint32_t currentHeight = height;
+
+	while (currentWidth > 1 || currentHeight > 1) {
+		currentWidth = std::max(1u, (currentWidth + 1) / 2);
+		currentHeight = std::max(1u, (currentHeight + 1) / 2);
+
+		pyramid.push_back(
+			make_unique_gs_texture(currentWidth, currentHeight, format, 1, NULL, GS_RENDER_TARGET));
+	}
+
+	return pyramid;
 }
 
 } // anonymous namespace
@@ -64,8 +85,6 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  heightSub(height / subsamplingRate),
 	  bgrxOriginalImage(make_unique_gs_texture(width, height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  r32fOriginalGrayscale(make_unique_gs_texture(width, height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubOriginalGrayscale(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubLastOriginalGrayscale(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, 0)),
 	  bgrxSegmenterInput(make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT,
 						    GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  segmenterInputBuffer(SelfieSegmenter::PIXEL_COUNT * 4),
@@ -74,6 +93,10 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  maskRoiWidth(getMaskRoiDimension(width, height)[2]),
 	  maskRoiHeight(getMaskRoiDimension(width, height)[3]),
 	  r8SegmentationMask(make_unique_gs_texture(maskRoiWidth, maskRoiHeight, GS_R8, 1, NULL, GS_DYNAMIC)),
+	  r32fSubOriginalGrayscale(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubLastOriginalGrayscale(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, 0)),
+	  r32fSubDifferenceWithMask(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubReductionPyramid(createReductionPyramid(widthSub, heightSub, GS_R32F)),
 	  r8SubGFGuide(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r8SubGFSource(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFMeanGuide(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
@@ -162,6 +185,12 @@ void RenderingContext::renderSegmentationMask()
 	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, SelfieSegmenter::INPUT_WIDTH, 0);
 }
 
+void RenderingContext::calculateDifferenceWithMask()
+{
+	mainEffect.calculateDifferenceWithMask(widthSub, heightSub, r32fSubDifferenceWithMask, r32fSubOriginalGrayscale,
+					       r32fSubLastOriginalGrayscale, r8SegmentationMask);
+}
+
 void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask)
 {
 	mainEffect.resampleByNearestR8(widthSub, heightSub, r8SubGFGuide.get(), r16fOriginalGrayscale);
@@ -225,6 +254,7 @@ void RenderingContext::videoRender()
 	if (actualFilterLevel >= FilterLevel::Segmentation) {
 		renderSegmenterInput(bgrxOriginalImage.get());
 		renderSegmentationMask();
+		calculateDifferenceWithMask();
 	}
 
 	if (actualFilterLevel >= FilterLevel::GuidedFilter) {
