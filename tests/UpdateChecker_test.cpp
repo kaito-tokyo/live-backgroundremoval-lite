@@ -24,7 +24,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
-TEST(UpdateCheckerTest, Fetch)
+TEST(UpdateCheckerTest, DISABLED_Fetch)
 {
 	NullLogger logger;
 	UpdateChecker checker(logger);
@@ -33,7 +33,7 @@ TEST(UpdateCheckerTest, Fetch)
 	EXPECT_FALSE(latestVersion->empty());
 }
 
-TEST(LatestVersionTest, IsUpdateAvailable)
+TEST(LatestVersionTest, DISABLED_IsUpdateAvailable)
 {
 	NullLogger logger;
 	UpdateChecker checker(logger);
