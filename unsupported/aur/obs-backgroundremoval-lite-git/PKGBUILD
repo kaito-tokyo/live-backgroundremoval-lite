@@ -7,7 +7,7 @@ pkgdesc='Background Removal Lite for OBS Studio'
 arch=(x86_64)
 url="https://github.com/kaito-tokyo/${_pkgname}"
 license=('GPL2')
-depends=('obs-studio' 'cpr' 'fmt' 'ncnn')
+depends=('obs-studio' 'fmt' 'ncnn')
 makedepends=('git' 'cmake' 'ninja')
 source=("${_pkgname}::git+https://github.com/kaito-tokyo/${_pkgname}.git#branch=add-pkgbuild")
 sha256sums=('SKIP')
