@@ -9,7 +9,6 @@ modules:
     buildsystem: cmake-ninja
     builddir: true
     config-opts:
-      - -DCMAKE_INSTALL_PREFIX=${FLATPAK_DEST}
       - -DCMAKE_BUILD_TYPE=Release
       - -DNCNN_VULKAN=OFF
       - -DNCNN_SYSTEM_GLSLANG=OFF
@@ -26,7 +25,6 @@ modules:
     buildsystem: cmake-ninja
     builddir: true
     config-opts:
-      - -DCMAKE_INSTALL_PREFIX=${FLATPAK_DEST}
       - -DCMAKE_BUILD_TYPE=Release
       - -DFMT_TEST=OFF
       - -DFMT_DOC=OFF
@@ -39,7 +37,6 @@ modules:
     buildsystem: cmake-ninja
     builddir: true
     config-opts:
-      - -DCMAKE_INSTALL_PREFIX=${FLATPAK_DEST}
       - -DCMAKE_PREFIX_PATH=/app
       - -DCMAKE_BUILD_TYPE=Release
       - -DENABLE_FRONTEND_API=ON
