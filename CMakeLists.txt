@@ -54,10 +54,7 @@ target_sources(
     src/DebugWindow.cpp
     src/plugin-main.c
 )
-target_link_libraries(
-  ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs fmt::fmt ncnn
-)
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OBS::libobs fmt::fmt ncnn)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
 
