@@ -9,6 +9,7 @@ modules:
     buildsystem: cmake-ninja
     builddir: true
     config-opts:
+      - -DCMAKE_INSTALL_PREFIX=${FLATPAK_DEST}
       - -DCMAKE_BUILD_TYPE=Release
       - -DNCNN_VULKAN=OFF
       - -DNCNN_SYSTEM_GLSLANG=OFF
