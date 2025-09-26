@@ -12,6 +12,7 @@ modules:
     buildsystem: cmake-ninja
     builddir: true
     config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
       - -DNCNN_SHARED_LIB=ON
       - -DNCNN_BUILD_TESTS=OFF
       - -DNCNN_BUILD_EXAMPLES=OFF
@@ -24,6 +25,7 @@ modules:
     buildsystem: cmake-ninja
     builddir: true
     config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
       - -DFMT_TEST=OFF
       - -DFMT_DOC=OFF
     sources:
