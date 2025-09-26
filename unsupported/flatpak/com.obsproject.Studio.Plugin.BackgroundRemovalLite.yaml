@@ -8,12 +8,7 @@ modules:
   - name: git-lfs
     buildsystem: simple
     build-commands:
-      - ./install.sh
-    sources:
-      - type: git
-        url: https://github.com/git-lfs/git-lfs.git
-        tag: 'v3.7.0'
-        commit: '92dddf560e62ef7dd25877d87ce072f7595aa52d'
+      - git lfs pull
 
   - name: ncnn
     buildsystem: cmake-ninja
