@@ -4,24 +4,28 @@ runtime: com.obsproject.Studio
 runtime-version: stable
 sdk: org.kde.Sdk//6.8
 build-extension: true
+separate-locales: false
+build-options:
+  prefix: /app/plugins/BackgroundRemovalLite
 modules:
   - name: ncnn
-    buildsystem: simple
-    build-commands:
-      - cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DNCNN_SHARED_LIB=ON -DNCNN_BUILD_TESTS=OFF -DNCNN_BUILD_EXAMPLES=OFF
-      - cmake --build build
-      - DESTDIR=${FLATPAK_DEST} cmake --install build
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DNCNN_SHARED_LIB=ON
+      - -DNCNN_BUILD_TESTS=OFF
+      - -DNCNN_BUILD_EXAMPLES=OFF
     sources:
       - type: git
         url: https://github.com/Tencent/ncnn.git
         tag: '20250916'
         commit: 'c4193aadbbb56582aa87b1850dd3d98fb8fd936d'
   - name: fmt
-    buildsystem: simple
-    build-commands:
-      - cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DFMT_TEST=OFF -DFMT_DOC=OFF
-      - cmake --build build
-      - DESTDIR=${FLATPAK_DEST} cmake --install build
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DFMT_TEST=OFF
+      - -DFMT_DOC=OFF
     sources:
       - type: git
         url: https://github.com/fmtlib/fmt.git
