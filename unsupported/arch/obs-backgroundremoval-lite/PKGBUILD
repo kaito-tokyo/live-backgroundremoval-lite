@@ -1,27 +1,19 @@
 # Maintainer: Kaito Udagawa <umireon at kaito dot tokyo>
-pkgname=obs-backgroundremoval-lite-git
-_pkgname="${pkgname%-git}"
-pkgver=1.4.2.r6.g93e83e6
+pkgname=obs-backgroundremoval-lite
+pkgver=1.4.3
 pkgrel=1
 pkgdesc='Background Removal Lite for OBS Studio'
 arch=('x86_64')
-url="https://github.com/kaito-tokyo/${_pkgname}"
-license=('GPL-2.0-only')
+url="https://github.com/kaito-tokyo/${pkgname}"
+license=('GPL2')
 depends=('obs-studio' 'fmt' 'ncnn')
 makedepends=('git' 'cmake' 'ninja')
-provides=("${_pkgname}")
-conflicts=("${_pkgname}")
-source=("${_pkgname}::git+https://github.com/kaito-tokyo/${_pkgname}.git")
-sha256sums=('SKIP')
-
-pkgver() {
-  cd "${_pkgname}"
-  git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
-}
-
+conflicts=("${pkgname}-git")
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/kaito-tokyo/$pkgname/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('8ccb3706630fedb9ee7e65cf668751fc776a001ffdf95288b86bd4eaa4c52591')
 
 build() {
-  cd "${_pkgname}"
+  cd "${pkgname}-${pkgver}"
   cmake -B build -S . \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
@@ -33,6 +25,6 @@ build() {
 }
 
 package() {
-  cd "${_pkgname}"
+  cd "${pkgname}-${pkgver}"
   DESTDIR="$pkgdir" cmake --install build
 }
