@@ -34,12 +34,12 @@ modules:
         tag: '12.0.0'
         commit: 'e424e3f2e607da02742f73db84873b8084fc714c'
   - name: backgroundremoval-lite
-    buildsystem: simple
-    build-commands:
-      - find /app
-      - cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=/app -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DENABLE_FRONTEND_API=ON -DENABLE_QT=ON
-      - cmake --build build
-      - DESTDIR=${FLATPAK_DEST} cmake --install build
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DENABLE_FRONTEND_API=ON
+      - -DENABLE_QT=ON
     sources:
       - type: git
         url: https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
