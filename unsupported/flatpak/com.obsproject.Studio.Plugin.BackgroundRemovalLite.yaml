@@ -1,0 +1,54 @@
+id: com.obsproject.Studio.Plugin.BackgroundRemovalLite
+branch: stable
+runtime: com.obsproject.Studio
+runtime-version: stable
+sdk: org.kde.Sdk//6.8
+build-extension: true
+separate-locales: false
+appstream-compose: false
+build-options:
+  prefix: /app/plugins/BackgroundRemovalLite
+modules:
+  - name: ncnn
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DNCNN_SHARED_LIB=ON
+      - -DNCNN_BUILD_TESTS=OFF
+      - -DNCNN_BUILD_EXAMPLES=OFF
+    sources:
+      - type: git
+        url: https://github.com/Tencent/ncnn.git
+        tag: '20240410'
+  - name: fmt
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DFMT_TEST=OFF
+    sources:
+      - type: git
+        url: https://github.com/fmtlib/fmt.git
+        tag: '10.2.1'
+  - name: backgroundremoval-lite
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    sources:
+      - type: git
+        url: https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
+        tag: 1.4.3
+        commit: bf7fe71ae39a9a0a782a224dedda14513b97dfc2
+        x-checker-data:
+          type: git
+          tag-pattern: ^([\d.]+)$
+      - type: file
+        path: com.obsproject.Studio.Plugin.BackgroundRemovalLite.metainfo.xml
+    post-install:
+      - install -Dm644 --target-directory=${FLATPAK_DEST}/share/metainfo ${FLATPAK_BUILDER_BUILDDIR}/${FLATPAK_ID}.metainfo.xml
+      - appstream-compose --basename=${FLATPAK_ID} --prefix=${FLATPAK_DEST} --origin=flatpak
+        ${FLATPAK_ID}
+cleanup:
+  - /include
+  - /lib/cmake
+  - /bin
