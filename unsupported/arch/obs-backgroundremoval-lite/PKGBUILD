@@ -10,7 +10,7 @@ depends=('obs-studio' 'fmt' 'ncnn')
 makedepends=('git' 'cmake' 'ninja')
 conflicts=("${pkgname}-git")
 source=("${pkgname}-${pkgver}::git+https://github.com/kaito-tokyo/${pkgname}.git")
-sha256sums=('SKIP')
+sha256sums=('aaa')
 
 build() {
   cd "${pkgname}-${pkgver}"
