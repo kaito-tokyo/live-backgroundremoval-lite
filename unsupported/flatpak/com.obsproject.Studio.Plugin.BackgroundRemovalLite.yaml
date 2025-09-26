@@ -22,19 +22,6 @@ modules:
         url: https://github.com/Tencent/ncnn.git
         tag: '20250916'
         commit: 'c4193aadbbb56582aa87b1850dd3d98fb8fd936d'
-  - name: fmt
-    buildsystem: cmake-ninja
-    builddir: true
-    config-opts:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DBUILD_SHARED_LIBS=ON
-      - -DFMT_TEST=OFF
-      - -DFMT_DOC=OFF
-    sources:
-      - type: git
-        url: https://github.com/fmtlib/fmt.git
-        tag: '12.0.0'
-        commit: 'e424e3f2e607da02742f73db84873b8084fc714c'
   - name: backgroundremoval-lite
     buildsystem: cmake-ninja
     builddir: true
