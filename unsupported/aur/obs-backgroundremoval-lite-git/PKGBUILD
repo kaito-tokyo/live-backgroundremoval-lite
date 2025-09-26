@@ -20,7 +20,7 @@ pkgver() {
 
 build() {
   cd "$srcdir/${pkgname%-git}"
-  cmake -B build --preset linux-x86_64
+  cmake -B build --preset ubuntu-x86_64
   cmake --build build
 }
 
