@@ -30,6 +30,7 @@ modules:
   - name: backgroundremoval-lite
     buildsystem: simple
     build-commands:
+      - find /app
       - cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH=/app -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DENABLE_FRONTEND_API=ON -DENABLE_QT=ON
       - cmake --build build
       - DESTDIR=${FLATPAK_DEST} cmake --install build
