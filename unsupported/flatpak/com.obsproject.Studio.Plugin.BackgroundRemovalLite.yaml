@@ -22,12 +22,16 @@ modules:
         tag: '20250916'
         commit: 'c4193aadbbb56582aa87b1850dd3d98fb8fd936d'
   - name: fmt
-    buildsystem: cmake-ninja
-    builddir: true
-    config-opts:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DFMT_TEST=OFF
-      - -DFMT_DOC=OFF
+
+    buildsystem: simple
+    build-commands:
+      - cmake -S . -B build -G Ninja \
+          -DCMAKE_BUILD_TYPE=Release \
+          -DCMAKE_INSTALL_PREFIX=/app \
+          -DFMT_TEST=OFF \
+          -DFMT_DOC=OFF
+      - cmake --build build
+      - DESTDIR=${FLATPAK_DEST} cmake --install build
     sources:
       - type: git
         url: https://github.com/fmtlib/fmt.git
