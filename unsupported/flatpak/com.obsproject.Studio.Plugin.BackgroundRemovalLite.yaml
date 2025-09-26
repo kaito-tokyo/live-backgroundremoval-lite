@@ -8,7 +8,6 @@ modules:
   - name: ncnn
     buildsystem: simple
     build-commands:
-      - git lfs pull
       - cmake -S . -B build -G Ninja \
           -DCMAKE_BUILD_TYPE=Release \
           -DCMAKE_INSTALL_PREFIX=/app \
@@ -17,6 +16,11 @@ modules:
           -DNCNN_BUILD_EXAMPLES=OFF
       - cmake --build build
       - DESTDIR=${FLATPAK_DEST} cmake --install build
+    sources:
+      - type: git
+        url: https://github.com/Tencent/ncnn.git
+        tag: '20250916'
+        commit: 'c4193aadbbb56582aa87b1850dd3d98fb8fd936d'
   - name: fmt
     buildsystem: cmake-ninja
     builddir: true
