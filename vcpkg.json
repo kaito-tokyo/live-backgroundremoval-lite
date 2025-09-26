@@ -1,10 +1,6 @@
 {
   "dependencies": [
     {
-      "name": "cpr",
-      "default-features": false
-    },
-    {
       "name": "curl",
       "default-features": false,
       "features": [

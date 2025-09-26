@@ -10,6 +10,7 @@
 !/LICENSES
 !/src
 !/tests
+!/unsupported
 !/vcpkg-overlay-ports
 !/vcpkg-triplets
 !.aiexclude

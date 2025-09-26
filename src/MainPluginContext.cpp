@@ -37,7 +37,6 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 	: source{_source},
 	  logger("[" PLUGIN_NAME "] "),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
-	  updateChecker(logger),
 	  selfieSegmenterTaskQueue(logger, 1)
 {
 	selfieSegmenterNet.opt.num_threads = 2;
@@ -63,17 +62,7 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 	update(settings);
 }
 
-void MainPluginContext::startup() noexcept
-{
-	futureLatestVersion = std::async(std::launch::async, [self = weak_from_this()]() -> std::optional<std::string> {
-		if (auto s = self.lock()) {
-			return s.get()->updateChecker.fetch();
-		} else {
-			blog(LOG_INFO, "MainPluginContext has been destroyed, skipping update check");
-			return std::nullopt;
-		}
-	});
-}
+void MainPluginContext::startup() noexcept {}
 
 void MainPluginContext::shutdown() noexcept
 {
@@ -111,11 +100,6 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_t *props = obs_properties_create();
 
 	const char *updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
-	std::optional<std::string> latestVersion = getLatestVersion();
-	if (latestVersion.has_value() && updateChecker.isUpdateAvailable(latestVersion.value(), PLUGIN_VERSION)) {
-		updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
-	}
-
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
@@ -245,19 +229,6 @@ try {
 } catch (...) {
 	logger.error("Failed to create rendering context: unknown error");
 	return frame;
-}
-
-std::optional<std::string> MainPluginContext::getLatestVersion() const
-{
-	if (!futureLatestVersion.valid()) {
-		return std::nullopt;
-	}
-
-	if (futureLatestVersion.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
-		return std::nullopt;
-	}
-
-	return futureLatestVersion.get();
 }
 
 } // namespace obs_backgroundremoval_lite

@@ -10,7 +10,6 @@ option(ENABLE_QT "Use Qt functionality" OFF)
 include(compilerconfig)
 include(defaults)
 include(helpers)
-include(install-vcpkg)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE)
 
@@ -35,10 +34,11 @@ if(ENABLE_QT)
   )
 endif()
 
-find_package(cpr CONFIG REQUIRED)
+set(VCPKG_INSTALLED_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed")
+list(PREPEND CMAKE_PREFIX_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
+
 find_package(fmt CONFIG REQUIRED)
 find_package(ncnn CONFIG REQUIRED)
-find_package(semver CONFIG REQUIRED)
 
 target_compile_definitions(
   ${CMAKE_PROJECT_NAME}
@@ -54,10 +54,7 @@ target_sources(
     src/DebugWindow.cpp
     src/plugin-main.c
 )
-target_link_libraries(
-  ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs cpr::cpr fmt::fmt ncnn semver::semver
-)
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OBS::libobs fmt::fmt ncnn)
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
 
