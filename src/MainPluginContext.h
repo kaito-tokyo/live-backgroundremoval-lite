@@ -29,7 +29,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #ifdef __cplusplus
 
-#include <future>
 #include <memory>
 #include <mutex>
 #include <stdint.h>
@@ -44,7 +43,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
 #include "ThrottledTaskQueue.hpp"
-#include "UpdateChecker/UpdateChecker.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -57,7 +55,6 @@ private:
 	obs_source_t *const source = nullptr;
 	const kaito_tokyo::obs_bridge_utils::ObsLogger logger;
 	const MainEffect mainEffect;
-	UpdateChecker updateChecker;
 	ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
 	Preset preset;
@@ -65,8 +62,6 @@ private:
 	std::shared_ptr<RenderingContext> renderingContext;
 	std::shared_ptr<RenderingContext> nextRenderingContext;
 	std::int64_t frameCountBeforeContextSwitch = 0;
-
-	std::shared_future<std::optional<std::string>> futureLatestVersion;
 
 	std::unique_ptr<DebugWindow> debugWindow;
 
