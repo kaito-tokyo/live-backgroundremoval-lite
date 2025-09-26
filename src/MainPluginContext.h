@@ -1,5 +1,5 @@
 /*
-OBS Background Removal Lite
+Background Removal Lite
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -58,7 +58,7 @@ private:
 	obs_source_t *const source = nullptr;
 	const kaito_tokyo::obs_bridge_utils::ObsLogger logger;
 	const MainEffect mainEffect;
-	UpdateChecker<MyCprSession> updateChecker;
+	UpdateChecker updateChecker;
 	ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
 	Preset preset;

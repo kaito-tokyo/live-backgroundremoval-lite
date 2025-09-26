@@ -1,5 +1,5 @@
 /*
-obs-showdraw
+Background Removal Lite
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -35,7 +35,7 @@ namespace obs_backgroundremoval_lite {
  * @note The calling context is expected to handle any desired asynchronous
  * execution.
  */
-template<typename TCprSession = cpr::Session> class UpdateChecker {
+class UpdateChecker {
 public:
 	static_assert(std::is_base_of_v<cpr::Session, TCprSession>, "TCprSession must inherit from cpr::Session");
 

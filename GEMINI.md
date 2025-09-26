@@ -67,23 +67,23 @@ User: `1.2.3`
 Gemini: `buildspec.json のバージョンを 1.2.3 に更新します。よろしいですか？`
 User: `はい`
 Gemini: `mainブランチにいることを確認し、ブランチ 'bump-1.2.3' を作成し、buildspec.json を更新しました。プルリクエストを作成します。`
-Gemini: `プルリクエストのURL: https://github.com/kaito-tokyo/obs-showdraw/pull/123`
+Gemini: `プルリクエストのURL: https://github.com/kaito-tokyo/obs-backgroundremoval-lite/pull/123`
 Gemini: `このプルリクエストをマージし、完了したら「マージしたのでタグをプッシュして」と私に報告してください。`
 User: `マージしたのでタグをプッシュして`
 Gemini: `バージョン 1.2.3 の Git タグをプッシュします。よろしいですか？`
 User: `はい`
 Gemini: `mainブランチに切り替え、リモートと同期し、buildspec.jsonのバージョンを確認しました。Git タグ '1.2.3' をプッシュしました。GitHub Actions でリリースワークフローが開始されます。`
-Gemini: `GitHub リリースのURL: https://github.com/kaito-tokyo/obs-showdraw/releases`
+Gemini: `GitHub リリースのURL: https://github.com/kaito-tokyo/obs-backgroundremoval-lite/releases`
 Gemini: `GitHub上でリリースを完了してください。`
 
 # Development Guideline for Astro Pages
 
 - **Purpose**: The Astro project in the `docs/` directory builds the official website for this OBS plugin.
-- **Hosting**: The site is hosted on GitHub Pages at `obs-showdraw.kaito.tokyo`.
+- **Hosting**: The site is hosted on GitHub Pages at `obs-backgroundremoval-lite.kaito.tokyo`.
 - **Source Directory**: All source code for the Astro site is located in the `docs` directory.
 - **Key URLs**:
-    - `https://obs-showdraw.kaito.tokyo/`: Main page with a multilingual plugin description.
-    - `https://obs-showdraw.kaito.tokyo/metadata/`: Hosts metadata for the OBS plugin itself.
+    - `https://obs-backgroundremoval-lite.kaito.tokyo/`: Main page with a multilingual plugin description.
+    - `https://obs-backgroundremoval-lite.kaito.tokyo/metadata/`: Hosts metadata for the OBS plugin itself.
 - **Formatting**: All files within the `docs/` directory must be formatted using Prettier.
 - **Formatting Command**: To format the files, run `npm run format` from within the `docs/` directory.
 - **Dependencies**: Dependencies are managed by `npm` and defined in `docs/package.json`.

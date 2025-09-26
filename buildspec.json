@@ -36,8 +36,8 @@
             "bundleId": "tokyo.kaito.obs-backgroundremoval-lite"
         }
     },
-    "name": "obs-backgroundremoval-lite",
-    "displayName": "OBS Background Removal Lite",
+    "name": "backgroundremoval-lite",
+    "displayName": "Background Removal Lite",
     "version": "1.4.2",
     "author": "Kaito Udagawa",
     "website": "https://obs-backgroundremoval-lite.kaito.tokyo",

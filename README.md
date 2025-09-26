@@ -1,4 +1,4 @@
-# OBS Background Removal Lite
+# Background Removal Lite
 
 An OBS plugin that allows you to remove the background from your video source in real-time, without the need for a green screen.
 
