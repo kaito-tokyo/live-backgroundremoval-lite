@@ -1,7 +1,7 @@
 # Maintainer: Kaito Udagawa <umireon at kaito dot tokyo>
 pkgname=obs-backgroundremoval-lite-git
 _pkgname="${pkgname%-git}"
-pkgver=1.4.3
+pkgver=1.4.2.r6.g93e83e6
 pkgrel=1
 pkgdesc='Background Removal Lite for OBS Studio'
 arch=(x86_64)
@@ -26,6 +26,8 @@ build() {
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
     -DCMAKE_INSTALL_LIBDIR=lib \
+    -DENABLE_FRONTEND_API=ON \
+    -DENABLE_QT=ON \
     -GNinja
   cmake --build build
 }
