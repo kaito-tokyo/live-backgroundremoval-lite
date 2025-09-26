@@ -100,7 +100,6 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_t *props = obs_properties_create();
 
 	const char *updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
-	std::optional<std::string> latestVersion = getLatestVersion();
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
