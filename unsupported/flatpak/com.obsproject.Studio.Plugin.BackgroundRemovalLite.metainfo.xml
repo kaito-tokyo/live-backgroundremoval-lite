@@ -4,6 +4,13 @@
   <extends>com.obsproject.Studio</extends>
   <name>Background Removal Lite</name>
   <summary>Background Removal Lite for OBS Studio</summary>
+  <description>
+    Background Removal Lite is a lightweight and easy-to-use plugin for OBS
+    Studio that allows you to remove the background from your webcam feed without
+    the need for a green screen. It uses advanced AI technology to accurately
+    detect and remove the background, leaving you with a clean and professional
+    look.
+  </description>
   <url type="homepage">https://github.com/kaito-tokyo/obs-backgroundremoval-lite</url>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0</project_license>
@@ -12,4 +19,5 @@
       <description></description>
     </release>
   </releases>
+  <content_rating type="oars-1.1" />
 </component>
