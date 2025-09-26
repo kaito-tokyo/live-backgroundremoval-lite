@@ -10,7 +10,6 @@ option(ENABLE_QT "Use Qt functionality" OFF)
 include(compilerconfig)
 include(defaults)
 include(helpers)
-include(install-vcpkg)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE)
 

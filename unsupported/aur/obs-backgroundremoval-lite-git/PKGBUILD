@@ -1,30 +1,34 @@
 # Maintainer: Kaito Udagawa <umireon at kaito dot tokyo>
 pkgname=obs-backgroundremoval-lite-git
+_pkgname="${pkgname%-git}"
 pkgver=1.4.3
 pkgrel=1
 pkgdesc='Background Removal Lite for OBS Studio'
 arch=(x86_64)
-url='https://github.com/kaito-tokyo/obs-backgroundremoval-lite'
+url="https://github.com/kaito-tokyo/${_pkgname}"
 license=('GPL2')
-depends=('obs-studio')
+depends=('obs-studio' 'cpr' 'fmt' 'ncnn')
 makedepends=('git' 'cmake' 'ninja')
-source=('git+https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git')
+source=("${_pkgname}::git+https://github.com/kaito-tokyo/${_pkgname}.git")
 sha256sums=('SKIP')
 
 
 pkgver() {
-  cd "$srcdir/${pkgname%-git}"
-  printf "%s" "$(git describe --tags --long | sed 's/\([^-]*-\)g/r\1/;s/-/./g')"
+  cd "${_pkgname}"
+  git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
 }
 
 
 build() {
-  cd "$srcdir/${pkgname%-git}"
-  cmake -B build --preset ubuntu-x86_64
+  cd "${_pkgname}"
+  cmake -B build -S . \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -GNinja
   cmake --build build
 }
 
 package() {
-  cd "$srcdir/${pkgname%-git}"
-  cmake --install build --prefix "$pkgdir/usr"
+  cd "${_pkgname}"
+  DESTDIR="$pkgdir" cmake --install build
 }
