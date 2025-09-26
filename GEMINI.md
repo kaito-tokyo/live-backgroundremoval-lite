@@ -65,7 +65,7 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     *   **ACTION**: Replace the `sha256sums` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
     *   **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.metainfo.xml`.
     *   **ACTION**: The new release element should have the `version` and `date` attributes set to the new version and current date.
-    *   **ACTION**: The description inside the release element should point to the GitHub release notes.
+    *   **ACTION**: The description inside the release element should be a summary of the release notes from GitHub Releases.
     *   **ACTION**: Commit the changes for both files and create a single pull request.
 
 **Example Interaction:**
