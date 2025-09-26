@@ -41,7 +41,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs-bridge-utils/ObsLogger.hpp>
 
 #include "MainEffect.hpp"
-#include "MyCprSession.hpp"
 #include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
 #include "ThrottledTaskQueue.hpp"

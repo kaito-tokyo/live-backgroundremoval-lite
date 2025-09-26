@@ -37,8 +37,6 @@ namespace obs_backgroundremoval_lite {
  */
 class UpdateChecker {
 public:
-	static_assert(std::is_base_of_v<cpr::Session, TCprSession>, "TCprSession must inherit from cpr::Session");
-
 	UpdateChecker(const kaito_tokyo::obs_bridge_utils::ILogger &_logger) : logger(_logger) {}
 
 	/**
@@ -48,9 +46,7 @@ public:
      */
 	std::optional<std::string> fetch()
 	{
-		// Use a fully qualified name to avoid `using namespace` in a header file.
-		// MyCprSession is assumed to be in the kaito_tokyo::obs_backgroundremoval_lite namespace.
-		TCprSession session;
+		cpr::Session session;
 		session.SetUrl(cpr::Url{"https://obs-backgroundremoval-lite.kaito.tokyo/metadata/latest-version.txt"});
 		cpr::Response r = session.Get();
 
