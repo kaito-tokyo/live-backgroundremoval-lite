@@ -19,8 +19,7 @@ modules:
   - name: fmt
     buildsystem: simple
     build-commands:
-      - |
-        cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DFMT_TEST=OFF -DFMT_DOC=OFF
+      - cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/app -DFMT_TEST=OFF -DFMT_DOC=OFF
       - cmake --build build
       - DESTDIR=${FLATPAK_DEST} cmake --install build
     sources:
