@@ -8,8 +8,17 @@
       "name": "curl",
       "default-features": false,
       "features": [
+        "sspi"
+      ],
+      "platform": "(windows & !uwp) | mingw"
+    },
+    {
+      "name": "curl",
+      "default-features": false,
+      "features": [
         "wolfssl"
-      ]
+      ],
+      "platform": "(uwp | !windows) & !mingw"
     },
     "fmt",
     "gtest",

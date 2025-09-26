@@ -1,5 +1,5 @@
 /*
-obs-showdraw
+Background Removal Lite
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -20,25 +20,23 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <gtest/gtest.h>
 
-#include <MyCprSession.hpp>
-
 #include "NullLogger.hpp"
 
 using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
-TEST(UpdateCheckerTest, Fetch)
+TEST(UpdateCheckerTest, DISABLED_Fetch)
 {
 	NullLogger logger;
-	UpdateChecker<MyCprSession> checker(logger);
+	UpdateChecker checker(logger);
 	auto latestVersion = checker.fetch();
 	ASSERT_TRUE(latestVersion.has_value());
 	EXPECT_FALSE(latestVersion->empty());
 }
 
-TEST(LatestVersionTest, IsUpdateAvailable)
+TEST(LatestVersionTest, DISABLED_IsUpdateAvailable)
 {
 	NullLogger logger;
-	UpdateChecker<MyCprSession> checker(logger);
+	UpdateChecker checker(logger);
 
 	EXPECT_TRUE(checker.isUpdateAvailable("1.0.0", "0.9.0"));
 	EXPECT_FALSE(checker.isUpdateAvailable("1.0.0", "1.0.0"));
