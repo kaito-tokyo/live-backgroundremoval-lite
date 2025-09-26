@@ -59,6 +59,12 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     *   **ACTION**: Provide the releases URL.
     *   **INSTRUCTION**: User completes the release on GitHub.
 
+6.  **Update PKGBUILD for Arch Linux**:
+    *   **ACTION**: Match the `pkgver` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
+    *   **ACTION**: Download the source tar.gz for that version from GitHub and calculate its SHA-256 checksum.
+    *   **ACTION**: Replace the `sha256sums` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
+    *   **ACTION**: Commit the changes and create a pull request.
+
 **Example Interaction:**
 
 User: `リリースを開始して`
