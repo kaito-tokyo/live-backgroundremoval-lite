@@ -232,18 +232,5 @@ try {
 	return frame;
 }
 
-std::optional<std::string> MainPluginContext::getLatestVersion() const
-{
-	if (!futureLatestVersion.valid()) {
-		return std::nullopt;
-	}
-
-	if (futureLatestVersion.wait_for(std::chrono::seconds(0)) != std::future_status::ready) {
-		return std::nullopt;
-	}
-
-	return futureLatestVersion.get();
-}
-
 } // namespace obs_backgroundremoval_lite
 } // namespace kaito_tokyo

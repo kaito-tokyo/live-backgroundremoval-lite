@@ -65,8 +65,6 @@ private:
 
 	std::unique_ptr<DebugWindow> debugWindow;
 
-	std::optional<std::string> getLatestVersion() const;
-
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source);
 	void startup() noexcept;
