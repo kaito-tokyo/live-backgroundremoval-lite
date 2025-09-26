@@ -22,7 +22,13 @@ sudo pacman -S --needed base-devel git debugedit
 
 ### Build and Install Steps
 
-1.  Navigate to the directory of the version you want to build.
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
+    cd obs-backgroundremoval-lite/unsupported/arch
+    ```
+
+2.  Navigate to the directory of the version you want to build.
 
       * **For a specific release version (stable):**
         ```bash
@@ -33,12 +39,10 @@ sudo pacman -S --needed base-devel git debugedit
         cd obs-backgroundremoval-lite-git
         ```
 
-2.  Use `makepkg` to build and install the package.
+3.  Use `makepkg` to build and install the package.
 
       * The `-s` flag installs necessary dependencies from the official repositories.
       * The `-i` flag installs the package after a successful build.
-
-    <!-- end list -->
 
     ```bash
     makepkg -si
