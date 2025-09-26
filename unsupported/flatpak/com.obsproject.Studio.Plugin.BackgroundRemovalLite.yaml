@@ -26,6 +26,7 @@ modules:
     builddir: true
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
+      - -DBUILD_SHARED_LIBS=ON
       - -DFMT_TEST=OFF
       - -DFMT_DOC=OFF
     sources:
@@ -54,5 +55,4 @@ modules:
       - install -Dm644 --target-directory=${FLATPAK_DEST}/share/metainfo ${FLATPAK_BUILDER_BUILDDIR}/${FLATPAK_ID}.metainfo.xml
 cleanup:
   - /include
-  - /lib/cmake
-  - /bin
+  - /lib/pkgconfig
