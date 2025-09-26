@@ -1,5 +1,5 @@
 /*
-OBS Background Removal Lite
+Background Removal Lite
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify

@@ -1,5 +1,5 @@
 /*
-OBS Background Removal Lite
+Background Removal Lite
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -41,7 +41,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs-bridge-utils/ObsLogger.hpp>
 
 #include "MainEffect.hpp"
-#include "MyCprSession.hpp"
 #include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
 #include "ThrottledTaskQueue.hpp"
@@ -58,7 +57,7 @@ private:
 	obs_source_t *const source = nullptr;
 	const kaito_tokyo::obs_bridge_utils::ObsLogger logger;
 	const MainEffect mainEffect;
-	UpdateChecker<MyCprSession> updateChecker;
+	UpdateChecker updateChecker;
 	ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
 	Preset preset;
