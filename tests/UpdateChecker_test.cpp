@@ -20,8 +20,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <gtest/gtest.h>
 
-#include <MyCprSession.hpp>
-
 #include "NullLogger.hpp"
 
 using namespace kaito_tokyo::obs_backgroundremoval_lite;
