@@ -34,7 +34,6 @@ if(ENABLE_QT)
   )
 endif()
 
-find_package(cpr CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(ncnn CONFIG REQUIRED)
 find_package(semver CONFIG REQUIRED)
@@ -55,7 +54,7 @@ target_sources(
 )
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs cpr::cpr fmt::fmt ncnn semver::semver
+  PUBLIC OBS::libobs fmt::fmt ncnn semver::semver
 )
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
