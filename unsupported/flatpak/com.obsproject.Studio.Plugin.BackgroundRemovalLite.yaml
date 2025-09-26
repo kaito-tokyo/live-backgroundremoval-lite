@@ -11,24 +11,30 @@ build-options:
 modules:
   - name: ncnn
     buildsystem: cmake-ninja
+    builddir: true
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
-      - -DNCNN_SHARED_LIB=ON
-      - -DNCNN_BUILD_TESTS=OFF
+      - -DNCNN_VULKAN=OFF
+      - -DNCNN_SYSTEM_GLSLANG=OFF
+      - -DNCNN_BUILD_TOOLS=OFF
       - -DNCNN_BUILD_EXAMPLES=OFF
+      - -DNCNN_BUILD_BENCHMARK=OFF
+      - -DNCNN_SHARED_LIB=ON
     sources:
       - type: git
         url: https://github.com/Tencent/ncnn.git
-        tag: '20240410'
+        tag: '20250916'
   - name: fmt
     buildsystem: cmake-ninja
+    builddir: true
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
       - -DFMT_TEST=OFF
+      - -DFMT_DOC=OFF
     sources:
       - type: git
         url: https://github.com/fmtlib/fmt.git
-        tag: '10.2.1'
+        tag: '12.0.0'
   - name: backgroundremoval-lite
     buildsystem: cmake-ninja
     builddir: true
@@ -38,7 +44,6 @@ modules:
       - type: git
         url: https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
         tag: 1.4.3
-        commit: bf7fe71ae39a9a0a782a224dedda14513b97dfc2
         x-checker-data:
           type: git
           tag-pattern: ^([\d.]+)$
