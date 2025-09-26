@@ -5,11 +5,6 @@ runtime-version: stable
 sdk: org.kde.Sdk//6.8
 build-extension: true
 modules:
-  - name: git-lfs
-    buildsystem: simple
-    build-commands:
-      - git lfs pull
-
   - name: ncnn
     buildsystem: cmake-ninja
     builddir: true
