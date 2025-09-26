@@ -9,17 +9,11 @@ license=('GPL2')
 depends=('obs-studio' 'fmt' 'ncnn')
 makedepends=('git' 'cmake' 'ninja')
 conflicts=("${pkgname}-git")
-source=("${pkgname}::git+https://github.com/kaito-tokyo/${pkgname}.git")
+source=("${pkgname}-${pkgver}::git+https://github.com/kaito-tokyo/${pkgname}.git")
 sha256sums=('SKIP')
 
-pkgver() {
-  cd "${pkgname}"
-  git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
-}
-
-
 build() {
-  cd "${pkgname}"
+  cd "${pkgname}-${pkgver}"
   cmake -B build -S . \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/usr \
@@ -31,6 +25,6 @@ build() {
 }
 
 package() {
-  cd "${_pkgname}"
+  cd "${_pkgname}-${pkgver}"
   DESTDIR="$pkgdir" cmake --install build
 }
