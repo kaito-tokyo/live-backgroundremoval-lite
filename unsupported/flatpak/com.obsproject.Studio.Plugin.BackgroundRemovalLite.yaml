@@ -16,6 +16,7 @@ modules:
       - -DNCNN_SHARED_LIB=ON
       - -DNCNN_BUILD_TESTS=OFF
       - -DNCNN_BUILD_EXAMPLES=OFF
+      - -DNCNN_BUILD_TOOLS=OFF
     sources:
       - type: git
         url: https://github.com/Tencent/ncnn.git
@@ -55,4 +56,5 @@ modules:
       - install -Dm644 --target-directory=${FLATPAK_DEST}/share/metainfo ${FLATPAK_BUILDER_BUILDDIR}/${FLATPAK_ID}.metainfo.xml
 cleanup:
   - /include
+  - /lib/cmake
   - /lib/pkgconfig
