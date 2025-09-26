@@ -9,8 +9,8 @@ url="https://github.com/kaito-tokyo/${_pkgname}"
 license=('GPL-2.0-only')
 depends=('obs-studio' 'fmt' 'ncnn')
 makedepends=('git' 'cmake' 'ninja')
-provides=("${_pkgname}" "${_pkgname}-dbg")
-conflicts=("${_pkgname}" "${_pkgname}-dbg")
+provides=("${_pkgname}" "${_pkgname}-debug")
+conflicts=("${_pkgname}" "${_pkgname}-debug")
 source=("${_pkgname}::git+https://github.com/kaito-tokyo/${_pkgname}.git")
 sha256sums=('SKIP')
 
