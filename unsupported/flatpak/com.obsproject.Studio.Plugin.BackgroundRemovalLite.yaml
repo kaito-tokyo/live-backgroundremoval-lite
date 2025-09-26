@@ -40,6 +40,7 @@ modules:
     builddir: true
     config-opts:
       - -DCMAKE_INSTALL_PREFIX=${FLATPAK_DEST}
+      - -DCMAKE_PREFIX_PATH=/app
       - -DCMAKE_BUILD_TYPE=Release
       - -DENABLE_FRONTEND_API=ON
       - -DENABLE_QT=ON
