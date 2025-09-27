@@ -2,13 +2,11 @@
 
 - This project must be developed in C++17.
 - Use `()` instead of `(void)` for empty argument lists except for part surrounded by `extern "C"`.
-- Implementation related to unique_ptr should be placed under bridge.hpp.
 - C and C++ files must be formatted using clang-format-19 after any modification.
 - CMake files must be formatted using gersemi after any modification.
 - OBS team maintains the CMake and GitHub Actions so we don't need to improve these parts. However, you can modify workflows start with `my-`.
 - The default branch of this project is `main`.
 - There must be a empty newline at the end of the file. The build will fail if this rule is not followed.
-- Run clang-format-19 when you get no newline at end of file error first.
 
 ## How to build and run tests on macOS
 
@@ -16,75 +14,53 @@
 2. Run `cmake --build --preset macos-testing`.
 3. Run `ctest --preset macos-testing --rerun-failed --output-on-failure`.
 
-## How to test the effect shader (DrawingEffect_shader) on macOS
-1. Run `( cd tests/shader && cmake --preset macos-testing )`.
-2. Run ``( cd tests/shader && cmake --build --preset macos-testing )`.
-3. Run `( cd tests/shader && ctest --preset macos-testing )`.
-
 ## How to test plugin with OBS
 
 1. Run `cmake --preset macos-testing` only when CMake-related changes are made.
-2. Run `cmake --build --preset macos-testing && rm -rf ~/"Library/Application Support/obs-studio/plugins/obs-backgroundremoval-lite.plugin" && cp -r ./build_macos/RelWithDebInfo/obs-backgroundremoval-lite.plugin ~/"Library/Application Support/obs-studio/plugins"`.
+2. Run `cmake --build --preset macos-testing && rm -rf ~/"Library/Application Support/obs-studio/plugins/backgroundremoval-lite.plugin" && cp -r ./build_macos/RelWithDebInfo/backgroundremoval-lite.plugin ~/"Library/Application Support/obs-studio/plugins"`.
 
 ## Release Automation with Gemini
 
-To initiate a new release, the user will instruct Gemini to start the process (e.g., "リリースを開始して"). Gemini will then perform the following steps:
+To initiate a new release, the user will instruct Gemini to start the process (e.g., "リリースを開始して" or "リリースしたい"). Gemini will then perform the following steps:
 
 1.  **Specify New Version**:
-    *   **ACTION**: Display the current version.
-    *   **ACTION**: Prompt the user to provide the new version number (e.g., `1.0.0`, `1.0.0-beta1`).
-    *   **CONSTRAINT**: The version must follow Semantic Versioning (e.g., `MAJOR.MINOR.PATCH`).
+    * **ACTION**: Display the current version.
+    * **ACTION**: Prompt the user to provide the new version number (e.g., `1.0.0`, `1.0.0-beta1`).
+    * **CONSTRAINT**: The version must follow Semantic Versioning (e.g., `MAJOR.MINOR.PATCH`).
 
 2.  **Prepare & Update `buildspec.json`**:
-    *   **ACTION**: Confirm the current branch is `main` and synchronized with the remote.
-    *   **ACTION**: Create a new branch (`bump-X.Y.Z`).
-    *   **ACTION**: Update the `version` field in `buildspec.json`.
+    * **ACTION**: Confirm the current branch is `main` and synchronized with the remote.
+    * **ACTION**: Create a new branch (`bump-X.Y.Z`).
+    * **ACTION**: Update the `version` field in `buildspec.json`.
 
 3.  **Create & Merge Pull Request (PR)**:
-    *   **ACTION**: Create a PR for the version update.
-    *   **ACTION**: Provide the URL of the created PR.
-    *   **ACTION**: Instruct the user to merge this PR.
-    *   **PAUSE**: Wait for user confirmation of PR merge.
+    * **ACTION**: Create a PR for the version update.
+    * **ACTION**: Provide the URL of the created PR.
+    * **ACTION**: Instruct the user to merge this PR.
+    * **PAUSE**: Wait for user confirmation of PR merge.
 
 4.  **Push Git Tag**:
-    *   **TRIGGER**: User instructs Gemini to push the Git tag after PR merge confirmation.
-    *   **ACTION**: Switch to the `main` branch.
-    *   **ACTION**: Synchronize with the remote.
-    *   **ACTION**: Verify the `buildspec.json` version.
-    *   **ACTION**: Push the Git tag.
-    *   **CONSTRAINT**: The tag must be `X.Y.Z` (no 'v' prefix).
-    *   **RESULT**: Pushing the tag triggers the automated release workflow.
+    * **TRIGGER**: User instructs Gemini to push the Git tag after PR merge confirmation.
+    * **ACTION**: Switch to the `main` branch.
+    * **ACTION**: Synchronize with the remote.
+    * **ACTION**: Verify the `buildspec.json` version.
+    * **ACTION**: Push the Git tag.
+    * **CONSTRAINT**: The tag must be `X.Y.Z` (no 'v' prefix).
+    * **RESULT**: Pushing the tag triggers the automated release workflow.
 
 5.  **Finalize Release**:
-    *   **ACTION**: Provide the releases URL.
-    *   **INSTRUCTION**: User completes the release on GitHub.
+    * **ACTION**: Provide the releases URL.
+    * **INSTRUCTION**: User completes the release on GitHub.
 
 6.  **Update Package Manifests**:
-    *   **ACTION**: Match the `pkgver` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
-    *   **ACTION**: Download the source tar.gz for that version from GitHub and calculate its SHA-256 checksum.
-    *   **ACTION**: Replace the `sha256sums` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
-    *   **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.metainfo.xml`.
-    *   **ACTION**: The new release element should have the `version` and `date` attributes set to the new version and current date.
-    *   **ACTION**: The description inside the release element should be a summary of the release notes from GitHub Releases.
+    * **ACTION**: Match the `pkgver` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
+    * **ACTION**: Download the source tar.gz for that version from GitHub and calculate its SHA-256 checksum.
+    * **ACTION**: Replace the `sha256sums` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
+    * **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.metainfo.xml`.
+    * **ACTION**: The new release element should have the `version` and `date` attributes set to the new version and current date.
+    * **ACTION**: The description inside the release element should be a summary of the release notes from GitHub Releases.
         You can get the body of release note by running `gh release view <tag>`.
-    *   **ACTION**: Commit the changes for both files and create a single pull request.
-
-**Example Interaction:**
-
-User: `リリースを開始して`
-Gemini: `はい、新しいリリースを開始します。現在のバージョンは X.Y.Z です。buildspec.json に記載するリリースバージョンを指定してください (例: 1.0.0, 1.0.0-beta1)。`
-User: `1.2.3`
-Gemini: `buildspec.json のバージョンを 1.2.3 に更新します。よろしいですか？`
-User: `はい`
-Gemini: `mainブランチにいることを確認し、ブランチ 'bump-1.2.3' を作成し、buildspec.json を更新しました。プルリクエストを作成します。`
-Gemini: `プルリクエストのURL: https://github.com/kaito-tokyo/obs-backgroundremoval-lite/pull/123`
-Gemini: `このプルリクエストをマージし、完了したら「マージしたのでタグをプッシュして」と私に報告してください。`
-User: `マージしたのでタグをプッシュして`
-Gemini: `バージョン 1.2.3 の Git タグをプッシュします。よろしいですか？`
-User: `はい`
-Gemini: `mainブランチに切り替え、リモートと同期し、buildspec.jsonのバージョンを確認しました。Git タグ '1.2.3' をプッシュしました。GitHub Actions でリリースワークフローが開始されます。`
-Gemini: `GitHub リリースのURL: https://github.com/kaito-tokyo/obs-backgroundremoval-lite/releases`
-Gemini: `GitHub上でリリースを完了してください。`
+    * **ACTION**: Commit the changes for both files and create a single pull request.
 
 # Development Guideline for Astro Pages
 
@@ -107,7 +83,7 @@ Gemini: `GitHub上でリリースを完了してください。`
 ### プロジェクトの基本情報
 - **プロジェクト名:** obs-backgroundremoval-lite
 - **ホスティング場所:** GitHub
-- **リポジトリURL:** https://github.com/kaito-tokyo/obs-backgroundremoval-lite
+- **リポジトリURL:** [https://github.com/kaito-tokyo/obs-backgroundremoval-lite](https://github.com/kaito-tokyo/obs-backgroundremoval-lite)
 
 ### 全体のゴール
 あなたのゴールは、GitHubの課題に対する一次対応担当者として振る舞うことです。課題の言語と内容を分析し、上記のプロジェクト情報と以下のルールに基づいて歓迎的で役立つコメントを生成しなければなりません。
@@ -200,3 +176,10 @@ Gemini: `GitHub上でリリースを完了してください。`
 - 「以上の技術的、そして文化的な理由から、Arch Linux向けのバイナリ提供のご要望にお応えすることはできません。これは決してサポートを軽視しているわけではなく、Arch Linuxのエコシステムにおける最も現実的で正しいアプローチを選択した結果であることをご理解いただけますと幸いです。」と伝えてください。
 - **具体的な解決策**として、ビルド方法が記載されている`CONTRIBUTING.md`ファイルへ、必ず**完全なURL形式**でリンクしてください。
 - 最後に、**「もしコミュニティのためにAURに`PKGBUILD`を登録・メンテナンスしていただけるのであれば、それは非常に価値のある貢献であり、私たちはそれを歓迎します」**と付け加え、議論を建設的な方向へ導いてください。
+
+**3. マニュアルインストールの方法**
+- Arch Linux向けにソースからビルド・インストールする方法は、以下のドキュメントに記載されています。
+  - `https://github.com/kaito-tokyo/obs-backgroundremoval-lite/blob/main/unsupported/arch/README.md`
+- Flatpak向けにソースからビルド・インストールする方法は、以下のドキュメントに記載されています。
+  - `https://github.com/kaito-tokyo/obs-backgroundremoval-lite/blob/main/unsupported/flatpak/README.md`
+- これらのドキュメントはコミュニティによってメンテナンスされることを想定しており、公式サポートの対象外です。
