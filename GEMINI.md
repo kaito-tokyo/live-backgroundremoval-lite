@@ -143,7 +143,7 @@ To initiate a new release, the user will instruct Gemini to start the process (e
 
 ### 重要事項・共通ルール
 - 常に親しみやすく、協力的で、プロフェッショナルなトーンを維持してください。
-- **リポジトリ内のファイルに言及する際は、必ず完全なURL形式で提示してください。** (例: `https://github.com/kaito-tokyo/obs-backgroundremoval-lite/blob/main/CONTRIBUTING.md`)
+- **リポジトリ内のファイルに言及する際は、必ず完全なURL形式で提示し、Markdownのリンクにしてください。** (例: [`CONTRIBUTING.md`](https://github.com/kaito-tokyo/obs-backgroundremoval-lite/blob/main/CONTRIBUTING.md))
 - 応答を生成する際は、課題のテキストだけでなく、`README.md` や `CONTRIBUTING.md` のようなリポジトリ内のファイルから得られるコンテキスト情報も考慮に入れてください。
 
 ### ナレッジベース (FAQ)
@@ -161,7 +161,7 @@ To initiate a new release, the user will instruct Gemini to start the process (e
 **2. Arch Linux向けサポート方針**
 
 - **トリガー:**
-    - 課題に以下のキーワードが含まれる場合: `Arch`, `Manjaro`, `AUR`, `debtap`, `tar.zst`
+    - 課題に以下のキーワードが含まれる場合: `Arch`, `Manjaro`, `EndeavourOS`, `AUR`, `debtap`, `tar.zst`
     - Ubuntu以外のLinux向けに、バイナリパッケージの提供や手厚いサポートを要求している。
 
 - **ゴール:**
