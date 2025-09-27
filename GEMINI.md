@@ -1,3 +1,17 @@
+# Table of Contents
+- [Development Guideline of the OBS plugin](#development-guideline-of-the-obs-plugin)
+  - [How to build and run tests on macOS](#how-to-build-and-run-tests-on-macos)
+  - [How to test plugin with OBS](#how-to-test-plugin-with-obs)
+- [Release Automation with Gemini](#release-automation-with-gemini)
+- [Development Guideline for Astro Pages](#development-guideline-for-astro-pages)
+- [Instructions for AI Agent (AIエージェントへの指示書)](#aiエージェントへの指示書)
+  - [BR Lite Buddy: Guideline for Initial Response of Issue](#br-lite-buddy-guideline-for-initial-response-of-issue)
+    - [Project Information (プロジェクトの基本情報)](#プロジェクトの基本情報)
+    - [Overall Goal (全体のゴール)](#全体のゴール)
+    - [Procedures (手順)](#手順)
+    - [Important Common Rules (重要事項・共通ルール)](#重要事項共通ルール)
+    - [Knowledge Base (FAQ) (ナレッジベース-faq)](#ナレッジベース-faq)
+
 # Development Guideline of the OBS plugin
 
 - This project must be developed in C++17.
