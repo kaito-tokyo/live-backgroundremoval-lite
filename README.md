@@ -23,7 +23,8 @@ An OBS plugin that allows you to remove the background from your video source in
         * Download and run the `.pkg` installer.
     * **For Linux:**
         * **Ubuntu:** Download and install the provided `.deb` package.
-        * **Arch Linux:** Please refer to the instructions in [`unsupported/arch/README.md`](./unsupported/arch/README.md) for installation.
+        * **Arch Linux:** Please refer to the instructions in [`unsupported/arch/`](./unsupported/arch#readme) for installation.
+        * **Flatpak:** Please refer to the instructions in [`unsupported/flatpak/`](./unsupported/flatpak#readme) for building.
         * **Other Distributions:** Users of other distributions (like Debian, etc.) will need to build the plugin from source. Please note that converting the `.deb` package is known not to work.
 
 3.  Restart OBS Studio after the installation is complete.
