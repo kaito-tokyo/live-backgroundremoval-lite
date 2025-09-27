@@ -66,6 +66,7 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     *   **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.metainfo.xml`.
     *   **ACTION**: The new release element should have the `version` and `date` attributes set to the new version and current date.
     *   **ACTION**: The description inside the release element should be a summary of the release notes from GitHub Releases.
+        You can get the body of release note by running `gh release view <tag>`.
     *   **ACTION**: Commit the changes for both files and create a single pull request.
 
 **Example Interaction:**
