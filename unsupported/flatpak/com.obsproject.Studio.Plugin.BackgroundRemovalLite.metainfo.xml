@@ -15,6 +15,19 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0</project_license>
   <releases>
+    <release version="1.5.1" date="2025-09-27">
+      <description>
+        <p>This release adds unofficial Flatpak build instructions, improves documentation, and fixes installer links.</p>
+        <ul>
+          <li>Flatpak build instructions added.</li>
+          <li>Documentation improvements.</li>
+          <li>Installer link corrections.</li>
+          <li>Project cleanup.</li>
+          <li>Arch Linux PKGBUILD & Flatpak metadata updates.</li>
+          <li>Release process & contributor docs enhanced.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5.0" date="2025-09-27">
       <description>
         <p>This release adds support for Arch Linux packaging, includes a new Flatpak manifest, and brings several documentation and workflow improvements.</p>
