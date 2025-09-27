@@ -15,6 +15,17 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0</project_license>
   <releases>
+    <release version="1.5.0" date="2025-09-27">
+      <description>
+        <p>This release adds support for Arch Linux packaging, includes a new Flatpak manifest, and brings several documentation and workflow improvements.</p>
+        <ul>
+          <li><strong>Arch Linux Packaging Support:</strong> Added a PKGBUILD for easier building and installation on Arch Linux.</li>
+          <li><strong>Flatpak Manifest Added:</strong> New experimental Flatpak manifests for easier packaging.</li>
+          <li><strong>Documentation & Readme Improvements:</strong> Updated documentation to include Arch Linux instructions.</li>
+          <li><strong>Workflow Improvements:</strong> CI workflow now triggers on both branch and tag pushes.</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4.3" date="2025-09-27">
       <description>
         <p>This update brings several improvements to build and testing workflows, a cleanup of legacy update checker code, and small quality-of-life fixes for both users and contributors. Major changes include renaming the project to "Background Removal Lite", removing the built-in update checker, and cleaning up the CMake and CI build processes. An unsupported PKGBUILD for Arch Linux has also been added.</p>
