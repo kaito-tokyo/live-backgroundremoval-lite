@@ -27,9 +27,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "BridgeUtils/AsyncTextureReader.hpp"
 
-using namespace KaitoTokyo::BridgeUtils;
 #include "MainPluginContext.h"
 #include "RenderingContext.hpp"
+
+using namespace KaitoTokyo::BridgeUtils;
 
 namespace {
 
