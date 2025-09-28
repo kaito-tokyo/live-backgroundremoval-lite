@@ -27,7 +27,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "BridgeUtils/GsUnique.hpp"
 #include "BridgeUtils/ILogger.hpp"
 
-#include "AsyncTextureReader.hpp"
+#include "BridgeUtils/AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
 #include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
@@ -43,7 +43,7 @@ private:
 	const KaitoTokyo::BridgeUtils::ILogger &logger;
 	const MainEffect &mainEffect;
 
-	AsyncTextureReader readerSegmenterInput;
+	KaitoTokyo::BridgeUtils::AsyncTextureReader readerSegmenterInput;
 	SelfieSegmenter selfieSegmenter;
 	ThrottledTaskQueue &selfieSegmenterTaskQueue;
 
@@ -76,7 +76,7 @@ public:
 	const std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
 
 private:
-	AsyncTextureReader readerReducedDifferenceWithMask;
+	KaitoTokyo::BridgeUtils::AsyncTextureReader readerReducedDifferenceWithMask;
 
 public:
 	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8SubGFGuide;

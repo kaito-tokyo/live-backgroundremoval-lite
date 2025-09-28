@@ -25,7 +25,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <QDebug>
 #include <iostream>
 
-#include "AsyncTextureReader.hpp"
+#include "BridgeUtils/AsyncTextureReader.hpp"
 #include "MainPluginContext.h"
 #include "RenderingContext.hpp"
 
@@ -162,41 +162,41 @@ void DebugWindow::videoRender()
 
 		if (!readerBgrx || readerBgrx->width != renderingContext->width ||
 		    readerBgrx->height != renderingContext->height) {
-			readerBgrx = std::make_unique<AsyncTextureReader>(renderingContext->width,
+			readerBgrx = std::make_unique<KaitoTokyo::BridgeUtils::AsyncTextureReader>(renderingContext->width,
 									  renderingContext->height, GS_BGRX);
 		}
 
 		if (!readerR8 || readerR8->width != renderingContext->width ||
 		    readerR8->height != renderingContext->height) {
-			readerR8 = std::make_unique<AsyncTextureReader>(renderingContext->width,
+			readerR8 = std::make_unique<KaitoTokyo::BridgeUtils::AsyncTextureReader>(renderingContext->width,
 									renderingContext->height, GS_R8);
 		}
 
 		if (!readerR32f || readerR32f->width != renderingContext->width ||
 		    readerR32f->height != renderingContext->height) {
-			readerR32f = std::make_unique<AsyncTextureReader>(renderingContext->width,
+			readerR32f = std::make_unique<KaitoTokyo::BridgeUtils::AsyncTextureReader>(renderingContext->width,
 									  renderingContext->height, GS_R32F);
 		}
 
 		if (!readerMaskRoiR8 || readerMaskRoiR8->width != renderingContext->maskRoiWidth ||
 		    readerMaskRoiR8->height != renderingContext->maskRoiHeight) {
-			readerMaskRoiR8 = std::make_unique<AsyncTextureReader>(renderingContext->maskRoiWidth,
+			readerMaskRoiR8 = std::make_unique<KaitoTokyo::BridgeUtils::AsyncTextureReader>(renderingContext->maskRoiWidth,
 									       renderingContext->maskRoiHeight, GS_R8);
 		}
 
 		if (!reader256Bgrx) {
-			reader256Bgrx = std::make_unique<AsyncTextureReader>(256, 256, GS_BGRX);
+			reader256Bgrx = std::make_unique<KaitoTokyo::BridgeUtils::AsyncTextureReader>(256, 256, GS_BGRX);
 		}
 
 		if (!readerSubR8 || readerSubR8->width != renderingContext->widthSub ||
 		    readerSubR8->height != renderingContext->heightSub) {
-			readerSubR8 = std::make_unique<AsyncTextureReader>(renderingContext->widthSub,
+			readerSubR8 = std::make_unique<KaitoTokyo::BridgeUtils::AsyncTextureReader>(renderingContext->widthSub,
 									   renderingContext->heightSub, GS_R8);
 		}
 
 		if (!readerR32fSub || readerR32fSub->width != renderingContext->widthSub ||
 		    readerR32fSub->height != renderingContext->heightSub) {
-			readerR32fSub = std::make_unique<AsyncTextureReader>(renderingContext->widthSub,
+			readerR32fSub = std::make_unique<KaitoTokyo::BridgeUtils::AsyncTextureReader>(renderingContext->widthSub,
 									     renderingContext->heightSub, GS_R32F);
 		}
 
