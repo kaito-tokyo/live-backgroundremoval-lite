@@ -30,7 +30,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <thread>
 #include <utility>
 
-#include "obs-bridge-utils/ILogger.hpp"
+#include "BridgeUtils/ILogger.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {

@@ -22,7 +22,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs-module.h>
 
-using namespace kaito_tokyo::obs_bridge_utils;
+
+#include "BridgeUtils/GsUnique.hpp"
+using namespace KaitoTokyo::BridgeUtils;
 using namespace kaito_tokyo::obs_backgroundremoval_lite;
 
 const char *main_plugin_context_get_name(void *type_data)
@@ -57,7 +59,7 @@ try {
 	delete self;
 
 	graphics_context_guard guard;
-	gs_unique::drain();
+	GsUnique::drain();
 } catch (const std::exception &e) {
 	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to destroy main plugin context: %s", e.what());
 

@@ -23,12 +23,15 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
-#include <obs-bridge-utils/ObsLogger.hpp>
+#include "BridgeUtils/ObsLogger.hpp"
 
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
+#include "BridgeUtils/ObsUnique.hpp"
+#include "BridgeUtils/GsUnique.hpp"
 
 using namespace kaito_tokyo::obs_bridge_utils;
+using namespace KaitoTokyo::BridgeUtils;
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {
@@ -204,7 +207,7 @@ try {
 			renderingContext = std::move(nextRenderingContext);
 			nextRenderingContext.reset();
 			logger.info("Switched to new rendering context");
-			gs_unique::drain();
+			GsUnique::drain();
 		}
 	}
 
@@ -215,7 +218,7 @@ try {
 			frame->height, preset.filterLevel, preset.selfieSegmenterFps, preset.gfEps, preset.maskGamma,
 			preset.maskLowerBound, preset.maskUpperBound);
 		frameCountBeforeContextSwitch = 1;
-		gs_unique::drain();
+		GsUnique::drain();
 	}
 
 	if (renderingContext) {

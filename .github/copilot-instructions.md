@@ -1,42 +1,76 @@
-# GitHub Copilot Agent - リリース手順書 (C++/CMake Project)
+# Development Guideline for OBS Background Removal Lite Plugin
 
-## 概要
-このリポジトリのリリース作業は、Copilot Agent を通じて半自動化されています。
-リリース担当者は、以下の手順に従って Copilot に指示を出してください。
+- Develop this project using C++17.
+- For empty argument lists, use `()` instead of `(void)`, except within regions marked by `extern "C"`.
+- After modifying C or C++ files, format them with `clang-format-19`.
+- After modifying CMake files, format them with `gersemi`.
+- The OBS team maintains CMake and GitHub Actions files. Do not modify these, except for workflow files starting with `my-`.
+- The default branch is `main`.
+- Ensure each file ends with a single empty newline. Builds will fail if this rule is not followed.
 
-## Context - プロジェクトの技術情報
-このプロジェクトでは以下の技術スタックとツールを使用しています。
+## Building and Running Tests on macOS
 
-- **言語**: C++
-- **ビルドシステム**: CMake
-- **バージョン管理ファイル**: `buildspec.json`
-- **ブランチ戦略**: `main` ブランチから `release/X.X.X` のようなブランチを作成し、リリース作業後に `main` へマージします。
+1. Run `cmake --preset macos-testing`.
+2. Run `cmake --build --preset macos-testing`.
+3. Run `ctest --preset macos-testing --rerun-failed --output-on-failure`.
 
-## Command - `/release` コマンドの定義
-リリース作業を開始するためのカスタムコマンド `/release` を定義します。
+## Testing the Plugin with OBS
 
-### `/release [バージョン番号]` - 新規バージョンのリリースPRを作成する
+1. Run `cmake --preset macos-testing` only if CMake-related changes were made.
+2. Run:
+   ```
+   cmake --build --preset macos-testing && \
+   rm -rf ~/Library/Application\ Support/obs-studio/plugins/backgroundremoval-lite.plugin && \
+   cp -r ./build_macos/RelWithDebInfo/backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
+   ```
 
-**例:** `@workspace /release 1.2.3`
+## Release Automation with Gemini
 
-このコマンドを受け取ると、Copilot は以下のタスクを順番に実行します。
+To initiate a new release, the user will instruct Gemini to start the process (e.g., "リリースを開始して" or "リリースしたい"). Gemini will then perform the following steps:
 
-**実行タスク:**
+1.  **Specify New Version**:
+    * **ACTION**: Display the current version.
+    * **ACTION**: Prompt the user to provide the new version number (e.g., `1.0.0`, `1.0.0-beta1`).
+    * **CONSTRAINT**: The version must follow Semantic Versioning (e.g., `MAJOR.MINOR.PATCH`).
 
-1.  **リリースブランチの作成:**
-    - 現在の `main` ブランチから `release/[指定されたバージョン番号]` という名前の新しいブランチを作成します。
+2.  **Prepare & Update `buildspec.json`**:
+    * **ACTION**: Confirm the current branch is `main` and synchronized with the remote.
+    * **ACTION**: Create a new branch (`bump-X.Y.Z`).
+    * **ACTION**: Update the `version` field in `buildspec.json`.
 
-2.  **バージョンの更新:**
-    - **`buildspec.json`** ファイル内の `version` フィールドを指定されたバージョン番号に更新します。
+3.  **Create & Merge Pull Request (PR)**:
+    * **ACTION**: Create a PR for the version update.
+    * **ACTION**: Provide the URL of the created PR.
+    * **ACTION**: Instruct the user to merge this PR.
+    * **PAUSE**: Wait for user confirmation of PR merge.
 
-3.  **コミット:**
-    - 更新されたファイルをステージングし、「Bump [指定されたバージョン番号]」というコミットメッセージでコミットします。
+4.  **Push Git Tag**:
+    * **TRIGGER**: User instructs Gemini to push the Git tag after PR merge confirmation.
+    * **ACTION**: Switch to the `main` branch.
+    * **ACTION**: Synchronize with the remote.
+    * **ACTION**: Verify the `buildspec.json` version.
+    * **ACTION**: Push the Git tag.
+    * **CONSTRAINT**: The tag must be `X.Y.Z` (no 'v' prefix).
+    * **RESULT**: Pushing the tag triggers the automated release workflow.
 
-4.  **プルリクエストの作成:**
-    - 作成したリリースブランチから `main` ブランチへのプルリクエストを作成します。
-    - タイトル: `Release [指定されたバージョン番号]`
-    - 本文: Copilot がコミット履歴を基に、リリースの変更内容の要約を生成します。
+5.  **Finalize Release**:
+    * **ACTION**: Provide the releases URL.
+    * **INSTRUCTION**: User completes the release on GitHub.
 
-## 注意事項
-- このコマンドは、必ず `main` ブランチが最新の状態であることを確認してから実行してください。
-- 生成されたプルリクエストは、CI/CD のビルドとテストがすべて成功することを確認した上で、手動でマージしてください。
+6.  **Update Arch Linux Package Manifest**:
+    * **ACTION**: Match the `pkgver` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
+    * **ACTION**: Download the source tar.gz for that version from GitHub and calculate its SHA-256 checksum.
+    * **ACTION**: Replace the `sha256sums` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
+
+7.  **Update Flatpak Package Manifest**:
+    * **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.metainfo.xml`.
+    * **ACTION**: The new release element should have the `version` and `date` attributes set to the new version and current date.
+    * **ACTION**: The description inside the release element should be a summary of the release notes from GitHub Releases.
+        You can get the body of release note by running `gh release view <tag>`.
+    * **ACTION**: Update the `tag` field for the `backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.yaml` to the new version.
+    * **ACTION**: Get the commit hash for the new tag by running `git rev-list -n 1 <new_version_tag>`.
+    * **ACTION**: Update the `commit` field for the `backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.yaml` to the new commit hash.
+
+8.  **Create Pull Request for Manifest Updates**:
+    * **ACTION**: Commit the changes for both files and create a single pull request.
+
