@@ -36,8 +36,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
-#include <obs-bridge-utils/gs_unique.hpp>
-#include <obs-bridge-utils/ObsLogger.hpp>
+#include "BridgeUtils/GsUnique.hpp"
+#include "BridgeUtils/ObsLogger.hpp"
 
 #include "MainEffect.hpp"
 #include "Preset.hpp"
