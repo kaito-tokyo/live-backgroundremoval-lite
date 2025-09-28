@@ -32,8 +32,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "BridgeUtils/ILogger.hpp"
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
+
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
 
 /**
  * @brief A self-contained thread queue for executing cancellable tasks with a limit.
@@ -198,5 +199,5 @@ private:
 	}
 };
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo

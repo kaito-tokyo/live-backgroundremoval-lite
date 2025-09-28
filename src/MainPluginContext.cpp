@@ -33,8 +33,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::BridgeUtils;
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
+
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
 
 MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source)
 	: source{_source},
@@ -234,5 +235,5 @@ try {
 	return frame;
 }
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo

@@ -37,8 +37,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "SelfieSegmenter.hpp"
 #include "ThrottledTaskQueue.hpp"
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
+
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
 
 class DebugWindow;
 class RenderingContext;
@@ -85,8 +86,8 @@ public:
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept { return renderingContext; }
 };
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo
 
 extern "C" {
 #endif // __cplusplus

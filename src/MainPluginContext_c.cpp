@@ -24,7 +24,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "BridgeUtils/GsUnique.hpp"
 using namespace KaitoTokyo::BridgeUtils;
-using namespace kaito_tokyo::obs_backgroundremoval_lite;
+using namespace KaitoTokyo::BackgroundRemovalLite;
 
 const char *main_plugin_context_get_name(void *type_data)
 {
