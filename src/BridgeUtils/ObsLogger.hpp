@@ -38,7 +38,7 @@ public:
 	ObsLogger(const std::string &_prefix) : prefix(_prefix) {}
 
 protected:
-	constexpr size_t MAX_LOG_CHUNK_SIZE = 4000;
+	static constexpr size_t MAX_LOG_CHUNK_SIZE = 4000;
 
 	void log(LogLevel level, std::string_view message) const noexcept override
 	{
