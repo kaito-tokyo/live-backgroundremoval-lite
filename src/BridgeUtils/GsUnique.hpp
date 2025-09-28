@@ -73,7 +73,7 @@ inline void scheduleTextureToDelete(gs_texture_t *texture)
 	}
 }
 
-inline void scheduleStagesurfsToDelete(gs_stagesurf_t *surface)
+inline void scheduleStagesurfToDelete(gs_stagesurf_t *surface)
 {
 	if (surface) {
 		std::lock_guard lock(getMutex());
@@ -119,7 +119,7 @@ struct GsTextureDeleter {
 };
 
 struct GsStagesurfDeleter {
-	void operator()(gs_stagesurf_t *surface) const { scheduleStagesurfsToDelete(surface); }
+	void operator()(gs_stagesurf_t *surface) const { scheduleStagesurfToDelete(surface); }
 };
 
 } // namespace GsUnique
