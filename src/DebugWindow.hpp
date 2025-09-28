@@ -26,12 +26,12 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include "BridgeUtils/AsyncTextureReader.hpp"
 #include "BridgeUtils/ILogger.hpp"
 
-#include "AsyncTextureReader.hpp"
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
 
 class MainPluginContext;
 
@@ -72,5 +72,5 @@ private:
 	std::vector<std::uint8_t> bufferSubR8;
 };
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo
