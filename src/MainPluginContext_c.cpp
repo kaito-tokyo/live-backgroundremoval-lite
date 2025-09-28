@@ -22,7 +22,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs-module.h>
 
-
 #include "BridgeUtils/GsUnique.hpp"
 using namespace KaitoTokyo::BridgeUtils;
 using namespace kaito_tokyo::obs_backgroundremoval_lite;

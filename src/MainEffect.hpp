@@ -32,7 +32,7 @@ namespace obs_backgroundremoval_lite {
 namespace main_effect_detail {
 
 inline gs_eparam_t *getEffectParam(const KaitoTokyo::BridgeUtils::unique_gs_effect_t &effect, const char *name,
-								   const KaitoTokyo::BridgeUtils::ILogger &logger)
+				   const KaitoTokyo::BridgeUtils::ILogger &logger)
 {
 	gs_eparam_t *param = gs_effect_get_param_by_name(effect.get(), name);
 
@@ -45,7 +45,7 @@ inline gs_eparam_t *getEffectParam(const KaitoTokyo::BridgeUtils::unique_gs_effe
 }
 
 inline gs_technique_t *getEffectTech(const KaitoTokyo::BridgeUtils::unique_gs_effect_t &effect, const char *name,
-									 const KaitoTokyo::BridgeUtils::ILogger &logger)
+				     const KaitoTokyo::BridgeUtils::ILogger &logger)
 {
 	gs_technique_t *tech = gs_effect_get_technique(effect.get(), name);
 
@@ -128,7 +128,7 @@ public:
 	gs_technique_t *const techFinalizeGuidedFilter = nullptr;
 
 	MainEffect(const KaitoTokyo::BridgeUtils::unique_bfree_char_t &effectPath,
-			   const KaitoTokyo::BridgeUtils::ILogger &logger)
+		   const KaitoTokyo::BridgeUtils::ILogger &logger)
 		: effect(KaitoTokyo::BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
 		  textureImage(main_effect_detail::getEffectParam(effect, "image", logger)),
 		  floatTexelWidth(main_effect_detail::getEffectParam(effect, "texelWidth", logger)),
@@ -274,10 +274,10 @@ public:
 
 	void calculateDifferenceWithMask(
 		std::uint32_t width, std::uint32_t height,
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t &targetTexture,
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t &currentGrayscaleTexture,
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t &lastGrayscaleTexture,
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t &segmentationMaskTexture) const noexcept
+		const KaitoTokyo::BridgeUtils::unique_gs_texture_t &targetTexture,
+		const KaitoTokyo::BridgeUtils::unique_gs_texture_t &currentGrayscaleTexture,
+		const KaitoTokyo::BridgeUtils::unique_gs_texture_t &lastGrayscaleTexture,
+		const KaitoTokyo::BridgeUtils::unique_gs_texture_t &segmentationMaskTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
@@ -303,7 +303,7 @@ public:
 	}
 
 	void reduce(const std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> &reductionPyramidTextures,
-				const KaitoTokyo::BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
+		    const KaitoTokyo::BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;

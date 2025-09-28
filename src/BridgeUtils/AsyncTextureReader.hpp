@@ -121,7 +121,7 @@ public:
 		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
 			     std::vector<std::uint8_t>(height * bufferLinesize)},
 		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
-					 BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
+			     BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
 	{
 	}
 

@@ -43,7 +43,7 @@ std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint3
 }
 
 inline std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
-											      std::uint32_t height)
+											std::uint32_t height)
 {
 	using namespace KaitoTokyo::BridgeUtils;
 	std::vector<unique_gs_texture_t> pyramid;

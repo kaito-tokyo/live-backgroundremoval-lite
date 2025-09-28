@@ -123,7 +123,7 @@ public:
 		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
 			     std::vector<std::uint8_t>(height * bufferLinesize)},
 		  stagesurfs{KaitoTokyo::BridgeUtils::make_unique_gs_stagesurf(width, height, format),
-					 KaitoTokyo::BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
+			     KaitoTokyo::BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
 	{
 	}
 
