@@ -1,5 +1,5 @@
 /*
-obs-bridge-utils
+Bridge Utils
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -21,14 +21,15 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <cstdint>
 #include <cstdio>
 #include <iterator>
+#include <stdexcept>
 #include <string_view>
 #include <string>
 #include <utility>
 
 #include <fmt/format.h>
 
-namespace kaito_tokyo {
-namespace obs_bridge_utils {
+namespace KaitoTokyo {
+namespace BridgeUtils {
 
 class ILogger {
 public:
@@ -60,6 +61,8 @@ public:
 		formatAndLog(LogLevel::Error, fmt, std::forward<Args>(args)...);
 	}
 
+	virtual void logException(const std::exception &e, std::string_view context) const noexcept = 0;
+
 protected:
 	enum class LogLevel : std::int8_t { Debug, Info, Warn, Error };
 
@@ -70,17 +73,19 @@ protected:
 private:
 	template<typename... Args>
 	void formatAndLog(LogLevel level, fmt::format_string<Args...> fmt, Args &&...args) const noexcept
-	try {
-		fmt::memory_buffer buffer;
-		fmt::format_to(std::back_inserter(buffer), "{}", getPrefix());
-		fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
-		log(level, {buffer.data(), buffer.size()});
-	} catch (const std::exception &e) {
-		fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
-	} catch (...) {
-		fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
+	{
+		try {
+			fmt::memory_buffer buffer;
+			fmt::format_to(std::back_inserter(buffer), "{}", getPrefix());
+			fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
+			log(level, {buffer.data(), buffer.size()});
+		} catch (const std::exception &e) {
+			fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
+		} catch (...) {
+			fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
+		}
 	}
 };
 
-} // namespace obs_bridge_utils
-} // namespace kaito_tokyo
+} // namespace BridgeUtils
+} // namespace KaitoTokyo

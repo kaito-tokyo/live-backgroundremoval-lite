@@ -1,5 +1,5 @@
 /*
-obs-bridge-utils
+Bridge Utils
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -26,58 +26,58 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs.h>
 
-#include <obs-bridge-utils/unique_bfree.hpp>
+#include "ObsUnique.hpp"
 
-namespace kaito_tokyo {
-namespace obs_bridge_utils {
+namespace KaitoTokyo {
+namespace BridgeUtils {
 
-namespace gs_unique {
+namespace GsUnique {
 
-inline std::mutex &get_mutex()
+inline std::mutex &getMutex()
 {
 	static std::mutex mtx;
 	return mtx;
 }
 
-inline std::deque<gs_effect_t *> &get_effects_deque()
+inline std::deque<gs_effect_t *> &getEffectsDeque()
 {
-	static std::deque<gs_effect_t *> effects_to_delete;
-	return effects_to_delete;
+	static std::deque<gs_effect_t *> effectsToDelete;
+	return effectsToDelete;
 }
 
-inline std::deque<gs_texture_t *> &get_textures_deque()
+inline std::deque<gs_texture_t *> &getTexturesDeque()
 {
-	static std::deque<gs_texture_t *> textures_to_delete;
-	return textures_to_delete;
+	static std::deque<gs_texture_t *> texturesToDelete;
+	return texturesToDelete;
 }
 
-inline std::deque<gs_stagesurf_t *> &get_stagesurfs_deque()
+inline std::deque<gs_stagesurf_t *> &getStagesurfsDeque()
 {
-	static std::deque<gs_stagesurf_t *> stagesurfs_to_delete;
-	return stagesurfs_to_delete;
+	static std::deque<gs_stagesurf_t *> stagesurfsToDelete;
+	return stagesurfsToDelete;
 }
 
-inline void schedule_effect_to_delete(gs_effect_t *effect)
+inline void scheduleEffectToDelete(gs_effect_t *effect)
 {
 	if (effect) {
-		std::lock_guard lock(get_mutex());
-		get_effects_deque().push_back(effect);
+		std::lock_guard lock(getMutex());
+		getEffectsDeque().push_back(effect);
 	}
 }
 
-inline void schedule_texture_to_delete(gs_texture_t *texture)
+inline void scheduleTextureToDelete(gs_texture_t *texture)
 {
 	if (texture) {
-		std::lock_guard lock(get_mutex());
-		get_textures_deque().push_back(texture);
+		std::lock_guard lock(getMutex());
+		getTexturesDeque().push_back(texture);
 	}
 }
 
-inline void schedule_stagesurfs_to_delete(gs_stagesurf_t *surface)
+inline void scheduleStagesurfToDelete(gs_stagesurf_t *surface)
 {
 	if (surface) {
-		std::lock_guard lock(get_mutex());
-		get_stagesurfs_deque().push_back(surface);
+		std::lock_guard lock(getMutex());
+		getStagesurfsDeque().push_back(surface);
 	}
 }
 
@@ -87,15 +87,15 @@ inline void drain()
 	std::deque<gs_texture_t *> _textures_to_delete;
 	std::deque<gs_stagesurf_t *> _stagesurfs_to_delete;
 	{
-		std::lock_guard lock(get_mutex());
-		if (!get_effects_deque().empty()) {
-			_effects_to_delete = std::move(get_effects_deque());
+		std::lock_guard lock(getMutex());
+		if (!getEffectsDeque().empty()) {
+			_effects_to_delete = std::move(getEffectsDeque());
 		}
-		if (!get_textures_deque().empty()) {
-			_textures_to_delete = std::move(get_textures_deque());
+		if (!getTexturesDeque().empty()) {
+			_textures_to_delete = std::move(getTexturesDeque());
 		}
-		if (!get_stagesurfs_deque().empty()) {
-			_stagesurfs_to_delete = std::move(get_stagesurfs_deque());
+		if (!getStagesurfsDeque().empty()) {
+			_stagesurfs_to_delete = std::move(getStagesurfsDeque());
 		}
 	}
 
@@ -110,13 +110,21 @@ inline void drain()
 	}
 }
 
-} // namespace gs_unique
-
-struct gs_effect_deleter {
-	void operator()(gs_effect_t *effect) const { gs_unique::schedule_effect_to_delete(effect); }
+struct GsEffectDeleter {
+	void operator()(gs_effect_t *effect) const { scheduleEffectToDelete(effect); }
 };
 
-using unique_gs_effect_t = std::unique_ptr<gs_effect_t, gs_effect_deleter>;
+struct GsTextureDeleter {
+	void operator()(gs_texture_t *texture) const { scheduleTextureToDelete(texture); }
+};
+
+struct GsStagesurfDeleter {
+	void operator()(gs_stagesurf_t *surface) const { scheduleStagesurfToDelete(surface); }
+};
+
+} // namespace GsUnique
+
+using unique_gs_effect_t = std::unique_ptr<gs_effect_t, GsUnique::GsEffectDeleter>;
 
 inline unique_gs_effect_t make_unique_gs_effect_from_file(const unique_bfree_char_t &file)
 {
@@ -131,11 +139,7 @@ inline unique_gs_effect_t make_unique_gs_effect_from_file(const unique_bfree_cha
 	return unique_gs_effect_t(raw_effect);
 }
 
-struct gs_texture_deleter {
-	void operator()(gs_texture_t *texture) const { gs_unique::schedule_texture_to_delete(texture); }
-};
-
-using unique_gs_texture_t = std::unique_ptr<gs_texture_t, gs_texture_deleter>;
+using unique_gs_texture_t = std::unique_ptr<gs_texture_t, GsUnique::GsTextureDeleter>;
 
 inline unique_gs_texture_t make_unique_gs_texture(std::uint32_t width, std::uint32_t height,
 						  enum gs_color_format color_format, std::uint32_t levels,
@@ -148,11 +152,7 @@ inline unique_gs_texture_t make_unique_gs_texture(std::uint32_t width, std::uint
 	return unique_gs_texture_t(rawTexture);
 }
 
-struct gs_stagesurf_deleter {
-	void operator()(gs_stagesurf_t *surface) const { gs_unique::schedule_stagesurfs_to_delete(surface); }
-};
-
-using unique_gs_stagesurf_t = std::unique_ptr<gs_stagesurf_t, gs_stagesurf_deleter>;
+using unique_gs_stagesurf_t = std::unique_ptr<gs_stagesurf_t, GsUnique::GsStagesurfDeleter>;
 
 inline unique_gs_stagesurf_t make_unique_gs_stagesurf(std::uint32_t width, std::uint32_t height,
 						      enum gs_color_format color_format)
@@ -164,16 +164,16 @@ inline unique_gs_stagesurf_t make_unique_gs_stagesurf(std::uint32_t width, std::
 	return unique_gs_stagesurf_t(rawSurface);
 }
 
-class graphics_context_guard {
+class GraphicsContextGuard {
 public:
-	graphics_context_guard() noexcept { obs_enter_graphics(); }
-	~graphics_context_guard() noexcept { obs_leave_graphics(); }
+	GraphicsContextGuard() noexcept { obs_enter_graphics(); }
+	~GraphicsContextGuard() noexcept { obs_leave_graphics(); }
 
-	graphics_context_guard(const graphics_context_guard &) = delete;
-	graphics_context_guard(graphics_context_guard &&) = delete;
-	graphics_context_guard &operator=(const graphics_context_guard &) = delete;
-	graphics_context_guard &operator=(graphics_context_guard &&) = delete;
+	GraphicsContextGuard(const GraphicsContextGuard &) = delete;
+	GraphicsContextGuard(GraphicsContextGuard &&) = delete;
+	GraphicsContextGuard &operator=(const GraphicsContextGuard &) = delete;
+	GraphicsContextGuard &operator=(GraphicsContextGuard &&) = delete;
 };
 
-} // namespace obs_bridge_utils
-} // namespace kaito_tokyo
+} // namespace BridgeUtils
+} // namespace KaitoTokyo

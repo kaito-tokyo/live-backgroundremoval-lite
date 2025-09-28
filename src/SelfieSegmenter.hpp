@@ -28,7 +28,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
-#include "obs-bridge-utils/unique_bfree.hpp"
+#include "BridgeUtils/ObsUnique.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {

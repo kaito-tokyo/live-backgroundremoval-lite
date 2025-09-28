@@ -1,5 +1,5 @@
 /*
-obs-bridge-utils
+Bridge Utils
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -19,16 +19,36 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #pragma once
 
 #include <memory>
-#include <obs-data.h>
 
-namespace kaito_tokyo {
-namespace obs_bridge_utils {
+#include <obs-module.h>
 
-struct obs_data_array_deleter {
+namespace KaitoTokyo {
+namespace BridgeUtils {
+namespace ObsUnique {
+
+struct BfreeDeleter {
+	void operator()(void *ptr) const { bfree(ptr); }
+};
+
+struct ObsDataDeleter {
+	void operator()(obs_data_t *data) const { obs_data_release(data); }
+};
+
+struct ObsDataArrayDeleter {
 	void operator()(obs_data_array_t *array) const { obs_data_array_release(array); }
 };
 
-using unique_obs_data_array_t = std::unique_ptr<obs_data_array_t, obs_data_array_deleter>;
+} // namespace ObsUnique
 
-} // namespace obs_bridge_utils
-} // namespace kaito_tokyo
+using unique_bfree_char_t = std::unique_ptr<char, ObsUnique::BfreeDeleter>;
+
+inline unique_bfree_char_t unique_obs_module_file(const char *file)
+{
+	return unique_bfree_char_t(obs_module_file(file));
+}
+
+using unique_obs_data_t = std::unique_ptr<obs_data_t, ObsUnique::ObsDataDeleter>;
+using unique_obs_data_array_t = std::unique_ptr<obs_data_array_t, ObsUnique::ObsDataArrayDeleter>;
+
+} // namespace BridgeUtils
+} // namespace KaitoTokyo

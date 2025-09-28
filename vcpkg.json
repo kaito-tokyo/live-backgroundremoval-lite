@@ -1,5 +1,6 @@
 {
   "dependencies": [
+    "backward-cpp",
     {
       "name": "curl",
       "default-features": false,
@@ -18,7 +19,6 @@
     },
     "fmt",
     "gtest",
-    "ncnn",
-    "neargye-semver"
+    "ncnn"
   ]
 }

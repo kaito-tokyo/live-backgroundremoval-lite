@@ -26,7 +26,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <QTimer>
 #include <QVBoxLayout>
 
-#include <obs-bridge-utils/ILogger.hpp>
+#include "BridgeUtils/ILogger.hpp"
 
 #include "AsyncTextureReader.hpp"
 

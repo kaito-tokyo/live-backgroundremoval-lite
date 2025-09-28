@@ -1,5 +1,5 @@
 /*
-Background Removal Lite
+Bridge Utils
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -20,6 +20,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <array>
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <mutex>
@@ -27,13 +28,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <utility>
 #include <vector>
 
-#include "BridgeUtils/ObsUnique.hpp"
-#include "BridgeUtils/GsUnique.hpp"
+namespace KaitoTokyo {
+namespace BridgeUtils {
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
-
-namespace async_texture_reader_detail {
+namespace AsyncTextureReaderDetail {
 
 inline std::uint32_t getBytesPerPixel(const gs_color_format format)
 {
@@ -91,7 +89,7 @@ struct ScopedStageSurfMap {
 	ScopedStageSurfMap &operator=(ScopedStageSurfMap &&) = delete;
 };
 
-} // namespace async_texture_reader_detail
+} // namespace AsyncTextureReaderDetail
 
 /**
  * @class AsyncTextureReader
@@ -122,8 +120,8 @@ public:
 		  bufferLinesize((width * async_texture_reader_detail::getBytesPerPixel(format) + 3) & ~3u),
 		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
 			     std::vector<std::uint8_t>(height * bufferLinesize)},
-		  stagesurfs{KaitoTokyo::BridgeUtils::make_unique_gs_stagesurf(width, height, format),
-			     KaitoTokyo::BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
+		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
+			     BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
 	{
 	}
 
@@ -225,10 +223,10 @@ private:
 	std::array<std::vector<std::uint8_t>, 2> cpuBuffers;
 	std::atomic<std::size_t> activeCpuBufferIndex = {0};
 
-	std::array<KaitoTokyo::BridgeUtils::unique_gs_stagesurf_t, 2> stagesurfs;
+	std::array<KaitoTokyo::BridgeUtils::gs_stagesurf_t, 2> stagesurfs;
 	std::size_t gpuWriteIndex = 0;
 	std::mutex gpuMutex;
 };
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BridgeUtils
+} // namespace KaitoTokyo
