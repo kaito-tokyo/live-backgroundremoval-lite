@@ -23,13 +23,12 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <string_view>
 
 #ifdef HAVE_BACKWARD
-#  include <backward.hpp>
-#endif
+#include <backward.hpp>
+#endif // HAVE_BACKWARD
 
 #include <util/base.h>
 
 #include "ILogger.hpp"
-#include "ObsUnique.hpp"
 
 namespace KaitoTokyo {
 namespace BridgeUtils {
@@ -57,7 +56,7 @@ protected:
 			blogLevel = LOG_ERROR;
 			break;
 		default:
-			fprintf(stderr, "[LOGGER FATAL] Unknown log level: %d\n", static_cast<int>(level));
+			blog(LOG_ERROR, "[LOGGER FATAL] Unknown log level: %d\n", static_cast<int>(level));
 			return;
 		}
 
@@ -73,26 +72,7 @@ protected:
 		}
 	}
 
-	#ifdef HAVE_BACKWARD
-		try {
-			std::stringstream ss;
-			ss << context.data() << ": " << e.what() << "\n";
-
-			backward::StackTrace st;
-			st.load_here(32);
-
-			backward::Printer p;
-			p.print(st, ss);
-
-			error("--- Stack Trace ---\n{}", ss.str());
-		} catch (const std::exception &log_ex) {
-			fprintf(stderr, "[LOGGER FATAL] Failed during exception logging: %s\n", log_ex.what());
-		} catch (...) {
-			fprintf(stderr, "[LOGGER FATAL] Unknown error during exception logging.\n");
-		}
-	#else
-		error("{}: {}", context, e.what());
-	#endif
+	void logException(const std::exception &e, std::string_view context) const noexcept override;
 
 protected:
 	std::string_view getPrefix() const noexcept override { return prefix; }
@@ -101,6 +81,37 @@ private:
 	const std::string prefix;
 	mutable std::mutex mtx;
 };
+
+#ifdef HAVE_BACKWARD
+
+inline void ObsLogger::logException(const std::exception &e, std::string_view context) const noexcept
+{
+	try {
+		std::stringstream ss;
+		ss << context.data() << ": " << e.what() << "\n";
+
+		backward::StackTrace st;
+		st.load_here(32);
+
+		backward::Printer p;
+		p.print(st, ss);
+
+		error("--- Stack Trace ---\n{}", ss.str());
+	} catch (const std::exception &log_ex) {
+		fprintf(stderr, "[LOGGER FATAL] Failed during exception logging: %s\n", log_ex.what());
+	} catch (...) {
+		fprintf(stderr, "[LOGGER FATAL] Unknown error during exception logging.\n");
+	}
+}
+
+#else // !HAVE_BACKWARD
+
+inline void ObsLogger::logException(const std::exception &e, std::string_view context) const noexcept
+{
+	error("{}: {}", context, e.what());
+}
+
+#endif // HAVE_BACKWARD
 
 } // namespace BridgeUtils
 } // namespace KaitoTokyo
