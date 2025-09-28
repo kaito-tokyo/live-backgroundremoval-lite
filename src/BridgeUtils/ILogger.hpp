@@ -73,15 +73,17 @@ protected:
 private:
 	template<typename... Args>
 	void formatAndLog(LogLevel level, fmt::format_string<Args...> fmt, Args &&...args) const noexcept
-	try {
-		fmt::memory_buffer buffer;
-		fmt::format_to(std::back_inserter(buffer), "{}", getPrefix());
-		fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
-		log(level, {buffer.data(), buffer.size()});
-	} catch (const std::exception &e) {
-		fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
-	} catch (...) {
-		fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
+	{
+		try {
+			fmt::memory_buffer buffer;
+			fmt::format_to(std::back_inserter(buffer), "{}", getPrefix());
+			fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
+			log(level, {buffer.data(), buffer.size()});
+		} catch (const std::exception &e) {
+			fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
+		} catch (...) {
+			fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
+		}
 	}
 };
 
