@@ -35,7 +35,7 @@ const char *main_plugin_context_get_name(void *type_data)
 
 void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
 try {
-	graphics_context_guard guard;
+	GraphicsContextGuard guard;
 	auto self = std::make_shared<MainPluginContext>(settings, source);
 	self->startup();
 	return new std::shared_ptr<MainPluginContext>(self);
@@ -58,18 +58,18 @@ try {
 	self->get()->shutdown();
 	delete self;
 
-	graphics_context_guard guard;
+	GraphicsContextGuard guard;
 	GsUnique::drain();
 } catch (const std::exception &e) {
 	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to destroy main plugin context: %s", e.what());
 
-	graphics_context_guard guard;
-	gs_unique::drain();
+	GraphicsContextGuard guard;
+	GsUnique::drain();
 } catch (...) {
 	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to destroy main plugin context: unknown error");
 
-	graphics_context_guard guard;
-	gs_unique::drain();
+	GraphicsContextGuard guard;
+	GsUnique::drain();
 }
 
 std::uint32_t main_plugin_context_get_width(void *data)
@@ -217,7 +217,7 @@ try {
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->videoRender();
-	gs_unique::drain();
+	GsUnique::drain();
 } catch (const std::exception &e) {
 	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to render video in main plugin context: %s", e.what());
 } catch (...) {
@@ -255,8 +255,8 @@ try {
 
 void main_plugin_context_module_unload()
 try {
-	graphics_context_guard guard;
-	gs_unique::drain();
+	GraphicsContextGuard guard;
+	GsUnique::drain();
 } catch (const std::exception &e) {
 	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to unload main plugin context: %s", e.what());
 } catch (...) {

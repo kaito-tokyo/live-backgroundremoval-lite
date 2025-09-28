@@ -28,6 +28,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <vector>
 
 #include "BridgeUtils/ObsUnique.hpp"
+#include "BridgeUtils/GsUnique.hpp"
 
 namespace kaito_tokyo {
 namespace obs_backgroundremoval_lite {

@@ -203,7 +203,7 @@ try {
 	if (frameCountBeforeContextSwitch > 0) {
 		--frameCountBeforeContextSwitch;
 		if (frameCountBeforeContextSwitch == 0 && nextRenderingContext) {
-			graphics_context_guard guard;
+						GraphicsContextGuard guard;
 			renderingContext = std::move(nextRenderingContext);
 			nextRenderingContext.reset();
 			logger.info("Switched to new rendering context");
@@ -212,7 +212,7 @@ try {
 	}
 
 	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height) {
-		graphics_context_guard guard;
+				GraphicsContextGuard guard;
 		nextRenderingContext = std::make_shared<RenderingContext>(
 			source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, frame->width,
 			frame->height, preset.filterLevel, preset.selfieSegmenterFps, preset.gfEps, preset.maskGamma,
