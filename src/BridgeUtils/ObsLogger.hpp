@@ -22,7 +22,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <sstream>
 #include <string_view>
 
-#include <backward.hpp>
+#ifdef HAVE_BACKWARD
+#  include <backward.hpp>
+#endif
 
 #include <util/base.h>
 
@@ -71,23 +73,26 @@ protected:
 		}
 	}
 
-	void logException(const std::exception &e, std::string_view context) const noexcept override
-	try {
-		std::stringstream ss;
-		ss << context.data() << ": " << e.what() << "\n";
+	#ifdef HAVE_BACKWARD
+		try {
+			std::stringstream ss;
+			ss << context.data() << ": " << e.what() << "\n";
 
-		backward::StackTrace st;
-		st.load_here(32);
+			backward::StackTrace st;
+			st.load_here(32);
 
-		backward::Printer p;
-		p.print(st, ss);
+			backward::Printer p;
+			p.print(st, ss);
 
-		error("--- Stack Trace ---\n{}", ss.str());
-	} catch (const std::exception &log_ex) {
-		fprintf(stderr, "[LOGGER FATAL] Failed during exception logging: %s\n", log_ex.what());
-	} catch (...) {
-		fprintf(stderr, "[LOGGER FATAL] Unknown error during exception logging.\n");
-	}
+			error("--- Stack Trace ---\n{}", ss.str());
+		} catch (const std::exception &log_ex) {
+			fprintf(stderr, "[LOGGER FATAL] Failed during exception logging: %s\n", log_ex.what());
+		} catch (...) {
+			fprintf(stderr, "[LOGGER FATAL] Unknown error during exception logging.\n");
+		}
+	#else
+		error("{}: {}", context, e.what());
+	#endif
 
 protected:
 	std::string_view getPrefix() const noexcept override { return prefix; }
