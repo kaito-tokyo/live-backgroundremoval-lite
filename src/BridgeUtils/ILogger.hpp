@@ -80,9 +80,9 @@ private:
 			fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
 			log(level, {buffer.data(), buffer.size()});
 		} catch (const std::exception &e) {
-			fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
+			blog(LOG_ERROR, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
 		} catch (...) {
-			fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
+			blog(LOG_ERROR, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
 		}
 	}
 };

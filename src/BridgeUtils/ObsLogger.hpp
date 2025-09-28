@@ -38,6 +38,8 @@ public:
 	ObsLogger(const std::string &_prefix) : prefix(_prefix) {}
 
 protected:
+	constexpr size_t MAX_LOG_CHUNK_SIZE = 4000;
+
 	void log(LogLevel level, std::string_view message) const noexcept override
 	{
 		std::lock_guard<std::mutex> lock(mtx);
@@ -59,8 +61,6 @@ protected:
 			blog(LOG_ERROR, "[LOGGER FATAL] Unknown log level: %d\n", static_cast<int>(level));
 			return;
 		}
-
-		constexpr size_t MAX_LOG_CHUNK_SIZE = 4000;
 
 		if (message.length() <= MAX_LOG_CHUNK_SIZE) {
 			blog(blogLevel, "%.*s", static_cast<int>(message.length()), message.data());
@@ -98,9 +98,9 @@ inline void ObsLogger::logException(const std::exception &e, std::string_view co
 
 		error("--- Stack Trace ---\n{}", ss.str());
 	} catch (const std::exception &log_ex) {
-		fprintf(stderr, "[LOGGER FATAL] Failed during exception logging: %s\n", log_ex.what());
+		blog(LOG_ERROR, "[LOGGER FATAL] Failed during exception logging: %s\n", log_ex.what());
 	} catch (...) {
-		fprintf(stderr, "[LOGGER FATAL] Unknown error during exception logging.\n");
+		blog(LOG_ERROR, "[LOGGER FATAL] Unknown error during exception logging.\n");
 	}
 }
 
