@@ -30,7 +30,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "BridgeUtils/ObsUnique.hpp"
 #include "BridgeUtils/GsUnique.hpp"
 
-using namespace kaito_tokyo::obs_bridge_utils;
+using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::BridgeUtils;
 
 namespace kaito_tokyo {

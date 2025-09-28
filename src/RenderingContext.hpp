@@ -39,7 +39,7 @@ namespace obs_backgroundremoval_lite {
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 private:
 	obs_source_t *const source;
-	const kaito_tokyo::obs_bridge_utils::ILogger &logger;
+	const KaitoTokyo::BridgeUtils::ILogger &logger;
 	const MainEffect &mainEffect;
 
 	AsyncTextureReader readerSegmenterInput;
@@ -54,10 +54,10 @@ public:
 	const std::uint32_t heightSub;
 
 public:
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxOriginalImage;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fOriginalGrayscale;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t bgrxOriginalImage;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fOriginalGrayscale;
 
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t bgrxSegmenterInput;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t bgrxSegmenterInput;
 
 private:
 	std::vector<std::uint8_t> segmenterInputBuffer;
@@ -68,28 +68,28 @@ public:
 	const std::uint32_t maskRoiWidth;
 	const std::uint32_t maskRoiHeight;
 
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SegmentationMask;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8SegmentationMask;
 
-	std::array<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t, 2> r32fSubOriginalGrayscales;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubDifferenceWithMask;
-	const std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
+	std::array<KaitoTokyo::BridgeUtils::unique_gs_texture_t, 2> r32fSubOriginalGrayscales;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubDifferenceWithMask;
+	const std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
 
 private:
 	AsyncTextureReader readerReducedDifferenceWithMask;
 
 public:
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFGuide;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8SubGFSource;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFMeanGuide;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFMeanSource;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFMeanGuideSource;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFMeanGuideSq;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFA;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fSubGFB;
-	const kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r8GFResult;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8SubGFGuide;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8SubGFSource;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFMeanSource;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSource;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSq;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFA;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFB;
+	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8GFResult;
 
 private:
-	kaito_tokyo::obs_bridge_utils::unique_gs_texture_t r32fGFTemporary1Sub;
+	KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fGFTemporary1Sub;
 
 	const FilterLevel &filterLevel;
 	const int &selfieSegmenterFps;
@@ -105,7 +105,7 @@ private:
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 public:
-	RenderingContext(obs_source_t *source, const kaito_tokyo::obs_bridge_utils::ILogger &logger,
+	RenderingContext(obs_source_t *source, const KaitoTokyo::BridgeUtils::ILogger &logger,
 			 const MainEffect &mainEffect, const ncnn::Net &selfieSegmenterNet,
 			 ThrottledTaskQueue &selfieSegmenterTaskQueue, std::uint32_t width, std::uint32_t height,
 			 const FilterLevel &filterLevel, const int &selfieSegmenterFps, const double &gfEps,

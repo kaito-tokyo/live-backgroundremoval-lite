@@ -53,7 +53,7 @@ class RenderingContext;
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
 private:
 	obs_source_t *const source = nullptr;
-	const kaito_tokyo::obs_bridge_utils::ObsLogger logger;
+	const KaitoTokyo::BridgeUtils::ObsLogger logger;
 	const MainEffect mainEffect;
 	ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
@@ -87,7 +87,7 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
-	const kaito_tokyo::obs_bridge_utils::ILogger &getLogger() const noexcept { return logger; }
+	const KaitoTokyo::BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
 
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept { return renderingContext; }
 };

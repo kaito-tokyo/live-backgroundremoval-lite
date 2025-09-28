@@ -21,7 +21,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "RenderingContext.hpp"
 #include "SelfieSegmenter.hpp"
 
-using namespace kaito_tokyo::obs_bridge_utils;
+using namespace KaitoTokyo::BridgeUtils;
 
 namespace {
 
@@ -42,10 +42,10 @@ std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint3
 	return {offsetX, offsetY, scaledWidth, scaledHeight};
 }
 
-inline std::vector<kaito_tokyo::obs_bridge_utils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
+inline std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
 											      std::uint32_t height)
 {
-	using namespace kaito_tokyo::obs_bridge_utils;
+	using namespace KaitoTokyo::BridgeUtils;
 	std::vector<unique_gs_texture_t> pyramid;
 
 	std::uint32_t currentWidth = width;

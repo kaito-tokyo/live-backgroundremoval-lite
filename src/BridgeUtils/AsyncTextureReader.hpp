@@ -120,8 +120,8 @@ public:
 		  bufferLinesize((width * async_texture_reader_detail::getBytesPerPixel(format) + 3) & ~3u),
 		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
 			     std::vector<std::uint8_t>(height * bufferLinesize)},
-		  stagesurfs{obs_bridge_utils::make_unique_gs_stagesurf(width, height, format),
-			     obs_bridge_utils::make_unique_gs_stagesurf(width, height, format)}
+		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
+					 BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
 	{
 	}
 
