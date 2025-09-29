@@ -100,7 +100,7 @@ jobs:
             -Password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "Install dependencies from vcpkg"
-        run: "$VCPKG_ROOT/vcpkg install --triplet x64-windows-static-md"
+        run: "$VCPKG_ROOT/vcpkg install --triplet x64-windows-static-md-obs"
 
       - name: "Configure"
         run: "cmake --preset windows-testing-ci-x64"
@@ -161,7 +161,7 @@ jobs:
             -Password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "Install dependencies from vcpkg"
-        run: "$VCPKG_ROOT/vcpkg install --triplet x64-linux"
+        run: "$VCPKG_ROOT/vcpkg install --triplet x64-linux-obs"
 
       - name: "Configure"
         run: "cmake --preset ubuntu-testing-ci-x86_64"
