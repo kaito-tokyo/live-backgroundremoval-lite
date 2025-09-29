@@ -149,7 +149,7 @@ inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data
 #if !defined(_MSC_VER)
 __attribute__((target("xsave")))
 #endif
-bool isAVX2Available()
+inline bool isAVX2Available()
 {
 	int cpuInfo[4];
 	auto cpuid = [&](int leaf, int subleaf = 0) {
@@ -221,7 +221,7 @@ copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 
 #else
 
-bool isAVX2Available()
+inline bool isAVX2Available()
 {
 	return false;
 }
