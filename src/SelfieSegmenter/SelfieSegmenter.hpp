@@ -28,9 +28,21 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
+#if defined(_M_X64) || defined(__x86_64__)
+#define SELFIE_SEGMENTER_CHECK_AVX2
+#if defined(_MSC_VER)
+#include <intrin.h>
+#else
+#include <x86intrin.h>
+#endif // defined(_MSC_VER)
+#endif // defined(_M_X64) || defined(__x86_64__)
+
+#if defined(_M_ARM64) || defined(__aarch64__)
 #ifdef __ARM_NEON
+#define SELFIE_SEGMENTER_HAVE_NEON
 #include <arm_neon.h>
 #endif // __ARM_NEON
+#endif // defined(_M_ARM64) || defined(__aarch64__)
 
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
@@ -95,7 +107,7 @@ inline void copyDataToMatNaive(ncnn::Mat &inputMat, const std::uint8_t *bgra_dat
 	}
 }
 
-#ifdef __ARM_NEON
+#ifdef SELFIE_SEGMENTER_HAVE_NEON
 
 inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 {
@@ -129,7 +141,55 @@ inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data
 	}
 }
 
-#endif // __ARM_NEON
+#endif // SELFIE_SEGMENTER_HAVE_NEON
+
+#ifdef SELFIE_SEGMENTER_CHECK_AVX2
+
+bool isAVX2Available()
+{
+	int cpuInfo[4];
+	auto cpuid = [&](int leaf, int subleaf = 0) {
+#if defined(_MSC_VER)
+		__cpuidex(cpuInfo, leaf, subleaf);
+#else
+		__cpuid_count(leaf, subleaf, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
+#endif
+	};
+
+	cpuid(1);
+	bool osxsave = (cpuInfo[2] & (1 << 27)) != 0;
+	if (!osxsave)
+		return false;
+
+	unsigned long long xcr_val = _xgetbv(0);
+	if ((xcr_val & 0x6) != 0x6)
+		return false;
+
+	cpuid(7, 0);
+	return (cpuInfo[1] & (1 << 5)) != 0;
+}
+
+inline void copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
+{
+	float *r_channel = inputMat.channel(0);
+	float *g_channel = inputMat.channel(1);
+	float *b_channel = inputMat.channel(2);
+
+	for (int i = 0; i < PIXEL_COUNT; i++) {
+		b_channel[i] = (static_cast<float>(bgra_data[i * 4 + 0])) / 255.0f;
+		g_channel[i] = (static_cast<float>(bgra_data[i * 4 + 1])) / 255.0f;
+		r_channel[i] = (static_cast<float>(bgra_data[i * 4 + 2])) / 255.0f;
+	}
+}
+
+#else
+
+bool isAVX2Available()
+{
+	return false;
+}
+
+#endif // SELFIE_SEGMENTER_CHECK_AVX2
 
 } // namespace SelfieSegmenterDetail
 
@@ -143,15 +203,14 @@ public:
 	static constexpr int INPUT_HEIGHT = SelfieSegmenterDetail::INPUT_HEIGHT;
 	static constexpr int PIXEL_COUNT = SelfieSegmenterDetail::PIXEL_COUNT;
 
-	static constexpr float MEAN_VALS[3] = {0.0f, 0.0f, 0.0f};
-	static constexpr float NORM_VALS[3] = {1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f};
-
 	const ncnn::Net &selfieSegmenterNet;
 	MaskBuffer maskBuffer;
 
 	// Member variables to reuse memory for ncnn::Mat
 	ncnn::Mat m_inputMat;
 	ncnn::Mat m_outputMat;
+
+	bool isAVX2Available = SelfieSegmenterDetail::isAVX2Available();
 
 	SelfieSegmenter(const ncnn::Net &_selfieSegmenterNet)
 		: selfieSegmenterNet(_selfieSegmenterNet),
@@ -198,11 +257,17 @@ public:
 private:
 	void preprocess(const std::uint8_t *bgra_data)
 	{
-#ifdef __ARM_NEON
+#if defined(SELFIE_SEGMENTER_HAVE_NEON)
 		SelfieSegmenterDetail::copyDataToMatNeon(m_inputMat, bgra_data);
+#elif defined(SELFIE_SEGMENTER_CHECK_AVX2)
+		if (isAVX2Available) {
+			SelfieSegmenterDetail::copyDataToMatAVX2(m_inputMat, bgra_data);
+		} else {
+			SelfieSegmenterDetail::copyDataToMatNaive(m_inputMat, bgra_data);
+		}
 #else
 		SelfieSegmenterDetail::copyDataToMatNaive(m_inputMat, bgra_data);
-#endif // __ARM_NEON
+#endif
 	}
 
 	void postprocess(std::vector<std::uint8_t> &mask) const
