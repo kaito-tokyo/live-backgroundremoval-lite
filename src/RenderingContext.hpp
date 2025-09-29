@@ -24,14 +24,14 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
+#include "BridgeUtils/AsyncTextureReader.hpp"
 #include "BridgeUtils/GsUnique.hpp"
 #include "BridgeUtils/ILogger.hpp"
+#include "BridgeUtils/ThrottledTaskQueue.hpp"
 
-#include "BridgeUtils/AsyncTextureReader.hpp"
 #include "MainEffect.hpp"
 #include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
-#include "ThrottledTaskQueue.hpp"
 
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
@@ -44,7 +44,7 @@ private:
 
 	BridgeUtils::AsyncTextureReader readerSegmenterInput;
 	SelfieSegmenter selfieSegmenter;
-	ThrottledTaskQueue &selfieSegmenterTaskQueue;
+	BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
 
 public:
 	const std::uint32_t width;
@@ -106,7 +106,7 @@ private:
 
 public:
 	RenderingContext(obs_source_t *source, const BridgeUtils::ILogger &logger, const MainEffect &mainEffect,
-			 const ncnn::Net &selfieSegmenterNet, ThrottledTaskQueue &selfieSegmenterTaskQueue,
+			 const ncnn::Net &selfieSegmenterNet, BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue,
 			 std::uint32_t width, std::uint32_t height, const FilterLevel &filterLevel,
 			 const int &selfieSegmenterFps, const double &gfEps, const double &maskGamma,
 			 const double &maskLowerBound, const double &maskUpperBound);

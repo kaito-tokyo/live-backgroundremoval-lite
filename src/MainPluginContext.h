@@ -31,11 +31,11 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "BridgeUtils/GsUnique.hpp"
 #include "BridgeUtils/ObsLogger.hpp"
+#include "BridgeUtils/ThrottledTaskQueue.hpp"
 
 #include "MainEffect.hpp"
 #include "Preset.hpp"
 #include "SelfieSegmenter.hpp"
-#include "ThrottledTaskQueue.hpp"
 
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
@@ -48,7 +48,7 @@ private:
 	obs_source_t *const source = nullptr;
 	const BridgeUtils::ObsLogger logger;
 	const MainEffect mainEffect;
-	ThrottledTaskQueue selfieSegmenterTaskQueue;
+	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
 	Preset preset;
 
