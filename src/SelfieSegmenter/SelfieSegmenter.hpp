@@ -245,7 +245,7 @@ public:
 	ncnn::Mat m_inputMat;
 	ncnn::Mat m_outputMat;
 
-	bool isAVX2Available = SelfieSegmenterDetail::isAVX2Available();
+	bool m_isAVX2Available = SelfieSegmenterDetail::isAVX2Available();
 
 	SelfieSegmenter(const ncnn::Net &_selfieSegmenterNet)
 		: selfieSegmenterNet(_selfieSegmenterNet),
@@ -295,7 +295,7 @@ private:
 #if defined(SELFIE_SEGMENTER_HAVE_NEON)
 		SelfieSegmenterDetail::copyDataToMatNeon(m_inputMat, bgra_data);
 #elif defined(SELFIE_SEGMENTER_CHECK_AVX2)
-		if (isAVX2Available) {
+		if (m_isAVX2Available) {
 			SelfieSegmenterDetail::copyDataToMatAVX2(m_inputMat, bgra_data);
 		} else {
 			SelfieSegmenterDetail::copyDataToMatNaive(m_inputMat, bgra_data);
