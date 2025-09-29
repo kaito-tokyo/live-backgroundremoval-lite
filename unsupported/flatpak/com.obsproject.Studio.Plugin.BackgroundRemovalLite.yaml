@@ -32,8 +32,8 @@ modules:
     sources:
       - type: git
         url: https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
-        tag: 1.5.1
-        commit: 'ea1003f39f1cda22545bef451334808f428b42f3'
+        tag: 1.6.0
+        commit: '6d7f6c7425f114064d365642ebecd48eb1e90917'
         x-checker-data:
           type: git
           tag-pattern: ^([\d.]+)$
