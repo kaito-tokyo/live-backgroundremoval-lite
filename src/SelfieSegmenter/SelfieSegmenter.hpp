@@ -28,6 +28,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
+#ifdef __ARM_NEON
+#include <arm_neon.h>
+#endif // __ARM_NEON
+
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
@@ -72,15 +76,73 @@ private:
 	mutable std::mutex bufferMutex;
 };
 
+namespace SelfieSegmenterDetail {
+
+constexpr int INPUT_WIDTH = 256;
+constexpr int INPUT_HEIGHT = 256;
+constexpr int PIXEL_COUNT = INPUT_WIDTH * INPUT_HEIGHT;
+
+inline void copyDataToMatNaive(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
+{
+	float *r_channel = inputMat.channel(0);
+	float *g_channel = inputMat.channel(1);
+	float *b_channel = inputMat.channel(2);
+
+	for (int i = 0; i < PIXEL_COUNT; i++) {
+		b_channel[i] = (static_cast<float>(bgra_data[i * 4 + 0])) / 255.0f;
+		g_channel[i] = (static_cast<float>(bgra_data[i * 4 + 1])) / 255.0f;
+		r_channel[i] = (static_cast<float>(bgra_data[i * 4 + 2])) / 255.0f;
+	}
+}
+
+#ifdef __ARM_NEON
+
+inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
+{
+    const float32x4_t v_norm = vdupq_n_f32(1.0f / 255.0f);
+
+	float *r_channel = inputMat.channel(0);
+	float *g_channel = inputMat.channel(1);
+	float *b_channel = inputMat.channel(2);
+
+    for (int i = 0; i < PIXEL_COUNT; i += 8) {
+        uint8x8x4_t bgra_vec = vld4_u8(bgra_data + i * 4);
+
+        uint16x8_t b_u16 = vmovl_u8(bgra_vec.val[0]);
+        uint16x8_t g_u16 = vmovl_u8(bgra_vec.val[1]);
+        uint16x8_t r_u16 = vmovl_u8(bgra_vec.val[2]);
+
+        float32x4_t b_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(b_u16))), v_norm);
+        float32x4_t g_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(g_u16))), v_norm);
+        float32x4_t r_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(r_u16))), v_norm);
+
+        float32x4_t b_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(b_u16))), v_norm);
+        float32x4_t g_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16))), v_norm);
+        float32x4_t r_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16))), v_norm);
+
+        // 4. 結果をメモリにストア
+        vst1q_f32(b_channel + i,     b_f32_low);
+        vst1q_f32(b_channel + i + 4, b_f32_high);
+        vst1q_f32(g_channel + i,     g_f32_low);
+        vst1q_f32(g_channel + i + 4, g_f32_high);
+        vst1q_f32(r_channel + i,     r_f32_low);
+        vst1q_f32(r_channel + i + 4, r_f32_high);
+    }
+}
+
+#endif // __ARM_NEON
+
+} // namespace SelfieSegmenterDetail
+
 /**
  * @class SelfieSegmenter
  * @brief A class that orchestrates image preprocessing, inference, and postprocessing.
  */
 class SelfieSegmenter {
 public:
-	static constexpr int INPUT_WIDTH = 256;
-	static constexpr int INPUT_HEIGHT = 256;
-	static constexpr int PIXEL_COUNT = INPUT_WIDTH * INPUT_HEIGHT;
+	static constexpr int INPUT_WIDTH = SelfieSegmenterDetail::INPUT_WIDTH;
+	static constexpr int INPUT_HEIGHT = SelfieSegmenterDetail::INPUT_HEIGHT;
+	static constexpr int PIXEL_COUNT = SelfieSegmenterDetail::PIXEL_COUNT;
 
 	static constexpr float MEAN_VALS[3] = {0.0f, 0.0f, 0.0f};
 	static constexpr float NORM_VALS[3] = {1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f};
@@ -137,15 +199,11 @@ public:
 private:
 	void preprocess(const std::uint8_t *bgra_data)
 	{
-		float *r_channel = m_inputMat.channel(0);
-		float *g_channel = m_inputMat.channel(1);
-		float *b_channel = m_inputMat.channel(2);
-
-		for (int i = 0; i < PIXEL_COUNT; i++) {
-			b_channel[i] = (static_cast<float>(bgra_data[i * 4 + 0]) - MEAN_VALS[0]) * NORM_VALS[0];
-			g_channel[i] = (static_cast<float>(bgra_data[i * 4 + 1]) - MEAN_VALS[1]) * NORM_VALS[1];
-			r_channel[i] = (static_cast<float>(bgra_data[i * 4 + 2]) - MEAN_VALS[2]) * NORM_VALS[2];
-		}
+#ifdef __ARM_NEON
+		SelfieSegmenterDetail::copyDataToMatNeon(m_inputMat, bgra_data);
+#else
+		SelfieSegmenterDetail::copyDataToMatNaive(m_inputMat, bgra_data);
+#endif // __ARM_NEON
 	}
 
 	void postprocess(std::vector<std::uint8_t> &mask) const
