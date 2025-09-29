@@ -182,30 +182,6 @@ public:
 		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
 		while (gs_effect_loop(effect.get(), "ConvertToGrayscale")) {
 			gs_effect_set_texture(textureImage, sourceTexture);
-
-			gs_draw_sprite(nullptr, 0, width, height);
-		}
-	}
-
-	void calculateDifferenceWithMask(std::uint32_t width, std::uint32_t height,
-					 const BridgeUtils::unique_gs_texture_t &targetTexture,
-					 const BridgeUtils::unique_gs_texture_t &currentGrayscaleTexture,
-					 const BridgeUtils::unique_gs_texture_t &lastGrayscaleTexture,
-					 const BridgeUtils::unique_gs_texture_t &segmentationMaskTexture) const noexcept
-	{
-		RenderTargetGuard renderTargetGuard;
-		TransformStateGuard transformStateGuard;
-
-		gs_set_viewport(0, 0, width, height);
-		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
-		gs_matrix_identity();
-
-		gs_set_render_target_with_color_space(targetTexture.get(), nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "CalculateDifferenceWithMask")) {
-			gs_effect_set_texture(textureImage, currentGrayscaleTexture.get());
-			gs_effect_set_texture(textureImage1, lastGrayscaleTexture.get());
-			gs_effect_set_texture(textureImage2, segmentationMaskTexture.get());
-
 			gs_draw_sprite(nullptr, 0, width, height);
 		}
 	}
@@ -314,7 +290,7 @@ public:
 		gs_matrix_identity();
 
 		gs_set_render_target_with_color_space(targetATexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "VerticalBoxFilterR8KS17")) {
+		while (gs_effect_loop(effect.get(), "CalculateGuidedFilterA")) {
 			gs_effect_set_texture(textureImage, sourceMeanGuideSqTexture);
 			gs_effect_set_texture(textureImage1, sourceMeanGuideTexture);
 			gs_effect_set_texture(textureImage2, sourceMeanGuideSourceTexture);
@@ -325,7 +301,7 @@ public:
 		}
 
 		gs_set_render_target_with_color_space(targetBTexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "VerticalBoxFilterR8KS17")) {
+		while (gs_effect_loop(effect.get(), "CalculateGuidedFilterB")) {
 			gs_effect_set_texture(textureImage, targetATexture);
 			gs_effect_set_texture(textureImage1, sourceMeanSourceTexture);
 			gs_effect_set_texture(textureImage2, sourceMeanGuideTexture);
