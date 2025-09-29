@@ -40,8 +40,6 @@ public:
 	ILogger() noexcept = default;
 	virtual ~ILogger() noexcept = default;
 
-	ILogger(const ILogger &) = delete;
-	ILogger &operator=(const ILogger &) = delete;
 	ILogger(ILogger &&) = delete;
 	ILogger &operator=(ILogger &&) = delete;
 
