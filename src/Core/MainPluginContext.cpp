@@ -108,6 +108,7 @@ obs_properties_t *MainPluginContext::getProperties()
 	const char *updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
 	try {
 		const std::string latestVersion = latestVersionFuture.get();
+		logger.info("Latest version: {}", latestVersion);
 		if (latestVersion != PLUGIN_VERSION) {
 			updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
 		}
