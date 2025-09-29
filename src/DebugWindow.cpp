@@ -18,12 +18,13 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "DebugWindow.hpp"
 
+#include <iostream>
+
 #include <QImage>
 #include <QLabel>
 #include <QPixmap>
 #include <QTimer>
 #include <QDebug>
-#include <iostream>
 
 #include "BridgeUtils/AsyncTextureReader.hpp"
 
