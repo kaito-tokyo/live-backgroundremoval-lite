@@ -5,7 +5,7 @@
       "name": "curl",
       "default-features": false,
       "features": [
-        "sspi"
+        "ssl"
       ],
       "platform": "(windows & !uwp) | mingw"
     },

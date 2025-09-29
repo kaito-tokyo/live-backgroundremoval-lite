@@ -57,8 +57,6 @@ inline std::string fetchLatestVersion(const std::string &url)
 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
-    curl_easy_setopt(curl, CURLOPT_HTTPAUTH, (long)CURLAUTH_NEGOTIATE);
-    curl_easy_setopt(curl, CURLOPT_USERPWD, ":");
 	CURLcode res = curl_easy_perform(curl);
 	curl_easy_cleanup(curl);
 	if (res != CURLE_OK) {
