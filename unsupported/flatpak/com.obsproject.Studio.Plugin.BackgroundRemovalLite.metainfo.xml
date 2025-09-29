@@ -15,6 +15,20 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-2.0</project_license>
   <releases>
+    <release version="1.6.0" date="2025-09-29">
+      <description>
+        <p>🎉 <b>Release 1.6.0</b></p>
+        <ul>
+          <li>🚀 <b>Update Checker Returns!</b> Plugin now checks for new versions and notifies you in the filter UI. Localized status and clear messages.</li>
+          <li>💨 <b>Selfie Segmenter Performance Boost:</b> Major rewrite, SIMD acceleration (AVX2/NEON), new unit tests, and better maintainability.</li>
+          <li>🧩 <b>Project Structure Modernization:</b> Core logic reorganized, redundant files removed.</li>
+          <li>🛠️ <b>CMake & Build Improvements:</b> CMake detects/links curl & backward-cpp, AVX2 triplets, improved test infra.</li>
+          <li>🌍 <b>Localization & UI Enhancements:</b> Update checker info fully localized, clearer UI messages.</li>
+          <li>📚 <b>Documentation & Developer Guide Updates:</b> Release/dev guidelines clarified, Copilot/Gemini instructions improved.</li>
+        </ul>
+        <p>Thank you for using Background Removal Lite! Please report any issues or feedback.</p>
+      </description>
+    </release>
     <release version="1.5.1" date="2025-09-27">
       <description>
         <p>This release adds unofficial Flatpak build instructions, improves documentation, and fixes installer links.</p>
