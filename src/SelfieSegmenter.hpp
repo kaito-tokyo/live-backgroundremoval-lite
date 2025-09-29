@@ -30,8 +30,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "BridgeUtils/ObsUnique.hpp"
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
 
 /**
  * @class MaskBuffer
@@ -164,5 +164,5 @@ private:
 	}
 };
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo

@@ -25,9 +25,12 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <QDebug>
 #include <iostream>
 
-#include "AsyncTextureReader.hpp"
+#include "BridgeUtils/AsyncTextureReader.hpp"
+
 #include "MainPluginContext.h"
 #include "RenderingContext.hpp"
+
+using namespace KaitoTokyo::BridgeUtils;
 
 namespace {
 
@@ -105,8 +108,8 @@ inline double float16_to_double(uint16_t h)
 
 } // namespace
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
 
 DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext, QWidget *parent)
 	: QDialog(parent),
@@ -303,5 +306,5 @@ void DebugWindow::updatePreview()
 	previewImageLabel->setPixmap(scaledPixmap);
 }
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo

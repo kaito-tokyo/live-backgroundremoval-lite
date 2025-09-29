@@ -19,6 +19,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <array>
 
 #include "RenderingContext.hpp"
+#include "BridgeUtils/AsyncTextureReader.hpp"
 #include "SelfieSegmenter.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
@@ -27,7 +28,7 @@ namespace {
 
 std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
 {
-	using namespace kaito_tokyo::obs_backgroundremoval_lite;
+	using namespace KaitoTokyo::BackgroundRemovalLite;
 
 	double widthScale = static_cast<double>(SelfieSegmenter::INPUT_WIDTH) / static_cast<double>(width);
 	double heightScale = static_cast<double>(SelfieSegmenter::INPUT_HEIGHT) / static_cast<double>(height);
@@ -42,10 +43,8 @@ std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint3
 	return {offsetX, offsetY, scaledWidth, scaledHeight};
 }
 
-inline std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
-											std::uint32_t height)
+inline std::vector<unique_gs_texture_t> createReductionPyramid(std::uint32_t width, std::uint32_t height)
 {
-	using namespace KaitoTokyo::BridgeUtils;
 	std::vector<unique_gs_texture_t> pyramid;
 
 	std::uint32_t currentWidth = width;
@@ -64,8 +63,8 @@ inline std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> createReduction
 
 } // anonymous namespace
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
 				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
@@ -301,5 +300,5 @@ obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 	return frame;
 }
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo

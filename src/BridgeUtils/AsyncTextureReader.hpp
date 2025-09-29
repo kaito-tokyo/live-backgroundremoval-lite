@@ -20,13 +20,15 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <array>
 #include <atomic>
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <mutex>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+#include "BridgeUtils/ObsUnique.hpp"
+#include "BridgeUtils/GsUnique.hpp"
 
 namespace KaitoTokyo {
 namespace BridgeUtils {
@@ -117,7 +119,7 @@ public:
 			   const gs_color_format format = GS_BGRA)
 		: width(width),
 		  height(height),
-		  bufferLinesize((width * async_texture_reader_detail::getBytesPerPixel(format) + 3) & ~3u),
+		  bufferLinesize((width * AsyncTextureReaderDetail::getBytesPerPixel(format) + 3) & ~3u),
 		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
 			     std::vector<std::uint8_t>(height * bufferLinesize)},
 		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
@@ -154,7 +156,7 @@ public:
 		}
 		gs_stagesurf_t *const stagesurf = stagesurfs[gpuReadIndex].get();
 
-		const async_texture_reader_detail::ScopedStageSurfMap mappedSurf(stagesurf);
+		const AsyncTextureReaderDetail::ScopedStageSurfMap mappedSurf(stagesurf);
 
 		if (!mappedSurf.data || mappedSurf.linesize > bufferLinesize) {
 			throw std::runtime_error("gs_stagesurface_map returned invalid data");
@@ -223,7 +225,7 @@ private:
 	std::array<std::vector<std::uint8_t>, 2> cpuBuffers;
 	std::atomic<std::size_t> activeCpuBufferIndex = {0};
 
-	std::array<KaitoTokyo::BridgeUtils::gs_stagesurf_t, 2> stagesurfs;
+	std::array<BridgeUtils::unique_gs_stagesurf_t, 2> stagesurfs;
 	std::size_t gpuWriteIndex = 0;
 	std::mutex gpuMutex;
 };

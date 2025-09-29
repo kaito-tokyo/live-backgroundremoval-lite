@@ -32,8 +32,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "BridgeUtils/ILogger.hpp"
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
 
 /**
  * @brief A self-contained thread queue for executing cancellable tasks with a limit.
@@ -59,7 +59,7 @@ public:
 private:
 	using QueuedTask = std::pair<std::function<void()>, CancellationToken>;
 
-	const KaitoTokyo::BridgeUtils::ILogger &logger;
+	const BridgeUtils::ILogger &logger;
 	const std::size_t maxQueueSize;
 	std::thread worker;
 	std::mutex mtx;
@@ -73,7 +73,7 @@ public:
      * @param _logger The logger to use for internal messages.
      * @param max_size The maximum number of tasks the queue can hold. Must be at least 1.
      */
-	ThrottledTaskQueue(const KaitoTokyo::BridgeUtils::ILogger &_logger, std::size_t _maxQueueSize)
+	ThrottledTaskQueue(const BridgeUtils::ILogger &_logger, std::size_t _maxQueueSize)
 		: logger(_logger),
 		  maxQueueSize(_maxQueueSize),
 		  worker(&ThrottledTaskQueue::workerLoop, this)
@@ -198,5 +198,5 @@ private:
 	}
 };
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo

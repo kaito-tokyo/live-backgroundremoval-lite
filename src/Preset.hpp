@@ -20,8 +20,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <cmath>
 
-namespace kaito_tokyo {
-namespace obs_backgroundremoval_lite {
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
 
 enum class FilterLevel : int {
 	Default = 0,
@@ -48,5 +48,5 @@ struct Preset {
 	static float dbToLinearPow(float db) noexcept { return std::pow(10.0f, db / 10.0f); }
 };
 
-} // namespace obs_backgroundremoval_lite
-} // namespace kaito_tokyo
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo
