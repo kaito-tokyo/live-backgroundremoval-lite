@@ -70,13 +70,6 @@ public:
 
 	const BridgeUtils::unique_gs_texture_t r8SegmentationMask;
 
-	std::array<BridgeUtils::unique_gs_texture_t, 2> r32fSubOriginalGrayscales;
-	const BridgeUtils::unique_gs_texture_t r32fSubDifferenceWithMask;
-	const std::vector<BridgeUtils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
-
-private:
-	BridgeUtils::AsyncTextureReader readerReducedDifferenceWithMask;
-
 public:
 	const BridgeUtils::unique_gs_texture_t r8SubGFGuide;
 	const BridgeUtils::unique_gs_texture_t r8SubGFSource;
