@@ -4,6 +4,7 @@
 # Except for default project files
 !/.github
 !/.vscode
+/.vscode/settings.json
 !/build-aux
 !/cmake
 !/data
