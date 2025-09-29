@@ -120,7 +120,6 @@ inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data
         float32x4_t g_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16))), v_norm);
         float32x4_t r_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16))), v_norm);
 
-        // 4. 結果をメモリにストア
         vst1q_f32(b_channel + i,     b_f32_low);
         vst1q_f32(b_channel + i + 4, b_f32_high);
         vst1q_f32(g_channel + i,     g_f32_low);
