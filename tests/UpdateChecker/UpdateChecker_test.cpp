@@ -16,13 +16,20 @@ You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
-#include <obs-bridge-utils/ILogger.hpp>
+#include <gtest/gtest.h>
 
-class NullLogger final : public kaito_tokyo::obs_bridge_utils::ILogger {
-public:
-	void log(LogLevel level, std::string_view message) const noexcept override
-	{
-		(void)level;
-		(void)message;
-	}
-};
+#include <UpdateChecker/UpdateChecker.hpp>
+
+TEST(UpdateCheckerTest, FetchLatestVersion_InvalidUrl)
+{
+    EXPECT_THROW({
+        KaitoTokyo::UpdateChecker::fetchLatestVersion("");
+    }, std::invalid_argument);
+}
+
+TEST(UpdateCheckerTest, FetchLatestVersion_ValidUrl)
+{
+    std::string url = "https://obs-backgroundremoval-lite.kaito.tokyo/metadata/latest-version.txt";
+    std::string result = KaitoTokyo::UpdateChecker::fetchLatestVersion(url);
+    EXPECT_FALSE(result.empty());
+}
