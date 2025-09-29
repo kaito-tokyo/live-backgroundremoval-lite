@@ -53,6 +53,7 @@ target_sources(
     src/Core/MainPluginContext.cpp
     src/Core/RenderingContext.cpp
     src/DebugWindow/DebugWindow.cpp
+    src/SelfieSegmenter/SelfieSegmenter.cpp
     src/plugin-main.c
 )
 target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OBS::libobs fmt::fmt ncnn)
