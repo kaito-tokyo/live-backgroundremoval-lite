@@ -72,6 +72,8 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
 if(BUILD_TESTING)
   enable_testing()
 
+  list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/stb")
+
   find_package(GTest CONFIG REQUIRED)
   find_package(Stb MODULE REQUIRED)
 
