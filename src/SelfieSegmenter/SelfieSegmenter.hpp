@@ -146,6 +146,9 @@ inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data
 
 #ifdef SELFIE_SEGMENTER_CHECK_AVX2
 
+#if !defined(_MSC_VER)
+__attribute__((target("xsave")))
+#endif
 bool isAVX2Available()
 {
 	int cpuInfo[4];
