@@ -17,5 +17,23 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
 #include <gtest/gtest.h>
+#include <UpdateChecker/UpdateChecker.hpp>
+#include <curl/curl.h>
 
-TEST(StubTest, DISABLED_Stub) {}
+class UpdateCheckerTest : public ::testing::Test {
+protected:
+	static void SetUpTestSuite() { curl_global_init(CURL_GLOBAL_DEFAULT); }
+	static void TearDownTestSuite() { curl_global_cleanup(); }
+};
+
+TEST_F(UpdateCheckerTest, FetchLatestVersion_InvalidUrl)
+{
+	EXPECT_THROW({ KaitoTokyo::UpdateChecker::fetchLatestVersion(""); }, std::invalid_argument);
+}
+
+TEST_F(UpdateCheckerTest, FetchLatestVersion_ValidUrl)
+{
+	std::string url = "https://obs-backgroundremoval-lite.kaito.tokyo/metadata/latest-version.txt";
+	std::string result = KaitoTokyo::UpdateChecker::fetchLatestVersion(url);
+	EXPECT_FALSE(result.empty());
+}

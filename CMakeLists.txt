@@ -67,10 +67,6 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
 
-add_library(${CMAKE_PROJECT_NAME}_header INTERFACE)
-target_include_directories(${CMAKE_PROJECT_NAME}_header INTERFACE ${CMAKE_SOURCE_DIR}/src)
-target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
-
 if(BUILD_TESTING)
   enable_testing()
 
