@@ -19,9 +19,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "MainPluginContext.h"
 #include "UpdateChecker/UpdateChecker.hpp"
 #include <future>
-namespace {
-std::shared_future<std::string> latestVersionFuture;
-}
 
 #include <stdexcept>
 
@@ -30,6 +27,12 @@ std::shared_future<std::string> latestVersionFuture;
 #include "BridgeUtils/GsUnique.hpp"
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::BackgroundRemovalLite;
+
+namespace {
+
+std::shared_future<std::string> latestVersionFuture;
+
+} // namespace
 
 const char *main_plugin_context_get_name(void *type_data)
 {
