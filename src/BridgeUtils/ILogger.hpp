@@ -112,7 +112,8 @@ private:
 	} catch (const std::exception &e) {
 		fprintf(stderr, "%s: [LOGGER FATAL] Failed to format log message: %s\n", getPrefix(), e.what());
 	} catch (...) {
-		fprintf(stderr, "%s: [LOGGER FATAL] An unknown error occurred while formatting log message.\n", getPrefix());
+		fprintf(stderr, "%s: [LOGGER FATAL] An unknown error occurred while formatting log message.\n",
+			getPrefix());
 	}
 };
 
