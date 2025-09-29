@@ -50,7 +50,7 @@ TEST(SelfieSegmenterTest, Construction)
 	ASSERT_EQ(net.load_param(kParamPath), 0);
 	ASSERT_EQ(net.load_model(kBinPath), 0);
 	SelfieSegmenter segmenter(net);
-	EXPECT_EQ(segmenter.maskBuffer.read().size(), SelfieSegmenter::PIXEL_COUNT);
+	EXPECT_EQ(segmenter.getMask().size(), SelfieSegmenter::PIXEL_COUNT);
 }
 
 TEST(SelfieSegmenterTest, ProcessRealImage)

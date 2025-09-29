@@ -1,6 +1,10 @@
 include(GoogleTest)
 
-add_executable(SelfieSegmenter_test SelfieSegmenter/SelfieSegmenter_test.cpp)
+add_executable(
+  SelfieSegmenter_test
+  ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter/SelfieSegmenter.cpp
+  SelfieSegmenter/SelfieSegmenter_test.cpp
+)
 target_include_directories(
   SelfieSegmenter_test
   PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/SelfieSegmenter

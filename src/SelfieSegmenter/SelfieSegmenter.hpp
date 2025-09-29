@@ -28,12 +28,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
-#ifdef __ARM_NEON
-#include <arm_neon.h>
-#endif // __ARM_NEON
-
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
+namespace SelfieSegmenterDetail {
 
 /**
  * @class MaskBuffer
@@ -76,61 +73,6 @@ private:
 	mutable std::mutex bufferMutex;
 };
 
-namespace SelfieSegmenterDetail {
-
-constexpr int INPUT_WIDTH = 256;
-constexpr int INPUT_HEIGHT = 256;
-constexpr int PIXEL_COUNT = INPUT_WIDTH * INPUT_HEIGHT;
-
-inline void copyDataToMatNaive(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
-{
-	float *r_channel = inputMat.channel(0);
-	float *g_channel = inputMat.channel(1);
-	float *b_channel = inputMat.channel(2);
-
-	for (int i = 0; i < PIXEL_COUNT; i++) {
-		b_channel[i] = (static_cast<float>(bgra_data[i * 4 + 0])) / 255.0f;
-		g_channel[i] = (static_cast<float>(bgra_data[i * 4 + 1])) / 255.0f;
-		r_channel[i] = (static_cast<float>(bgra_data[i * 4 + 2])) / 255.0f;
-	}
-}
-
-#ifdef __ARM_NEON
-
-inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
-{
-	const float32x4_t v_norm = vdupq_n_f32(1.0f / 255.0f);
-
-	float *r_channel = inputMat.channel(0);
-	float *g_channel = inputMat.channel(1);
-	float *b_channel = inputMat.channel(2);
-
-	for (int i = 0; i < PIXEL_COUNT; i += 8) {
-		uint8x8x4_t bgra_vec = vld4_u8(bgra_data + i * 4);
-
-		uint16x8_t b_u16 = vmovl_u8(bgra_vec.val[0]);
-		uint16x8_t g_u16 = vmovl_u8(bgra_vec.val[1]);
-		uint16x8_t r_u16 = vmovl_u8(bgra_vec.val[2]);
-
-		float32x4_t b_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(b_u16))), v_norm);
-		float32x4_t g_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(g_u16))), v_norm);
-		float32x4_t r_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(r_u16))), v_norm);
-
-		float32x4_t b_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(b_u16))), v_norm);
-		float32x4_t g_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16))), v_norm);
-		float32x4_t r_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16))), v_norm);
-
-		vst1q_f32(b_channel + i, b_f32_low);
-		vst1q_f32(b_channel + i + 4, b_f32_high);
-		vst1q_f32(g_channel + i, g_f32_low);
-		vst1q_f32(g_channel + i + 4, g_f32_high);
-		vst1q_f32(r_channel + i, r_f32_low);
-		vst1q_f32(r_channel + i + 4, r_f32_high);
-	}
-}
-
-#endif // __ARM_NEON
-
 } // namespace SelfieSegmenterDetail
 
 /**
@@ -139,79 +81,25 @@ inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data
  */
 class SelfieSegmenter {
 public:
-	static constexpr int INPUT_WIDTH = SelfieSegmenterDetail::INPUT_WIDTH;
-	static constexpr int INPUT_HEIGHT = SelfieSegmenterDetail::INPUT_HEIGHT;
-	static constexpr int PIXEL_COUNT = SelfieSegmenterDetail::PIXEL_COUNT;
-
-	static constexpr float MEAN_VALS[3] = {0.0f, 0.0f, 0.0f};
-	static constexpr float NORM_VALS[3] = {1.0f / 255.0f, 1.0f / 255.0f, 1.0f / 255.0f};
-
-	const ncnn::Net &selfieSegmenterNet;
-	MaskBuffer maskBuffer;
-
-	// Member variables to reuse memory for ncnn::Mat
-	ncnn::Mat m_inputMat;
-	ncnn::Mat m_outputMat;
-
-	SelfieSegmenter(const ncnn::Net &_selfieSegmenterNet)
-		: selfieSegmenterNet(_selfieSegmenterNet),
-		  maskBuffer(PIXEL_COUNT)
-	{
-		// Pre-allocate memory for the input Mat.
-		m_inputMat.create(INPUT_WIDTH, INPUT_HEIGHT, 3, sizeof(float));
-	}
-
-	/**
-     * @brief Generates a segmentation mask from BGRA image data (executed on the inference thread).
-     * @param bgra_data A pointer to the 256x256 BGRA image data.
-     */
-	void process(const std::uint8_t *bgra_data)
-	{
-		if (!bgra_data) {
-			return;
-		}
-
-		// 1. Pre-process data into the pre-allocated member Mat
-		preprocess(bgra_data);
-
-		// 2. Run inference using member Mats
-		ncnn::Extractor ex = selfieSegmenterNet.create_extractor();
-		ex.input("in0", m_inputMat);
-		ex.extract("out0", m_outputMat);
-
-		// 3. Get a reference to the buffer to write to
-		std::vector<std::uint8_t> &maskToWrite = maskBuffer.beginWrite();
-
-		// 4. Post-process the result directly into the back buffer
-		postprocess(maskToWrite);
-
-		// 5. Commit the write, making the buffer available for reading
-		maskBuffer.commitWrite();
-	}
-
-	/**
-     * @brief Retrieves the latest segmentation mask (executed on the rendering thread).
-     * @return A const reference to the vector of mask data (grayscale values).
-     */
-	const std::vector<std::uint8_t> &getMask() const { return maskBuffer.read(); }
+	static constexpr int INPUT_WIDTH = 256;
+	static constexpr int INPUT_HEIGHT = 256;
+	static constexpr int PIXEL_COUNT = INPUT_WIDTH * INPUT_HEIGHT;
 
 private:
-	void preprocess(const std::uint8_t *bgra_data)
-	{
-#ifdef __ARM_NEON
-		SelfieSegmenterDetail::copyDataToMatNeon(m_inputMat, bgra_data);
-#else
-		SelfieSegmenterDetail::copyDataToMatNaive(m_inputMat, bgra_data);
-#endif // __ARM_NEON
-	}
+	const ncnn::Net &selfieSegmenterNet;
+	SelfieSegmenterDetail::MaskBuffer maskBuffer;
+	ncnn::Mat inputMat;
+	ncnn::Mat outputMat;
+	bool isAVX2Available;
 
-	void postprocess(std::vector<std::uint8_t> &mask) const
-	{
-		const float *src_ptr = m_outputMat.channel(0);
-		for (int i = 0; i < PIXEL_COUNT; i++) {
-			mask[i] = static_cast<std::uint8_t>(std::max(0.f, std::min(255.f, src_ptr[i] * 255.f)));
-		}
-	}
+public:
+	SelfieSegmenter(const ncnn::Net &_selfieSegmenterNet);
+	void process(const std::uint8_t *bgra_data);
+	const std::vector<std::uint8_t> &getMask() const;
+
+private:
+	void preprocess(const std::uint8_t *bgra_data);
+	void postprocess(std::vector<std::uint8_t> &mask) const;
 };
 
 } // namespace BackgroundRemovalLite
