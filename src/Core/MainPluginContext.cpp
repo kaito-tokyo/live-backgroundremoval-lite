@@ -37,12 +37,13 @@ using namespace KaitoTokyo::BridgeUtils;
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
-MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source, std::shared_future<std::string> _latestVersionFuture)
-			 : source{_source},
-				 logger("[" PLUGIN_NAME "] "),
-				 mainEffect(unique_obs_module_file("effects/main.effect"), logger),
-				 latestVersionFuture(_latestVersionFuture),
-				 selfieSegmenterTaskQueue(logger, 1)
+MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source,
+				     std::shared_future<std::string> _latestVersionFuture)
+	: source{_source},
+	  logger("[" PLUGIN_NAME "] "),
+	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
+	  latestVersionFuture(_latestVersionFuture),
+	  selfieSegmenterTaskQueue(logger, 1)
 {
 	selfieSegmenterNet.opt.num_threads = 2;
 	selfieSegmenterNet.opt.use_local_pool_allocator = true;

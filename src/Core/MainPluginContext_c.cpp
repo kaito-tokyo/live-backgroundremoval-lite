@@ -16,7 +16,6 @@ You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
-
 #include "MainPluginContext.h"
 #include "UpdateChecker/UpdateChecker.hpp"
 #include <future>
@@ -249,9 +248,11 @@ try {
 
 bool main_plugin_context_module_load()
 try {
-	latestVersionFuture = std::async(std::launch::async, [] {
-		 return KaitoTokyo::UpdateChecker::fetchLatestVersion("https://obs-backgroundremoval-lite.kaito.tokyo/metadata/latest-version.txt");
-	}).share();
+	latestVersionFuture =
+		std::async(std::launch::async, [] {
+			return KaitoTokyo::UpdateChecker::fetchLatestVersion(
+				"https://obs-backgroundremoval-lite.kaito.tokyo/metadata/latest-version.txt");
+		}).share();
 	return true;
 } catch (const std::exception &e) {
 	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to load main plugin context: %s", e.what());

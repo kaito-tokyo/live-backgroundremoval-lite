@@ -60,7 +60,8 @@ private:
 	std::unique_ptr<DebugWindow> debugWindow;
 
 public:
-	MainPluginContext(obs_data_t *settings, obs_source_t *source, std::shared_future<std::string> latestVersionFuture);
+	MainPluginContext(obs_data_t *settings, obs_source_t *source,
+			  std::shared_future<std::string> latestVersionFuture);
 	void startup() noexcept;
 	void shutdown() noexcept;
 	~MainPluginContext() noexcept;
@@ -84,7 +85,6 @@ public:
 	const BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
 
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept { return renderingContext; }
-	const std::shared_future<std::string>& getLatestVersionFuture() const noexcept { return latestVersionFuture_; }
 };
 
 } // namespace BackgroundRemovalLite
