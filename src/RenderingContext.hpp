@@ -43,7 +43,7 @@ private:
 	const KaitoTokyo::BridgeUtils::ILogger &logger;
 	const MainEffect &mainEffect;
 
-	BridgeUtils::AsyncTextureReader readerSegmenterInput;
+	AsyncTextureReader readerSegmenterInput;
 	SelfieSegmenter selfieSegmenter;
 	ThrottledTaskQueue &selfieSegmenterTaskQueue;
 
@@ -76,7 +76,7 @@ public:
 	const std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
 
 private:
-	BridgeUtils::AsyncTextureReader readerReducedDifferenceWithMask;
+	AsyncTextureReader readerReducedDifferenceWithMask;
 
 public:
 	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8SubGFGuide;
