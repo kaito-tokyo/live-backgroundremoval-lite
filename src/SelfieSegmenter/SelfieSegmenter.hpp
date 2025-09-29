@@ -173,6 +173,9 @@ bool isAVX2Available()
 	return (cpuInfo[1] & (1 << 5)) != 0;
 }
 
+#if !defined(_MSC_VER)
+__attribute__((target("avx,avx2")))
+#endif
 inline void copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 {
 	float *r_channel = inputMat.channel(0);
