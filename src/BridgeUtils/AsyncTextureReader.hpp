@@ -38,25 +38,39 @@ namespace AsyncTextureReaderDetail {
 inline std::uint32_t getBytesPerPixel(const gs_color_format format)
 {
 	switch (format) {
+	case GS_UNKNOWN:
+		throw std::runtime_error("GS_UNKNOWN format is not supported");
 	case GS_A8:
 	case GS_R8:
 		return 1;
 	case GS_R8G8:
-	case GS_RG16:
+		return 2;
 	case GS_R16:
 	case GS_R16F:
 		return 2;
 	case GS_RGBA:
-	case GS_BGRX:
 	case GS_BGRA:
+	case GS_BGRX:
 	case GS_R10G10B10A2:
 	case GS_R32F:
+	case GS_RGBA_UNORM:
+	case GS_BGRA_UNORM:
+	case GS_BGRX_UNORM:
 		return 4;
 	case GS_RGBA16:
 	case GS_RGBA16F:
 		return 8;
 	case GS_RGBA32F:
 		return 16;
+	case GS_RG16:
+	case GS_RG16F:
+		return 4;
+	case GS_RG32F:
+		return 8;
+	case GS_DXT1:
+	case GS_DXT3:
+	case GS_DXT5:
+		throw std::runtime_error("Compressed formats are not supported");
 	default:
 		throw std::runtime_error("Unsupported color format");
 	}
@@ -115,8 +129,7 @@ public:
      * @param height The height of the textures to be read.
      * @param format The color format of the textures.
      */
-	AsyncTextureReader(const std::uint32_t width, const std::uint32_t height,
-			   const gs_color_format format = GS_BGRA)
+	AsyncTextureReader(const std::uint32_t width, const std::uint32_t height, const gs_color_format format)
 		: width(width),
 		  height(height),
 		  bufferLinesize((width * AsyncTextureReaderDetail::getBytesPerPixel(format) + 3) & ~3u),
@@ -175,17 +188,6 @@ public:
 		}
 
 		activeCpuBufferIndex.store(backBufferIndex, std::memory_order_release);
-	}
-
-	/**
-     * @brief Gets read-write access to the internal CPU buffer containing the latest pixel data.
-     * This operation is lock-free and provides immediate access to the most recently synced frame.
-     * @return A reference to the active pixel data buffer.
-     */
-	std::vector<std::uint8_t> &getBuffer() noexcept
-	{
-		// non-const version calls const version and removes constness.
-		return const_cast<std::vector<std::uint8_t> &>(std::as_const(*this).getBuffer());
 	}
 
 	/**

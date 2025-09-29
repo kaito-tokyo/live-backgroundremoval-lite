@@ -67,45 +67,6 @@ const std::vector<std::string> r32fSubTextures = {textureR32fSubOriginalGrayscal
 						  textureR32fSubGFA,
 						  textureR32fSubGFB};
 
-inline double float16_to_double(uint16_t h)
-{
-	const uint16_t sign_h = (h >> 15) & 0x0001;
-	const uint16_t exp_h = (h >> 10) & 0x001f;
-	const uint16_t frac_h = h & 0x03ff;
-
-	uint64_t sign_d = static_cast<uint64_t>(sign_h) << 63;
-	uint64_t exp_d;
-	uint64_t frac_d;
-
-	if (exp_h == 0) {
-		if (frac_h == 0) {
-			uint64_t result_bits = sign_d;
-			double result;
-			std::memcpy(&result, &result_bits, sizeof(double));
-			return result;
-		} else {
-			int n = 0;
-			uint16_t temp_frac = frac_h;
-			while (!((temp_frac <<= 1) & 0x0400)) {
-				n++;
-			}
-			exp_d = static_cast<uint64_t>(1023 - 15 - n + 1);
-			frac_d = static_cast<uint64_t>((temp_frac & 0x03ff)) << 42;
-		}
-	} else if (exp_h == 0x1f) {
-		exp_d = 0x7ff;
-		frac_d = (frac_h == 0) ? 0 : (static_cast<uint64_t>(frac_h) << 42);
-	} else {
-		exp_d = static_cast<uint64_t>(exp_h - 15 + 1023);
-		frac_d = static_cast<uint64_t>(frac_h) << 42;
-	}
-
-	uint64_t result_bits = sign_d | (exp_d << 52) | frac_d;
-	double result;
-	std::memcpy(&result, &result_bits, sizeof(double));
-	return result;
-}
-
 } // namespace
 
 namespace KaitoTokyo {
@@ -269,7 +230,7 @@ void DebugWindow::updatePreview()
 		image = QImage(readerR8->getBuffer().data(), readerR8->width, readerR8->height,
 			       QImage::Format_Grayscale8);
 	} else if (std::find(r32fTextures.begin(), r32fTextures.end(), currentTextureStd) != r32fTextures.end()) {
-		auto r32fDataView = reinterpret_cast<float *>(readerR32f->getBuffer().data());
+		auto r32fDataView = reinterpret_cast<const float *>(readerR32f->getBuffer().data());
 		bufferR8.resize(readerR32f->width * readerR32f->height);
 		for (std::uint32_t i = 0; i < readerR32f->width * readerR32f->height; ++i) {
 			bufferR8[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);
@@ -289,7 +250,7 @@ void DebugWindow::updatePreview()
 			       QImage::Format_Grayscale8);
 	} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), currentTextureStd) !=
 		   r32fSubTextures.end()) {
-		auto r32fDataView = reinterpret_cast<float *>(readerR32fSub->getBuffer().data());
+		auto r32fDataView = reinterpret_cast<const float *>(readerR32fSub->getBuffer().data());
 		bufferSubR8.resize(readerR32fSub->width * readerR32fSub->height);
 		for (std::uint32_t i = 0; i < readerR32fSub->width * readerR32fSub->height; ++i) {
 			bufferSubR8[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);

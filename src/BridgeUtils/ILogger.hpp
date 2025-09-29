@@ -28,6 +28,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <fmt/format.h>
 
+#ifdef HAVE_BACKWARD
+#include <backward.hpp>
+#endif // HAVE_BACKWARD
+
 namespace KaitoTokyo {
 namespace BridgeUtils {
 
@@ -61,29 +65,55 @@ public:
 		formatAndLog(LogLevel::Error, fmt, std::forward<Args>(args)...);
 	}
 
-	virtual void logException(const std::exception &e, std::string_view context) const noexcept = 0;
+#ifdef HAVE_BACKWARD
+
+	virtual void logException(const std::exception &e, std::string_view context) const noexcept
+	try {
+		std::stringstream ss;
+		ss << context.data() << ": " << e.what() << "\n";
+
+		backward::StackTrace st;
+		st.load_here(32);
+
+		backward::Printer p;
+		p.print(st, ss);
+
+		error("--- Stack Trace ---\n{}", ss.str());
+	} catch (const std::exception &log_ex) {
+		error("[LOGGER FATAL] Failed during exception logging: %s\n", log_ex.what());
+	} catch (...) {
+		error("[LOGGER FATAL] Unknown error during exception logging.");
+	}
+
+#else // !HAVE_BACKWARD
+
+	virtual void logException(const std::exception &e, std::string_view context) const noexcept
+	{
+		error("{}: {}", context, e.what());
+	}
+
+#endif // HAVE_BACKWARD
 
 protected:
 	enum class LogLevel : std::int8_t { Debug, Info, Warn, Error };
 
 	virtual void log(LogLevel level, std::string_view message) const noexcept = 0;
 
-	virtual std::string_view getPrefix() const noexcept { return ""; }
+	virtual const char *getPrefix() const noexcept = 0;
 
 private:
 	template<typename... Args>
 	void formatAndLog(LogLevel level, fmt::format_string<Args...> fmt, Args &&...args) const noexcept
-	{
-		try {
-			fmt::memory_buffer buffer;
-			fmt::format_to(std::back_inserter(buffer), "{}", getPrefix());
-			fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
-			log(level, {buffer.data(), buffer.size()});
-		} catch (const std::exception &e) {
-			fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
-		} catch (...) {
-			fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
-		}
+	try {
+		fmt::memory_buffer buffer;
+		fmt::format_to(std::back_inserter(buffer), "{}", getPrefix());
+		fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
+		log(level, {buffer.data(), buffer.size()});
+	} catch (const std::exception &e) {
+		fprintf(stderr, "%s: [LOGGER FATAL] Failed to format log message: %s\n", getPrefix(), e.what());
+	} catch (...) {
+		fprintf(stderr, "%s: [LOGGER FATAL] An unknown error occurred while formatting log message.\n",
+			getPrefix());
 	}
 };
 
