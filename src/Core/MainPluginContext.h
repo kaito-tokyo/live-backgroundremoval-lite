@@ -35,7 +35,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "MainEffect.hpp"
 #include "Preset.hpp"
-#include "SelfieSegmenter.hpp"
+#include "../SelfieSegmentator/SelfieSegmenter.hpp"
 
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
