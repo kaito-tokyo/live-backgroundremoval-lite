@@ -176,7 +176,8 @@ bool isAVX2Available()
 #if !defined(_MSC_VER)
 __attribute__((target("avx,avx2")))
 #endif
-inline void copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
+inline void
+copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 {
 	float *r_channel = inputMat.channel(0);
 	float *g_channel = inputMat.channel(1);
