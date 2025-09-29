@@ -18,6 +18,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "MainPluginContext.h"
 
+#include <future>
 #include <stdexcept>
 
 #include <obs-module.h>
@@ -36,10 +37,12 @@ using namespace KaitoTokyo::BridgeUtils;
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
-MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source)
+MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source,
+				     std::shared_future<std::string> _latestVersionFuture)
 	: source{_source},
 	  logger("[" PLUGIN_NAME "] "),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
+	  latestVersionFuture(_latestVersionFuture),
 	  selfieSegmenterTaskQueue(logger, 1)
 {
 	selfieSegmenterNet.opt.num_threads = 2;
@@ -102,7 +105,26 @@ obs_properties_t *MainPluginContext::getProperties()
 {
 	obs_properties_t *props = obs_properties_create();
 
-	const char *updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
+	const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
+	try {
+		if (latestVersionFuture.valid()) {
+			if (latestVersionFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+				const std::string latestVersion = latestVersionFuture.get();
+				logger.info("Latest version: {}", latestVersion);
+				if (latestVersion == PLUGIN_VERSION) {
+					updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
+				} else {
+					updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
+				}
+			} else {
+				updateAvailableText = obs_module_text("updateCheckerChecking");
+			}
+		}
+	} catch (const std::exception &e) {
+		logger.error("Failed to check for updates: {}", e.what());
+	} catch (...) {
+		logger.error("Failed to check for updates: unknown error");
+	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
@@ -129,10 +151,10 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
-			auto _this = static_cast<MainPluginContext *>(data);
+			auto self = static_cast<MainPluginContext *>(data)->shared_from_this();
 			auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
-			_this->debugWindow = std::make_unique<DebugWindow>(_this->weak_from_this(), parent);
-			_this->debugWindow->show();
+			self->debugWindow = std::make_unique<DebugWindow>(self->weak_from_this(), parent);
+			self->debugWindow->show();
 			return false;
 		},
 		this);

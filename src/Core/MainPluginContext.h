@@ -18,13 +18,15 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <stdint.h>
+
 #include <obs.h>
 
 #ifdef __cplusplus
 
+#include <future>
 #include <memory>
 #include <mutex>
-#include <stdint.h>
 #include <vector>
 
 #include <net.h>
@@ -47,6 +49,7 @@ class MainPluginContext : public std::enable_shared_from_this<MainPluginContext>
 private:
 	obs_source_t *const source = nullptr;
 	const BridgeUtils::ObsLogger logger;
+	std::shared_future<std::string> latestVersionFuture;
 	const MainEffect mainEffect;
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
@@ -59,7 +62,8 @@ private:
 	std::unique_ptr<DebugWindow> debugWindow;
 
 public:
-	MainPluginContext(obs_data_t *settings, obs_source_t *source);
+	MainPluginContext(obs_data_t *settings, obs_source_t *source,
+			  std::shared_future<std::string> latestVersionFuture);
 	void startup() noexcept;
 	void shutdown() noexcept;
 	~MainPluginContext() noexcept;

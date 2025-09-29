@@ -17,6 +17,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
 #include "MainPluginContext.h"
+#include "UpdateChecker/UpdateChecker.hpp"
+#include <future>
 
 #include <stdexcept>
 
@@ -25,6 +27,12 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "BridgeUtils/GsUnique.hpp"
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::BackgroundRemovalLite;
+
+namespace {
+
+std::shared_future<std::string> latestVersionFuture;
+
+} // namespace
 
 const char *main_plugin_context_get_name(void *type_data)
 {
@@ -35,7 +43,7 @@ const char *main_plugin_context_get_name(void *type_data)
 void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
 try {
 	GraphicsContextGuard guard;
-	auto self = std::make_shared<MainPluginContext>(settings, source);
+	auto self = std::make_shared<MainPluginContext>(settings, source, latestVersionFuture);
 	self->startup();
 	return new std::shared_ptr<MainPluginContext>(self);
 } catch (const std::exception &e) {
@@ -243,6 +251,12 @@ try {
 
 bool main_plugin_context_module_load()
 try {
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+	latestVersionFuture =
+		std::async(std::launch::async, [] {
+			return KaitoTokyo::UpdateChecker::fetchLatestVersion(
+				"https://obs-backgroundremoval-lite.kaito.tokyo/metadata/latest-version.txt");
+		}).share();
 	return true;
 } catch (const std::exception &e) {
 	blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to load main plugin context: %s", e.what());

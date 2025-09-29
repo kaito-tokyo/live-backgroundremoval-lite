@@ -38,6 +38,7 @@ set(VCPKG_INSTALLED_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed")
 list(PREPEND CMAKE_PREFIX_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
 
 find_package(Backward CONFIG)
+find_package(CURL CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(ncnn CONFIG REQUIRED)
 
@@ -56,7 +57,7 @@ target_sources(
     src/SelfieSegmenter/SelfieSegmenter.cpp
     src/plugin-main.c
 )
-target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OBS::libobs fmt::fmt ncnn)
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OBS::libobs CURL::libcurl fmt::fmt ncnn)
 if(Backward_FOUND)
   target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Backward::Backward)
   target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE HAVE_BACKWARD)

@@ -132,9 +132,8 @@ copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 	constexpr int PIXELS_PER_LOOP = 8;
 	const int num_loops = SelfieSegmenter::PIXEL_COUNT / PIXELS_PER_LOOP;
 
-	// 定数はループ外で定義
 	const __m256 v_inv_255 = _mm256_set1_ps(1.0f / 255.0f);
-	const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF); // 各32-bit整数から下位8-bitを抽出するマスク
+	const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF);
 
 	for (int i = 0; i < num_loops; ++i) {
 		const int offset = i * PIXELS_PER_LOOP;
