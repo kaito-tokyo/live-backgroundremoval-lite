@@ -33,6 +33,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #if defined(_MSC_VER)
 #include <intrin.h>
 #else
+#include <cpuid.h>
 #include <x86intrin.h>
 #endif // defined(_MSC_VER)
 #endif // defined(_M_X64) || defined(__x86_64__)
