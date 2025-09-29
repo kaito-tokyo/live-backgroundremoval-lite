@@ -18,13 +18,15 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <stdint.h>
+
 #include <obs.h>
 
 #ifdef __cplusplus
 
+#include <future>
 #include <memory>
 #include <mutex>
-#include <stdint.h>
 #include <vector>
 
 #include <net.h>

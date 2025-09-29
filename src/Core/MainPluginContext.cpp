@@ -144,10 +144,10 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
-			auto _this = static_cast<MainPluginContext *>(data);
+			auto self = static_cast<MainPluginContext *>(data)->shared_from_this();
 			auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
-			_this->debugWindow = std::make_unique<DebugWindow>(_this->weak_from_this(), parent);
-			_this->debugWindow->show();
+			self->debugWindow = std::make_unique<DebugWindow>(self->weak_from_this(), parent);
+			self->debugWindow->show();
 			return false;
 		},
 		this);
