@@ -125,38 +125,38 @@ __attribute__((target("avx,avx2")))
 inline void
 copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 {
-    float *r_channel = inputMat.channel(0);
-    float *g_channel = inputMat.channel(1);
-    float *b_channel = inputMat.channel(2);
+	float *r_channel = inputMat.channel(0);
+	float *g_channel = inputMat.channel(1);
+	float *b_channel = inputMat.channel(2);
 
-    constexpr int PIXELS_PER_LOOP = 8;
-    const int num_loops = SelfieSegmenter::PIXEL_COUNT / PIXELS_PER_LOOP;
+	constexpr int PIXELS_PER_LOOP = 8;
+	const int num_loops = SelfieSegmenter::PIXEL_COUNT / PIXELS_PER_LOOP;
 
-    // 定数はループ外で定義
-    const __m256 v_inv_255 = _mm256_set1_ps(1.0f / 255.0f);
-    const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF); // 各32-bit整数から下位8-bitを抽出するマスク
+	// 定数はループ外で定義
+	const __m256 v_inv_255 = _mm256_set1_ps(1.0f / 255.0f);
+	const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF); // 各32-bit整数から下位8-bitを抽出するマスク
 
-    for (int i = 0; i < num_loops; ++i) {
-        const int offset = i * PIXELS_PER_LOOP;
-        const int data_offset = offset * 4;
+	for (int i = 0; i < num_loops; ++i) {
+		const int offset = i * PIXELS_PER_LOOP;
+		const int data_offset = offset * 4;
 
-        __m256i bgra_u32 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(bgra_data + data_offset));
-        __m256i b_u32 = _mm256_and_si256(bgra_u32, mask_u8);
-        __m256i g_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 8), mask_u8);
-        __m256i r_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 16), mask_u8);
+		__m256i bgra_u32 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(bgra_data + data_offset));
+		__m256i b_u32 = _mm256_and_si256(bgra_u32, mask_u8);
+		__m256i g_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 8), mask_u8);
+		__m256i r_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 16), mask_u8);
 
-        __m256 b_ps = _mm256_cvtepi32_ps(b_u32);
-        __m256 g_ps = _mm256_cvtepi32_ps(g_u32);
-        __m256 r_ps = _mm256_cvtepi32_ps(r_u32);
+		__m256 b_ps = _mm256_cvtepi32_ps(b_u32);
+		__m256 g_ps = _mm256_cvtepi32_ps(g_u32);
+		__m256 r_ps = _mm256_cvtepi32_ps(r_u32);
 
-        b_ps = _mm256_mul_ps(b_ps, v_inv_255);
-        g_ps = _mm256_mul_ps(g_ps, v_inv_255);
-        r_ps = _mm256_mul_ps(r_ps, v_inv_255);
+		b_ps = _mm256_mul_ps(b_ps, v_inv_255);
+		g_ps = _mm256_mul_ps(g_ps, v_inv_255);
+		r_ps = _mm256_mul_ps(r_ps, v_inv_255);
 
-        _mm256_storeu_ps(b_channel + offset, b_ps);
-        _mm256_storeu_ps(g_channel + offset, g_ps);
-        _mm256_storeu_ps(r_channel + offset, r_ps);
-    }
+		_mm256_storeu_ps(b_channel + offset, b_ps);
+		_mm256_storeu_ps(g_channel + offset, g_ps);
+		_mm256_storeu_ps(r_channel + offset, r_ps);
+	}
 }
 
 #else
