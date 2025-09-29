@@ -71,6 +71,9 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
 
 if(BUILD_TESTING)
   enable_testing()
+
   find_package(GTest CONFIG REQUIRED)
+  find_package(Stb MODULE REQUIRED)
+
   add_subdirectory(tests)
 endif()
