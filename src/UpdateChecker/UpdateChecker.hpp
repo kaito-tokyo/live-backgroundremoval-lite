@@ -19,6 +19,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #pragma once
 
 #include <future>
+#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -29,6 +30,9 @@ namespace UpdateChecker {
 
 inline size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
+	if (size != 0 && nmemb > (std::numeric_limits<size_t>::max() / size)) {
+		return 0;
+	}
 	size_t totalSize = size * nmemb;
 	std::string *str = static_cast<std::string *>(userp);
 	str->append(static_cast<char *>(contents), totalSize);

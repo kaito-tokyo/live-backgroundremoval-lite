@@ -251,6 +251,7 @@ try {
 
 bool main_plugin_context_module_load()
 try {
+	curl_global_init(CURL_GLOBAL_DEFAULT);
 	latestVersionFuture =
 		std::async(std::launch::async, [] {
 			return KaitoTokyo::UpdateChecker::fetchLatestVersion(
