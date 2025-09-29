@@ -46,8 +46,7 @@ inline std::string fetchLatestVersion(const std::string &url)
 	}
 	std::string result;
 	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
-			 static_cast<size_t (*)(void *, size_t, size_t, void *)>(writeCallback));
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
 	curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
