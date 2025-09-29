@@ -125,55 +125,59 @@ __attribute__((target("avx,avx2")))
 inline void
 copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 {
-	float *r_channel = inputMat.channel(0);
-	float *g_channel = inputMat.channel(1);
-	float *b_channel = inputMat.channel(2);
+    float *r_channel = inputMat.channel(0);
+    float *g_channel = inputMat.channel(1);
+    float *b_channel = inputMat.channel(2);
 
-	constexpr int PIXELS_PER_LOOP = 32;
-	const int num_loops = SelfieSegmenter::PIXEL_COUNT / PIXELS_PER_LOOP;
+    constexpr int PIXELS_PER_LOOP = 32;
+    const int num_loops = SelfieSegmenter::PIXEL_COUNT / PIXELS_PER_LOOP;
 
-	const __m256 v_inv_255 = _mm256_set1_ps(1.0f / 255.0f);
+    const __m256 v_inv_255 = _mm256_set1_ps(1.0f / 255.0f);
 
-	for (int i = 0; i < num_loops; ++i) {
-		const int offset = i * PIXELS_PER_LOOP;
-		const int data_offset = offset * 4;
+    for (int i = 0; i < num_loops; ++i) {
+        const int offset = i * PIXELS_PER_LOOP;
+        const int data_offset = offset * 4;
 
-		__m256i v0 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset + 0));
-		__m256i v1 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset + 32));
-		__m256i v2 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset + 64));
-		__m256i v3 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset + 96));
+        __m256i v0 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset + 0));
+        __m256i v1 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset + 32));
+        __m256i v2 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset + 64));
+        __m256i v3 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset + 96));
 
-		__m256i t0 = _mm256_unpacklo_epi8(v0, v1);
-		__m256i t1 = _mm256_unpackhi_epi8(v0, v1);
-		__m256i t2 = _mm256_unpacklo_epi8(v2, v3);
-		__m256i t3 = _mm256_unpackhi_epi8(v2, v3);
+        __m256i t0 = _mm256_unpacklo_epi8(v0, v1);
+        __m256i t1 = _mm256_unpackhi_epi8(v0, v1);
+        __m256i t2 = _mm256_unpacklo_epi8(v2, v3);
+        __m256i t3 = _mm256_unpackhi_epi8(v2, v3);
+        __m256i tt0 = _mm256_unpacklo_epi16(t0, t2);
+        __m256i tt1 = _mm256_unpackhi_epi16(t0, t2);
+        __m256i tt2 = _mm256_unpacklo_epi16(t1, t3);
+        __m256i tt3 = _mm256_unpackhi_epi16(t1, t3);
+        v0 = _mm256_permute2x128_si256(tt0, tt1, 0x20);
+        v1 = _mm256_permute2x128_si256(tt2, tt3, 0x20);
+        v2 = _mm256_permute2x128_si256(tt0, tt1, 0x31);
 
-		__m256i tt0 = _mm256_unpacklo_epi16(t0, t2);
-		__m256i tt1 = _mm256_unpackhi_epi16(t0, t2);
-		__m256i tt2 = _mm256_unpacklo_epi16(t1, t3);
-		__m256i tt3 = _mm256_unpackhi_epi16(t1, t3);
+        __m128i b_lane_low = _mm256_castsi256_si128(v0);
+        __m128i b_lane_high = _mm256_extracti128_si256(v0, 1);
+        __m128i g_lane_low = _mm256_castsi256_si128(v1);
+        __m128i g_lane_high = _mm256_extracti128_si256(v1, 1);
+        __m128i r_lane_low = _mm256_castsi256_si128(v2);
+        __m128i r_lane_high = _mm256_extracti128_si256(v2, 1);
 
-		v0 = _mm256_permute2x128_si256(tt0, tt1, 0x20);
-		v1 = _mm256_permute2x128_si256(tt2, tt3, 0x20);
-		v2 = _mm256_permute2x128_si256(tt0, tt1, 0x31);
-		v3 = _mm256_permute2x128_si256(tt2, tt3, 0x31);
+        _mm256_storeu_ps(b_channel + offset + 0,  _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(b_lane_low)), v_inv_255));
+        _mm256_storeu_ps(g_channel + offset + 0,  _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(g_lane_low)), v_inv_255));
+        _mm256_storeu_ps(r_channel + offset + 0,  _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(r_lane_low)), v_inv_255));
 
-		for (int k = 0; k < 4; ++k) {
-			__m128i b_u8 = _mm_loadu_si128((__m128i const *)((uint8_t *)&v0 + k * 8)); // 8バイトロード
-			__m256 b_ps = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(b_u8));
-			_mm256_storeu_ps(b_channel + offset + k * 8, _mm256_mul_ps(b_ps, v_inv_255));
-		}
-		for (int k = 0; k < 4; ++k) {
-			__m128i g_u8 = _mm_loadu_si128((__m128i const *)((uint8_t *)&v1 + k * 8));
-			__m256 g_ps = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(g_u8));
-			_mm256_storeu_ps(g_channel + offset + k * 8, _mm256_mul_ps(g_ps, v_inv_255));
-		}
-		for (int k = 0; k < 4; ++k) {
-			__m128i r_u8 = _mm_loadu_si128((__m128i const *)((uint8_t *)&v2 + k * 8));
-			__m256 r_ps = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(r_u8));
-			_mm256_storeu_ps(r_channel + offset + k * 8, _mm256_mul_ps(r_ps, v_inv_255));
-		}
-	}
+        _mm256_storeu_ps(b_channel + offset + 8,  _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(b_lane_low, 8))), v_inv_255));
+        _mm256_storeu_ps(g_channel + offset + 8,  _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(g_lane_low, 8))), v_inv_255));
+        _mm256_storeu_ps(r_channel + offset + 8,  _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(r_lane_low, 8))), v_inv_255));
+
+        _mm256_storeu_ps(b_channel + offset + 16, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(b_lane_high)), v_inv_255));
+        _mm256_storeu_ps(g_channel + offset + 16, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(g_lane_high)), v_inv_255));
+        _mm256_storeu_ps(r_channel + offset + 16, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(r_lane_high)), v_inv_255));
+
+        _mm256_storeu_ps(b_channel + offset + 24, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(b_lane_high, 8))), v_inv_255));
+        _mm256_storeu_ps(g_channel + offset + 24, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(g_lane_high, 8))), v_inv_255));
+        _mm256_storeu_ps(r_channel + offset + 24, _mm256_mul_ps(_mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm_srli_si128(r_lane_high, 8))), v_inv_255));
+    }
 }
 
 #else
