@@ -26,14 +26,13 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "BridgeUtils/ILogger.hpp"
 #include "BridgeUtils/ObsUnique.hpp"
 
-
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
 namespace main_effect_detail {
 
-inline gs_eparam_t *getEffectParam(const KaitoTokyo::BridgeUtils::unique_gs_effect_t &effect, const char *name,
-				   const KaitoTokyo::BridgeUtils::ILogger &logger)
+inline gs_eparam_t *getEffectParam(const BridgeUtils::unique_gs_effect_t &effect, const char *name,
+				   const BridgeUtils::ILogger &logger)
 {
 	gs_eparam_t *param = gs_effect_get_param_by_name(effect.get(), name);
 
@@ -45,8 +44,8 @@ inline gs_eparam_t *getEffectParam(const KaitoTokyo::BridgeUtils::unique_gs_effe
 	return param;
 }
 
-inline gs_technique_t *getEffectTech(const KaitoTokyo::BridgeUtils::unique_gs_effect_t &effect, const char *name,
-				     const KaitoTokyo::BridgeUtils::ILogger &logger)
+inline gs_technique_t *getEffectTech(const BridgeUtils::unique_gs_effect_t &effect, const char *name,
+				     const BridgeUtils::ILogger &logger)
 {
 	gs_technique_t *tech = gs_effect_get_technique(effect.get(), name);
 
@@ -95,7 +94,7 @@ struct RenderTargetGuard {
 
 class MainEffect {
 public:
-	const KaitoTokyo::BridgeUtils::unique_gs_effect_t effect = nullptr;
+	const BridgeUtils::unique_gs_effect_t effect = nullptr;
 
 	gs_eparam_t *const textureImage = nullptr;
 
@@ -128,9 +127,8 @@ public:
 	gs_technique_t *const techCalculateGuidedFilterB = nullptr;
 	gs_technique_t *const techFinalizeGuidedFilter = nullptr;
 
-	MainEffect(const KaitoTokyo::BridgeUtils::unique_bfree_char_t &effectPath,
-		   const KaitoTokyo::BridgeUtils::ILogger &logger)
-		: effect(KaitoTokyo::BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
+	MainEffect(const BridgeUtils::unique_bfree_char_t &effectPath, const BridgeUtils::ILogger &logger)
+		: effect(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
 		  textureImage(main_effect_detail::getEffectParam(effect, "image", logger)),
 		  floatTexelWidth(main_effect_detail::getEffectParam(effect, "texelWidth", logger)),
 		  floatTexelHeight(main_effect_detail::getEffectParam(effect, "texelHeight", logger)),
@@ -273,12 +271,11 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void calculateDifferenceWithMask(
-		std::uint32_t width, std::uint32_t height,
-		const KaitoTokyo::BridgeUtils::unique_gs_texture_t &targetTexture,
-		const KaitoTokyo::BridgeUtils::unique_gs_texture_t &currentGrayscaleTexture,
-		const KaitoTokyo::BridgeUtils::unique_gs_texture_t &lastGrayscaleTexture,
-		const KaitoTokyo::BridgeUtils::unique_gs_texture_t &segmentationMaskTexture) const noexcept
+	void calculateDifferenceWithMask(std::uint32_t width, std::uint32_t height,
+					 const BridgeUtils::unique_gs_texture_t &targetTexture,
+					 const BridgeUtils::unique_gs_texture_t &currentGrayscaleTexture,
+					 const BridgeUtils::unique_gs_texture_t &lastGrayscaleTexture,
+					 const BridgeUtils::unique_gs_texture_t &segmentationMaskTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;
@@ -303,8 +300,8 @@ public:
 		gs_technique_end(tech);
 	}
 
-	void reduce(const std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> &reductionPyramidTextures,
-		    const KaitoTokyo::BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
+	void reduce(const std::vector<BridgeUtils::unique_gs_texture_t> &reductionPyramidTextures,
+		    const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
 		RenderTargetGuard renderTargetGuard;
 		TransformStateGuard transformStateGuard;

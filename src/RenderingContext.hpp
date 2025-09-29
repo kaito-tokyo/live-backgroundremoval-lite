@@ -33,17 +33,16 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "SelfieSegmenter.hpp"
 #include "ThrottledTaskQueue.hpp"
 
-
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 private:
 	obs_source_t *const source;
-	const KaitoTokyo::BridgeUtils::ILogger &logger;
+	const BridgeUtils::ILogger &logger;
 	const MainEffect &mainEffect;
 
-	AsyncTextureReader readerSegmenterInput;
+	BridgeUtils::AsyncTextureReader readerSegmenterInput;
 	SelfieSegmenter selfieSegmenter;
 	ThrottledTaskQueue &selfieSegmenterTaskQueue;
 
@@ -55,10 +54,10 @@ public:
 	const std::uint32_t heightSub;
 
 public:
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t bgrxOriginalImage;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fOriginalGrayscale;
+	const BridgeUtils::unique_gs_texture_t bgrxOriginalImage;
+	const BridgeUtils::unique_gs_texture_t r32fOriginalGrayscale;
 
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t bgrxSegmenterInput;
+	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput;
 
 private:
 	std::vector<std::uint8_t> segmenterInputBuffer;
@@ -69,28 +68,28 @@ public:
 	const std::uint32_t maskRoiWidth;
 	const std::uint32_t maskRoiHeight;
 
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8SegmentationMask;
+	const BridgeUtils::unique_gs_texture_t r8SegmentationMask;
 
-	std::array<KaitoTokyo::BridgeUtils::unique_gs_texture_t, 2> r32fSubOriginalGrayscales;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubDifferenceWithMask;
-	const std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
+	std::array<BridgeUtils::unique_gs_texture_t, 2> r32fSubOriginalGrayscales;
+	const BridgeUtils::unique_gs_texture_t r32fSubDifferenceWithMask;
+	const std::vector<BridgeUtils::unique_gs_texture_t> r32fSubDifferenceWithMaskReductionPyramid;
 
 private:
-	AsyncTextureReader readerReducedDifferenceWithMask;
+	BridgeUtils::AsyncTextureReader readerReducedDifferenceWithMask;
 
 public:
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8SubGFGuide;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8SubGFSource;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFMeanSource;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSource;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSq;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFA;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fSubGFB;
-	const KaitoTokyo::BridgeUtils::unique_gs_texture_t r8GFResult;
+	const BridgeUtils::unique_gs_texture_t r8SubGFGuide;
+	const BridgeUtils::unique_gs_texture_t r8SubGFSource;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanSource;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSource;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSq;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFA;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFB;
+	const BridgeUtils::unique_gs_texture_t r8GFResult;
 
 private:
-	KaitoTokyo::BridgeUtils::unique_gs_texture_t r32fGFTemporary1Sub;
+	BridgeUtils::unique_gs_texture_t r32fGFTemporary1Sub;
 
 	const FilterLevel &filterLevel;
 	const int &selfieSegmenterFps;
@@ -106,11 +105,11 @@ private:
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 public:
-	RenderingContext(obs_source_t *source, const KaitoTokyo::BridgeUtils::ILogger &logger,
-			 const MainEffect &mainEffect, const ncnn::Net &selfieSegmenterNet,
-			 ThrottledTaskQueue &selfieSegmenterTaskQueue, std::uint32_t width, std::uint32_t height,
-			 const FilterLevel &filterLevel, const int &selfieSegmenterFps, const double &gfEps,
-			 const double &maskGamma, const double &maskLowerBound, const double &maskUpperBound);
+	RenderingContext(obs_source_t *source, const BridgeUtils::ILogger &logger, const MainEffect &mainEffect,
+			 const ncnn::Net &selfieSegmenterNet, ThrottledTaskQueue &selfieSegmenterTaskQueue,
+			 std::uint32_t width, std::uint32_t height, const FilterLevel &filterLevel,
+			 const int &selfieSegmenterFps, const double &gfEps, const double &maskGamma,
+			 const double &maskLowerBound, const double &maskUpperBound);
 	~RenderingContext() noexcept;
 
 	void videoTick(float seconds);

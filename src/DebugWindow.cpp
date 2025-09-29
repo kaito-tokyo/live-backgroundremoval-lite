@@ -108,7 +108,6 @@ inline double float16_to_double(uint16_t h)
 
 } // namespace
 
-
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 

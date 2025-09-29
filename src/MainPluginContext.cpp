@@ -33,7 +33,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::BridgeUtils;
 
-
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 

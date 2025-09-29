@@ -37,7 +37,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "SelfieSegmenter.hpp"
 #include "ThrottledTaskQueue.hpp"
 
-
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
@@ -47,7 +46,7 @@ class RenderingContext;
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
 private:
 	obs_source_t *const source = nullptr;
-	const KaitoTokyo::BridgeUtils::ObsLogger logger;
+	const BridgeUtils::ObsLogger logger;
 	const MainEffect mainEffect;
 	ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
@@ -81,7 +80,7 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
-	const KaitoTokyo::BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
+	const BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
 
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept { return renderingContext; }
 };

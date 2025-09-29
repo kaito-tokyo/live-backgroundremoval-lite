@@ -43,10 +43,8 @@ std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint3
 	return {offsetX, offsetY, scaledWidth, scaledHeight};
 }
 
-inline std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
-											std::uint32_t height)
+inline std::vector<unique_gs_texture_t> createReductionPyramid(std::uint32_t width, std::uint32_t height)
 {
-	using namespace KaitoTokyo::BridgeUtils;
 	std::vector<unique_gs_texture_t> pyramid;
 
 	std::uint32_t currentWidth = width;
@@ -64,7 +62,6 @@ inline std::vector<KaitoTokyo::BridgeUtils::unique_gs_texture_t> createReduction
 }
 
 } // anonymous namespace
-
 
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {

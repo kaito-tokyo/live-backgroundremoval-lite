@@ -29,7 +29,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "BridgeUtils/AsyncTextureReader.hpp"
 #include "BridgeUtils/ILogger.hpp"
 
-
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
@@ -60,13 +59,13 @@ private:
 	QLabel *previewImageLabel;
 	QTimer *updateTimer;
 
-	std::unique_ptr<AsyncTextureReader> readerBgrx;
-	std::unique_ptr<AsyncTextureReader> readerR8;
-	std::unique_ptr<AsyncTextureReader> readerR32f;
-	std::unique_ptr<AsyncTextureReader> reader256Bgrx;
-	std::unique_ptr<AsyncTextureReader> readerMaskRoiR8;
-	std::unique_ptr<AsyncTextureReader> readerSubR8;
-	std::unique_ptr<AsyncTextureReader> readerR32fSub;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerBgrx;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR8;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32f;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> reader256Bgrx;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerMaskRoiR8;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerSubR8;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32fSub;
 
 	std::vector<std::uint8_t> bufferR8;
 	std::vector<std::uint8_t> bufferSubR8;

@@ -122,8 +122,8 @@ public:
 		  bufferLinesize((width * AsyncTextureReaderDetail::getBytesPerPixel(format) + 3) & ~3u),
 		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
 			     std::vector<std::uint8_t>(height * bufferLinesize)},
-		  stagesurfs{KaitoTokyo::BridgeUtils::make_unique_gs_stagesurf(width, height, format),
-			     KaitoTokyo::BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
+		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
+			     BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
 	{
 	}
 
@@ -225,7 +225,7 @@ private:
 	std::array<std::vector<std::uint8_t>, 2> cpuBuffers;
 	std::atomic<std::size_t> activeCpuBufferIndex = {0};
 
-	std::array<KaitoTokyo::BridgeUtils::unique_gs_stagesurf_t, 2> stagesurfs;
+	std::array<BridgeUtils::unique_gs_stagesurf_t, 2> stagesurfs;
 	std::size_t gpuWriteIndex = 0;
 	std::mutex gpuMutex;
 };
