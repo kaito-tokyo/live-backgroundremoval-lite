@@ -109,14 +109,14 @@ obs_properties_t *MainPluginContext::getProperties()
 	try {
 		const std::string latestVersion = latestVersionFuture.get();
 		if (latestVersion != PLUGIN_VERSION) {
-			updateAvailableText = obs_module_text("updateCheckerPluginIsUpdateAvailable");
+			updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
 		}
 	} catch (const std::exception &e) {
 		logger.error("Failed to check for updates: {}", e.what());
-		updateAvailableText = obs_module_text("updateCheckerPluginIsErrorChecking");
+		updateAvailableText = obs_module_text("updateCheckerCheckingError");
 	} catch (...) {
 		logger.error("Failed to check for updates: unknown error");
-		updateAvailableText = obs_module_text("updateCheckerPluginIsErrorChecking");
+		updateAvailableText = obs_module_text("updateCheckerCheckingError");
 	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
