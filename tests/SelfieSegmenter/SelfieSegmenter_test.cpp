@@ -18,4 +18,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <gtest/gtest.h>
 
-TEST(StubTest, DISABLED_Stub) {}
+#include <SelfieSegmenter/SelfieSegmenter.hpp>
+
+TEST(SelfieSegmenterTest, Test) {
+}
