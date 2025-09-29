@@ -24,8 +24,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <cstdint>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
 
 // JPEG(BGR) -> BGRA loader
 static bool load_jpg_bgra(const std::string& filename, std::vector<uint8_t>& out_bgra, int& width, int& height) {
