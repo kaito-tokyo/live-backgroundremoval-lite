@@ -49,10 +49,10 @@ target_compile_definitions(
 target_sources(
   ${CMAKE_PROJECT_NAME}
   PRIVATE
-    src/MainPluginContext_c.cpp
-    src/MainPluginContext.cpp
-    src/RenderingContext.cpp
-    src/DebugWindow.cpp
+    src/Core/MainPluginContext_c.cpp
+    src/Core/MainPluginContext.cpp
+    src/Core/RenderingContext.cpp
+    src/DebugWindow/DebugWindow.cpp
     src/plugin-main.c
 )
 target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OBS::libobs fmt::fmt ncnn)

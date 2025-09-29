@@ -20,7 +20,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "RenderingContext.hpp"
 #include "BridgeUtils/AsyncTextureReader.hpp"
-#include "SelfieSegmenter.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
 
