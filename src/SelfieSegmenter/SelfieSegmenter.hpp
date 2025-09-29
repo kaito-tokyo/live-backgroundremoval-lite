@@ -172,50 +172,44 @@ bool isAVX2Available()
 
 inline void copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 {
-    float *r_channel = inputMat.channel(0);
-    float *g_channel = inputMat.channel(1);
-    float *b_channel = inputMat.channel(2);
+	float *r_channel = inputMat.channel(0);
+	float *g_channel = inputMat.channel(1);
+	float *b_channel = inputMat.channel(2);
 
-    constexpr int PIXELS_PER_LOOP = 8;
-    constexpr int num_loops = SelfieSegmenterDetail::PIXEL_COUNT / PIXELS_PER_LOOP;
+	constexpr int PIXELS_PER_LOOP = 8;
+	constexpr int num_loops = SelfieSegmenterDetail::PIXEL_COUNT / PIXELS_PER_LOOP;
 
-    const __m256 v_inv_255 = _mm256_set1_ps(1.0f / 255.0f);
+	const __m256 v_inv_255 = _mm256_set1_ps(1.0f / 255.0f);
 
-    const __m256i shuffle_b_mask = _mm256_set_epi8(
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 28, 24, 20, 16,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12,  8,  4,  0
-    );
-    const __m256i shuffle_g_mask = _mm256_set_epi8(
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 29, 25, 21, 17,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 13,  9,  5,  1
-    );
-    const __m256i shuffle_r_mask = _mm256_set_epi8(
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 30, 26, 22, 18,
-        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 14, 10,  6,  2
-    );
+	const __m256i shuffle_b_mask = _mm256_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 28, 24, 20, 16,
+						       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 8, 4, 0);
+	const __m256i shuffle_g_mask = _mm256_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 29, 25, 21, 17,
+						       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 13, 9, 5, 1);
+	const __m256i shuffle_r_mask = _mm256_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 30, 26, 22, 18,
+						       -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 14, 10, 6, 2);
 
-    for (int i = 0; i < num_loops; ++i) {
-        const int offset = i * PIXELS_PER_LOOP;
-        const int data_offset = offset * 4;
+	for (int i = 0; i < num_loops; ++i) {
+		const int offset = i * PIXELS_PER_LOOP;
+		const int data_offset = offset * 4;
 
-        __m256i bgra_u8 = _mm256_loadu_si256((__m256i const*)(bgra_data + data_offset));
+		__m256i bgra_u8 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset));
 
-        __m256i b_u8 = _mm256_shuffle_epi8(bgra_u8, shuffle_b_mask);
-        __m256i g_u8 = _mm256_shuffle_epi8(bgra_u8, shuffle_g_mask);
-        __m256i r_u8 = _mm256_shuffle_epi8(bgra_u8, shuffle_r_mask);
-        
-        __m256 b_ps = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm256_castsi256_si128(b_u8)));
-        __m256 g_ps = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm256_castsi256_si128(g_u8)));
-        __m256 r_ps = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm256_castsi256_si128(r_u8)));
+		__m256i b_u8 = _mm256_shuffle_epi8(bgra_u8, shuffle_b_mask);
+		__m256i g_u8 = _mm256_shuffle_epi8(bgra_u8, shuffle_g_mask);
+		__m256i r_u8 = _mm256_shuffle_epi8(bgra_u8, shuffle_r_mask);
 
-        b_ps = _mm256_mul_ps(b_ps, v_inv_255);
-        g_ps = _mm256_mul_ps(g_ps, v_inv_255);
-        r_ps = _mm256_mul_ps(r_ps, v_inv_255);
+		__m256 b_ps = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm256_castsi256_si128(b_u8)));
+		__m256 g_ps = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm256_castsi256_si128(g_u8)));
+		__m256 r_ps = _mm256_cvtepi32_ps(_mm256_cvtepu8_epi32(_mm256_castsi256_si128(r_u8)));
 
-        _mm256_storeu_ps(b_channel + offset, b_ps);
-        _mm256_storeu_ps(g_channel + offset, g_ps);
-        _mm256_storeu_ps(r_channel + offset, r_ps);
-    }
+		b_ps = _mm256_mul_ps(b_ps, v_inv_255);
+		g_ps = _mm256_mul_ps(g_ps, v_inv_255);
+		r_ps = _mm256_mul_ps(r_ps, v_inv_255);
+
+		_mm256_storeu_ps(b_channel + offset, b_ps);
+		_mm256_storeu_ps(g_channel + offset, g_ps);
+		_mm256_storeu_ps(r_channel + offset, r_ps);
+	}
 }
 
 #else
