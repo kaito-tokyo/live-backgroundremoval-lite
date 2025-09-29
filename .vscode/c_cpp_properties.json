@@ -8,7 +8,9 @@
             "defines": [
                 "PLUGIN_NAME=\"[plugin]\"",
                 "PLUGIN_VERSION=\"0.0.0\"",
-                "HAVE_BACKWARD"
+                "HAVE_BACKWARD",
+                "DATA_DIR=\".\"",
+                "TESTS_DIR=\".\""
             ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",

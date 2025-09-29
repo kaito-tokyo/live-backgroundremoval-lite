@@ -19,6 +19,7 @@
     },
     "fmt",
     "gtest",
-    "ncnn"
+    "ncnn",
+    "stb"
   ]
 }

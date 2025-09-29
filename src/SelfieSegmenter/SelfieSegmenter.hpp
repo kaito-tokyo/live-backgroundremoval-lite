@@ -28,8 +28,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <net.h>
 
-#include "BridgeUtils/ObsUnique.hpp"
-
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
@@ -139,19 +137,14 @@ public:
 private:
 	void preprocess(const std::uint8_t *bgra_data)
 	{
-		// Manually convert BGRA (uint8_t) to planar RGB (float) and apply normalization in a single loop.
 		float *r_channel = m_inputMat.channel(0);
 		float *g_channel = m_inputMat.channel(1);
 		float *b_channel = m_inputMat.channel(2);
 
 		for (int i = 0; i < PIXEL_COUNT; i++) {
-			// BGRA layout and normalization formula: (pixel - mean) * norm
-			// Since mean is 127.5f and norm is 1.0/127.5f, this is equivalent to (pixel / 127.5f) - 1.0f
-			// However, to be precise, we follow the (pixel - mean) * norm calculation.
 			b_channel[i] = (static_cast<float>(bgra_data[i * 4 + 0]) - MEAN_VALS[0]) * NORM_VALS[0];
 			g_channel[i] = (static_cast<float>(bgra_data[i * 4 + 1]) - MEAN_VALS[1]) * NORM_VALS[1];
 			r_channel[i] = (static_cast<float>(bgra_data[i * 4 + 2]) - MEAN_VALS[2]) * NORM_VALS[2];
-			// Alpha channel (i*4 + 3) is ignored
 		}
 	}
 
