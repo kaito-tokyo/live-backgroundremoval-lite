@@ -132,40 +132,22 @@ copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 	constexpr int PIXELS_PER_LOOP = 8;
 	const int num_loops = SelfieSegmenter::PIXEL_COUNT / PIXELS_PER_LOOP;
 
+	// 定数はループ外で定義
 	const __m256 v_inv_255 = _mm256_set1_ps(1.0f / 255.0f);
-
-	const __m128i shuffle_b_mask = _mm_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 12, 8, 4, 0);
-	const __m128i shuffle_g_mask = _mm_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 13, 9, 5, 1);
-	const __m128i shuffle_r_mask = _mm_set_epi8(-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 14, 10, 6, 2);
+	const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF); // 各32-bit整数から下位8-bitを抽出するマスク
 
 	for (int i = 0; i < num_loops; ++i) {
 		const int offset = i * PIXELS_PER_LOOP;
 		const int data_offset = offset * 4;
 
-		__m256i bgra_u8 = _mm256_loadu_si256((__m256i const *)(bgra_data + data_offset));
+		__m256i bgra_u32 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(bgra_data + data_offset));
+		__m256i b_u32 = _mm256_and_si256(bgra_u32, mask_u8);
+		__m256i g_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 8), mask_u8);
+		__m256i r_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 16), mask_u8);
 
-		__m128i bgra_low = _mm256_castsi256_si128(bgra_u8);
-		__m128i bgra_high = _mm256_extracti128_si256(bgra_u8, 1);
-
-		__m128i b_u8_low = _mm_shuffle_epi8(bgra_low, shuffle_b_mask);
-		__m128i g_u8_low = _mm_shuffle_epi8(bgra_low, shuffle_g_mask);
-		__m128i r_u8_low = _mm_shuffle_epi8(bgra_low, shuffle_r_mask);
-
-		__m128 b_ps_low = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(b_u8_low));
-		__m128 g_ps_low = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(g_u8_low));
-		__m128 r_ps_low = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(r_u8_low));
-
-		__m128i b_u8_high = _mm_shuffle_epi8(bgra_high, shuffle_b_mask);
-		__m128i g_u8_high = _mm_shuffle_epi8(bgra_high, shuffle_g_mask);
-		__m128i r_u8_high = _mm_shuffle_epi8(bgra_high, shuffle_r_mask);
-
-		__m128 b_ps_high = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(b_u8_high));
-		__m128 g_ps_high = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(g_u8_high));
-		__m128 r_ps_high = _mm_cvtepi32_ps(_mm_cvtepu8_epi32(r_u8_high));
-
-		__m256 b_ps = _mm256_insertf128_ps(_mm256_castps128_ps256(b_ps_low), b_ps_high, 1);
-		__m256 g_ps = _mm256_insertf128_ps(_mm256_castps128_ps256(g_ps_low), g_ps_high, 1);
-		__m256 r_ps = _mm256_insertf128_ps(_mm256_castps128_ps256(r_ps_low), r_ps_high, 1);
+		__m256 b_ps = _mm256_cvtepi32_ps(b_u32);
+		__m256 g_ps = _mm256_cvtepi32_ps(g_u32);
+		__m256 r_ps = _mm256_cvtepi32_ps(r_u32);
 
 		b_ps = _mm256_mul_ps(b_ps, v_inv_255);
 		g_ps = _mm256_mul_ps(g_ps, v_inv_255);
