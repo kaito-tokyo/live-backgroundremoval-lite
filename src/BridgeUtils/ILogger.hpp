@@ -80,9 +80,9 @@ public:
 
 		error("--- Stack Trace ---\n{}", ss.str());
 	} catch (const std::exception &log_ex) {
-		blog(LOG_ERROR, "[LOGGER FATAL] Failed during exception logging: %s\n", log_ex.what());
+		error("[LOGGER FATAL] Failed during exception logging: %s\n", log_ex.what());
 	} catch (...) {
-		blog(LOG_ERROR, "[LOGGER FATAL] Unknown error during exception logging.\n");
+		error("[LOGGER FATAL] Unknown error during exception logging.");
 	}
 
 #else // !HAVE_BACKWARD
@@ -99,7 +99,7 @@ protected:
 
 	virtual void log(LogLevel level, std::string_view message) const noexcept = 0;
 
-	virtual std::string_view getPrefix() const noexcept { return ""; }
+	virtual const char *getPrefix() const noexcept = 0;
 
 private:
 	template<typename... Args>
@@ -110,9 +110,9 @@ private:
 		fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
 		log(level, {buffer.data(), buffer.size()});
 	} catch (const std::exception &e) {
-		fprintf(stderr, "[LOGGER FATAL] Failed to format log message: %s\n", e.what());
+		fprintf(stderr, "%s: [LOGGER FATAL] Failed to format log message: %s\n", getPrefix(), e.what());
 	} catch (...) {
-		fprintf(stderr, "[LOGGER FATAL] An unknown error occurred while formatting log message.\n");
+		fprintf(stderr, "%s: [LOGGER FATAL] An unknown error occurred while formatting log message.\n", getPrefix());
 	}
 };
 

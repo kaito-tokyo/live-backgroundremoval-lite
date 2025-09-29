@@ -31,7 +31,7 @@ namespace BridgeUtils {
 
 class ObsLogger final : public ILogger {
 public:
-	ObsLogger(const std::string &_prefix) : prefix(_prefix) {}
+	ObsLogger(const char *_prefix) : prefix(_prefix) {}
 
 protected:
 	static constexpr size_t MAX_LOG_CHUNK_SIZE = 4000;
@@ -68,13 +68,11 @@ protected:
 		}
 	}
 
-	void logException(const std::exception &e, std::string_view context) const noexcept override;
-
 protected:
-	std::string_view getPrefix() const noexcept override { return prefix; }
+	const char *getPrefix() const noexcept override { return prefix; }
 
 private:
-	const std::string prefix;
+	const char *prefix;
 	mutable std::mutex mtx;
 };
 
