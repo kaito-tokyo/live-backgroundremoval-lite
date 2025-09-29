@@ -161,7 +161,7 @@ jobs:
             -Password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "Install dependencies from vcpkg"
-        run: "$VCPKG_ROOT/vcpkg install --triplet x64-linux-obs
+        run: "$VCPKG_ROOT/vcpkg install --triplet x64-linux-obs"
 
       - name: "Configure"
         run: "cmake --preset ubuntu-testing-ci-x86_64"
