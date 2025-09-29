@@ -18,6 +18,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "MainPluginContext.h"
 
+#include <future>
 #include <stdexcept>
 
 #include <obs-module.h>
@@ -36,11 +37,12 @@ using namespace KaitoTokyo::BridgeUtils;
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
-MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source)
-	: source{_source},
-	  logger("[" PLUGIN_NAME "] "),
-	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
-	  selfieSegmenterTaskQueue(logger, 1)
+MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source, std::shared_future<std::string> _latestVersionFuture)
+			 : source{_source},
+				 logger("[" PLUGIN_NAME "] "),
+				 mainEffect(unique_obs_module_file("effects/main.effect"), logger),
+				 latestVersionFuture(_latestVersionFuture),
+				 selfieSegmenterTaskQueue(logger, 1)
 {
 	selfieSegmenterNet.opt.num_threads = 2;
 	selfieSegmenterNet.opt.use_local_pool_allocator = true;
@@ -103,6 +105,18 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_t *props = obs_properties_create();
 
 	const char *updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
+	try {
+		const std::string latestVersion = latestVersionFuture.get();
+		if (latestVersion != PLUGIN_VERSION) {
+			updateAvailableText = obs_module_text("updateCheckerPluginIsUpdateAvailable");
+		}
+	} catch (const std::exception &e) {
+		logger.error("Failed to check for updates: {}", e.what());
+		updateAvailableText = obs_module_text("updateCheckerPluginIsErrorChecking");
+	} catch (...) {
+		logger.error("Failed to check for updates: unknown error");
+		updateAvailableText = obs_module_text("updateCheckerPluginIsErrorChecking");
+	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),

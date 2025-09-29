@@ -27,31 +27,29 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 namespace KaitoTokyo {
 namespace UpdateChecker {
 
-inline std::future<std::string> fetchLatestVersion(const std::string &url)
+inline std::string fetchLatestVersion(const std::string &url)
 {
-	return std::async(std::launch::async, [url]() -> std::string {
-		CURL *curl = curl_easy_init();
-		if (!curl) {
-			throw std::runtime_error("Failed to initialize curl");
-		}
-		std::string result;
-		auto writeCallback = [](void *contents, size_t size, size_t nmemb, void *userp) -> size_t {
-			size_t totalSize = size * nmemb;
-			std::string *str = static_cast<std::string *>(userp);
-			str->append(static_cast<char *>(contents), totalSize);
-			return totalSize;
-		};
-		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
-				 static_cast<size_t (*)(void *, size_t, size_t, void *)>(writeCallback));
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result);
-		CURLcode res = curl_easy_perform(curl);
-		curl_easy_cleanup(curl);
-		if (res != CURLE_OK) {
-			throw std::runtime_error("curl_easy_perform() failed");
-		}
-		return result;
-	});
+    CURL *curl = curl_easy_init();
+    if (!curl) {
+        throw std::runtime_error("Failed to initialize curl");
+    }
+    std::string result;
+    auto writeCallback = [](void *contents, size_t size, size_t nmemb, void *userp) -> size_t {
+        size_t totalSize = size * nmemb;
+        std::string *str = static_cast<std::string *>(userp);
+        str->append(static_cast<char *>(contents), totalSize);
+        return totalSize;
+    };
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION,
+                static_cast<size_t (*)(void *, size_t, size_t, void *)>(writeCallback));
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &result);
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    if (res != CURLE_OK) {
+        throw std::runtime_error("curl_easy_perform() failed");
+    }
+    return result;
 }
 
 } // namespace UpdateChecker

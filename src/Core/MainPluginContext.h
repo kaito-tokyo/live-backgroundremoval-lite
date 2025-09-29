@@ -47,6 +47,7 @@ class MainPluginContext : public std::enable_shared_from_this<MainPluginContext>
 private:
 	obs_source_t *const source = nullptr;
 	const BridgeUtils::ObsLogger logger;
+	std::shared_future<std::string> latestVersionFuture;
 	const MainEffect mainEffect;
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
@@ -59,7 +60,7 @@ private:
 	std::unique_ptr<DebugWindow> debugWindow;
 
 public:
-	MainPluginContext(obs_data_t *settings, obs_source_t *source);
+	MainPluginContext(obs_data_t *settings, obs_source_t *source, std::shared_future<std::string> latestVersionFuture);
 	void startup() noexcept;
 	void shutdown() noexcept;
 	~MainPluginContext() noexcept;
@@ -83,6 +84,7 @@ public:
 	const BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
 
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept { return renderingContext; }
+	const std::shared_future<std::string>& getLatestVersionFuture() const noexcept { return latestVersionFuture_; }
 };
 
 } // namespace BackgroundRemovalLite
