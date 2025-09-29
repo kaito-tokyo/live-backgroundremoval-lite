@@ -99,34 +99,34 @@ inline void copyDataToMatNaive(ncnn::Mat &inputMat, const std::uint8_t *bgra_dat
 
 inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 {
-    const float32x4_t v_norm = vdupq_n_f32(1.0f / 255.0f);
+	const float32x4_t v_norm = vdupq_n_f32(1.0f / 255.0f);
 
 	float *r_channel = inputMat.channel(0);
 	float *g_channel = inputMat.channel(1);
 	float *b_channel = inputMat.channel(2);
 
-    for (int i = 0; i < PIXEL_COUNT; i += 8) {
-        uint8x8x4_t bgra_vec = vld4_u8(bgra_data + i * 4);
+	for (int i = 0; i < PIXEL_COUNT; i += 8) {
+		uint8x8x4_t bgra_vec = vld4_u8(bgra_data + i * 4);
 
-        uint16x8_t b_u16 = vmovl_u8(bgra_vec.val[0]);
-        uint16x8_t g_u16 = vmovl_u8(bgra_vec.val[1]);
-        uint16x8_t r_u16 = vmovl_u8(bgra_vec.val[2]);
+		uint16x8_t b_u16 = vmovl_u8(bgra_vec.val[0]);
+		uint16x8_t g_u16 = vmovl_u8(bgra_vec.val[1]);
+		uint16x8_t r_u16 = vmovl_u8(bgra_vec.val[2]);
 
-        float32x4_t b_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(b_u16))), v_norm);
-        float32x4_t g_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(g_u16))), v_norm);
-        float32x4_t r_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(r_u16))), v_norm);
+		float32x4_t b_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(b_u16))), v_norm);
+		float32x4_t g_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(g_u16))), v_norm);
+		float32x4_t r_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(r_u16))), v_norm);
 
-        float32x4_t b_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(b_u16))), v_norm);
-        float32x4_t g_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16))), v_norm);
-        float32x4_t r_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16))), v_norm);
+		float32x4_t b_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(b_u16))), v_norm);
+		float32x4_t g_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16))), v_norm);
+		float32x4_t r_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16))), v_norm);
 
-        vst1q_f32(b_channel + i,     b_f32_low);
-        vst1q_f32(b_channel + i + 4, b_f32_high);
-        vst1q_f32(g_channel + i,     g_f32_low);
-        vst1q_f32(g_channel + i + 4, g_f32_high);
-        vst1q_f32(r_channel + i,     r_f32_low);
-        vst1q_f32(r_channel + i + 4, r_f32_high);
-    }
+		vst1q_f32(b_channel + i, b_f32_low);
+		vst1q_f32(b_channel + i + 4, b_f32_high);
+		vst1q_f32(g_channel + i, g_f32_low);
+		vst1q_f32(g_channel + i + 4, g_f32_high);
+		vst1q_f32(r_channel + i, r_f32_low);
+		vst1q_f32(r_channel + i + 4, r_f32_high);
+	}
 }
 
 #endif // __ARM_NEON
