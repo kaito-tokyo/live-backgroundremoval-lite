@@ -56,7 +56,7 @@ inline std::string fetchLatestVersion(const std::string &url)
 	CURLcode res = curl_easy_perform(curl);
 	curl_easy_cleanup(curl);
 	if (res != CURLE_OK) {
-		throw std::runtime_error("curl_easy_perform() failed");
+		throw std::runtime_error(std::string("curl_easy_perform() failed: ") + curl_easy_strerror(res));
 	}
 	return result;
 }
