@@ -10,7 +10,7 @@ The files in this directory are provided for users who wish to build this plugin
 
 Currently, this plugin is **not available on Flathub**. To publish and maintain an application on Flathub, we need a dedicated volunteer from the community.
 
-**We are actively looking for a volunteer to maintain the Flatpak package for `obs-backgroundremoval-lite`.** If you are an experienced Flatpak packager and are interested in helping the community, please get in touch with us by opening an issue in this repository.
+**We are actively looking for a volunteer to maintain the Flatpak package for `live-backgroundremoval-lite`.** If you are an experienced Flatpak packager and are interested in helping the community, please get in touch with us by opening an issue in this repository.
 
 ## Building from This Repository (Manual Installation)
 
@@ -51,7 +51,7 @@ If you wish to proceed with building the plugin from these local files, you will
       * `build-dir` is a temporary directory for the build process.
 
     ```bash
-    flatpak-builder --user --install --force-clean build-dir com.obsproject.Studio.Plugin.BackgroundRemovalLite.yaml
+    flatpak-builder --user --install --force-clean build-dir com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml
     ```
 
 This will build the plugin and all its dependencies from source and install it as an extension for the OBS Studio Flatpak. Once complete, you can run OBS Studio, and the plugin will be available.

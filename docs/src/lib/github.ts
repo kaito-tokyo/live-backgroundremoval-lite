@@ -87,7 +87,7 @@ export async function getLatestRelease(): Promise<Release> {
 
   // Fallback: Fetch the latest release from GitHub API
   const response = await fetch(
-    "https://api.github.com/repos/kaito-tokyo/obs-backgroundremoval-lite/releases/latest",
+    "https://api.github.com/repos/kaito-tokyo/live-backgroundremoval-lite/releases/latest",
   );
   return (await response.json()) as Release;
 }

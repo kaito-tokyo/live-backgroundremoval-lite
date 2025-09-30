@@ -1,4 +1,4 @@
-id: com.obsproject.Studio.Plugin.BackgroundRemovalLite
+id: com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite
 branch: stable
 runtime: com.obsproject.Studio
 runtime-version: stable
@@ -6,7 +6,7 @@ sdk: org.kde.Sdk//6.8
 build-extension: true
 separate-locales: false
 build-options:
-  prefix: /app/plugins/BackgroundRemovalLite
+  prefix: /app/plugins/LiveBackgroundRemovalLite
 modules:
   - name: ncnn
     buildsystem: cmake-ninja
@@ -31,7 +31,7 @@ modules:
       - -DENABLE_QT=ON
     sources:
       - type: git
-        url: https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
+        url: https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
         tag: 1.6.0
         commit: '6d7f6c7425f114064d365642ebecd48eb1e90917'
         x-checker-data:
