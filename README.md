@@ -79,6 +79,10 @@ This project is built upon and incorporates several open-source components. We a
 
 </details>
 
+## 🐞 Bug Reports
+
+If you find a bug or issue, please report it on the [GitHub Issues page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues).
+
 ## 📜 License
 
 This plugin itself is licensed under the [GPL-3.0-or-later](LICENSE).
