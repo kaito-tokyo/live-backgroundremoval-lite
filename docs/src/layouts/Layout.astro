@@ -1,17 +1,24 @@
 ---
+import { joinURL } from "ufo";
+
 interface Props {
   title: string;
   lang: string;
 }
 
 const { title, lang } = Astro.props;
+const { BASE_URL } = import.meta.env;
 ---
 
 <!doctype html>
 <html lang={lang}>
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href={joinURL(BASE_URL, "favicon-96x96.png")} sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
+    <link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
+    <link rel="apple-touch-icon" sizes="180x180" href={joinURL(BASE_URL, "apple-touch-icon.png")} />
+    <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
     <title>{title}</title>
