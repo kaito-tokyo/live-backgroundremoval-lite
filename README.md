@@ -4,6 +4,10 @@ An OBS plugin that allows you to remove the background from your video source in
 
 [**⬇️ Download Latest Release**](https://obs-backgroundremoval-lite.kaito.tokyo/)
 
+## Demo
+
+![Demo](docs/src/pages/demo.gif)
+
 ---
 
 ## 🌟 Features
