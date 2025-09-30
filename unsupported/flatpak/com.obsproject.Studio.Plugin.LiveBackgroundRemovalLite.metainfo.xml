@@ -15,6 +15,19 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <releases>
+    <release version="1.8.0" date="2025-10-01">
+      <description>
+        <p>🎉 <b>Release 1.8.0</b></p>
+        <ul>
+          <li>✨ <b>Web & Docs Polish:</b> New icons, web app manifest, improved metadata, and PWA support for a professional experience.</li>
+          <li>🔌 <b>Plugin Integration:</b> OBS plugin info now registered as <code>live_backgroundremoval_lite</code>. Consistent filter selection and documentation.</li>
+          <li>📦 <b>Packaging:</b> Flatpak/Arch manifests updated for new version/tag/commit.</li>
+          <li>🧹 <b>Code Clean-up:</b> Minor refactoring, removed unused files and obsolete registry entries.</li>
+          <li>🛠 <b>Other Improvements:</b> Dynamic documentation/download URLs, new assets, and metadata integration.</li>
+        </ul>
+        <p>Thank you for using Live Background Removal Lite! If you enjoy the plugin or spot any issues, please report them on GitHub.</p>
+      </description>
+    </release>
     <release version="1.7.0" date="2025-09-30">
       <description>
         <p>🎉 <b>Release 1.7.0</b></p>
