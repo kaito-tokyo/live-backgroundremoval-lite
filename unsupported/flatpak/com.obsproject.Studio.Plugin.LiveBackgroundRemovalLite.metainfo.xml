@@ -15,6 +15,20 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <releases>
+    <release version="1.7.0" date="2025-09-30">
+      <description>
+        <p>🎉 <b>Release 1.7.0</b></p>
+        <ul>
+          <li>✨ <b>Plugin Renamed:</b> The plugin is now "Live Background Removal Lite" everywhere. All references, file names, documentation, and install paths updated for consistency.</li>
+          <li>📝 <b>License Upgrade:</b> Now licensed under GPL-3.0-or-later.</li>
+          <li>📚 <b>Documentation & Demo:</b> README and documentation improved, demo GIF added, all links and instructions updated.</li>
+          <li>🛠️ <b>Build & Packaging:</b> All manifests and build files updated to match the new name and version. CMake bundleId, website, and metadata updated.</li>
+          <li>🧩 <b>Codebase Modernization:</b> Copyright and license headers updated, redundant files removed.</li>
+          <li>🌍 <b>Localization:</b> Plugin and UI labels updated in all supported languages.</li>
+        </ul>
+        <p>Thank you for supporting Live Background Removal Lite! If you notice anything amiss after this big rename and license change, please open an issue.</p>
+      </description>
+    </release>
     <release version="1.6.0" date="2025-09-29">
       <description>
         <p>🎉 <b>Release 1.6.0</b></p>
