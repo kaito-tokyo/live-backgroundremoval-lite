@@ -47,7 +47,7 @@ An OBS plugin that allows you to remove the background from your video source in
 
 1.  In OBS Studio, right-click on the video source (e.g., your webcam) you want to apply the effect to.
 2.  Select **"Filters"** from the context menu.
-3.  Click the **"+"** button at the bottom left of the Filters window and select **"Background Removal Lite"** from the list.
+3.  Click the **"+"** button at the bottom left of the Filters window and select **"Live Background Removal Lite"** from the list.
 4.  Adjust the settings as needed.
 
 ## 🙏 Acknowledgements

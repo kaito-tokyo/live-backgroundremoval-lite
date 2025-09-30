@@ -40,6 +40,33 @@ inline const ILogger &logger()
 
 } // namespace
 
+bool main_plugin_context_module_load()
+try {
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+	latestVersionFuture =
+		std::async(std::launch::async, [] {
+			return KaitoTokyo::UpdateChecker::fetchLatestVersion(
+				"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt");
+		}).share();
+	return true;
+} catch (const std::exception &e) {
+	logger().error("Failed to load main plugin context: %s", e.what());
+	return false;
+} catch (...) {
+	logger().error("Failed to load main plugin context: unknown error");
+	return false;
+}
+
+void main_plugin_context_module_unload()
+try {
+	GraphicsContextGuard guard;
+	GsUnique::drain();
+} catch (const std::exception &e) {
+	logger().error("Failed to unload plugin context: %s", e.what());
+} catch (...) {
+	logger().error("Failed to unload main plugin context: unknown error");
+}
+
 const char *main_plugin_context_get_name(void *type_data)
 {
 	UNUSED_PARAMETER(type_data);
@@ -253,31 +280,4 @@ try {
 } catch (...) {
 	logger().error("Failed to filter video in main plugin context: unknown error");
 	return frame;
-}
-
-bool main_plugin_context_module_load()
-try {
-	curl_global_init(CURL_GLOBAL_DEFAULT);
-	latestVersionFuture =
-		std::async(std::launch::async, [] {
-			return KaitoTokyo::UpdateChecker::fetchLatestVersion(
-				"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt");
-		}).share();
-	return true;
-} catch (const std::exception &e) {
-	logger().error("Failed to load main plugin context: %s", e.what());
-	return false;
-} catch (...) {
-	logger().error("Failed to load main plugin context: unknown error");
-	return false;
-}
-
-void main_plugin_context_module_unload()
-try {
-	GraphicsContextGuard guard;
-	GsUnique::drain();
-} catch (const std::exception &e) {
-	logger().error("Failed to unload main plugin context: %s", e.what());
-} catch (...) {
-	logger().error("Failed to unload main plugin context: unknown error");
 }
