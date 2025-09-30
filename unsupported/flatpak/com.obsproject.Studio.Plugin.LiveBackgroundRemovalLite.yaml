@@ -30,10 +30,9 @@ modules:
       - -DENABLE_FRONTEND_API=ON
       - -DENABLE_QT=ON
     sources:
-      - type: git
         url: https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
-        tag: 1.7.0
-        commit: '385a366fc3d4274d7be066487ceeccfe2c11e0bf'
+        tag: 1.8.0
+        commit: '7b77f0f16fb13de264d2acdba3326bebf10c4342'
         x-checker-data:
           type: git
           tag-pattern: ^([\d.]+)$
