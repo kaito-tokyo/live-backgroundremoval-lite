@@ -57,23 +57,25 @@ This project is built upon and incorporates several open-source components. We a
 <details>
 <summary>List of Open Source Components</summary>
 
-* **OBS Studio**
-    * License: [GPL-2.0](https://github.com/obsproject/obs-studio/blob/master/COPYING)
+* **backward-cpp**
+    * License: [MIT](https://github.com/bombela/backward-cpp/blob/master/LICENSE)
+* **cURL**
+    * License: [curl](https://curl.se/docs/copyright.html)
+* **fmt**
+    * License: [MIT](https://github.com/fmtlib/fmt/blob/master/LICENSE.rst)
+* **GoogleTest**
+    * License: [BSD-3-Clause](https://github.com/google/googletest/blob/main/LICENSE)
 * **MediaPipe Selfie Segmentation**
     * License: [Apache-2.0](https://opensource.org/licenses/Apache-2.0)
     * Source: [huggingface.co/onnx-community/mediapipe_selfie_segmentation](https://huggingface.co/onnx-community/mediapipe_selfie_segmentation)
 * **ncnn**
     * License: [BSD-3-Clause](https://github.com/Tencent/ncnn/blob/master/LICENSE.txt)
-* **GoogleTest**
-    * License: [BSD-3-Clause](https://github.com/google/googletest/blob/main/LICENSE)
+* **OBS Studio**
+    * License: [GPL-2.0](https://github.com/obsproject/obs-studio/blob/master/COPYING)
+* **stb**
+    * License: [Public Domain or MIT](https://github.com/nothings/stb/blob/master/LICENSE)
 * **wolfSSL**
-    * License: [GPL-2.0](https://github.com/wolfSSL/wolfssl/blob/v5.8.0-stable/COPYING)
-* **cURL**
-    * License: [curl](https://curl.se/docs/copyright.html)
-* **cpr**
-    * License: [MIT](https://github.com/libcpr/cpr/blob/master/LICENSE)
-* **semver**
-    * License: [MIT](https://github.com/Neargye/semver/blob/master/LICENSE)
+    * License: [GPL-3.0](https://github.com/wolfSSL/wolfssl/blob/master/COPYING)
 
 </details>
 
