@@ -2,7 +2,7 @@
 
 An OBS plugin that allows you to remove the background from your video source in real-time, without the need for a green screen.
 
-[**⬇️ Download Latest Release**](https://live-backgroundremoval-lite.kaito.tokyo/)
+[**⬇️ Download Latest Release**](https://kaito-tokyo.github.io/live-backgroundremoval-lite/)
 
 ## 📸 Demo
 
