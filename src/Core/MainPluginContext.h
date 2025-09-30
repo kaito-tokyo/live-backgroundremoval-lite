@@ -95,6 +95,9 @@ public:
 extern "C" {
 #endif // __cplusplus
 
+bool main_plugin_context_module_load(void);
+void main_plugin_context_module_unload(void);
+
 const char *main_plugin_context_get_name(void *type_data);
 void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source);
 void main_plugin_context_destroy(void *data);
@@ -110,9 +113,6 @@ void main_plugin_context_hide(void *data);
 void main_plugin_context_video_tick(void *data, float seconds);
 void main_plugin_context_video_render(void *data, gs_effect_t *effect);
 struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs_source_frame *frame);
-
-bool main_plugin_context_module_load(void);
-void main_plugin_context_module_unload(void);
 
 #ifdef __cplusplus
 }
