@@ -8,7 +8,7 @@ An OBS plugin that allows you to remove the background from your video source in
 
 <div align="center">
 
-<img src="docs/src/pages/demo.gif" alt="Background Removal Lite Demo" width="480" style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;">
+<img src="docs/public/demo.gif" alt="Background Removal Lite Demo" width="480" style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;">
 
 <p style="margin-top:8px; color:#666; font-size:90%;">
   <em>
