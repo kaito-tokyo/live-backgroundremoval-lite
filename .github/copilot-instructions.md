@@ -63,13 +63,13 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     * **ACTION**: Replace the `sha256sums` field in `unsupported/arch/live-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
 
 7.  **Update Flatpak Package Manifest**:
-    * **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.metainfo.xml`.
+    * **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.metainfo.xml`.
     * **ACTION**: The new release element should have the `version` and `date` attributes set to the new version and current date.
     * **ACTION**: The description inside the release element should be a summary of the release notes from GitHub Releases.
         You can get the body of release note by running `gh release view <tag>`.
-    * **ACTION**: Update the `tag` field for the `backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.yaml` to the new version.
+    * **ACTION**: Update the `tag` field for the `live-backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml` to the new version.
     * **ACTION**: Get the commit hash for the new tag by running `git rev-list -n 1 <new_version_tag>`.
-    * **ACTION**: Update the `commit` field for the `backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.yaml` to the new commit hash.
+    * **ACTION**: Update the `commit` field for the `live-backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml` to the new commit hash.
 
 8.  **Create Pull Request for Manifest Updates**:
     * **ACTION**: Commit the changes for both files and create a single pull request.
