@@ -81,4 +81,4 @@ This project is built upon and incorporates several open-source components. We a
 
 ## 📜 License
 
-This plugin itself is licensed under the [GPL-2.0](LICENSE).
+This plugin itself is licensed under the [GPL-3.0-or-later](LICENSE).
