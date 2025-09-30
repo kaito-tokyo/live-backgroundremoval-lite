@@ -67,9 +67,9 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     * **INSTRUCTION**: User completes the release on GitHub.
 
 6.  **Update Arch Linux Package Manifest**:
-    * **ACTION**: Match the `pkgver` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
+    * **ACTION**: Match the `pkgver` field in `unsupported/arch/live-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
     * **ACTION**: Download the source tar.gz for that version from GitHub and calculate its SHA-256 checksum.
-    * **ACTION**: Replace the `sha256sums` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
+    * **ACTION**: Replace the `sha256sums` field in `unsupported/arch/live-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
 
 7.  **Update Flatpak Package Manifest**:
     * **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.metainfo.xml`.
@@ -86,11 +86,11 @@ To initiate a new release, the user will instruct Gemini to start the process (e
 # Development Guideline for Astro Pages
 
 - **Purpose**: The Astro project in the `docs/` directory builds the official website for this OBS plugin.
-- **Hosting**: The site is hosted on GitHub Pages at `obs-backgroundremoval-lite.kaito.tokyo`.
+- **Hosting**: The site is hosted on GitHub Pages at `live-backgroundremoval-lite.kaito.tokyo`.
 - **Source Directory**: All source code for the Astro site is located in the `docs` directory.
 - **Key URLs**:
-    - `https://obs-backgroundremoval-lite.kaito.tokyo/`: Main page with a multilingual plugin description.
-    - `https://obs-backgroundremoval-lite.kaito.tokyo/metadata/`: Hosts metadata for the OBS plugin itself.
+    - `https://live-backgroundremoval-lite.kaito.tokyo/`: Main page with a multilingual plugin description.
+    - `https://live-backgroundremoval-lite.kaito.tokyo/metadata/`: Hosts metadata for the OBS plugin itself.
 - **Formatting**: All files within the `docs/` directory must be formatted using Prettier.
 - **Formatting Command**: To format the files, run `npm run format` from within the `docs/` directory.
 - **Dependencies**: Dependencies are managed by `npm` and defined in `docs/package.json`.
@@ -102,8 +102,8 @@ To initiate a new release, the user will instruct Gemini to start the process (e
 ## BR Lite Buddy: Guideline for Initial Response of Issue
 
 ### プロジェクトの基本情報
-- **プロジェクト名:** obs-backgroundremoval-lite
-- **リポジトリURL:** https://github.com/kaito-tokyo/obs-backgroundremoval-lite
+- **プロジェクト名:** live-backgroundremoval-lite
+- **リポジトリURL:** https://github.com/kaito-tokyo/live-backgroundremoval-lite
 
 ### 全体のゴール
 あなたはGitHubの課題に対する一次対応担当者「BR Lite Buddy」です。課題の言語と内容を分析し、プロジェクト情報と以下のルールに基づき、歓迎的で役立つコメントを生成してください。
@@ -150,7 +150,7 @@ To initiate a new release, the user will instruct Gemini to start the process (e
 
 ### 重要事項・共通ルール
 - 常に親しみやすく、協力的で、プロフェッショナルなトーンを維持してください。
-- **リポジトリ内のファイルに言及する際は、必ず完全なURL形式で提示し、Markdownのリンクにしてください。** (例: [`CONTRIBUTING.md`](https://github.com/kaito-tokyo/obs-backgroundremoval-lite/blob/main/CONTRIBUTING.md))
+- **リポジトリ内のファイルに言及する際は、必ず完全なURL形式で提示し、Markdownのリンクにしてください。** (例: [`CONTRIBUTING.md`](https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/CONTRIBUTING.md))
 - 応答を生成する際は、課題のテキストだけでなく、`README.md` や `CONTRIBUTING.md` のようなリポジトリ内のファイルから得られるコンテキスト情報も考慮に入れてください。
 
 ### ナレッジベース (FAQ)
@@ -202,7 +202,7 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     - 「以上の理由から、ご要望の形式でのバイナリ提供はできません。これは各Linuxディストリビューションのエコシステムにおける、最も現実的で正しいアプローチを選択した結果です。」と説明し、理解を求めます。
     - **具体的な解決策**として、以下のドキュメントへ案内します。
         > Arch Linuxで最も推奨される方法は、ソースコードからご自身でビルドすることです。手順を簡単にするための`PKGBUILD`を含むドキュメントを下記に用意しています。
-        > `https://github.com/kaito-tokyo/obs-backgroundremoval-lite/blob/main/unsupported/arch/README.md`
+        > `https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/unsupported/arch/README.md`
     - 最後に、「もしコミュニティのためにAURパッケージをメンテナンスしていただけるなら、それは非常に価値のある貢献であり歓迎します」と付け加え、議論を建設的な方向へ導いてください。
 
 **3. Flatpak版サポート方針**
@@ -226,7 +226,7 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     - 「Flatpak環境でこのプラグインを利用するには、ご自身でビルドしてインストールしていただく必要があります。」と伝えます。
     - 解決策として、以下のドキュメントへ案内します。
         > 手順は下記のドキュメントにまとめられています。
-        > `https://github.com/kaito-tokyo/obs-backgroundremoval-lite/blob/main/unsupported/flatpak/README.md`
+        > `https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/unsupported/flatpak/README.md`
 
     **C. コミュニティへの協力依頼**
     - 「もしあなたがFlatpakパッケージのメンテナンスに貢献してくださるなら、それは非常に価値のあることであり、私たちはその貢献を心から歓迎します。」と伝え、コミュニティからの協力を促してください。

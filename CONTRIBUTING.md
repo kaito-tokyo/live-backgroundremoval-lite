@@ -6,7 +6,7 @@ We welcome all kinds of contributions, including bug reports, feature requests, 
 
 ## Reporting Bugs or Requesting Features
 
-The best way to report a bug or request a feature is to open an issue on our [GitHub Issues](https://www.google.com/search?q=https://github.com/kaito-tokyo/obs-backgroundremoval-lite/issues).
+The best way to report a bug or request a feature is to open an issue on our [GitHub Issues](https://www.google.com/search?q=https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues).
 
 Before creating a new issue, please check if a similar one already exists. When reporting a bug, please include as much detail as possible, such as your OS version, OBS Studio version, the plugin version, steps to reproduce, and the expected vs. actual behavior.
 
@@ -85,8 +85,8 @@ sudo pacman -S \
 Clone the source code to your local machine.
 
 ```bash
-git clone https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
-cd obs-backgroundremoval-lite
+git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
+cd live-backgroundremoval-lite
 ```
 
 ### 4. Build and Install
@@ -103,10 +103,10 @@ cmake --preset ubuntu-x86_64
 cmake --build --preset ubuntu-x86_64
 
 # 3. Install the plugin
-rm -rf ~/.config/obs-studio/plugins/obs-backgroundremoval-lite
-mkdir -p ~/.config/obs-studio/plugins/obs-backgroundremoval-lite/bin/64bit
-cp build_x86_64/obs-backgroundremoval-lite.so ~/.config/obs-studio/plugins/obs-backgroundremoval-lite/bin/64bit
-cp -r data ~/.config/obs-studio/plugins/obs-backgroundremoval-lite/data
+rm -rf ~/.config/obs-studio/plugins/live-backgroundremoval-lite
+mkdir -p ~/.config/obs-studio/plugins/live-backgroundremoval-lite/bin/64bit
+cp build_x86_64/live-backgroundremoval-lite.so ~/.config/obs-studio/plugins/live-backgroundremoval-lite/bin/64bit
+cp -r data ~/.config/obs-studio/plugins/live-backgroundremoval-lite/data
 ```
 
 ### 5. Verify the Installation
@@ -161,8 +161,8 @@ export VCPKG_ROOT=~/vcpkg
 Clone the source code to your local machine.
 
 ```bash
-git clone https://github.com/kaito-tokyo/obs-backgroundremoval-lite.git
-cd obs-backgroundremoval-lite
+git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
+cd live-backgroundremoval-lite
 ```
 
 ### 4. Build and Manually Install
@@ -181,7 +181,7 @@ cmake --build --preset macos
 ```
 
 **2. Manually install the plugin**
-After the build is complete, you need to manually copy the plugin to the OBS Studio plugins directory. The built plugin (e.g., `obs-backgroundremoval-lite.plugin`) will be located in the build directory.
+After the build is complete, you need to manually copy the plugin to the OBS Studio plugins directory. The built plugin (e.g., `live-backgroundremoval-lite.plugin`) will be located in the build directory.
 
 Copy the plugin to: `~/Library/Application Support/obs-studio/plugins/`
 

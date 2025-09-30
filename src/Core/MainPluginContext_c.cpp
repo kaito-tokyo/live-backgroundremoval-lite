@@ -1,5 +1,5 @@
 /*
-Background Removal Lite
+Live Background Removal Lite
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software: you can redistribute it and/or modify
@@ -261,7 +261,7 @@ try {
 	latestVersionFuture =
 		std::async(std::launch::async, [] {
 			return KaitoTokyo::UpdateChecker::fetchLatestVersion(
-				"https://obs-backgroundremoval-lite.kaito.tokyo/metadata/latest-version.txt");
+				"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt");
 		}).share();
 	return true;
 } catch (const std::exception &e) {

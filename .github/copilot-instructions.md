@@ -58,9 +58,9 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     * **INSTRUCTION**: User completes the release on GitHub.
 
 6.  **Update Arch Linux Package Manifest**:
-    * **ACTION**: Match the `pkgver` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
+    * **ACTION**: Match the `pkgver` field in `unsupported/arch/live-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
     * **ACTION**: Download the source tar.gz for that version from GitHub and calculate its SHA-256 checksum.
-    * **ACTION**: Replace the `sha256sums` field in `unsupported/arch/obs-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
+    * **ACTION**: Replace the `sha256sums` field in `unsupported/arch/live-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
 
 7.  **Update Flatpak Package Manifest**:
     * **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.BackgroundRemovalLite.metainfo.xml`.

@@ -1,11 +1,11 @@
 # Maintainer: Kaito Udagawa <umireon at kaito dot tokyo>
-pkgname=obs-backgroundremoval-lite
+pkgname=live-backgroundremoval-lite
 pkgver=1.6.0
 pkgrel=1
-pkgdesc='Background Removal Lite for OBS Studio'
+pkgdesc='Live Background Removal Lite for OBS Studio'
 arch=('x86_64')
 url="https://github.com/kaito-tokyo/${pkgname}"
-license=('GPL-2.0-only')
+license=('GPL-3.0-or-later')
 depends=('obs-studio' 'fmt' 'ncnn')
 makedepends=('git' 'cmake' 'ninja')
 conflicts=("${pkgname}-git" "${pkgname}-git-debug")
