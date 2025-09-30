@@ -1,7 +1,11 @@
 ---
 import { joinURL } from "ufo";
+
 import Layout from "../layouts/Layout.astro";
-import { getLatestRelease } from "../lib/github";
+import { getLatestRelease } from "../lib/github.js";
+
+import { name } from "../../../buildspec.json";
+const githubURL = `https://github.com/kaito-tokyo/${name}`;
 
 const { BASE_URL } = import.meta.env;
 
@@ -36,30 +40,32 @@ const tagName = release.tag_name;
   </div>
   <div class="links">
     <a
-      href=`https://github.com/kaito-tokyo/live-backgroundremoval-lite/releases/download/${tagName}/live-backgroundremoval-lite-${tagName}-windows-x64.zip`
-      >Windows</a
+      href={joinURL(
+        githubURL,
+        `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`,
+      )}>Windows</a
     >
     <a
-      href=`https://github.com/kaito-tokyo/live-backgroundremoval-lite/releases/download/${tagName}/live-backgroundremoval-lite-${tagName}-macos-universal.pkg`
-      >Mac</a
+      href={joinURL(
+        githubURL,
+        `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`,
+      )}>Mac</a
     >
     <a
-      href=`https://github.com/kaito-tokyo/live-backgroundremoval-lite/releases/download/${tagName}/live-backgroundremoval-lite-${tagName}-x86_64-linux-gnu.deb`
-      >Ubuntu</a
+      href={joinURL(
+        githubURL,
+        `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`,
+      )}>Ubuntu</a
     >
-    <a
-      href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch#readme"
+    <a href={joinURL(githubURL, "tree/main/unsupported/arch#readme")}
       >Arch Linux</a
     >
-    <a
-      href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak#readme"
+    <a href={joinURL(githubURL, "tree/main/unsupported/flatpak#readme")}
       >Flatpak</a
     >
   </div>
   <div class="links">
-    <a href=`https://github.com/kaito-tokyo/live-backgroundremoval-lite/`
-      >GitHub</a
-    >
+    <a href={githubURL}>GitHub</a>
   </div>
 </Layout>
 
