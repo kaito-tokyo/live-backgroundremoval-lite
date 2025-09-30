@@ -1,4 +1,5 @@
 ---
+import { joinURL } from "ufo";
 import Layout from "../layouts/Layout.astro";
 import { getLatestRelease } from "../lib/github";
 
@@ -10,21 +11,24 @@ const tagName = release.tag_name;
   <h1>Remove your bg, Enrich your stream</h1>
   <p>
     Live Background Removal Lite is a lightweight and easy-to-use plugin for OBS
-    Studio that allows you to remove the background from your webcam feed without
-    the need for a green screen. It uses advanced AI technology to accurately
-    detect and remove the background, leaving you with a clean and professional
-    look.
+    Studio that allows you to remove the background from your webcam feed
+    without the need for a green screen. It uses advanced AI technology to
+    accurately detect and remove the background, leaving you with a clean and
+    professional look.
   </p>
-  <div style="display: flex; flex-direction: column; align-items: center; margin: 2em 0 2em 0;">
+  <div
+    style="display: flex; flex-direction: column; align-items: center; margin: 2em 0 2em 0;"
+  >
     <img
-      src="/demo.gif"
+      src={joinURL(import.meta.env.BASE_URL, "demo.gif")}
       alt="Background Removal Lite Demo"
       width="480"
       style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;"
     />
     <p style="margin-top:8px; color:#666; font-size:90%;">
       <em>
-        The plugin removes a cluttered room background, revealing a gray color source set behind in OBS.
+        The plugin removes a cluttered room background, revealing a gray color
+        source set behind in OBS.
       </em>
     </p>
   </div>
@@ -48,6 +52,11 @@ const tagName = release.tag_name;
     <a
       href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak#readme"
       >Flatpak</a
+    >
+  </div>
+  <div class="links">
+    <a href=`https://github.com/kaito-tokyo/live-backgroundremoval-lite/`
+      >GitHub</a
     >
   </div>
 </Layout>
@@ -76,9 +85,11 @@ const tagName = release.tag_name;
     margin-top: 2em;
   }
   .links a {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 10px 20px;
-    background-color: #4caf50; /* Green */
+    background-color: #4caf50;
     color: white;
     text-align: center;
     text-decoration: none;
