@@ -15,6 +15,18 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <releases>
+    <release version="1.8.1" date="2025-10-02">
+      <description>
+        <p>🎉 <b>Release 1.8.1</b></p>
+        <ul>
+          <li>🛠 <b>Linux Packaging:</b> Arch Linux PKGBUILD now correctly declares <code>curl</code> as a dependency and updates version/checksums.</li>
+          <li>📦 <b>Flatpak Manifest:</b> Flatpak build and metainfo files now point to the correct version and commit for v1.8.1.</li>
+          <li>⚙️ <b>GitHub Actions:</b> Astro site deployment workflow triggers on PRs to <code>main</code> and tags, deploy job runs only for <code>main</code> or tags.</li>
+          <li>📝 <b>Docs & Process:</b> Minor instruction and manifest tweaks for update steps and file naming.</li>
+        </ul>
+        <p>Thank you to everyone who packages and maintains Live Background Removal Lite on Linux! If you spot any issues with builds or packaging, please open an issue or pull request.</p>
+      </description>
+    </release>
     <release version="1.8.0" date="2025-10-01">
       <description>
         <p>🎉 <b>Release 1.8.0</b></p>
@@ -86,17 +98,5 @@
       </description>
     </release>
   </releases>
-      <release version="1.8.1" date="2025-10-02">
-        <description>
-          <p>🎉 <b>Release 1.8.1</b></p>
-          <ul>
-            <li>🛠 <b>Linux Packaging:</b> Arch Linux PKGBUILD now correctly declares <code>curl</code> as a dependency and updates version/checksums.</li>
-            <li>📦 <b>Flatpak Manifest:</b> Flatpak build and metainfo files now point to the correct version and commit for v1.8.1.</li>
-            <li>⚙️ <b>GitHub Actions:</b> Astro site deployment workflow triggers on PRs to <code>main</code> and tags, deploy job runs only for <code>main</code> or tags.</li>
-            <li>📝 <b>Docs & Process:</b> Minor instruction and manifest tweaks for update steps and file naming.</li>
-          </ul>
-          <p>Thank you to everyone who packages and maintains Live Background Removal Lite on Linux! If you spot any issues with builds or packaging, please open an issue or pull request.</p>
-        </description>
-      </release>
   <content_rating type="oars-1.1" />
 </component>
