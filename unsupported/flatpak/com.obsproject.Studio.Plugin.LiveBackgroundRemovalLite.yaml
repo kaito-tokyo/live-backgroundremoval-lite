@@ -23,10 +23,6 @@ modules:
         url: https://github.com/Tencent/ncnn.git
         tag: '20250916'
         commit: 'c4193aadbbb56582aa87b1850dd3d98fb8fd936d'
-  - name: simple
-    buildsystem: simple
-    build-commands:
-      - find /usr
   - name: live-backgroundremoval-lite
     buildsystem: cmake-ninja
     builddir: true
@@ -39,7 +35,8 @@ modules:
     sources:
       - type: git
         url: https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
-        branch: fix-arch-build
+        tag: 1.8.2
+        commit: 'cf90e1c9ba6fc0b7e031b6ffec63a797373ae100'
         x-checker-data:
           type: git
           tag-pattern: ^([\d.]+)$
