@@ -182,7 +182,6 @@ void DebugWindow::updatePreview()
 		return;
 	}
 
-	// Readerの再生成が必要かどうかをチェック
 	bool needsRecreation = !currentRenderData ||
 			       (currentRenderData->readerBgrx &&
 				(currentRenderData->readerBgrx->width != renderingContext->width ||
@@ -208,20 +207,17 @@ void DebugWindow::updatePreview()
 		newRenderData->readerR32fSub = std::make_unique<AsyncTextureReader>(
 			renderingContext->widthSub, renderingContext->heightSub, GS_R32F);
 
-		// もし古いデータがあれば、遅延解放リストに移動
 		if (currentRenderData) {
 			oldRenderData.push_back(std::move(currentRenderData));
 		}
 
-		// 新しいデータを現在のデータとして保持
 		currentRenderData = std::move(newRenderData);
 
-		// 新しいデータのアドレスをアトミックに公開する
 		atomicRenderData.store(currentRenderData.get(), std::memory_order_release);
 	}
 
 	if (!currentRenderData) {
-		return; // まだ準備ができていない
+		return;
 	}
 
 	auto currentTexture = previewTextureSelector->currentText();

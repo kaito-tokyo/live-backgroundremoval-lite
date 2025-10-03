@@ -1,8 +1,7 @@
 #pragma once
 
-#include <atomic> // <--- この行を追加
+#include <atomic>
 #include <memory>
-// #include <mutex> は不要なので削除
 
 #include <QComboBox>
 #include <QDialog>
@@ -18,7 +17,6 @@ namespace BackgroundRemovalLite {
 
 class MainPluginContext;
 
-// AsyncTextureReader群を管理するための構造体
 struct DebugRenderData {
 	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerBgrx;
 	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR8;
@@ -54,10 +52,9 @@ private:
 	QLabel *previewImageLabel;
 	QTimer *updateTimer;
 
-	// mutex と reader のポインタ群を差し替え
 	std::atomic<DebugRenderData *> atomicRenderData{nullptr};
 	std::unique_ptr<DebugRenderData> currentRenderData;
-	std::vector<std::unique_ptr<DebugRenderData>> oldRenderData; // 安全な遅延解放のため
+	std::vector<std::unique_ptr<DebugRenderData>> oldRenderData;
 
 	std::vector<std::uint8_t> bufferR8;
 	std::vector<std::uint8_t> bufferSubR8;
