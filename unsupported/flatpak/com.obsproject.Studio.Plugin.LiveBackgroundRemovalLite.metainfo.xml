@@ -36,7 +36,7 @@
           <li>🛠 <b>Linux Packaging:</b> Arch Linux PKGBUILD now correctly declares <code>curl</code> as a dependency and updates version/checksums.</li>
           <li>📦 <b>Flatpak Manifest:</b> Flatpak build and metainfo files now point to the correct version and commit for v1.8.1.</li>
           <li>⚙️ <b>GitHub Actions:</b> Astro site deployment workflow triggers on PRs to <code>main</code> and tags, deploy job runs only for <code>main</code> or tags.</li>
-          <li>📝 <b>Docs & Process:</b> Minor instruction and manifest tweaks for update steps and file naming.</li>
+          <li>📝 <b>Docs &amp; Process:</b> Minor instruction and manifest tweaks for update steps and file naming.</li>
         </ul>
         <p>Thank you to everyone who packages and maintains Live Background Removal Lite on Linux! If you spot any issues with builds or packaging, please open an issue or pull request.</p>
       </description>
@@ -45,7 +45,7 @@
       <description>
         <p>🎉 <b>Release 1.8.0</b></p>
         <ul>
-          <li>✨ <b>Web & Docs Polish:</b> New icons, web app manifest, improved metadata, and PWA support for a professional experience.</li>
+          <li>✨ <b>Web &amp; Docs Polish:</b> New icons, web app manifest, improved metadata, and PWA support for a professional experience.</li>
           <li>🔌 <b>Plugin Integration:</b> OBS plugin info now registered as <code>live_backgroundremoval_lite</code>. Consistent filter selection and documentation.</li>
           <li>📦 <b>Packaging:</b> Flatpak/Arch manifests updated for new version/tag/commit.</li>
           <li>🧹 <b>Code Clean-up:</b> Minor refactoring, removed unused files and obsolete registry entries.</li>
@@ -60,8 +60,8 @@
         <ul>
           <li>✨ <b>Plugin Renamed:</b> The plugin is now "Live Background Removal Lite" everywhere. All references, file names, documentation, and install paths updated for consistency.</li>
           <li>📝 <b>License Upgrade:</b> Now licensed under GPL-3.0-or-later.</li>
-          <li>📚 <b>Documentation & Demo:</b> README and documentation improved, demo GIF added, all links and instructions updated.</li>
-          <li>🛠️ <b>Build & Packaging:</b> All manifests and build files updated to match the new name and version. CMake bundleId, website, and metadata updated.</li>
+          <li>📚 <b>Documentation &amp; Demo:</b> README and documentation improved, demo GIF added, all links and instructions updated.</li>
+          <li>🛠️ <b>Build &amp; Packaging:</b> All manifests and build files updated to match the new name and version. CMake bundleId, website, and metadata updated.</li>
           <li>🧩 <b>Codebase Modernization:</b> Copyright and license headers updated, redundant files removed.</li>
           <li>🌍 <b>Localization:</b> Plugin and UI labels updated in all supported languages.</li>
         </ul>
@@ -75,9 +75,9 @@
           <li>🚀 <b>Update Checker Returns!</b> Plugin now checks for new versions and notifies you in the filter UI. Localized status and clear messages.</li>
           <li>💨 <b>Selfie Segmenter Performance Boost:</b> Major rewrite, SIMD acceleration (AVX2/NEON), new unit tests, and better maintainability.</li>
           <li>🧩 <b>Project Structure Modernization:</b> Core logic reorganized, redundant files removed.</li>
-          <li>🛠️ <b>CMake & Build Improvements:</b> CMake detects/links curl & backward-cpp, AVX2 triplets, improved test infra.</li>
-          <li>🌍 <b>Localization & UI Enhancements:</b> Update checker info fully localized, clearer UI messages.</li>
-          <li>📚 <b>Documentation & Developer Guide Updates:</b> Release/dev guidelines clarified, Copilot/Gemini instructions improved.</li>
+          <li>🛠️ <b>CMake &amp; Build Improvements:</b> CMake detects/links curl &amp; backward-cpp, AVX2 triplets, improved test infra.</li>
+          <li>🌍 <b>Localization &amp; UI Enhancements:</b> Update checker info fully localized, clearer UI messages.</li>
+          <li>📚 <b>Documentation &amp; Developer Guide Updates:</b> Release/dev guidelines clarified, Copilot/Gemini instructions improved.</li>
         </ul>
         <p>Thank you for using Background Removal Lite! Please report any issues or feedback.</p>
       </description>
@@ -90,8 +90,8 @@
           <li>Documentation improvements.</li>
           <li>Installer link corrections.</li>
           <li>Project cleanup.</li>
-          <li>Arch Linux PKGBUILD & Flatpak metadata updates.</li>
-          <li>Release process & contributor docs enhanced.</li>
+          <li>Arch Linux PKGBUILD &amp; Flatpak metadata updates.</li>
+          <li>Release process &amp; contributor docs enhanced.</li>
         </ul>
       </description>
     </release>
@@ -101,7 +101,7 @@
         <ul>
           <li><strong>Arch Linux Packaging Support:</strong> Added a PKGBUILD for easier building and installation on Arch Linux.</li>
           <li><strong>Flatpak Manifest Added:</strong> New experimental Flatpak manifests for easier packaging.</li>
-          <li><strong>Documentation & Readme Improvements:</strong> Updated documentation to include Arch Linux instructions.</li>
+          <li><strong>Documentation &amp; Readme Improvements:</strong> Updated documentation to include Arch Linux instructions.</li>
           <li><strong>Workflow Improvements:</strong> CI workflow now triggers on both branch and tag pushes.</li>
         </ul>
       </description>
