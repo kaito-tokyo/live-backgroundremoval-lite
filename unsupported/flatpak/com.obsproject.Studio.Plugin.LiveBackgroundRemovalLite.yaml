@@ -38,7 +38,7 @@ modules:
         commit: 'c4193aadbbb56582aa87b1850dd3d98fb8fd936d'
   - name: simple
     buildsystem: simple
-    commands:
+    build-commands:
       - find /
   - name: live-backgroundremoval-lite
     buildsystem: cmake-ninja
