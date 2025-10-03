@@ -30,7 +30,7 @@ enum class FilterLevel : int {
 	GuidedFilter = 300,
 };
 
-struct Preset {
+struct PluginProperty {
 	FilterLevel filterLevel;
 
 	int selfieSegmenterFps;

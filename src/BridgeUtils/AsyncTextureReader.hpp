@@ -132,7 +132,7 @@ public:
 	AsyncTextureReader(const std::uint32_t width, const std::uint32_t height, const gs_color_format format)
 		: width(width),
 		  height(height),
-		  bufferLinesize((width * AsyncTextureReaderDetail::getBytesPerPixel(format) + 3) & ~3u),
+		  bufferLinesize(width * AsyncTextureReaderDetail::getBytesPerPixel(format)),
 		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
 			     std::vector<std::uint8_t>(height * bufferLinesize)},
 		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
@@ -175,16 +175,18 @@ public:
 			throw std::runtime_error("gs_stagesurface_map returned invalid data");
 		}
 
-		const std::size_t bytesToCopyPerRow = std::min(static_cast<std::size_t>(mappedSurf.linesize),
-							       static_cast<std::size_t>(bufferLinesize));
-
 		const std::size_t backBufferIndex = 1 - activeCpuBufferIndex.load(std::memory_order_acquire);
 		auto &backBuffer = cpuBuffers[backBufferIndex];
 
-		for (std::uint32_t y = 0; y < height; y++) {
-			const std::uint8_t *srcRow = mappedSurf.data + (y * mappedSurf.linesize);
-			std::uint8_t *dstRow = backBuffer.data() + (y * bufferLinesize);
-			std::memcpy(dstRow, srcRow, bytesToCopyPerRow);
+		if (mappedSurf.linesize == bufferLinesize) {
+			std::memcpy(backBuffer.data(), mappedSurf.data,
+				    static_cast<std::size_t>(height) * bufferLinesize);
+		} else {
+			for (std::uint32_t y = 0; y < height; y++) {
+				const std::uint8_t *srcRow = mappedSurf.data + (y * mappedSurf.linesize);
+				std::uint8_t *dstRow = backBuffer.data() + (y * bufferLinesize);
+				std::memcpy(dstRow, srcRow, bufferLinesize);
+			}
 		}
 
 		activeCpuBufferIndex.store(backBufferIndex, std::memory_order_release);

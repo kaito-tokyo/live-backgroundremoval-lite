@@ -73,6 +73,9 @@ void MainPluginContext::startup() noexcept {}
 
 void MainPluginContext::shutdown() noexcept
 {
+	if (DebugWindow *_debugWindow = debugWindow.load()) {
+		_debugWindow->close();
+	}
 	renderingContext.reset();
 	selfieSegmenterTaskQueue.shutdown();
 }
@@ -153,9 +156,24 @@ obs_properties_t *MainPluginContext::getProperties()
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
 			auto self = static_cast<MainPluginContext *>(data)->shared_from_this();
-			auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
-			self->debugWindow = std::make_unique<DebugWindow>(self->weak_from_this(), parent);
-			self->debugWindow->show();
+
+			if (DebugWindow *_debugWindow = self->debugWindow.load()) {
+				_debugWindow->show();
+				_debugWindow->raise();
+				_debugWindow->activateWindow();
+			} else {
+				auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
+				DebugWindow *newDebugWindow = new DebugWindow(self->weak_from_this(), parent);
+				newDebugWindow->setAttribute(Qt::WA_DeleteOnClose);
+
+				QObject::connect(newDebugWindow, &QDialog::destroyed,
+						 [self]() { self->setDebugWindowNull(); });
+
+				self->debugWindow.store(newDebugWindow);
+
+				newDebugWindow->show();
+			}
+
 			return false;
 		},
 		this);
@@ -165,18 +183,18 @@ obs_properties_t *MainPluginContext::getProperties()
 
 void MainPluginContext::update(obs_data_t *settings)
 {
-	preset.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+	pluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
 
-	preset.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
+	pluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
 
-	preset.gfEpsDb = obs_data_get_double(settings, "gfEpsDb");
-	preset.gfEps = Preset::dbToLinearPow(preset.gfEpsDb);
+	pluginProperty.gfEpsDb = obs_data_get_double(settings, "gfEpsDb");
+	pluginProperty.gfEps = PluginProperty::dbToLinearPow(pluginProperty.gfEpsDb);
 
-	preset.maskGamma = obs_data_get_double(settings, "maskGamma");
-	preset.maskLowerBoundDb = obs_data_get_double(settings, "maskLowerBoundDb");
-	preset.maskLowerBound = Preset::dbToLinearAmp(preset.maskLowerBoundDb);
-	preset.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
-	preset.maskUpperBound = 1.0 - Preset::dbToLinearAmp(preset.maskUpperBoundMarginDb);
+	pluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
+	pluginProperty.maskLowerBoundDb = obs_data_get_double(settings, "maskLowerBoundDb");
+	pluginProperty.maskLowerBound = PluginProperty::dbToLinearAmp(pluginProperty.maskLowerBoundDb);
+	pluginProperty.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
+	pluginProperty.maskUpperBound = 1.0 - PluginProperty::dbToLinearAmp(pluginProperty.maskUpperBoundMarginDb);
 }
 
 void MainPluginContext::activate() {}
@@ -189,12 +207,29 @@ void MainPluginContext::hide() {}
 
 void MainPluginContext::videoTick(float seconds)
 {
-	if (!renderingContext) {
-		logger.debug("Rendering context is not initialized, skipping video tick");
+	obs_source_t *target = obs_filter_get_target(source);
+	uint32_t targetWidth = obs_source_get_width(target);
+	uint32_t targetHeight = obs_source_get_height(target);
+
+	if (targetWidth == 0 || targetHeight == 0) {
+		targetWidth = obs_source_get_base_width(target);
+		targetHeight = obs_source_get_base_height(target);
+	}
+
+	if (targetWidth == 0 || targetHeight == 0) {
+		logger.debug("Target source has zero width or height, skipping video tick");
 		return;
 	}
 
-	renderingContext->videoTick(seconds);
+	if (!renderingContext || renderingContext->width != targetWidth || renderingContext->height != targetHeight) {
+		GraphicsContextGuard guard;
+		renderingContext = createRenderingContext(targetWidth, targetHeight);
+		GsUnique::drain();
+	}
+
+	if (renderingContext) {
+		renderingContext->videoTick(seconds);
+	}
 }
 
 void MainPluginContext::videoRender()
@@ -211,39 +246,13 @@ void MainPluginContext::videoRender()
 		nextRenderingContext->videoRender();
 	}
 
-	if (debugWindow) {
-		debugWindow->videoRender();
+	if (DebugWindow *_debugWindow = debugWindow.load()) {
+		_debugWindow->videoRender();
 	}
 }
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 try {
-	if (frame->width == 0 || frame->height == 0) {
-		renderingContext.reset();
-		return frame;
-	}
-
-	if (frameCountBeforeContextSwitch > 0) {
-		--frameCountBeforeContextSwitch;
-		if (frameCountBeforeContextSwitch == 0 && nextRenderingContext) {
-			GraphicsContextGuard guard;
-			renderingContext = std::move(nextRenderingContext);
-			nextRenderingContext.reset();
-			logger.info("Switched to new rendering context");
-			GsUnique::drain();
-		}
-	}
-
-	if (!renderingContext || renderingContext->width != frame->width || renderingContext->height != frame->height) {
-		GraphicsContextGuard guard;
-		nextRenderingContext = std::make_shared<RenderingContext>(
-			source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, frame->width,
-			frame->height, preset.filterLevel, preset.selfieSegmenterFps, preset.gfEps, preset.maskGamma,
-			preset.maskLowerBound, preset.maskUpperBound);
-		frameCountBeforeContextSwitch = 1;
-		GsUnique::drain();
-	}
-
 	if (renderingContext) {
 		return renderingContext->filterVideo(frame);
 	} else {
@@ -255,6 +264,18 @@ try {
 } catch (...) {
 	logger.error("Failed to create rendering context: unknown error");
 	return frame;
+}
+
+std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std::uint32_t targetWidth,
+									    std::uint32_t targetHeight)
+{
+	PluginConfig defaultPluginConfig;
+
+	auto renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
+								   selfieSegmenterTaskQueue, defaultPluginConfig,
+								   subsamplingRate, targetWidth, targetHeight);
+	renderingContext->setPluginProperty(pluginProperty);
+	return renderingContext;
 }
 
 } // namespace BackgroundRemovalLite

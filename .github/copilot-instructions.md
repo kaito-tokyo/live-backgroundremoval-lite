@@ -20,8 +20,8 @@
 2. Run:
    ```
    cmake --build --preset macos-testing && \
-   rm -rf ~/Library/Application\ Support/obs-studio/plugins/backgroundremoval-lite.plugin && \
-   cp -r ./build_macos/RelWithDebInfo/backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
+   rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin && \
+   cp -r ./build_macos/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
    ```
 
 ## Release Automation with Gemini

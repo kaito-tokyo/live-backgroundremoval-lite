@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 
 #include <QComboBox>
@@ -33,6 +34,16 @@ namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
 class MainPluginContext;
+
+struct DebugRenderData {
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerBgrx;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR8;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32f;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> reader256Bgrx;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerMaskRoiR8;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerSubR8;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32fSub;
+};
 
 class DebugWindow : public QDialog {
 	Q_OBJECT
@@ -59,13 +70,9 @@ private:
 	QLabel *previewImageLabel;
 	QTimer *updateTimer;
 
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerBgrx;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR8;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32f;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> reader256Bgrx;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerMaskRoiR8;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerSubR8;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32fSub;
+	std::atomic<DebugRenderData *> atomicRenderData{nullptr};
+	std::unique_ptr<DebugRenderData> currentRenderData;
+	std::vector<std::unique_ptr<DebugRenderData>> oldRenderData;
 
 	std::vector<std::uint8_t> bufferR8;
 	std::vector<std::uint8_t> bufferSubR8;

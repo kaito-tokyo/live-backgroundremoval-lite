@@ -29,9 +29,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "BridgeUtils/ILogger.hpp"
 #include "BridgeUtils/ThrottledTaskQueue.hpp"
 
-#include "MainEffect.hpp"
-#include "Preset.hpp"
 #include "../SelfieSegmenter/SelfieSegmenter.hpp"
+
+#include "MainEffect.hpp"
+#include "PluginConfig.hpp"
+#include "PluginProperty.hpp"
 
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
@@ -47,9 +49,10 @@ private:
 	BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
 
 public:
+	const PluginConfig pluginConfig;
+	const std::uint32_t subsamplingRate;
 	const std::uint32_t width;
 	const std::uint32_t height;
-	const std::uint32_t subsamplingRate = 4;
 	const std::uint32_t widthSub;
 	const std::uint32_t heightSub;
 
@@ -82,14 +85,9 @@ public:
 	const BridgeUtils::unique_gs_texture_t r8GFResult;
 
 private:
-	BridgeUtils::unique_gs_texture_t r32fGFTemporary1Sub;
+	const BridgeUtils::unique_gs_texture_t r32fGFTemporary1Sub;
 
-	const FilterLevel &filterLevel;
-	const int &selfieSegmenterFps;
-	const double &gfEps;
-	const double &maskGamma;
-	const double &maskLowerBound;
-	const double &maskUpperBound;
+	PluginProperty pluginProperty;
 
 	float timeSinceLastSelfieSegmentation = 0.0f;
 	std::uint64_t lastFrameTimestamp = 0;
@@ -100,10 +98,11 @@ private:
 public:
 	RenderingContext(obs_source_t *source, const BridgeUtils::ILogger &logger, const MainEffect &mainEffect,
 			 const ncnn::Net &selfieSegmenterNet, BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue,
-			 std::uint32_t width, std::uint32_t height, const FilterLevel &filterLevel,
-			 const int &selfieSegmenterFps, const double &gfEps, const double &maskGamma,
-			 const double &maskLowerBound, const double &maskUpperBound);
+			 PluginConfig pluginConfig, std::uint32_t subsamplingRate, std::uint32_t width,
+			 std::uint32_t height);
 	~RenderingContext() noexcept;
+
+	void setPluginProperty(PluginProperty newProperty);
 
 	void videoTick(float seconds);
 	void videoRender();
