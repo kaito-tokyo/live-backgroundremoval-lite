@@ -55,7 +55,7 @@ private:
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
 	PluginProperty pluginProperty;
-	std::uint32_t subsamplingRate = 2;
+	std::uint32_t subsamplingRate = 4;
 
 	std::shared_ptr<RenderingContext> renderingContext;
 	std::shared_ptr<RenderingContext> nextRenderingContext;
