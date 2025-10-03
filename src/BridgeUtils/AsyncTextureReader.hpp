@@ -132,7 +132,7 @@ public:
 	AsyncTextureReader(const std::uint32_t width, const std::uint32_t height, const gs_color_format format)
 		: width(width),
 		  height(height),
-		  bufferLinesize((width * AsyncTextureReaderDetail::getBytesPerPixel(format) + 3) & ~3u),
+		  bufferLinesize(width * AsyncTextureReaderDetail::getBytesPerPixel(format)),
 		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
 			     std::vector<std::uint8_t>(height * bufferLinesize)},
 		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
@@ -152,7 +152,7 @@ public:
 		gpuWriteIndex = 1 - gpuWriteIndex;
 	}
 
-	/**
+    /**
      * @brief Synchronizes the internal CPU buffer with the latest fully staged texture.
      *
      * This method maps the most recently completed staging surface, copies its pixel data
@@ -160,35 +160,36 @@ public:
      * This can be a potentially expensive operation due to GPU-CPU data transfer.
      * @throws std::runtime_error if mapping the staging surface fails or returns invalid data.
      */
-	void sync()
-	{
-		std::size_t gpuReadIndex;
-		{
-			std::lock_guard<std::mutex> lock(gpuMutex);
-			gpuReadIndex = 1 - gpuWriteIndex;
-		}
-		gs_stagesurf_t *const stagesurf = stagesurfs[gpuReadIndex].get();
+    void sync()
+    {
+        std::size_t gpuReadIndex;
+        {
+            std::lock_guard<std::mutex> lock(gpuMutex);
+            gpuReadIndex = 1 - gpuWriteIndex;
+        }
+        gs_stagesurf_t *const stagesurf = stagesurfs[gpuReadIndex].get();
 
-		const AsyncTextureReaderDetail::ScopedStageSurfMap mappedSurf(stagesurf);
+        const AsyncTextureReaderDetail::ScopedStageSurfMap mappedSurf(stagesurf);
 
-		if (!mappedSurf.data || mappedSurf.linesize > bufferLinesize) {
-			throw std::runtime_error("gs_stagesurface_map returned invalid data");
-		}
+        if (!mappedSurf.data || mappedSurf.linesize < bufferLinesize) {
+            throw std::runtime_error("gs_stagesurface_map returned invalid data");
+        }
 
-		const std::size_t bytesToCopyPerRow = std::min(static_cast<std::size_t>(mappedSurf.linesize),
-							       static_cast<std::size_t>(bufferLinesize));
+        const std::size_t backBufferIndex = 1 - activeCpuBufferIndex.load(std::memory_order_acquire);
+        auto &backBuffer = cpuBuffers[backBufferIndex];
 
-		const std::size_t backBufferIndex = 1 - activeCpuBufferIndex.load(std::memory_order_acquire);
-		auto &backBuffer = cpuBuffers[backBufferIndex];
+        if (mappedSurf.linesize == bufferLinesize) {
+            std::memcpy(backBuffer.data(), mappedSurf.data, height * bufferLinesize);
+        } else {
+            for (std::uint32_t y = 0; y < height; y++) {
+                const std::uint8_t *srcRow = mappedSurf.data + (y * mappedSurf.linesize);
+                std::uint8_t *dstRow = backBuffer.data() + (y * bufferLinesize);
+                std::memcpy(dstRow, srcRow, bufferLinesize);
+            }
+        }
 
-		for (std::uint32_t y = 0; y < height; y++) {
-			const std::uint8_t *srcRow = mappedSurf.data + (y * mappedSurf.linesize);
-			std::uint8_t *dstRow = backBuffer.data() + (y * bufferLinesize);
-			std::memcpy(dstRow, srcRow, bytesToCopyPerRow);
-		}
-
-		activeCpuBufferIndex.store(backBufferIndex, std::memory_order_release);
-	}
+        activeCpuBufferIndex.store(backBufferIndex, std::memory_order_release);
+    }
 
 	/**
      * @brief Gets read-only access to the internal CPU buffer containing the latest pixel data.
