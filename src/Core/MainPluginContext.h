@@ -30,7 +30,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <mutex>
 #include <vector>
 
-#include <net.h>
+#include <ncnn/net.h>
 
 #include "BridgeUtils/GsUnique.hpp"
 #include "BridgeUtils/ObsLogger.hpp"

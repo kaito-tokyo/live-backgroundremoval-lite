@@ -20,6 +20,7 @@ build() {
     -DCMAKE_INSTALL_LIBDIR=lib \
     -DENABLE_FRONTEND_API=ON \
     -DENABLE_QT=ON \
+    -DUSE_PKGCONFIG=ON \
     -GNinja
   cmake --build build
 }
