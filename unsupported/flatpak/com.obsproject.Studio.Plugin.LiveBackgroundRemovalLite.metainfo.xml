@@ -15,6 +15,20 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <releases>
+    <release version="1.8.2" date="2025-10-04">
+      <description>
+        <p>🎉 <b>Release 1.8.2</b></p>
+        <ul>
+          <li>🛠 <b>Refactored Plugin Properties:</b> Settings and runtime properties are now handled more cleanly, making it easier to adjust filtering and segmentation features.</li>
+          <li>🪟 <b>Debug Window Overhaul:</b> Uses atomic operations for better stability and responsiveness, especially when switching rendering contexts or updating previews.</li>
+          <li>🎥 <b>Rendering Context Updates:</b> Improved creation and switching of rendering contexts for smoother and more reliable video filtering.</li>
+          <li>🖼 <b>Texture Reader Reliability:</b> Smarter logic for copying and syncing textures, reducing errors and speeding up previews.</li>
+          <li>🧹 <b>Code Maintenance:</b> Files reorganized (splitting <code>Preset</code> into <code>PluginProperty</code> and <code>PluginConfig</code>) for clarity and future flexibility.</li>
+          <li>🧑‍💻 <b>Developer Notes:</b> New internal files (<code>PluginConfig.hpp</code>, <code>PluginProperty.hpp</code>), refined C++ code and memory management, and atomics for debug/render data objects.</li>
+        </ul>
+        <p>Thank you for using Live Background Removal Lite! If you run into any issues or have suggestions for future improvements, please open an issue or pull request. Happy streaming! 🚀</p>
+      </description>
+    </release>
     <release version="1.8.1" date="2025-10-02">
       <description>
         <p>🎉 <b>Release 1.8.1</b></p>

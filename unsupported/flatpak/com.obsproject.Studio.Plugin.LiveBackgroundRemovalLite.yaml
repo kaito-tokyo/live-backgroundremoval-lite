@@ -32,8 +32,8 @@ modules:
     sources:
       - type: git
         url: https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
-        tag: 1.8.1
-        commit: '89e052b84a6ed4e6572e1d28a4ffb536806d56d3'
+        tag: 1.8.2
+        commit: 'cf90e1c9ba6fc0b7e031b6ffec63a797373ae100'
         x-checker-data:
           type: git
           tag-pattern: ^([\d.]+)$
