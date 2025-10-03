@@ -35,9 +35,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "BridgeUtils/ObsLogger.hpp"
 #include "BridgeUtils/ThrottledTaskQueue.hpp"
 
-#include "MainEffect.hpp"
-#include "Preset.hpp"
 #include "../SelfieSegmenter/SelfieSegmenter.hpp"
+
+#include "MainEffect.hpp"
+#include "PluginProperty.hpp"
 
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
@@ -53,7 +54,8 @@ private:
 	const MainEffect mainEffect;
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
-	Preset preset;
+	PluginProperty pluginProperty;
+	std::uint32_t subsamplingRate = 4;
 
 	std::shared_ptr<RenderingContext> renderingContext;
 	std::shared_ptr<RenderingContext> nextRenderingContext;
@@ -87,6 +89,9 @@ public:
 	const BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
 
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept { return renderingContext; }
+
+private:
+	std::shared_ptr<RenderingContext> createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight);
 };
 
 } // namespace BackgroundRemovalLite

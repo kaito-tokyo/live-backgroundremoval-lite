@@ -67,15 +67,16 @@ namespace BackgroundRemovalLite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
 				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-				   std::uint32_t _width, std::uint32_t _height, const FilterLevel &_filterLevel,
-				   const int &_selfieSegmenterFps, const double &_gfEps, const double &_maskGamma,
-				   const double &_maskLowerBound, const double &_maskUpperBound)
+				   PluginConfig _pluginConfig, std::uint32_t _subsamplingRate,
+				   std::uint32_t _width, std::uint32_t _height)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
 	  readerSegmenterInput(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX),
 	  selfieSegmenter(_selfieSegmenterNet),
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
+	  pluginConfig(_pluginConfig),
+	  subsamplingRate(_subsamplingRate),
 	  width(_width),
 	  height(_height),
 	  widthSub(width / subsamplingRate),
@@ -99,31 +100,33 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r32fSubGFA(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFB(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGFTemporary1Sub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  filterLevel(_filterLevel),
-	  selfieSegmenterFps(_selfieSegmenterFps),
-	  gfEps(_gfEps),
-	  maskGamma(_maskGamma),
-	  maskLowerBound(_maskLowerBound),
-	  maskUpperBound(_maskUpperBound)
+	  r32fGFTemporary1Sub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET))
 {
 }
 
 RenderingContext::~RenderingContext() noexcept {}
 
+void RenderingContext::setPluginProperty(PluginProperty newPluginProperty)
+{
+	pluginProperty = newPluginProperty;
+}
+
+
 void RenderingContext::videoTick(float seconds)
 {
-	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
+	FilterLevel filterLevel = pluginProperty.filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : pluginProperty.filterLevel;
 
-	if (actualFilterLevel >= FilterLevel::Segmentation) {
+	if (filterLevel >= FilterLevel::Segmentation) {
 		timeSinceLastSelfieSegmentation += seconds;
-		const float interval = 1.0f / static_cast<float>(selfieSegmenterFps);
+		const float interval = 1.0f / static_cast<float>(pluginProperty.selfieSegmenterFps);
 
 		if (timeSinceLastSelfieSegmentation >= interval) {
 			timeSinceLastSelfieSegmentation -= interval;
 			kickSegmentationTask();
 		}
 	}
+
+	doesNextVideoRenderReceiveNewFrame = true;
 }
 
 void RenderingContext::renderOriginalImage()
@@ -193,7 +196,7 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, g
 	mainEffect.calculateGuidedFilterAAndB(widthSub, heightSub, r32fSubGFA.get(), r32fSubGFB.get(),
 					      r32fSubGFMeanGuideSq.get(), r32fSubGFMeanGuide.get(),
 					      r32fSubGFMeanGuideSource.get(), r32fSubGFMeanSource.get(),
-					      static_cast<float>(gfEps));
+					      static_cast<float>(pluginProperty.gfEps));
 
 	mainEffect.finalizeGuidedFilter(width, height, r8GFResult.get(), r16fOriginalGrayscale, r32fSubGFA.get(),
 					r32fSubGFB.get());
@@ -218,13 +221,13 @@ void RenderingContext::kickSegmentationTask()
 
 void RenderingContext::videoRender()
 {
-	FilterLevel actualFilterLevel = filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : filterLevel;
+	FilterLevel filterLevel = pluginProperty.filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : pluginProperty.filterLevel;
 
 	const bool needNewFrame = doesNextVideoRenderReceiveNewFrame;
 	if (needNewFrame) {
 		doesNextVideoRenderReceiveNewFrame = false;
 
-		if (actualFilterLevel >= FilterLevel::Segmentation) {
+		if (filterLevel >= FilterLevel::Segmentation) {
 			try {
 				readerSegmenterInput.sync();
 			} catch (const std::exception &e) {
@@ -234,48 +237,39 @@ void RenderingContext::videoRender()
 
 		renderOriginalImage();
 
-		if (actualFilterLevel >= FilterLevel::GuidedFilter) {
+		if (filterLevel >= FilterLevel::GuidedFilter) {
 			renderOriginalGrayscale(bgrxOriginalImage.get());
 		}
 
-		if (actualFilterLevel >= FilterLevel::Segmentation) {
+		if (filterLevel >= FilterLevel::Segmentation) {
 			renderSegmenterInput(bgrxOriginalImage.get());
 			renderSegmentationMask();
 		}
 
-		if (actualFilterLevel >= FilterLevel::GuidedFilter) {
+		if (filterLevel >= FilterLevel::GuidedFilter) {
 			renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get());
 		}
 	}
 
-	if (actualFilterLevel == FilterLevel::Passthrough) {
+	if (filterLevel == FilterLevel::Passthrough) {
 		mainEffect.draw(width, height, bgrxOriginalImage.get());
-	} else if (actualFilterLevel == FilterLevel::Segmentation) {
+	} else if (filterLevel == FilterLevel::Segmentation) {
 		mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
-	} else if (actualFilterLevel == FilterLevel::GuidedFilter) {
-		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(), maskGamma,
-					       maskLowerBound, maskUpperBound);
+	} else if (filterLevel == FilterLevel::GuidedFilter) {
+		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(), pluginProperty.maskGamma,
+					       pluginProperty.maskLowerBound, pluginProperty.maskUpperBound);
 	} else {
 		obs_source_skip_video_filter(source);
 		return;
 	}
 
-	if (needNewFrame && actualFilterLevel >= FilterLevel::Segmentation) {
+	if (needNewFrame && filterLevel >= FilterLevel::Segmentation) {
 		readerSegmenterInput.stage(bgrxSegmenterInput.get());
 	}
 }
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
-	if (!frame) {
-		return nullptr;
-	}
-
-	if (frame->timestamp > lastFrameTimestamp) {
-		doesNextVideoRenderReceiveNewFrame = true;
-		lastFrameTimestamp = frame->timestamp;
-	}
-
 	return frame;
 }
 

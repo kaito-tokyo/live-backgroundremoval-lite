@@ -18,35 +18,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <cmath>
-
-namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
-
-enum class FilterLevel : int {
-	Default = 0,
-	Passthrough = 100,
-	Segmentation = 200,
-	GuidedFilter = 300,
+struct PluginConfig {
 };
-
-struct Preset {
-	FilterLevel filterLevel;
-
-	int selfieSegmenterFps;
-
-	double gfEpsDb;
-	double gfEps;
-
-	double maskGamma;
-	double maskLowerBoundDb;
-	double maskLowerBound;
-	double maskUpperBoundMarginDb;
-	double maskUpperBound;
-
-	static float dbToLinearAmp(float db) noexcept { return std::pow(10.0f, db / 20.0f); }
-	static float dbToLinearPow(float db) noexcept { return std::pow(10.0f, db / 10.0f); }
-};
-
-} // namespace BackgroundRemovalLite
-} // namespace KaitoTokyo
