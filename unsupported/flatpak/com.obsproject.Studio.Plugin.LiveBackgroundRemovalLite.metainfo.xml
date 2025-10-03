@@ -2,7 +2,9 @@
 <component type="addon">
   <id>com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite</id>
   <extends>com.obsproject.Studio</extends>
-  <developer_name>Kaito Udagawa</developer_name>
+  <developer>
+    <name>Kaito Udagawa</name>
+  </developer>
   <name>Live Background Removal Lite</name>
   <summary>Live Background Removal Lite for OBS Studio</summary>
   <description>
