@@ -1,24 +1,8 @@
-/*
-Live Background Removal Lite
-Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
-
 #pragma once
 
+#include <atomic> // <--- この行を追加
 #include <memory>
+// #include <mutex> は不要なので削除
 
 #include <QComboBox>
 #include <QDialog>
@@ -33,6 +17,17 @@ namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
 class MainPluginContext;
+
+// AsyncTextureReader群を管理するための構造体
+struct DebugRenderData {
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerBgrx;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR8;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32f;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> reader256Bgrx;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerMaskRoiR8;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerSubR8;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32fSub;
+};
 
 class DebugWindow : public QDialog {
 	Q_OBJECT
@@ -59,13 +54,10 @@ private:
 	QLabel *previewImageLabel;
 	QTimer *updateTimer;
 
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerBgrx;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR8;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32f;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> reader256Bgrx;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerMaskRoiR8;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerSubR8;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32fSub;
+	// mutex と reader のポインタ群を差し替え
+	std::atomic<DebugRenderData *> atomicRenderData{nullptr};
+	std::unique_ptr<DebugRenderData> currentRenderData;
+	std::vector<std::unique_ptr<DebugRenderData>> oldRenderData; // 安全な遅延解放のため
 
 	std::vector<std::uint8_t> bufferR8;
 	std::vector<std::uint8_t> bufferSubR8;

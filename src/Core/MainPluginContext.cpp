@@ -73,7 +73,9 @@ void MainPluginContext::startup() noexcept {}
 
 void MainPluginContext::shutdown() noexcept
 {
-	debugWindow->close();
+	if (DebugWindow *_debugWindow = debugWindow.load()) {
+		_debugWindow->close();
+	}
 	renderingContext.reset();
 	selfieSegmenterTaskQueue.shutdown();
 }
@@ -154,9 +156,24 @@ obs_properties_t *MainPluginContext::getProperties()
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
 			auto self = static_cast<MainPluginContext *>(data)->shared_from_this();
-			auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
-			self->debugWindow = std::make_unique<DebugWindow>(self->weak_from_this(), parent);
-			self->debugWindow->show();
+
+			if (DebugWindow *_debugWindow = self->debugWindow.load()) {
+				_debugWindow->show();
+				_debugWindow->raise();
+				_debugWindow->activateWindow();
+			} else {
+				auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
+				DebugWindow *newDebugWindow = new DebugWindow(self->weak_from_this(), parent);
+				newDebugWindow->setAttribute(Qt::WA_DeleteOnClose);
+
+				QObject::connect(newDebugWindow, &QDialog::destroyed,
+						 [self]() { self->setDebugWindowNull(); });
+
+				self->debugWindow.store(newDebugWindow);
+
+				newDebugWindow->show();
+			}
+
 			return false;
 		},
 		this);
@@ -229,8 +246,8 @@ void MainPluginContext::videoRender()
 		nextRenderingContext->videoRender();
 	}
 
-	if (debugWindow) {
-		debugWindow->videoRender();
+	if (DebugWindow *_debugWindow = debugWindow.load()) {
+		_debugWindow->videoRender();
 	}
 }
 
@@ -249,14 +266,14 @@ try {
 	return frame;
 }
 
-std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight)
+std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std::uint32_t targetWidth,
+									    std::uint32_t targetHeight)
 {
 	PluginConfig defaultPluginConfig;
 
-	auto renderingContext = std::make_shared<RenderingContext>(
-		source, logger, mainEffect, selfieSegmenterNet, selfieSegmenterTaskQueue, defaultPluginConfig, subsamplingRate,
-		targetWidth,
-		targetHeight);
+	auto renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
+								   selfieSegmenterTaskQueue, defaultPluginConfig,
+								   subsamplingRate, targetWidth, targetHeight);
 	renderingContext->setPluginProperty(pluginProperty);
 	return renderingContext;
 }

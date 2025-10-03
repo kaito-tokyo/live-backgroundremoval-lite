@@ -96,16 +96,10 @@ private:
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 public:
-	RenderingContext(
-		obs_source_t *source,
-		const BridgeUtils::ILogger &logger,
-		const MainEffect &mainEffect,
-		const ncnn::Net &selfieSegmenterNet,
-		BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue,
-		PluginConfig pluginConfig,
-		std::uint32_t subsamplingRate,
-		std::uint32_t width,
-		std::uint32_t height);
+	RenderingContext(obs_source_t *source, const BridgeUtils::ILogger &logger, const MainEffect &mainEffect,
+			 const ncnn::Net &selfieSegmenterNet, BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue,
+			 PluginConfig pluginConfig, std::uint32_t subsamplingRate, std::uint32_t width,
+			 std::uint32_t height);
 	~RenderingContext() noexcept;
 
 	void setPluginProperty(PluginProperty newProperty);

@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #ifdef __cplusplus
 
+#include <atomic>
 #include <future>
 #include <memory>
 #include <mutex>
@@ -61,7 +62,7 @@ private:
 	std::shared_ptr<RenderingContext> nextRenderingContext;
 	std::int64_t frameCountBeforeContextSwitch = 0;
 
-	std::unique_ptr<DebugWindow> debugWindow;
+	std::atomic<DebugWindow *> debugWindow = nullptr;
 
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source,
@@ -89,6 +90,7 @@ public:
 	const BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
 
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept { return renderingContext; }
+	void setDebugWindowNull() { debugWindow = nullptr; }
 
 private:
 	std::shared_ptr<RenderingContext> createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight);

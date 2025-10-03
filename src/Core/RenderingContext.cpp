@@ -67,8 +67,8 @@ namespace BackgroundRemovalLite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
 				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-				   PluginConfig _pluginConfig, std::uint32_t _subsamplingRate,
-				   std::uint32_t _width, std::uint32_t _height)
+				   PluginConfig _pluginConfig, std::uint32_t _subsamplingRate, std::uint32_t _width,
+				   std::uint32_t _height)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
@@ -112,10 +112,10 @@ void RenderingContext::setPluginProperty(PluginProperty newPluginProperty)
 	pluginProperty = newPluginProperty;
 }
 
-
 void RenderingContext::videoTick(float seconds)
 {
-	FilterLevel filterLevel = pluginProperty.filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : pluginProperty.filterLevel;
+	FilterLevel filterLevel = pluginProperty.filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter
+										     : pluginProperty.filterLevel;
 
 	if (filterLevel >= FilterLevel::Segmentation) {
 		timeSinceLastSelfieSegmentation += seconds;
@@ -222,7 +222,8 @@ void RenderingContext::kickSegmentationTask()
 
 void RenderingContext::videoRender()
 {
-	FilterLevel filterLevel = pluginProperty.filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter : pluginProperty.filterLevel;
+	FilterLevel filterLevel = pluginProperty.filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter
+										     : pluginProperty.filterLevel;
 
 	const bool needNewFrame = doesNextVideoRenderReceiveNewFrame;
 	if (needNewFrame) {
@@ -257,8 +258,9 @@ void RenderingContext::videoRender()
 	} else if (filterLevel == FilterLevel::Segmentation) {
 		mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
 	} else if (filterLevel == FilterLevel::GuidedFilter) {
-		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(), pluginProperty.maskGamma,
-					       pluginProperty.maskLowerBound, pluginProperty.maskUpperBound);
+		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(),
+					       pluginProperty.maskGamma, pluginProperty.maskLowerBound,
+					       pluginProperty.maskUpperBound);
 	} else {
 		obs_source_skip_video_filter(source);
 		return;
