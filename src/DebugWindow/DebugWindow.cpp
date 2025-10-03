@@ -97,7 +97,7 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext
 	setLayout(layout);
 
 	connect(updateTimer, &QTimer::timeout, this, &DebugWindow::updatePreview);
-	updateTimer->start(1000 / 60); // 約30fpsで更新
+	updateTimer->start(1000 / 60);
 
 	connect(this, &DebugWindow::readerReady, this, &DebugWindow::updatePreview);
 }
@@ -106,7 +106,6 @@ DebugWindow::~DebugWindow() noexcept {}
 
 void DebugWindow::videoRender()
 {
-	// アトミックにポインタを読み込む（ロック不要）
 	DebugRenderData *renderData = atomicRenderData.load(std::memory_order_acquire);
 	if (!renderData) {
 		return;
@@ -164,7 +163,6 @@ void DebugWindow::videoRender()
 
 void DebugWindow::updatePreview()
 {
-	// 前回のフレームで破棄予定になった古いデータをここで安全に解放する
 	oldRenderData.clear();
 
 	auto mainPluginContext = weakMainPluginContext.lock();
