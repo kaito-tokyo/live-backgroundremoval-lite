@@ -8,20 +8,6 @@ separate-locales: false
 build-options:
   prefix: /app/plugins/LiveBackgroundRemovalLite
 modules:
-  - name: curl
-    buildsystem: cmake-ninja
-    builddir: true
-    config-opts:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DNCNN_SHARED_LIB=ON
-      - -DNCNN_BUILD_TESTS=OFF
-      - -DNCNN_BUILD_EXAMPLES=OFF
-      - -DNCNN_BUILD_TOOLS=OFF
-    sources:
-      - type: git
-        url: https://github.com/Tencent/ncnn.git
-        tag: '20250916'
-        commit: 'c4193aadbbb56582aa87b1850dd3d98fb8fd936d'
   - name: ncnn
     buildsystem: cmake-ninja
     builddir: true
@@ -36,10 +22,6 @@ modules:
         url: https://github.com/Tencent/ncnn.git
         tag: '20250916'
         commit: 'c4193aadbbb56582aa87b1850dd3d98fb8fd936d'
-  - name: simple
-    buildsystem: simple
-    build-commands:
-      - find /
   - name: live-backgroundremoval-lite
     buildsystem: cmake-ninja
     builddir: true
