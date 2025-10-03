@@ -13,6 +13,7 @@ modules:
     builddir: true
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_INCLUDEDIR=include
       - -DNCNN_SHARED_LIB=ON
       - -DNCNN_BUILD_TESTS=OFF
       - -DNCNN_BUILD_EXAMPLES=OFF
@@ -32,7 +33,6 @@ modules:
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
       - -DCMAKE_PREFIX_PATH=/app/plugins/LiveBackgroundRemovalLite
-      - -DCMAKE_INSTALL_INCLUDEDIR=include
       - -DENABLE_FRONTEND_API=ON
       - -DENABLE_QT=ON
       - -DUSE_PKGCONFIG=ON
