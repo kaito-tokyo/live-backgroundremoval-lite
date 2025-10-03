@@ -2,7 +2,7 @@
 <component type="addon">
   <id>com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite</id>
   <extends>com.obsproject.Studio</extends>
-  <developer>
+  <developer id="tokyo.kaito">
     <name>Kaito Udagawa</name>
   </developer>
   <name>Live Background Removal Lite</name>
