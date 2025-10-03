@@ -26,7 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string>
 #include <algorithm>
 
-#include <net.h>
+#include <ncnn/net.h>
 
 namespace KaitoTokyo {
 namespace BackgroundRemovalLite {

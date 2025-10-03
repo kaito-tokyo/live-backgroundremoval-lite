@@ -37,37 +37,45 @@ endif()
 set(VCPKG_INSTALLED_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed")
 list(PREPEND CMAKE_PREFIX_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
 
+option(USE_PKGCONFIG "Use pkg-config to find dependencies" OFF)
+
 if(USE_PKGCONFIG)
-find_package(PkgConfig REQUIRED)
+  find_package(PkgConfig REQUIRED)
 
-pkg_check_modules(PC_CURL REQUIRED libcurl)
-add_library(CURL::libcurl INTERFACE IMPORTED GLOBAL)
-set_target_properties(CURL::libcurl PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${PC_CURL_INCLUDE_DIRS}"
-  INTERFACE_LINK_LIBRARIES      "${PC_CURL_LIBRARIES}"
-  INTERFACE_COMPILE_DEFINITIONS "${PC_CURL_CFLAGS_OTHER}"
-)
+  pkg_check_modules(PC_CURL REQUIRED libcurl)
+  add_library(CURL::libcurl INTERFACE IMPORTED GLOBAL)
+  set_target_properties(
+    CURL::libcurl
+    PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${PC_CURL_INCLUDE_DIRS}"
+      INTERFACE_LINK_LIBRARIES "${PC_CURL_LIBRARIES}"
+      INTERFACE_COMPILE_DEFINITIONS "${PC_CURL_CFLAGS_OTHER}"
+  )
 
-pkg_check_modules(PC_FMT REQUIRED fmt)
-add_library(fmt::fmt INTERFACE IMPORTED GLOBAL)
-set_target_properties(fmt::fmt PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${PC_FMT_INCLUDE_DIRS}"
-  INTERFACE_LINK_LIBRARIES      "${PC_FMT_LIBRARIES}"
-  INTERFACE_COMPILE_DEFINITIONS "${PC_FMT_CFLAGS_OTHER}"
-)
+  pkg_check_modules(PC_FMT REQUIRED fmt)
+  add_library(fmt::fmt INTERFACE IMPORTED GLOBAL)
+  set_target_properties(
+    fmt::fmt
+    PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${PC_FMT_INCLUDE_DIRS}"
+      INTERFACE_LINK_LIBRARIES "${PC_FMT_LIBRARIES}"
+      INTERFACE_COMPILE_DEFINITIONS "${PC_FMT_CFLAGS_OTHER}"
+  )
 
-pkg_check_modules(PC_NCNN REQUIRED ncnn)
-add_library(ncnn::ncnn INTERFACE IMPORTED GLOBAL)
-set_target_properties(ncnn::ncnn PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${PC_NCNN_INCLUDE_DIRS}"
-  INTERFACE_LINK_LIBRARIES      "${PC_NCNN_LIBRARIES}"
-  INTERFACE_COMPILE_DEFINITIONS "${PC_NCNN_CFLAGS_OTHER}"
-)
+  pkg_check_modules(PC_NCNN REQUIRED ncnn)
+  add_library(ncnn::ncnn INTERFACE IMPORTED GLOBAL)
+  set_target_properties(
+    ncnn::ncnn
+    PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${PC_NCNN_INCLUDE_DIRS}"
+      INTERFACE_LINK_LIBRARIES "${PC_NCNN_LIBRARIES}"
+      INTERFACE_COMPILE_DEFINITIONS "${PC_NCNN_CFLAGS_OTHER}"
+  )
 else()
-find_package(Backward CONFIG)
-find_package(CURL CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-find_package(ncnn CONFIG REQUIRED)
+  find_package(Backward CONFIG)
+  find_package(CURL CONFIG REQUIRED)
+  find_package(fmt CONFIG REQUIRED)
+  find_package(ncnn CONFIG REQUIRED)
 endif()
 
 target_compile_definitions(
