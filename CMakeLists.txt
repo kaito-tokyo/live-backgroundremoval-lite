@@ -63,7 +63,7 @@ if(USE_PKGCONFIG)
   )
 
   pkg_check_modules(PC_NCNN REQUIRED ncnn)
-  add_library(ncnn::ncnn INTERFACE IMPORTED GLOBAL)
+  add_library(ncnn INTERFACE IMPORTED GLOBAL)
   set_target_properties(
     ncnn
     PROPERTIES
