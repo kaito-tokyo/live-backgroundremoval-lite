@@ -65,7 +65,7 @@ if(USE_PKGCONFIG)
   pkg_check_modules(PC_NCNN REQUIRED ncnn)
   add_library(ncnn::ncnn INTERFACE IMPORTED GLOBAL)
   set_target_properties(
-    ncnn::ncnn
+    ncnn
     PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${PC_NCNN_INCLUDE_DIRS}"
       INTERFACE_LINK_LIBRARIES "${PC_NCNN_LIBRARIES}"
