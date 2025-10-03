@@ -171,7 +171,7 @@ public:
 
 		const AsyncTextureReaderDetail::ScopedStageSurfMap mappedSurf(stagesurf);
 
-		if (!mappedSurf.data || mappedSurf.linesize < bufferLinesize) {
+		if (!mappedSurf.data || mappedSurf.linesize > bufferLinesize) {
 			throw std::runtime_error("gs_stagesurface_map returned invalid data");
 		}
 
