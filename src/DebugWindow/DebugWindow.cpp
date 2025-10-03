@@ -30,6 +30,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "../Core/MainPluginContext.h"
 #include "../Core/RenderingContext.hpp"
+#include "../BridgeUtils/ObsLogger.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
 
@@ -142,6 +143,9 @@ void DebugWindow::videoRender()
 
 		if (!readerSubR8 || readerSubR8->width != renderingContext->widthSub ||
 		    readerSubR8->height != renderingContext->heightSub) {
+			ObsLogger logger("DebugWindow: ");
+			logger.info("widthSub: {}, heightSub: {}", renderingContext->widthSub,
+				    renderingContext->heightSub);
 			readerSubR8 = std::make_unique<AsyncTextureReader>(renderingContext->widthSub,
 									   renderingContext->heightSub, GS_R8);
 		}
@@ -166,6 +170,10 @@ void DebugWindow::videoRender()
 			readerMaskRoiR8->sync();
 			readerMaskRoiR8->stage(renderingContext->r8SegmentationMask.get());
 		} else if (currentTexture == textureR8SubGFGuide) {
+
+			ObsLogger logger("DebugWindow: ");
+			logger.info("widthSub: {}, heightSub: {}", gs_texture_get_width(renderingContext->r8SubGFGuide.get()),
+				    gs_texture_get_height(renderingContext->r8SubGFGuide.get()));
 			readerSubR8->sync();
 			readerSubR8->stage(renderingContext->r8SubGFGuide.get());
 		} else if (currentTexture == textureR8SubGFSource) {
@@ -226,7 +234,9 @@ void DebugWindow::updatePreview()
 		image = QImage(readerMaskRoiR8->getBuffer().data(), readerMaskRoiR8->width, readerMaskRoiR8->height,
 			       QImage::Format_Grayscale8);
 	} else if (std::find(r8SubTextures.begin(), r8SubTextures.end(), currentTextureStd) != r8SubTextures.end()) {
-		image = QImage(readerSubR8->getBuffer().data(), readerSubR8->width, readerSubR8->height,
+		ObsLogger logger("DebugWindow: ");
+		logger.info("aaawidthSub: {}, heightSub: {}", readerSubR8->width, readerSubR8->height);
+		image = QImage(readerSubR8->getBuffer().data(), readerSubR8->width, readerSubR8->height, readerSubR8->bufferLinesize,
 			       QImage::Format_Grayscale8);
 	} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), currentTextureStd) !=
 		   r32fSubTextures.end()) {

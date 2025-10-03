@@ -49,10 +49,10 @@ private:
 	BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
 
 public:
-	const std::uint32_t width;
-	const std::uint32_t height;
 	const PluginConfig pluginConfig;
 	const std::uint32_t subsamplingRate;
+	const std::uint32_t width;
+	const std::uint32_t height;
 	const std::uint32_t widthSub;
 	const std::uint32_t heightSub;
 

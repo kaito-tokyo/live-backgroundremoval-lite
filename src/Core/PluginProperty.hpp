@@ -35,7 +35,6 @@ struct PluginProperty {
 
 	int selfieSegmenterFps;
 
-	int gfSubsamplingRate = 4;
 	double gfEpsDb;
 	double gfEps;
 

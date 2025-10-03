@@ -73,6 +73,7 @@ void MainPluginContext::startup() noexcept {}
 
 void MainPluginContext::shutdown() noexcept
 {
+	debugWindow->close();
 	renderingContext.reset();
 	selfieSegmenterTaskQueue.shutdown();
 }
