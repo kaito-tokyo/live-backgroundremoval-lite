@@ -179,7 +179,7 @@ public:
 		auto &backBuffer = cpuBuffers[backBufferIndex];
 
 		if (mappedSurf.linesize == bufferLinesize) {
-			std::memcpy(backBuffer.data(), mappedSurf.data, height * bufferLinesize);
+			std::memcpy(backBuffer.data(), mappedSurf.data, static_cast<std::size_t>(height) * bufferLinesize);
 		} else {
 			for (std::uint32_t y = 0; y < height; y++) {
 				const std::uint8_t *srcRow = mappedSurf.data + (y * mappedSurf.linesize);
