@@ -28,22 +28,24 @@ namespace KaitoTokyo {
 namespace BackgroundRemovalLite {
 
 struct PluginConfig {
-    std::string latestVersionURL = "https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
+	std::string latestVersionURL =
+		"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
 
-    static PluginConfig load() {
-        using namespace KaitoTokyo::BridgeUtils;
+	static PluginConfig load()
+	{
+		using namespace KaitoTokyo::BridgeUtils;
 
-        unique_bfree_char_t configPath(obs_module_config_path("PluginConfig.json"));
-        unique_obs_data_t data(obs_data_create_from_json_file_safe(configPath.get(), ".bak"));
+		unique_bfree_char_t configPath(obs_module_config_path("PluginConfig.json"));
+		unique_obs_data_t data(obs_data_create_from_json_file_safe(configPath.get(), ".bak"));
 
-        PluginConfig pluginConfig;
+		PluginConfig pluginConfig;
 
-        if (data) {
-            pluginConfig.latestVersionURL = obs_data_get_string(data.get(), "latestVersionURL");
-        }
+		if (data) {
+			pluginConfig.latestVersionURL = obs_data_get_string(data.get(), "latestVersionURL");
+		}
 
-        return pluginConfig;
-    }
+		return pluginConfig;
+	}
 };
 
 } // namespace BackgroundRemovalLite
