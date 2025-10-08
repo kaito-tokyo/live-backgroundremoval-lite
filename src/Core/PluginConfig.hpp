@@ -40,8 +40,12 @@ struct PluginConfig {
 
 		PluginConfig pluginConfig;
 
-		if (data) {
-			pluginConfig.latestVersionURL = obs_data_get_string(data.get(), "latestVersionURL");
+		if (!data) {
+			return pluginConfig;
+		}
+
+		if (const char *str = obs_data_get_string(data.get(), "latestVersionURL"); str) {
+			pluginConfig.latestVersionURL = str;
 		}
 
 		return pluginConfig;
