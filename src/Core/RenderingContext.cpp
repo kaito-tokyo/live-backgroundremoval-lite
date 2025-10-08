@@ -102,7 +102,6 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r32fGFTemporary1Sub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET))
 {
-	logger.info("width: {}, height: {}, widthSub: {}, heightSub: {}", width, height, widthSub, heightSub);
 }
 
 RenderingContext::~RenderingContext() noexcept {}
