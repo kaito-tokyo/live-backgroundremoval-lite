@@ -195,6 +195,10 @@ void MainPluginContext::update(obs_data_t *settings)
 	pluginProperty.maskLowerBound = PluginProperty::dbToLinearAmp(pluginProperty.maskLowerBoundDb);
 	pluginProperty.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
 	pluginProperty.maskUpperBound = 1.0 - PluginProperty::dbToLinearAmp(pluginProperty.maskUpperBoundMarginDb);
+
+	if (renderingContext) {
+		renderingContext->setPluginProperty(pluginProperty);
+	}
 }
 
 void MainPluginContext::activate() {}
