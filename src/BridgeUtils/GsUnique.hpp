@@ -19,6 +19,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #pragma once
 
 #include <deque>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -33,93 +34,61 @@ namespace BridgeUtils {
 
 namespace GsUnique {
 
+using GsResourceDeleterPair = std::pair<std::function<void(void *)>, void *>;
+
 inline std::mutex &getMutex()
 {
 	static std::mutex mtx;
 	return mtx;
 }
 
-inline std::deque<gs_effect_t *> &getEffectsDeque()
+inline std::deque<GsResourceDeleterPair> &getResourceDeque()
 {
-	static std::deque<gs_effect_t *> effectsToDelete;
-	return effectsToDelete;
+	static std::deque<GsResourceDeleterPair> resourcesToDelete;
+	return resourcesToDelete;
 }
 
-inline std::deque<gs_texture_t *> &getTexturesDeque()
+inline void scheduleResourceToDelete(void *resource, std::function<void(void *)> deleter)
 {
-	static std::deque<gs_texture_t *> texturesToDelete;
-	return texturesToDelete;
-}
-
-inline std::deque<gs_stagesurf_t *> &getStagesurfsDeque()
-{
-	static std::deque<gs_stagesurf_t *> stagesurfsToDelete;
-	return stagesurfsToDelete;
-}
-
-inline void scheduleEffectToDelete(gs_effect_t *effect)
-{
-	if (effect) {
+	if (resource) {
 		std::lock_guard lock(getMutex());
-		getEffectsDeque().push_back(effect);
-	}
-}
-
-inline void scheduleTextureToDelete(gs_texture_t *texture)
-{
-	if (texture) {
-		std::lock_guard lock(getMutex());
-		getTexturesDeque().push_back(texture);
-	}
-}
-
-inline void scheduleStagesurfToDelete(gs_stagesurf_t *surface)
-{
-	if (surface) {
-		std::lock_guard lock(getMutex());
-		getStagesurfsDeque().push_back(surface);
+		getResourceDeque().emplace_back(deleter, resource);
 	}
 }
 
 inline void drain()
 {
-	std::deque<gs_effect_t *> _effects_to_delete;
-	std::deque<gs_texture_t *> _textures_to_delete;
-	std::deque<gs_stagesurf_t *> _stagesurfs_to_delete;
+	std::deque<GsResourceDeleterPair> resources;
 	{
 		std::lock_guard lock(getMutex());
-		if (!getEffectsDeque().empty()) {
-			_effects_to_delete = std::move(getEffectsDeque());
-		}
-		if (!getTexturesDeque().empty()) {
-			_textures_to_delete = std::move(getTexturesDeque());
-		}
-		if (!getStagesurfsDeque().empty()) {
-			_stagesurfs_to_delete = std::move(getStagesurfsDeque());
-		}
+		resources = std::move(getResourceDeque());
 	}
 
-	for (gs_effect_t *effect : _effects_to_delete) {
-		gs_effect_destroy(effect);
-	}
-	for (gs_texture_t *texture : _textures_to_delete) {
-		gs_texture_destroy(texture);
-	}
-	for (gs_stagesurf_t *surface : _stagesurfs_to_delete) {
-		gs_stagesurface_destroy(surface);
+	for (const auto &pair : resources) {
+		pair.first(pair.second);
 	}
 }
 
 struct GsEffectDeleter {
-	void operator()(gs_effect_t *effect) const { scheduleEffectToDelete(effect); }
+	void operator()(gs_effect_t *effect) const
+	{
+		scheduleResourceToDelete(effect, [](void *p) { gs_effect_destroy(static_cast<gs_effect_t *>(p)); });
+	}
 };
 
 struct GsTextureDeleter {
-	void operator()(gs_texture_t *texture) const { scheduleTextureToDelete(texture); }
+	void operator()(gs_texture_t *texture) const
+	{
+		scheduleResourceToDelete(texture, [](void *p) { gs_texture_destroy(static_cast<gs_texture_t *>(p)); });
+	}
 };
 
 struct GsStagesurfDeleter {
-	void operator()(gs_stagesurf_t *surface) const { scheduleStagesurfToDelete(surface); }
+	void operator()(gs_stagesurf_t *surface) const
+	{
+		scheduleResourceToDelete(surface,
+					 [](void *p) { gs_stagesurface_destroy(static_cast<gs_stagesurf_t *>(p)); });
+	}
 };
 
 } // namespace GsUnique
