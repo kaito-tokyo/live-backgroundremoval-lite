@@ -37,7 +37,7 @@ static bool load_jpg_bgra(const std::string &filename, std::vector<uint8_t> &out
 	return true;
 }
 
-using namespace KaitoTokyo::BackgroundRemovalLite;
+using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 
 const char kParamPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation.ncnn.param";
 const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation.ncnn.bin";

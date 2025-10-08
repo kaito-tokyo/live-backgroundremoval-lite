@@ -36,7 +36,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #endif // defined(_M_ARM64) || defined(__aarch64__)
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 
 namespace {
 
@@ -222,5 +222,5 @@ void SelfieSegmenter::postprocess(std::vector<std::uint8_t> &mask) const
 	}
 }
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo

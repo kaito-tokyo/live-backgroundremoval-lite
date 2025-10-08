@@ -36,7 +36,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "PluginProperty.hpp"
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 private:
@@ -118,5 +118,5 @@ private:
 	void kickSegmentationTask();
 };
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo

@@ -86,10 +86,10 @@ target_compile_definitions(
 target_sources(
   ${CMAKE_PROJECT_NAME}
   PRIVATE
+    src/Core/DebugWindow.cpp
     src/Core/MainPluginContext_c.cpp
     src/Core/MainPluginContext.cpp
     src/Core/RenderingContext.cpp
-    src/DebugWindow/DebugWindow.cpp
     src/SelfieSegmenter/SelfieSegmenter.cpp
     src/plugin-main.c
 )
