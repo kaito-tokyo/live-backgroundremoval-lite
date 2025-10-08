@@ -27,7 +27,7 @@ namespace {
 
 std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
 {
-	using namespace KaitoTokyo::BackgroundRemovalLite;
+	using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 
 	double widthScale = static_cast<double>(SelfieSegmenter::INPUT_WIDTH) / static_cast<double>(width);
 	double heightScale = static_cast<double>(SelfieSegmenter::INPUT_HEIGHT) / static_cast<double>(height);
@@ -63,7 +63,7 @@ inline std::vector<unique_gs_texture_t> createReductionPyramid(std::uint32_t wid
 } // anonymous namespace
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
 				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
@@ -276,5 +276,5 @@ obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 	return frame;
 }
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo

@@ -27,7 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "../BridgeUtils/ObsUnique.hpp"
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 
 namespace main_effect_detail {
 
@@ -332,5 +332,5 @@ public:
 	}
 };
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo

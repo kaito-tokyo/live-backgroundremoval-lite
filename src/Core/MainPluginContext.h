@@ -39,7 +39,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "PluginProperty.hpp"
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 
 class DebugWindow;
 class RenderingContext;
@@ -93,7 +93,7 @@ private:
 	std::shared_ptr<RenderingContext> createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight);
 };
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo
 
 extern "C" {

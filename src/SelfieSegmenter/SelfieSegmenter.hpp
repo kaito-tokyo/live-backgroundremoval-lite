@@ -29,7 +29,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <ncnn/net.h>
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 namespace SelfieSegmenterDetail {
 
 /**
@@ -102,5 +102,5 @@ private:
 	void postprocess(std::vector<std::uint8_t> &mask) const;
 };
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo

@@ -27,10 +27,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <QDebug>
 
 #include "../BridgeUtils/AsyncTextureReader.hpp"
-
-#include "../Core/MainPluginContext.h"
-#include "../Core/RenderingContext.hpp"
 #include "../BridgeUtils/ObsLogger.hpp"
+
+#include "MainPluginContext.h"
+#include "RenderingContext.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
 
@@ -63,7 +63,7 @@ const std::vector<std::string> r32fSubTextures = {
 } // namespace
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 
 DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext, QWidget *parent)
 	: QDialog(parent),
@@ -298,5 +298,5 @@ void DebugWindow::updatePreview()
 	previewImageLabel->setPixmap(scaledPixmap);
 }
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo

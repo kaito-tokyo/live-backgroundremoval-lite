@@ -21,7 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <cmath>
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 
 enum class FilterLevel : int {
 	Default = 0,
@@ -48,5 +48,5 @@ struct PluginProperty {
 	static float dbToLinearPow(float db) noexcept { return std::pow(10.0f, db / 10.0f); }
 };
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo

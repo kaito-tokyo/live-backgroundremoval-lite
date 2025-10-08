@@ -31,7 +31,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "../BridgeUtils/ILogger.hpp"
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 
 class MainPluginContext;
 
@@ -78,5 +78,5 @@ private:
 	std::vector<std::uint8_t> bufferSubR8;
 };
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo

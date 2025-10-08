@@ -24,18 +24,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
-#include "../BridgeUtils/ObsLogger.hpp"
-
-#include "../DebugWindow/DebugWindow.hpp"
-#include "RenderingContext.hpp"
-#include "../BridgeUtils/ObsUnique.hpp"
 #include "../BridgeUtils/GsUnique.hpp"
+#include "../BridgeUtils/ObsLogger.hpp"
+#include "../BridgeUtils/ObsUnique.hpp"
+
+#include "DebugWindow.hpp"
+#include "RenderingContext.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::BridgeUtils;
 
 namespace KaitoTokyo {
-namespace BackgroundRemovalLite {
+namespace LiveBackgroundRemovalLite {
 
 MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source,
 				     std::shared_future<std::string> _latestVersionFuture,
@@ -278,5 +278,5 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 	return renderingContext;
 }
 
-} // namespace BackgroundRemovalLite
+} // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo
