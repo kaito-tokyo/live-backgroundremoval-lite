@@ -18,16 +18,16 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <mutex>
 #include <stdexcept>
-#include <utility>
 #include <vector>
 
-#include "ObsUnique.hpp"
 #include "GsUnique.hpp"
 
 namespace KaitoTokyo {
@@ -76,21 +76,36 @@ inline std::uint32_t getBytesPerPixel(const gs_color_format format)
 	}
 }
 
-struct ScopedStageSurfMap {
-	gs_stagesurf_t *surf = nullptr;
-	std::uint8_t *data = nullptr;
-	std::uint32_t linesize = 0;
+class ScopedStageSurfMap {
+private:
+	struct MappedData {
+		std::uint8_t *data;
+		std::uint32_t linesize;
+	};
 
-	explicit ScopedStageSurfMap(gs_stagesurf_t *surf) : surf{surf}
+	gs_stagesurf_t *const surf;
+	const MappedData mappedData;
+
+	static MappedData map(gs_stagesurf_t *surf)
 	{
 		if (!surf) {
 			throw std::invalid_argument("Target surface cannot be null.");
 		}
-		if (!gs_stagesurface_map(surf, &data, &linesize)) {
-			surf = nullptr;
+
+		MappedData mappedData;
+		if (!gs_stagesurface_map(surf, &mappedData.data, &mappedData.linesize)) {
 			throw std::runtime_error("gs_stagesurface_map failed");
 		}
+
+		if (mappedData.data == nullptr) {
+			throw std::runtime_error("gs_stagesurface_map returned null data");
+		}
+
+		return mappedData;
 	}
+
+public:
+	explicit ScopedStageSurfMap(gs_stagesurf_t *_surf) : surf{_surf}, mappedData{map(surf)} {}
 
 	~ScopedStageSurfMap() noexcept
 	{
@@ -103,127 +118,27 @@ struct ScopedStageSurfMap {
 	ScopedStageSurfMap &operator=(const ScopedStageSurfMap &) = delete;
 	ScopedStageSurfMap(ScopedStageSurfMap &&) = delete;
 	ScopedStageSurfMap &operator=(ScopedStageSurfMap &&) = delete;
+
+	const std::uint8_t *getData() const noexcept { return mappedData.data; }
+
+	std::uint32_t getLinesize() const noexcept { return mappedData.linesize; }
 };
 
 } // namespace AsyncTextureReaderDetail
 
 /**
  * @class AsyncTextureReader
- * @brief Manages a double buffer of staging surfaces to read GPU texture data efficiently on the CPU.
+ * @brief A double-buffering pipeline for asynchronously reading GPU textures to the CPU.
  *
- * This class implements a pipeline to copy texture data from the GPU to CPU-accessible memory
- * without stalling the render thread. The typical workflow is:
- * 1. Call stage() from the render thread to schedule a copy of a GPU texture.
- * 2. Call sync() from a CPU thread to synchronize the internal buffer with the latest staged texture data.
- * 3. Access the pixel data using getBuffer().
- *
- * This class is thread-safe. `stage()` can be called from one thread (e.g., render thread)
- * while `sync()` and `getBuffer()` are called from another (e.g., CPU worker thread).
- * `getBuffer()` provides lock-free access to the most recently synced data.
+ * Efficiently copies GPU texture contents to CPU memory without blocking the render thread.
+ * Provides thread-safe data access by calling stage() from a render/GPU thread
+ * and sync()/getBuffer() from a CPU thread.
  */
 class AsyncTextureReader {
 public:
-	/**
-     * @brief Constructs the AsyncTextureReader and allocates all necessary resources.
-     * @param width The width of the textures to be read.
-     * @param height The height of the textures to be read.
-     * @param format The color format of the textures.
-     */
-	AsyncTextureReader(const std::uint32_t width, const std::uint32_t height, const gs_color_format format)
-		: width(width),
-		  height(height),
-		  bufferLinesize(width * AsyncTextureReaderDetail::getBytesPerPixel(format)),
-		  cpuBuffers{std::vector<std::uint8_t>(height * bufferLinesize),
-			     std::vector<std::uint8_t>(height * bufferLinesize)},
-		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
-			     BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
-	{
-	}
-
-	/**
-     * @brief Schedules a non-blocking copy of a GPU texture to the next available staging surface.
-     * This method is designed to be called from a high-frequency thread (e.g., the OBS render thread).
-     * @param sourceTexture A pointer to the GPU texture to be copied.
-     */
-	void stage(gs_texture_t *sourceTexture) noexcept
-	{
-		std::lock_guard<std::mutex> lock(gpuMutex);
-		gs_stage_texture(stagesurfs[gpuWriteIndex].get(), sourceTexture);
-		gpuWriteIndex = 1 - gpuWriteIndex;
-	}
-
-	/**
-     * @brief Synchronizes the internal CPU buffer with the latest fully staged texture.
-     *
-     * This method maps the most recently completed staging surface, copies its pixel data
-     * to an internal CPU back buffer, and then atomically makes that buffer available for reading.
-     * This can be a potentially expensive operation due to GPU-CPU data transfer.
-     * @throws std::runtime_error if mapping the staging surface fails or returns invalid data.
-     */
-	void sync()
-	{
-		std::size_t gpuReadIndex;
-		{
-			std::lock_guard<std::mutex> lock(gpuMutex);
-			gpuReadIndex = 1 - gpuWriteIndex;
-		}
-		gs_stagesurf_t *const stagesurf = stagesurfs[gpuReadIndex].get();
-
-		const AsyncTextureReaderDetail::ScopedStageSurfMap mappedSurf(stagesurf);
-
-		if (!mappedSurf.data || mappedSurf.linesize > bufferLinesize) {
-			throw std::runtime_error("gs_stagesurface_map returned invalid data");
-		}
-
-		const std::size_t backBufferIndex = 1 - activeCpuBufferIndex.load(std::memory_order_acquire);
-		auto &backBuffer = cpuBuffers[backBufferIndex];
-
-		if (mappedSurf.linesize == bufferLinesize) {
-			std::memcpy(backBuffer.data(), mappedSurf.data,
-				    static_cast<std::size_t>(height) * bufferLinesize);
-		} else {
-			for (std::uint32_t y = 0; y < height; y++) {
-				const std::uint8_t *srcRow = mappedSurf.data + (y * mappedSurf.linesize);
-				std::uint8_t *dstRow = backBuffer.data() + (y * bufferLinesize);
-				std::memcpy(dstRow, srcRow, bufferLinesize);
-			}
-		}
-
-		activeCpuBufferIndex.store(backBufferIndex, std::memory_order_release);
-	}
-
-	/**
-     * @brief Gets read-only access to the internal CPU buffer containing the latest pixel data.
-     * This operation is lock-free and provides immediate access to the most recently synced frame.
-     * @return A constant reference to the active pixel data buffer.
-     */
-	const std::vector<std::uint8_t> &getBuffer() const noexcept
-	{
-		return cpuBuffers[activeCpuBufferIndex.load(std::memory_order_acquire)];
-	}
-
-	/**
-     * @brief Gets the width of the texture.
-     * @return The width in pixels.
-     */
-	std::uint32_t getWidth() const noexcept { return width; }
-
-	/**
-     * @brief Gets the height of the texture.
-     * @return The height in pixels.
-     */
-	std::uint32_t getHeight() const noexcept { return height; }
-
-	/**
-     * @brief Gets the line size (stride) of the internal CPU buffer in bytes.
-     * @return The number of bytes per row in the buffer.
-     */
-	std::uint32_t getBufferLinesize() const noexcept { return bufferLinesize; }
-
-public:
 	const std::uint32_t width;
 	const std::uint32_t height;
-	const std::uint32_t bufferLinesize;
+	const std::uint32_t dstLinesize;
 
 private:
 	std::array<std::vector<std::uint8_t>, 2> cpuBuffers;
@@ -232,6 +147,83 @@ private:
 	std::array<BridgeUtils::unique_gs_stagesurf_t, 2> stagesurfs;
 	std::size_t gpuWriteIndex = 0;
 	std::mutex gpuMutex;
+
+public:
+	/**
+    * @brief Constructs the AsyncTextureReader and allocates all necessary resources.
+    * @param width The width of the textures to be read.
+    * @param height The height of the textures to be read.
+    * @param format The color format of the textures.
+    */
+	AsyncTextureReader(const std::uint32_t _width, const std::uint32_t _height, const gs_color_format format)
+		: width(_width),
+		  height(_height),
+		  dstLinesize(_width * AsyncTextureReaderDetail::getBytesPerPixel(format)),
+		  cpuBuffers{std::vector<std::uint8_t>(height * dstLinesize),
+			     std::vector<std::uint8_t>(height * dstLinesize)},
+		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
+			     BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
+	{
+	}
+
+	/**
+   * @brief Schedules a GPU texture copy. Call from the render/GPU thread.
+   * @param sourceTexture The source GPU texture to copy.
+   */
+	void stage(const unique_gs_texture_t &sourceTexture) noexcept
+	{
+		std::lock_guard<std::mutex> lock(gpuMutex);
+		gs_stage_texture(stagesurfs[gpuWriteIndex].get(), sourceTexture.get());
+		gpuWriteIndex = 1 - gpuWriteIndex;
+	}
+
+	/**
+   * @brief Synchronizes the latest texture data to the CPU buffer. Call from a CPU thread.
+   *
+   * This is a potentially expensive operation due to GPU-to-CPU data transfer.
+   * @throws std::runtime_error If mapping the staging surface fails.
+   */
+	void sync()
+	{
+		using namespace AsyncTextureReaderDetail;
+
+		std::size_t gpuReadIndex;
+		{
+			std::lock_guard<std::mutex> lock(gpuMutex);
+			gpuReadIndex = 1 - gpuWriteIndex;
+		}
+		gs_stagesurf_t *const stagesurf = stagesurfs[gpuReadIndex].get();
+
+		const ScopedStageSurfMap mappedSurf(stagesurf);
+
+		const std::size_t backBufferIndex = 1 - activeCpuBufferIndex.load(std::memory_order_acquire);
+		auto &backBuffer = cpuBuffers[backBufferIndex];
+
+		if (dstLinesize == mappedSurf.getLinesize()) {
+			std::memcpy(backBuffer.data(), mappedSurf.getData(),
+				    static_cast<std::size_t>(height) * dstLinesize);
+		} else {
+			for (std::uint32_t y = 0; y < height; y++) {
+				const std::uint8_t *srcRow = mappedSurf.getData() + (y * mappedSurf.getLinesize());
+				std::uint8_t *dstRow = backBuffer.data() + (y * dstLinesize);
+				std::size_t copyBytes = std::min<std::size_t>(dstLinesize, mappedSurf.getLinesize());
+				std::memcpy(dstRow, srcRow, copyBytes);
+			}
+		}
+
+		activeCpuBufferIndex.store(backBufferIndex, std::memory_order_release);
+	}
+
+	/**
+   * @brief Gets a reference to the CPU buffer with the synced pixel data.
+   *
+   * This operation is lock-free for immediate data access.
+   * @return A read-only buffer containing the latest pixel data.
+   */
+	const std::vector<std::uint8_t> &getBuffer() const noexcept
+	{
+		return cpuBuffers[activeCpuBufferIndex.load(std::memory_order_acquire)];
+	}
 };
 
 } // namespace BridgeUtils
