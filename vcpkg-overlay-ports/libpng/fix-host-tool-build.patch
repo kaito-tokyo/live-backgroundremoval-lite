@@ -1,0 +1,21 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 249d04c..85ad9fe 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1021,6 +1021,8 @@ function(create_symlink DEST_FILE)
+ endfunction()
+ 
+ # Create source generation scripts.
++set(PNG_BACKUP_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
++set(CMAKE_C_FLAGS "" CACHE INTERNAL "Empty CFLAGS for host tool generation")
+ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/genchk.cmake.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/scripts/cmake/genchk.cmake"
+                @ONLY)
+@@ -1030,6 +1032,7 @@ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/genout.cmake.in"
+ configure_file("${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/gensrc.cmake.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/scripts/cmake/gensrc.cmake"
+                @ONLY)
++set(CMAKE_C_FLAGS "${PNG_BACKUP_CMAKE_C_FLAGS}" CACHE INTERNAL "Restore CFLAGS")
+ 
+ # libpng is a library so default to 'lib'
+ if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
