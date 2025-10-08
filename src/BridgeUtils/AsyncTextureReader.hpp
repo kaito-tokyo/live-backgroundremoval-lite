@@ -138,7 +138,7 @@ class AsyncTextureReader {
 public:
 	const std::uint32_t width;
 	const std::uint32_t height;
-	const std::uint32_t dstLinesize;
+	const std::uint32_t bufferLinesize;
 
 private:
 	std::array<std::vector<std::uint8_t>, 2> cpuBuffers;
@@ -158,9 +158,9 @@ public:
 	AsyncTextureReader(const std::uint32_t _width, const std::uint32_t _height, const gs_color_format format)
 		: width(_width),
 		  height(_height),
-		  dstLinesize(_width * AsyncTextureReaderDetail::getBytesPerPixel(format)),
-		  cpuBuffers{std::vector<std::uint8_t>(height * dstLinesize),
-			     std::vector<std::uint8_t>(height * dstLinesize)},
+		  bufferLinesize(_width * AsyncTextureReaderDetail::getBytesPerPixel(format)),
+		  cpuBuffers{std::vector<std::uint8_t>(static_cast<std::size_t>(height) * bufferLinesize),
+			     std::vector<std::uint8_t>(static_cast<std::size_t>(height) * bufferLinesize)},
 		  stagesurfs{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
 			     BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
 	{
@@ -199,14 +199,14 @@ public:
 		const std::size_t backBufferIndex = 1 - activeCpuBufferIndex.load(std::memory_order_acquire);
 		auto &backBuffer = cpuBuffers[backBufferIndex];
 
-		if (dstLinesize == mappedSurf.getLinesize()) {
+		if (bufferLinesize == mappedSurf.getLinesize()) {
 			std::memcpy(backBuffer.data(), mappedSurf.getData(),
-				    static_cast<std::size_t>(height) * dstLinesize);
+				    static_cast<std::size_t>(height) * bufferLinesize);
 		} else {
 			for (std::uint32_t y = 0; y < height; y++) {
 				const std::uint8_t *srcRow = mappedSurf.getData() + (y * mappedSurf.getLinesize());
-				std::uint8_t *dstRow = backBuffer.data() + (y * dstLinesize);
-				std::size_t copyBytes = std::min<std::size_t>(dstLinesize, mappedSurf.getLinesize());
+				std::uint8_t *dstRow = backBuffer.data() + (y * bufferLinesize);
+				std::size_t copyBytes = std::min<std::size_t>(bufferLinesize, mappedSurf.getLinesize());
 				std::memcpy(dstRow, srcRow, copyBytes);
 			}
 		}

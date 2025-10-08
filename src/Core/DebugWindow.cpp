@@ -228,12 +228,12 @@ void DebugWindow::updatePreview()
 			currentRenderData->readerBgrx->sync();
 			image = QImage(currentRenderData->readerBgrx->getBuffer().data(),
 				       currentRenderData->readerBgrx->width, currentRenderData->readerBgrx->height,
-				       currentRenderData->readerBgrx->dstLinesize, QImage::Format_RGB32);
+				       currentRenderData->readerBgrx->bufferLinesize, QImage::Format_RGB32);
 		} else if (std::find(r8Textures.begin(), r8Textures.end(), currentTextureStd) != r8Textures.end()) {
 			currentRenderData->readerR8->sync();
 			image = QImage(currentRenderData->readerR8->getBuffer().data(),
 				       currentRenderData->readerR8->width, currentRenderData->readerR8->height,
-				       currentRenderData->readerR8->dstLinesize, QImage::Format_Grayscale8);
+				       currentRenderData->readerR8->bufferLinesize, QImage::Format_Grayscale8);
 		} else if (std::find(r32fTextures.begin(), r32fTextures.end(), currentTextureStd) !=
 			   r32fTextures.end()) {
 			currentRenderData->readerR32f->sync();
@@ -252,20 +252,20 @@ void DebugWindow::updatePreview()
 			image = QImage(currentRenderData->reader256Bgrx->getBuffer().data(),
 				       currentRenderData->reader256Bgrx->width,
 				       currentRenderData->reader256Bgrx->height,
-				       currentRenderData->reader256Bgrx->dstLinesize, QImage::Format_RGB32);
+				       currentRenderData->reader256Bgrx->bufferLinesize, QImage::Format_RGB32);
 		} else if (std::find(r8MaskRoiTextures.begin(), r8MaskRoiTextures.end(), currentTextureStd) !=
 			   r8MaskRoiTextures.end()) {
 			currentRenderData->readerMaskRoiR8->sync();
 			image = QImage(currentRenderData->readerMaskRoiR8->getBuffer().data(),
 				       currentRenderData->readerMaskRoiR8->width,
 				       currentRenderData->readerMaskRoiR8->height,
-				       currentRenderData->readerMaskRoiR8->dstLinesize, QImage::Format_Grayscale8);
+				       currentRenderData->readerMaskRoiR8->bufferLinesize, QImage::Format_Grayscale8);
 		} else if (std::find(r8SubTextures.begin(), r8SubTextures.end(), currentTextureStd) !=
 			   r8SubTextures.end()) {
 			currentRenderData->readerSubR8->sync();
 			image = QImage(currentRenderData->readerSubR8->getBuffer().data(),
 				       currentRenderData->readerSubR8->width, currentRenderData->readerSubR8->height,
-				       currentRenderData->readerSubR8->dstLinesize, QImage::Format_Grayscale8);
+				       currentRenderData->readerSubR8->bufferLinesize, QImage::Format_Grayscale8);
 		} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), currentTextureStd) !=
 			   r32fSubTextures.end()) {
 			currentRenderData->readerR32fSub->sync();
