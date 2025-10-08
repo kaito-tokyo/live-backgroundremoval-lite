@@ -20,8 +20,8 @@
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <releases>
-  <release version="1.8.4" date="2025-10-08" />
-  <release version="1.8.3" date="2025-10-04" />
+    <release version="1.8.4" date="2025-10-08" />
+    <release version="1.8.3" date="2025-10-04" />
     <release version="1.8.2" date="2025-10-04" />
     <release version="1.8.1" date="2025-10-02" />
     <release version="1.8.0" date="2025-10-01" />
