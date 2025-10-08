@@ -23,4 +23,3 @@ jobs:
         with:
           stale-issue-message: 'This issue has been automatically marked as stale due to inactivity. If you believe this issue is still relevant, please comment or take action to prevent it from being closed.'
           stale-pr-message: 'This pull request has been automatically marked as stale due to inactivity. If you would like to keep it open, please comment or update the PR to prevent it from being closed.'
-    
