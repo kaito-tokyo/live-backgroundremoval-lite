@@ -267,7 +267,7 @@ void RenderingContext::videoRender()
 	}
 
 	if (needNewFrame && filterLevel >= FilterLevel::Segmentation) {
-		readerSegmenterInput.stage(bgrxSegmenterInput.get());
+		readerSegmenterInput.stage(bgrxSegmenterInput);
 	}
 }
 
