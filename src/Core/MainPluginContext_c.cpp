@@ -17,14 +17,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "MainPluginContext.h"
-#include "UpdateChecker/UpdateChecker.hpp"
-#include <future>
 
 #include <stdexcept>
 
 #include <obs-module.h>
 
-#include "BridgeUtils/GsUnique.hpp"
+#include "../BridgeUtils/GsUnique.hpp"
+#include "../BridgeUtils/ObsLogger.hpp"
+#include "../UpdateChecker/UpdateChecker.hpp"
+
+#include "PluginConfig.hpp"
+
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::BackgroundRemovalLite;
 
@@ -43,10 +46,10 @@ inline const ILogger &logger()
 bool main_plugin_context_module_load()
 try {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
+	PluginConfig pluginConfig(PluginConfig::load());
 	latestVersionFuture =
-		std::async(std::launch::async, [] {
-			return KaitoTokyo::UpdateChecker::fetchLatestVersion(
-				"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt");
+		std::async(std::launch::async, [&pluginConfig] {
+			return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
 		}).share();
 	return true;
 } catch (const std::exception &e) {

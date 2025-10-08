@@ -24,12 +24,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
-#include "BridgeUtils/ObsLogger.hpp"
+#include "../BridgeUtils/ObsLogger.hpp"
 
 #include "../DebugWindow/DebugWindow.hpp"
 #include "RenderingContext.hpp"
-#include "BridgeUtils/ObsUnique.hpp"
-#include "BridgeUtils/GsUnique.hpp"
+#include "../BridgeUtils/ObsUnique.hpp"
+#include "../BridgeUtils/GsUnique.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::BridgeUtils;

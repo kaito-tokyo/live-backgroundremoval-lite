@@ -26,7 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <QTimer>
 #include <QDebug>
 
-#include "BridgeUtils/AsyncTextureReader.hpp"
+#include "../BridgeUtils/AsyncTextureReader.hpp"
 
 #include "../Core/MainPluginContext.h"
 #include "../Core/RenderingContext.hpp"
