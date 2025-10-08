@@ -27,8 +27,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <utility>
 #include <vector>
 
-#include "BridgeUtils/ObsUnique.hpp"
-#include "BridgeUtils/GsUnique.hpp"
+#include "ObsUnique.hpp"
+#include "GsUnique.hpp"
 
 namespace KaitoTokyo {
 namespace BridgeUtils {

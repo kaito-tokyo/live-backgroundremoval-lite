@@ -24,10 +24,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <ncnn/net.h>
 
-#include "BridgeUtils/AsyncTextureReader.hpp"
-#include "BridgeUtils/GsUnique.hpp"
-#include "BridgeUtils/ILogger.hpp"
-#include "BridgeUtils/ThrottledTaskQueue.hpp"
+#include "../BridgeUtils/AsyncTextureReader.hpp"
+#include "../BridgeUtils/GsUnique.hpp"
+#include "../BridgeUtils/ILogger.hpp"
+#include "../BridgeUtils/ThrottledTaskQueue.hpp"
 
 #include "../SelfieSegmenter/SelfieSegmenter.hpp"
 

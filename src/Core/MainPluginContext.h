@@ -27,14 +27,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <atomic>
 #include <future>
 #include <memory>
-#include <mutex>
-#include <vector>
 
 #include <ncnn/net.h>
 
-#include "BridgeUtils/GsUnique.hpp"
-#include "BridgeUtils/ObsLogger.hpp"
-#include "BridgeUtils/ThrottledTaskQueue.hpp"
+#include "../BridgeUtils/ILogger.hpp"
+#include "../BridgeUtils/ThrottledTaskQueue.hpp"
 
 #include "../SelfieSegmenter/SelfieSegmenter.hpp"
 

@@ -18,4 +18,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-struct PluginConfig {};
+#include <string>
+
+#include <obs-module.h>
+
+#include "../BridgeUtils/ObsUnique.hpp"
+
+namespace KaitoTokyo {
+namespace BackgroundRemovalLite {
+
+struct PluginConfig {
+    std::string latestVersionURL = "https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
+
+    static PluginConfig load() {
+        using namespace KaitoTokyo::BridgeUtils;
+
+        unique_bfree_char_t configPath(obs_module_config_path("PluginConfig.json"));
+        unique_obs_data_t data(obs_data_create_from_json_file_safe(configPath.get(), ".bak"));
+
+        PluginConfig pluginConfig;
+
+        if (data) {
+            pluginConfig.latestVersionURL = obs_data_get_string(data.get(), "latestVersionURL");
+        }
+
+        return pluginConfig;
+    }
+};
+
+} // namespace BackgroundRemovalLite
+} // namespace KaitoTokyo

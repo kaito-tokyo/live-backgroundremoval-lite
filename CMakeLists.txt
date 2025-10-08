@@ -98,7 +98,6 @@ if(Backward_FOUND)
   target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Backward::Backward)
   target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE HAVE_BACKWARD)
 endif()
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
