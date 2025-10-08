@@ -46,9 +46,9 @@ inline const ILogger &logger()
 bool main_plugin_context_module_load()
 try {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
-	PluginConfig pluginConfig(PluginConfig::load());
 	latestVersionFuture =
-		std::async(std::launch::async, [&pluginConfig] {
+		std::async(std::launch::async, [] {
+			PluginConfig pluginConfig(PluginConfig::load());
 			return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
 		}).share();
 	return true;
