@@ -40,6 +40,11 @@ public:
 	ILogger() noexcept = default;
 	virtual ~ILogger() noexcept = default;
 
+	// Prohibit copying
+	ILogger(const ILogger &) = delete;
+	ILogger &operator=(const ILogger &) = delete;
+
+	// Prohibit moving
 	ILogger(ILogger &&) = delete;
 	ILogger &operator=(ILogger &&) = delete;
 
@@ -65,7 +70,7 @@ public:
 
 #ifdef HAVE_BACKWARD
 
-	virtual void logException(const std::exception &e, std::string_view context) const noexcept
+	void logException(const std::exception &e, std::string_view context) const noexcept
 	try {
 		std::stringstream ss;
 		ss << context.data() << ": " << e.what() << "\n";
@@ -85,7 +90,7 @@ public:
 
 #else // !HAVE_BACKWARD
 
-	virtual void logException(const std::exception &e, std::string_view context) const noexcept
+	void logException(const std::exception &e, std::string_view context) const noexcept
 	{
 		error("{}: {}", context, e.what());
 	}
@@ -108,9 +113,9 @@ private:
 		fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
 		log(level, {buffer.data(), buffer.size()});
 	} catch (const std::exception &e) {
-		fprintf(stderr, "%s: [LOGGER FATAL] Failed to format log message: %s\n", getPrefix(), e.what());
+		fprintf(stderr, "[%s] [LOGGER FATAL] Failed to format log message: %s\n", getPrefix(), e.what());
 	} catch (...) {
-		fprintf(stderr, "%s: [LOGGER FATAL] An unknown error occurred while formatting log message.\n",
+		fprintf(stderr, "[%s] [LOGGER FATAL] An unknown error occurred while formatting log message.\n",
 			getPrefix());
 	}
 };
