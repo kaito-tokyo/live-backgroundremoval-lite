@@ -208,30 +208,42 @@ void MainPluginContext::update(obs_data_t *settings)
 
 void MainPluginContext::activate()
 {
-	MainPluginState _mainPluginState = mainPluginState.load();
-	_mainPluginState.isActive = true;
-	mainPluginState.store(_mainPluginState);
+	MainPluginState current = mainPluginState.load();
+	MainPluginState desired;
+	do {
+		desired = current;
+		desired.isActive = true;
+	} while (!mainPluginState.compare_exchange_weak(current, desired, std::memory_order_release, std::memory_order_relaxed));
 }
 
 void MainPluginContext::deactivate()
 {
-	MainPluginState _mainPluginState = mainPluginState.load();
-	_mainPluginState.isActive = false;
-	mainPluginState.store(_mainPluginState);
+	MainPluginState current = mainPluginState.load();
+	MainPluginState desired;
+	do {
+		desired = current;
+		desired.isActive = false;
+	} while (!mainPluginState.compare_exchange_weak(current, desired, std::memory_order_release, std::memory_order_relaxed));
 }
 
 void MainPluginContext::show()
 {
-	MainPluginState _mainPluginState = mainPluginState.load();
-	_mainPluginState.isVisible = true;
-	mainPluginState.store(_mainPluginState);
+	MainPluginState current = mainPluginState.load();
+	MainPluginState desired;
+	do {
+		desired = current;
+		desired.isVisible = true;
+	} while (!mainPluginState.compare_exchange_weak(current, desired, std::memory_order_release, std::memory_order_relaxed));
 }
 
 void MainPluginContext::hide()
 {
-	MainPluginState _mainPluginState = mainPluginState.load();
-	_mainPluginState.isVisible = false;
-	mainPluginState.store(_mainPluginState);
+	MainPluginState current = mainPluginState.load();
+	MainPluginState desired;
+	do {
+		desired = current;
+		desired.isVisible = false;
+	} while (!mainPluginState.compare_exchange_weak(current, desired, std::memory_order_release, std::memory_order_relaxed));
 }
 
 void MainPluginContext::videoTick(float seconds)

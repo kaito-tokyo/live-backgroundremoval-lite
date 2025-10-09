@@ -64,6 +64,7 @@ private:
 	mutable std::mutex renderingContextMutex;
 	std::shared_ptr<RenderingContext> renderingContext;
 
+	// MainPluginState is trivially copyable struct
 	std::atomic<MainPluginState> mainPluginState;
 
 	std::atomic<DebugWindow *> debugWindow = nullptr;
