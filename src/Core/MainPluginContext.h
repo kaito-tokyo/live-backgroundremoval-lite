@@ -90,12 +90,6 @@ public:
 
 	const BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
 
-	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept
-	{
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		return renderingContext;
-	}
-
 	void setDebugWindowNull() { debugWindow = nullptr; }
 
 private:

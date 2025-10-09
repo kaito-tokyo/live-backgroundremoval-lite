@@ -201,7 +201,12 @@ void MainPluginContext::update(obs_data_t *settings)
 	pluginProperty.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
 	pluginProperty.maskUpperBound = 1.0 - PluginProperty::dbToLinearAmp(pluginProperty.maskUpperBoundMarginDb);
 
-	if (auto _renderingContext = getRenderingContext()) {
+	std::shared_ptr<RenderingContext> _renderingContext;
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		_renderingContext = renderingContext;
+	}
+	if (_renderingContext) {
 		_renderingContext->setPluginProperty(pluginProperty);
 	}
 }
@@ -250,16 +255,16 @@ void MainPluginContext::videoTick(float seconds)
 		return;
 	}
 
-	auto _renderingContext = getRenderingContext();
-	if (!_renderingContext || _renderingContext->width != targetWidth ||
-	    _renderingContext->height != targetHeight) {
-		GraphicsContextGuard graphicsContextGuard;
-		_renderingContext = createRenderingContext(targetWidth, targetHeight);
-		{
-			std::lock_guard<std::mutex> lock(renderingContextMutex);
-			renderingContext = _renderingContext;
+	std::shared_ptr<RenderingContext> _renderingContext;
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		if (!renderingContext || renderingContext->width != targetWidth ||
+			renderingContext->height != targetHeight) {
+			GraphicsContextGuard graphicsContextGuard;
+			renderingContext = createRenderingContext(targetWidth, targetHeight);
+			GsUnique::drain();
 		}
-		GsUnique::drain();
+		_renderingContext = renderingContext;
 	}
 
 	if (_renderingContext) {
@@ -276,7 +281,12 @@ void MainPluginContext::videoRender()
 		return;
 	}
 
-	if (auto _renderingContext = getRenderingContext()) {
+	std::shared_ptr<RenderingContext> _renderingContext;
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		_renderingContext = renderingContext;
+	}
+	if (_renderingContext) {
 		_renderingContext->videoRender();
 	}
 
@@ -294,7 +304,12 @@ try {
 		return frame;
 	}
 
-	if (auto _renderingContext = getRenderingContext()) {
+	std::shared_ptr<RenderingContext> _renderingContext;
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		_renderingContext = renderingContext;
+	}
+	if (_renderingContext) {
 		return _renderingContext->filterVideo(frame);
 	} else {
 		return frame;
