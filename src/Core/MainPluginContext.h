@@ -61,6 +61,9 @@ private:
 
 	std::atomic<DebugWindow *> debugWindow = nullptr;
 
+	std::atomic<bool> isActive;
+	std::atomic<bool> isVisible;
+
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source,
 			  std::shared_future<std::string> latestVersionFuture, const BridgeUtils::ILogger &logger);

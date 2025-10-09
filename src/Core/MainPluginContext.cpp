@@ -201,16 +201,31 @@ void MainPluginContext::update(obs_data_t *settings)
 	}
 }
 
-void MainPluginContext::activate() {}
+void MainPluginContext::activate() {
+	isActive = true;
+}
 
-void MainPluginContext::deactivate() {}
+void MainPluginContext::deactivate() {
+	isActive = false;
+}
 
-void MainPluginContext::show() {}
+void MainPluginContext::show() {
+	isVisible = true;
+}
 
-void MainPluginContext::hide() {}
+void MainPluginContext::hide() {
+	isVisible = false;
+}
 
 void MainPluginContext::videoTick(float seconds)
 {
+	if (!isActive.load()) {
+        if (renderingContext) {
+            renderingContext.reset();
+        }
+        return;
+    }
+
 	obs_source_t *target = obs_filter_get_target(source);
 	uint32_t targetWidth = obs_source_get_width(target);
 	uint32_t targetHeight = obs_source_get_height(target);
@@ -257,6 +272,10 @@ void MainPluginContext::videoRender()
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 try {
+    if (!isActive.load() || !isVisible.load()) {
+        return frame;
+    }
+
 	if (renderingContext) {
 		return renderingContext->filterVideo(frame);
 	} else {
