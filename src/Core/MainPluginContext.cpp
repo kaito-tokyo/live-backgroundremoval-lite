@@ -208,27 +208,37 @@ void MainPluginContext::update(obs_data_t *settings)
 
 void MainPluginContext::activate()
 {
-	isActive = true;
+	MainPluginState _mainPluginState = mainPluginState.load();
+	_mainPluginState.isActive = true;
+	mainPluginState.store(_mainPluginState);
 }
 
 void MainPluginContext::deactivate()
 {
-	isActive = false;
+	MainPluginState _mainPluginState = mainPluginState.load();
+	_mainPluginState.isActive = false;
+	mainPluginState.store(_mainPluginState);
 }
 
 void MainPluginContext::show()
 {
-	isVisible = true;
+	MainPluginState _mainPluginState = mainPluginState.load();
+	_mainPluginState.isVisible = true;
+	mainPluginState.store(_mainPluginState);
 }
 
 void MainPluginContext::hide()
 {
-	isVisible = false;
+	MainPluginState _mainPluginState = mainPluginState.load();
+	_mainPluginState.isVisible = false;
+	mainPluginState.store(_mainPluginState);
 }
 
 void MainPluginContext::videoTick(float seconds)
 {
-	if (!isActive.load()) {
+	MainPluginState _mainPluginState = mainPluginState.load();
+
+	if (!_mainPluginState.isActive) {
 		std::lock_guard<std::mutex> lock(renderingContextMutex);
 		if (renderingContext) {
 			renderingContext.reset();
@@ -269,7 +279,9 @@ void MainPluginContext::videoTick(float seconds)
 
 void MainPluginContext::videoRender()
 {
-	if (!isActive.load() || !isVisible.load()) {
+	MainPluginState _mainPluginState = mainPluginState.load();
+
+	if (!_mainPluginState.isActive || !_mainPluginState.isVisible) {
 		return;
 	}
 
@@ -284,7 +296,9 @@ void MainPluginContext::videoRender()
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 try {
-	if (!isActive.load() || !isVisible.load()) {
+	MainPluginState _mainPluginState = mainPluginState.load();
+
+	if (!_mainPluginState.isActive || !_mainPluginState.isVisible) {
 		return frame;
 	}
 

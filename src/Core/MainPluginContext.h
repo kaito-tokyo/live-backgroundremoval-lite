@@ -45,6 +45,11 @@ namespace LiveBackgroundRemovalLite {
 class DebugWindow;
 class RenderingContext;
 
+struct MainPluginState {
+	bool isActive = false;
+	bool isVisible = false;
+};
+
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
 private:
 	obs_source_t *const source;
@@ -59,8 +64,7 @@ private:
 	mutable std::mutex renderingContextMutex;
 	std::shared_ptr<RenderingContext> renderingContext;
 
-	std::atomic<bool> isActive = false;
-	std::atomic<bool> isVisible = false;
+	std::atomic<MainPluginState> mainPluginState;
 
 	std::atomic<DebugWindow *> debugWindow = nullptr;
 
@@ -94,7 +98,7 @@ public:
 		std::lock_guard<std::mutex> lock(renderingContextMutex);
 		return renderingContext;
 	}
-	
+
 	void setDebugWindowNull() { debugWindow = nullptr; }
 
 private:
