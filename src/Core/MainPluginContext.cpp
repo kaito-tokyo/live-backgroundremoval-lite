@@ -208,49 +208,29 @@ void MainPluginContext::update(obs_data_t *settings)
 
 void MainPluginContext::activate()
 {
-	MainPluginState current = mainPluginState.load();
-	MainPluginState desired;
-	do {
-		desired = current;
-		desired.isActive = true;
-	} while (!mainPluginState.compare_exchange_weak(current, desired, std::memory_order_release, std::memory_order_relaxed));
+	pluginState.fetch_or(IsActiveBit, std::memory_order_release);
 }
 
 void MainPluginContext::deactivate()
 {
-	MainPluginState current = mainPluginState.load();
-	MainPluginState desired;
-	do {
-		desired = current;
-		desired.isActive = false;
-	} while (!mainPluginState.compare_exchange_weak(current, desired, std::memory_order_release, std::memory_order_relaxed));
+	pluginState.fetch_and(~IsActiveBit, std::memory_order_release);
 }
 
 void MainPluginContext::show()
 {
-	MainPluginState current = mainPluginState.load();
-	MainPluginState desired;
-	do {
-		desired = current;
-		desired.isVisible = true;
-	} while (!mainPluginState.compare_exchange_weak(current, desired, std::memory_order_release, std::memory_order_relaxed));
+	pluginState.fetch_or(IsVisibleBit, std::memory_order_release);
 }
 
 void MainPluginContext::hide()
 {
-	MainPluginState current = mainPluginState.load();
-	MainPluginState desired;
-	do {
-		desired = current;
-		desired.isVisible = false;
-	} while (!mainPluginState.compare_exchange_weak(current, desired, std::memory_order_release, std::memory_order_relaxed));
+	pluginState.fetch_and(~IsVisibleBit, std::memory_order_release);
 }
 
 void MainPluginContext::videoTick(float seconds)
 {
-	MainPluginState _mainPluginState = mainPluginState.load();
+	auto _pluginState = pluginState.load();
 
-	if (!_mainPluginState.isActive) {
+	if (!(_pluginState & IsActiveBit)) {
 		std::lock_guard<std::mutex> lock(renderingContextMutex);
 		if (renderingContext) {
 			renderingContext.reset();
@@ -291,9 +271,10 @@ void MainPluginContext::videoTick(float seconds)
 
 void MainPluginContext::videoRender()
 {
-	MainPluginState _mainPluginState = mainPluginState.load();
+	auto _pluginState = pluginState.load();
 
-	if (!_mainPluginState.isActive || !_mainPluginState.isVisible) {
+	constexpr auto required = IsActiveBit | IsVisibleBit;
+	if ((_pluginState & required) == required) {
 		return;
 	}
 
@@ -308,9 +289,10 @@ void MainPluginContext::videoRender()
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 try {
-	MainPluginState _mainPluginState = mainPluginState.load();
+	auto _pluginState = pluginState.load();
 
-	if (!_mainPluginState.isActive || !_mainPluginState.isVisible) {
+	constexpr auto required = IsActiveBit | IsVisibleBit;
+	if ((_pluginState & required) == required) {
 		return frame;
 	}
 
