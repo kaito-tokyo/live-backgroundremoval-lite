@@ -99,15 +99,17 @@ std::uint32_t MainPluginContext::getHeight() const noexcept
 
 void MainPluginContext::getDefaults(obs_data_t *data)
 {
-	obs_data_set_default_int(data, "filterLevel", static_cast<int>(FilterLevel::Default));
+	PluginProperty defaultPluginProperty;
 
-	obs_data_set_default_int(data, "selfieSegmenterFps", 10);
+	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultPluginProperty.filterLevel));
 
-	obs_data_set_default_double(data, "gfEpsDb", -40.0);
+	obs_data_set_default_int(data, "selfieSegmenterFps", defaultPluginProperty.selfieSegmenterFps);
 
-	obs_data_set_default_double(data, "maskGamma", 2.5);
-	obs_data_set_default_double(data, "maskLowerBoundDb", -25.0);
-	obs_data_set_default_double(data, "maskUpperBoundMarginDb", -25.0);
+	obs_data_set_default_double(data, "gfEpsDb", defaultPluginProperty.gfEps.db);
+
+	obs_data_set_default_double(data, "maskGamma", defaultPluginProperty.maskGamma);
+	obs_data_set_default_double(data, "maskLowerBoundDb", defaultPluginProperty.maskLowerBound.db);
+	obs_data_set_default_double(data, "maskUpperBoundMarginDb", defaultPluginProperty.maskUpperBoundMargin.db);
 }
 
 obs_properties_t *MainPluginContext::getProperties()
@@ -188,18 +190,19 @@ obs_properties_t *MainPluginContext::getProperties()
 
 void MainPluginContext::update(obs_data_t *settings)
 {
-	pluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+	PluginProperty _pluginProperty;
 
-	pluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
+	_pluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
 
-	pluginProperty.gfEpsDb = obs_data_get_double(settings, "gfEpsDb");
-	pluginProperty.gfEps = PluginProperty::dbToLinearPow(pluginProperty.gfEpsDb);
+	_pluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
 
-	pluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
-	pluginProperty.maskLowerBoundDb = obs_data_get_double(settings, "maskLowerBoundDb");
-	pluginProperty.maskLowerBound = PluginProperty::dbToLinearAmp(pluginProperty.maskLowerBoundDb);
-	pluginProperty.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
-	pluginProperty.maskUpperBound = 1.0 - PluginProperty::dbToLinearAmp(pluginProperty.maskUpperBoundMarginDb);
+	_pluginProperty.gfEps = DecibelField::fromDbPow(obs_data_get_double(settings, "gfEpsDb"));
+
+	_pluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
+	_pluginProperty.maskLowerBound = DecibelField::fromDbAmp(obs_data_get_double(settings, "maskLowerBoundDb"));
+	_pluginProperty.maskUpperBoundMargin = DecibelField::fromDbAmp(obs_data_get_double(settings, "maskUpperBoundMarginDb"));
+
+	pluginProperty = std::move(_pluginProperty);
 
 	if (auto _renderingContext = getRenderingContext()) {
 		_renderingContext->setPluginProperty(pluginProperty);

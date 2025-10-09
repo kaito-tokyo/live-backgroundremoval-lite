@@ -30,22 +30,28 @@ enum class FilterLevel : int {
 	GuidedFilter = 300,
 };
 
+struct DecibelField {
+	double db;
+	double linear;
+
+	static DecibelField fromDbPow(double dbValue) { return DecibelField(dbValue, std::pow(10.0, dbValue / 10.0)); }
+
+	static DecibelField fromDbAmp(double dbValue) { return DecibelField(dbValue, std::pow(10.0, dbValue / 20.0)); }
+
+private:
+	DecibelField(double _dbValue, double _linearValue) : db(_dbValue), linear(_linearValue) {}
+};
+
 struct PluginProperty {
-	FilterLevel filterLevel;
+	FilterLevel filterLevel = FilterLevel::Default;
 
-	int selfieSegmenterFps;
+	int selfieSegmenterFps = 10;
 
-	double gfEpsDb;
-	double gfEps;
+	DecibelField gfEps = DecibelField::fromDbPow(-40.0);
 
-	double maskGamma;
-	double maskLowerBoundDb;
-	double maskLowerBound;
-	double maskUpperBoundMarginDb;
-	double maskUpperBound;
-
-	static float dbToLinearAmp(float db) noexcept { return std::pow(10.0f, db / 20.0f); }
-	static float dbToLinearPow(float db) noexcept { return std::pow(10.0f, db / 10.0f); }
+	double maskGamma = 2.5;
+	DecibelField maskLowerBound = DecibelField::fromDbAmp(-25.0);
+	DecibelField maskUpperBoundMargin = DecibelField::fromDbAmp(-25.0);
 };
 
 } // namespace LiveBackgroundRemovalLite
