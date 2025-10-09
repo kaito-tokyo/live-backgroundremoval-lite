@@ -277,7 +277,7 @@ void MainPluginContext::videoRender()
 	auto _pluginState = pluginState.load();
 
 	constexpr auto required = IsActiveBit | IsVisibleBit;
-	if ((_pluginState & required) == required) {
+	if ((_pluginState & required) != required) {
 		return;
 	}
 
@@ -300,7 +300,7 @@ try {
 	auto _pluginState = pluginState.load();
 
 	constexpr auto required = IsActiveBit | IsVisibleBit;
-	if ((_pluginState & required) == required) {
+	if ((_pluginState & required) != required) {
 		return frame;
 	}
 
