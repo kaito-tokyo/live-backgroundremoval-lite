@@ -24,7 +24,7 @@
    cp -r ./build_macos/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
    ```
 
-## Release Automation with Gemini
+## Release Automation
 
 To initiate a new release, the user will instruct Gemini to start the process (e.g., "リリースを開始して" or "リリースしたい"). Gemini will then perform the following steps:
 
@@ -36,7 +36,10 @@ To initiate a new release, the user will instruct Gemini to start the process (e
 2.  **Prepare & Update `buildspec.json`**:
     * **ACTION**: Confirm the current branch is `main` and synchronized with the remote.
     * **ACTION**: Create a new branch (`bump-X.Y.Z`).
-    * **ACTION**: Update the `version` field in `buildspec.json`.
+    * **ACTION**: Update the `version` field in `buildspec.json` using `jq`, e.g.:
+      ```
+      jq '.version = "<new_version>"' buildspec.json > buildspec.json.tmp && mv buildspec.json.tmp buildspec.json
+      ```
 
 3.  **Create & Merge Pull Request (PR)**:
     * **ACTION**: Create a PR for the version update.
@@ -57,18 +60,12 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     * **ACTION**: Provide the releases URL.
     * **INSTRUCTION**: User completes the release on GitHub.
 
-6.  **Update Arch Linux Package Manifest**:
-    * **ACTION**: Match the `pkgver` field in `unsupported/arch/live-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
-    * **ACTION**: Download the source tar.gz for that version from GitHub and calculate its SHA-256 checksum.
-    * **ACTION**: Replace the `sha256sums` field in `unsupported/arch/live-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
+6.  **Update Arch Linux and Flatpak Package Manifests**:
+    * **ACTION**: Run `unsupported/update-packages.sh <new_version>` to update both Arch Linux and Flatpak manifests automatically.
+    * **ACTION**: Review the changes made by the script.
 
-7.  **Update Flatpak Package Manifest**:
-    * **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.metainfo.xml`.
-    * **ACTION**: The new release element should have the `version` and `date` attributes set to the new version and current date.
-    * **ACTION**: Update the `tag` field for the `live-backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml` to the new version.
-    * **ACTION**: Get the commit hash for the new tag by running `git rev-list -n 1 <new_version_tag>`.
-    * **ACTION**: Update the `commit` field for the `live-backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml` to the new commit hash.
-
-8.  **Create Pull Request for Manifest Updates**:
-    * **ACTION**: Commit the changes for both files and create a single pull request.
+7.  **Create Pull Request for Manifest Updates**:
+    * **ACTION**: Create a new branch named `unsupported/bump-<new_version>`.
+    * **ACTION**: Commit the changes with the message `chore: Update PKGBUILD and Flatpak for <new_version>`.
+    * **ACTION**: Create a single pull request for these changes.
 
