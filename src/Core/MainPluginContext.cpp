@@ -201,8 +201,8 @@ void MainPluginContext::update(obs_data_t *settings)
 	pluginProperty.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
 	pluginProperty.maskUpperBound = 1.0 - PluginProperty::dbToLinearAmp(pluginProperty.maskUpperBoundMarginDb);
 
-	if (renderingContext) {
-		renderingContext->setPluginProperty(pluginProperty);
+	if (auto _renderingContext = getRenderingContext()) {
+		_renderingContext->setPluginProperty(pluginProperty);
 	}
 }
 
@@ -250,25 +250,32 @@ void MainPluginContext::videoTick(float seconds)
 		return;
 	}
 
-	if (!renderingContext || renderingContext->width != targetWidth || renderingContext->height != targetHeight) {
+	auto _renderingContext = getRenderingContext();
+	if (!_renderingContext || _renderingContext->width != targetWidth ||
+	    _renderingContext->height != targetHeight) {
 		GraphicsContextGuard graphicsContextGuard;
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		renderingContext = createRenderingContext(targetWidth, targetHeight);
+		_renderingContext = createRenderingContext(targetWidth, targetHeight);
+		{
+			std::lock_guard<std::mutex> lock(renderingContextMutex);
+			renderingContext = _renderingContext;
+		}
 		GsUnique::drain();
 	}
 
-	if (renderingContext) {
-		renderingContext->videoTick(seconds);
+	if (_renderingContext) {
+		_renderingContext->videoTick(seconds);
 	}
 }
 
 void MainPluginContext::videoRender()
 {
-	if (!isActive.load() || !isVisible.load() || !renderingContext) {
+	if (!isActive.load() || !isVisible.load()) {
 		return;
 	}
 
-	renderingContext->videoRender();
+	if (auto _renderingContext = getRenderingContext()) {
+		_renderingContext->videoRender();
+	}
 
 	if (DebugWindow *_debugWindow = debugWindow.load()) {
 		_debugWindow->videoRender();
@@ -281,8 +288,8 @@ try {
 		return frame;
 	}
 
-	if (renderingContext) {
-		return renderingContext->filterVideo(frame);
+	if (auto _renderingContext = getRenderingContext()) {
+		return _renderingContext->filterVideo(frame);
 	} else {
 		return frame;
 	}

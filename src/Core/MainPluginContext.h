@@ -94,6 +94,12 @@ public:
 
 private:
 	std::shared_ptr<RenderingContext> createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight);
+
+	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		return renderingContext;
+	}
 };
 
 } // namespace LiveBackgroundRemovalLite
