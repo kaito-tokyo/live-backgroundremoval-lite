@@ -189,7 +189,7 @@ void DebugWindow::updatePreview()
 				 currentRenderData->readerSubR8->height != renderingContext->heightSub));
 
 	if (needsRecreation) {
-		GraphicsContextGuard guard;
+		GraphicsContextGuard graphicsContextGuard;
 		auto newRenderData = std::make_unique<DebugRenderData>();
 		newRenderData->readerBgrx = std::make_unique<AsyncTextureReader>(renderingContext->width,
 										 renderingContext->height, GS_BGRX);
@@ -223,7 +223,7 @@ void DebugWindow::updatePreview()
 	QImage image;
 
 	try {
-		GraphicsContextGuard guard;
+		GraphicsContextGuard graphicsContextGuard;
 		if (std::find(bgrxTextures.begin(), bgrxTextures.end(), currentTextureStd) != bgrxTextures.end()) {
 			currentRenderData->readerBgrx->sync();
 			image = QImage(currentRenderData->readerBgrx->getBuffer().data(),

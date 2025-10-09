@@ -27,6 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <atomic>
 #include <future>
 #include <memory>
+#include <mutex>
 
 #include <ncnn/net.h>
 
@@ -55,14 +56,13 @@ private:
 	PluginProperty pluginProperty;
 	std::uint32_t subsamplingRate = 4;
 
+	mutable std::mutex renderingContextMutex;
 	std::shared_ptr<RenderingContext> renderingContext;
-	std::shared_ptr<RenderingContext> nextRenderingContext;
-	std::int64_t frameCountBeforeContextSwitch = 0;
+
+	std::atomic<bool> isActive = false;
+	std::atomic<bool> isVisible = false;
 
 	std::atomic<DebugWindow *> debugWindow = nullptr;
-
-	std::atomic<bool> isActive;
-	std::atomic<bool> isVisible;
 
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source,
