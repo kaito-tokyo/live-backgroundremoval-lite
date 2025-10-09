@@ -253,9 +253,12 @@ void MainPluginContext::videoTick(float seconds)
 
 void MainPluginContext::videoRender()
 {
+	if (!isActive.load() || !isVisible.load()) {
+		return;
+	}
+
 	if (!renderingContext) {
 		logger.debug("Rendering context is not initialized, skipping video render");
-		obs_source_skip_video_filter(source);
 		return;
 	}
 
