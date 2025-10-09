@@ -229,11 +229,9 @@ void MainPluginContext::hide()
 void MainPluginContext::videoTick(float seconds)
 {
 	if (!isActive.load()) {
-		{
-			std::lock_guard<std::mutex> lock(renderingContextMutex);
-			if (renderingContext) {
-				renderingContext.reset();
-			}
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		if (renderingContext) {
+			renderingContext.reset();
 		}
 		return;
 	}
