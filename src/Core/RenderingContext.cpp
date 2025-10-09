@@ -259,6 +259,8 @@ void RenderingContext::videoRender()
 		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(),
 					       pluginProperty.maskGamma, pluginProperty.maskLowerBound,
 					       pluginProperty.maskUpperBound);
+	} else {
+		// Draw nothing to prevent unexpected background disclosure
 	}
 
 	if (needNewFrame && filterLevel >= FilterLevel::Segmentation) {

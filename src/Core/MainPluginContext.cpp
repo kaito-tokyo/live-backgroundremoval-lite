@@ -219,6 +219,8 @@ void MainPluginContext::activate()
 void MainPluginContext::deactivate()
 {
 	pluginState.fetch_and(~IsActiveBit, std::memory_order_release);
+	std::lock_guard<std::mutex> lock(renderingContextMutex);
+	renderingContext.reset();
 }
 
 void MainPluginContext::show()
@@ -236,8 +238,6 @@ void MainPluginContext::videoTick(float seconds)
 	auto _pluginState = pluginState.load();
 
 	if (!(_pluginState & IsActiveBit)) {
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		renderingContext.reset();
 		return;
 	}
 
@@ -278,6 +278,7 @@ void MainPluginContext::videoRender()
 
 	constexpr auto required = IsActiveBit | IsVisibleBit;
 	if ((_pluginState & required) != required) {
+		// Draw nothing to prevent unexpected background disclosure
 		return;
 	}
 
