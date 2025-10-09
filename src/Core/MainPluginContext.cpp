@@ -201,12 +201,7 @@ void MainPluginContext::update(obs_data_t *settings)
 	pluginProperty.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
 	pluginProperty.maskUpperBound = 1.0 - PluginProperty::dbToLinearAmp(pluginProperty.maskUpperBoundMarginDb);
 
-	std::shared_ptr<RenderingContext> _renderingContext;
-	{
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		_renderingContext = renderingContext;
-	}
-	if (_renderingContext) {
+	if (auto _renderingContext = getRenderingContext()) {
 		_renderingContext->setPluginProperty(pluginProperty);
 	}
 }
@@ -282,12 +277,7 @@ void MainPluginContext::videoRender()
 		return;
 	}
 
-	std::shared_ptr<RenderingContext> _renderingContext;
-	{
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		_renderingContext = renderingContext;
-	}
-	if (_renderingContext) {
+	if (auto _renderingContext = getRenderingContext()) {
 		_renderingContext->videoRender();
 	}
 
@@ -305,12 +295,7 @@ try {
 		return frame;
 	}
 
-	std::shared_ptr<RenderingContext> _renderingContext;
-	{
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		_renderingContext = renderingContext;
-	}
-	if (_renderingContext) {
+	if (auto _renderingContext = getRenderingContext()) {
 		return _renderingContext->filterVideo(frame);
 	} else {
 		return frame;
