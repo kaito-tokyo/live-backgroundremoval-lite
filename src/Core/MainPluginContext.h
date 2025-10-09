@@ -92,7 +92,8 @@ public:
 
 	void setDebugWindowNull() { debugWindow = nullptr; }
 
-	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept {
+	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept
+	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex);
 		return renderingContext;
 	}
