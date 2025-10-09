@@ -259,7 +259,7 @@ void MainPluginContext::videoTick(float seconds)
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex);
 		if (!renderingContext || renderingContext->width != targetWidth ||
-			renderingContext->height != targetHeight) {
+		    renderingContext->height != targetHeight) {
 			GraphicsContextGuard graphicsContextGuard;
 			renderingContext = createRenderingContext(targetWidth, targetHeight);
 			GsUnique::drain();
