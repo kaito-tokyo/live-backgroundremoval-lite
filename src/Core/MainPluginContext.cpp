@@ -76,7 +76,12 @@ void MainPluginContext::shutdown() noexcept
 	if (DebugWindow *_debugWindow = debugWindow.load()) {
 		_debugWindow->close();
 	}
-	renderingContext.reset();
+
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		renderingContext.reset();
+	}
+
 	selfieSegmenterTaskQueue.shutdown();
 }
 
@@ -196,21 +201,41 @@ void MainPluginContext::update(obs_data_t *settings)
 	pluginProperty.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
 	pluginProperty.maskUpperBound = 1.0 - PluginProperty::dbToLinearAmp(pluginProperty.maskUpperBoundMarginDb);
 
-	if (renderingContext) {
-		renderingContext->setPluginProperty(pluginProperty);
+	if (auto _renderingContext = getRenderingContext()) {
+		_renderingContext->setPluginProperty(pluginProperty);
 	}
 }
 
-void MainPluginContext::activate() {}
+void MainPluginContext::activate()
+{
+	pluginState.fetch_or(IsActiveBit, std::memory_order_release);
+}
 
-void MainPluginContext::deactivate() {}
+void MainPluginContext::deactivate()
+{
+	pluginState.fetch_and(~IsActiveBit, std::memory_order_release);
+	std::lock_guard<std::mutex> lock(renderingContextMutex);
+	renderingContext.reset();
+}
 
-void MainPluginContext::show() {}
+void MainPluginContext::show()
+{
+	pluginState.fetch_or(IsVisibleBit, std::memory_order_release);
+}
 
-void MainPluginContext::hide() {}
+void MainPluginContext::hide()
+{
+	pluginState.fetch_and(~IsVisibleBit, std::memory_order_release);
+}
 
 void MainPluginContext::videoTick(float seconds)
 {
+	auto _pluginState = pluginState.load();
+
+	if (!(_pluginState & IsActiveBit)) {
+		return;
+	}
+
 	obs_source_t *target = obs_filter_get_target(source);
 	uint32_t targetWidth = obs_source_get_width(target);
 	uint32_t targetHeight = obs_source_get_height(target);
@@ -225,29 +250,35 @@ void MainPluginContext::videoTick(float seconds)
 		return;
 	}
 
-	if (!renderingContext || renderingContext->width != targetWidth || renderingContext->height != targetHeight) {
-		GraphicsContextGuard guard;
-		renderingContext = createRenderingContext(targetWidth, targetHeight);
-		GsUnique::drain();
+	std::shared_ptr<RenderingContext> _renderingContext;
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		if (!renderingContext || renderingContext->width != targetWidth ||
+		    renderingContext->height != targetHeight) {
+			GraphicsContextGuard graphicsContextGuard;
+			renderingContext = createRenderingContext(targetWidth, targetHeight);
+			GsUnique::drain();
+		}
+		_renderingContext = renderingContext;
 	}
 
-	if (renderingContext) {
-		renderingContext->videoTick(seconds);
+	if (_renderingContext) {
+		_renderingContext->videoTick(seconds);
 	}
 }
 
 void MainPluginContext::videoRender()
 {
-	if (!renderingContext) {
-		logger.debug("Rendering context is not initialized, skipping video render");
-		obs_source_skip_video_filter(source);
+	auto _pluginState = pluginState.load();
+
+	constexpr auto required = IsActiveBit | IsVisibleBit;
+	if ((_pluginState & required) != required) {
+		// Draw nothing to prevent unexpected background disclosure
 		return;
 	}
 
-	renderingContext->videoRender();
-
-	if (nextRenderingContext) {
-		nextRenderingContext->videoRender();
+	if (auto _renderingContext = getRenderingContext()) {
+		_renderingContext->videoRender();
 	}
 
 	if (DebugWindow *_debugWindow = debugWindow.load()) {
@@ -257,8 +288,15 @@ void MainPluginContext::videoRender()
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 try {
-	if (renderingContext) {
-		return renderingContext->filterVideo(frame);
+	auto _pluginState = pluginState.load();
+
+	constexpr auto required = IsActiveBit | IsVisibleBit;
+	if ((_pluginState & required) != required) {
+		return frame;
+	}
+
+	if (auto _renderingContext = getRenderingContext()) {
+		return _renderingContext->filterVideo(frame);
 	} else {
 		return frame;
 	}

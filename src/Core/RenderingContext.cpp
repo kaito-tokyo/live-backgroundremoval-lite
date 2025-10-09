@@ -138,7 +138,6 @@ void RenderingContext::renderOriginalImage()
 
 	if (!obs_source_process_filter_begin(source, GS_BGRA, OBS_ALLOW_DIRECT_RENDERING)) {
 		logger.error("Could not begin processing filter");
-		obs_source_skip_video_filter(source);
 		return;
 	}
 
@@ -261,8 +260,7 @@ void RenderingContext::videoRender()
 					       pluginProperty.maskGamma, pluginProperty.maskLowerBound,
 					       pluginProperty.maskUpperBound);
 	} else {
-		obs_source_skip_video_filter(source);
-		return;
+		// Draw nothing to prevent unexpected background disclosure
 	}
 
 	if (needNewFrame && filterLevel >= FilterLevel::Segmentation) {

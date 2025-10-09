@@ -62,7 +62,7 @@ try {
 
 void main_plugin_context_module_unload()
 try {
-	GraphicsContextGuard guard;
+	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
 } catch (const std::exception &e) {
 	logger().error("Failed to unload plugin context: %s", e.what());
@@ -78,7 +78,7 @@ const char *main_plugin_context_get_name(void *type_data)
 
 void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
 try {
-	GraphicsContextGuard guard;
+	GraphicsContextGuard graphicsContextGuard;
 	auto self = std::make_shared<MainPluginContext>(settings, source, latestVersionFuture, logger());
 	self->startup();
 	return new std::shared_ptr<MainPluginContext>(self);
@@ -101,17 +101,17 @@ try {
 	self->get()->shutdown();
 	delete self;
 
-	GraphicsContextGuard guard;
+	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
 } catch (const std::exception &e) {
 	logger().error("Failed to destroy main plugin context: %s", e.what());
 
-	GraphicsContextGuard guard;
+	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
 } catch (...) {
 	logger().error("Failed to destroy main plugin context: unknown error");
 
-	GraphicsContextGuard guard;
+	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
 }
 

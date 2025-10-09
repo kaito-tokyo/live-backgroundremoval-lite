@@ -27,6 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <atomic>
 #include <future>
 #include <memory>
+#include <mutex>
 
 #include <ncnn/net.h>
 
@@ -55,9 +56,12 @@ private:
 	PluginProperty pluginProperty;
 	std::uint32_t subsamplingRate = 4;
 
+	mutable std::mutex renderingContextMutex;
 	std::shared_ptr<RenderingContext> renderingContext;
-	std::shared_ptr<RenderingContext> nextRenderingContext;
-	std::int64_t frameCountBeforeContextSwitch = 0;
+
+	static constexpr std::uint32_t IsActiveBit = 1 << 0;
+	static constexpr std::uint32_t IsVisibleBit = 1 << 1;
+	std::atomic<std::uint32_t> pluginState = 0;
 
 	std::atomic<DebugWindow *> debugWindow = nullptr;
 
@@ -86,8 +90,13 @@ public:
 
 	const BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
 
-	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept { return renderingContext; }
 	void setDebugWindowNull() { debugWindow = nullptr; }
+
+	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		return renderingContext;
+	}
 
 private:
 	std::shared_ptr<RenderingContext> createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight);
