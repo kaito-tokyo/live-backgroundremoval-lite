@@ -31,9 +31,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "../SelfieSegmenter/SelfieSegmenter.hpp"
 
-#include "FilterLevel.hpp"
 #include "MainEffect.hpp"
 #include "PluginConfig.hpp"
+#include "PluginProperty.hpp"
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
@@ -115,6 +115,24 @@ public:
 	void videoTick(float seconds);
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
+
+	void applyPluginProperty(const PluginProperty &pluginProperty)
+	{
+		if (pluginProperty.filterLevel == FilterLevel::Default) {
+			filterLevel = FilterLevel::GuidedFilter;
+		} else {
+			filterLevel = pluginProperty.filterLevel;
+		}
+
+		selfieSegmenterFps = static_cast<float>(pluginProperty.selfieSegmenterFps);
+
+		gfEps = static_cast<float>(std::pow(10.0, pluginProperty.gfEpsPowDb / 10.0));
+
+		maskGamma = static_cast<float>(pluginProperty.maskGamma);
+		maskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
+		maskUpperBoundMargin =
+			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
+	}
 
 private:
 	void renderOriginalImage();
