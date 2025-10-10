@@ -72,7 +72,7 @@ if(USE_PKGCONFIG)
       INTERFACE_COMPILE_DEFINITIONS "${PC_NCNN_CFLAGS_OTHER}"
   )
 
-  pkg_check_modules(PC_OPENCV REQUIRED opencv3)
+  pkg_check_modules(PC_OPENCV REQUIRED opencv4)
   add_library(opencv INTERFACE IMPORTED GLOBAL)
   set_target_properties(
     opencv_all
