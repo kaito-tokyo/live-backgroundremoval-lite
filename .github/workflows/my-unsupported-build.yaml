@@ -39,4 +39,4 @@ jobs:
 
       - name: "Build"
         working-directory: "unsupported/arch/live-backgroundremoval-lite"
-        run: "makepkg -i"
+        run: "makepkg -s"
