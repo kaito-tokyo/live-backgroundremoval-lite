@@ -153,10 +153,10 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_float_slider(props, "gfEpsPowDb", obs_module_text("gfEpsPowDb"), -60.0, -20.0, 0.1);
 
 	obs_properties_add_float_slider(props, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0, 0.01);
-	obs_properties_add_float_slider(props, "maskLowerBoundAmpDb", obs_module_text("maskLowerBoundAmpDb"), -80.0, -10.0,
-					0.1);
-	obs_properties_add_float_slider(props, "maskUpperBoundMarginAmpDb", obs_module_text("maskUpperBoundMarginAmpDb"),
-					-80.0, -10.0, 0.1);
+	obs_properties_add_float_slider(props, "maskLowerBoundAmpDb", obs_module_text("maskLowerBoundAmpDb"), -80.0,
+					-10.0, 0.1);
+	obs_properties_add_float_slider(props, "maskUpperBoundMarginAmpDb",
+					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
 
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),

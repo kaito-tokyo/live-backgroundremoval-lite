@@ -116,7 +116,7 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
-	void applyPluginProperty(const PluginProperty &pluginProperty) 
+	void applyPluginProperty(const PluginProperty &pluginProperty)
 	{
 		if (pluginProperty.filterLevel == FilterLevel::Default) {
 			filterLevel = FilterLevel::GuidedFilter;
@@ -130,7 +130,8 @@ public:
 
 		maskGamma = static_cast<float>(pluginProperty.maskGamma);
 		maskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
-		maskUpperBoundMargin = static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
+		maskUpperBoundMargin =
+			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
 	}
 
 private:
