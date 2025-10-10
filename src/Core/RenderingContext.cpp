@@ -106,19 +106,15 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 
 RenderingContext::~RenderingContext() noexcept {}
 
-void RenderingContext::setPluginProperty(PluginProperty newPluginProperty)
-{
-	pluginProperty = newPluginProperty;
-}
-
 void RenderingContext::videoTick(float seconds)
 {
-	FilterLevel filterLevel = pluginProperty.filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter
-										     : pluginProperty.filterLevel;
+	FilterLevel _filterLevel = filterLevel;
 
-	if (filterLevel >= FilterLevel::Segmentation) {
+	float _selfieSegmenterFps = selfieSegmenterFps;
+
+	if (_filterLevel >= FilterLevel::Segmentation) {
 		timeSinceLastSelfieSegmentation += seconds;
-		const float interval = 1.0f / static_cast<float>(pluginProperty.selfieSegmenterFps);
+		const float interval = 1.0f / _selfieSegmenterFps;
 
 		if (timeSinceLastSelfieSegmentation >= interval) {
 			timeSinceLastSelfieSegmentation -= interval;
@@ -176,7 +172,8 @@ void RenderingContext::renderSegmentationMask()
 	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, SelfieSegmenter::INPUT_WIDTH, 0);
 }
 
-void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask)
+void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask,
+					  float gfEps)
 {
 	mainEffect.resampleByNearestR8(widthSub, heightSub, r8SubGFGuide.get(), r16fOriginalGrayscale);
 
@@ -194,8 +191,7 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, g
 
 	mainEffect.calculateGuidedFilterAAndB(widthSub, heightSub, r32fSubGFA.get(), r32fSubGFB.get(),
 					      r32fSubGFMeanGuideSq.get(), r32fSubGFMeanGuide.get(),
-					      r32fSubGFMeanGuideSource.get(), r32fSubGFMeanSource.get(),
-					      static_cast<float>(pluginProperty.gfEps));
+					      r32fSubGFMeanGuideSource.get(), r32fSubGFMeanSource.get(), gfEps);
 
 	mainEffect.finalizeGuidedFilter(width, height, r8GFResult.get(), r16fOriginalGrayscale, r32fSubGFA.get(),
 					r32fSubGFB.get());
@@ -220,14 +216,19 @@ void RenderingContext::kickSegmentationTask()
 
 void RenderingContext::videoRender()
 {
-	FilterLevel filterLevel = pluginProperty.filterLevel == FilterLevel::Default ? FilterLevel::GuidedFilter
-										     : pluginProperty.filterLevel;
+	FilterLevel _filterLevel = filterLevel;
+
+	float _gfEps = gfEps;
+
+	float _maskGamma = maskGamma;
+	float _maskLowerBound = maskLowerBound;
+	float _maskUpperBoundMargin = maskUpperBoundMargin;
 
 	const bool needNewFrame = doesNextVideoRenderReceiveNewFrame;
 	if (needNewFrame) {
 		doesNextVideoRenderReceiveNewFrame = false;
 
-		if (filterLevel >= FilterLevel::Segmentation) {
+		if (_filterLevel >= FilterLevel::Segmentation) {
 			try {
 				readerSegmenterInput.sync();
 			} catch (const std::exception &e) {
@@ -237,33 +238,32 @@ void RenderingContext::videoRender()
 
 		renderOriginalImage();
 
-		if (filterLevel >= FilterLevel::GuidedFilter) {
+		if (_filterLevel >= FilterLevel::GuidedFilter) {
 			renderOriginalGrayscale(bgrxOriginalImage.get());
 		}
 
-		if (filterLevel >= FilterLevel::Segmentation) {
+		if (_filterLevel >= FilterLevel::Segmentation) {
 			renderSegmenterInput(bgrxOriginalImage.get());
 			renderSegmentationMask();
 		}
 
-		if (filterLevel >= FilterLevel::GuidedFilter) {
-			renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get());
+		if (_filterLevel >= FilterLevel::GuidedFilter) {
+			renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get(), _gfEps);
 		}
 	}
 
-	if (filterLevel == FilterLevel::Passthrough) {
+	if (_filterLevel == FilterLevel::Passthrough) {
 		mainEffect.draw(width, height, bgrxOriginalImage.get());
-	} else if (filterLevel == FilterLevel::Segmentation) {
+	} else if (_filterLevel == FilterLevel::Segmentation) {
 		mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
-	} else if (filterLevel == FilterLevel::GuidedFilter) {
-		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(),
-					       pluginProperty.maskGamma, pluginProperty.maskLowerBound,
-					       pluginProperty.maskUpperBound);
+	} else if (_filterLevel == FilterLevel::GuidedFilter) {
+		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(), _maskGamma,
+					       _maskLowerBound, _maskUpperBoundMargin);
 	} else {
 		// Draw nothing to prevent unexpected background disclosure
 	}
 
-	if (needNewFrame && filterLevel >= FilterLevel::Segmentation) {
+	if (needNewFrame && _filterLevel >= FilterLevel::Segmentation) {
 		readerSegmenterInput.stage(bgrxSegmenterInput);
 	}
 }

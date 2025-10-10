@@ -190,22 +190,20 @@ obs_properties_t *MainPluginContext::getProperties()
 
 void MainPluginContext::update(obs_data_t *settings)
 {
-	PluginProperty _pluginProperty;
-
-	_pluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
-
-	_pluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
-
-	_pluginProperty.gfEps = DecibelField::fromDbPow(obs_data_get_double(settings, "gfEpsDb"));
-
-	_pluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
-	_pluginProperty.maskLowerBound = DecibelField::fromDbAmp(obs_data_get_double(settings, "maskLowerBoundDb"));
-	_pluginProperty.maskUpperBoundMargin = DecibelField::fromDbAmp(obs_data_get_double(settings, "maskUpperBoundMarginDb"));
-
-	pluginProperty = std::move(_pluginProperty);
-
 	if (auto _renderingContext = getRenderingContext()) {
-		_renderingContext->setPluginProperty(pluginProperty);
+		_renderingContext->filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+
+		_renderingContext->selfieSegmenterFps =
+			static_cast<float>(obs_data_get_int(settings, "selfieSegmenterFps"));
+
+		_renderingContext->gfEps =
+			static_cast<float>(std::pow(10.0, obs_data_get_double(settings, "gfEpsDb") / 10.0));
+
+		_renderingContext->maskGamma = static_cast<float>(obs_data_get_double(settings, "maskGamma"));
+		_renderingContext->maskLowerBound =
+			static_cast<float>(std::pow(10.0, obs_data_get_double(settings, "maskLowerBoundDb") / 20.0));
+		_renderingContext->maskUpperBoundMargin = static_cast<float>(
+			std::pow(10.0, obs_data_get_double(settings, "maskUpperBoundMarginDb") / 20.0));
 	}
 }
 
@@ -319,7 +317,6 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 	auto renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
 								   selfieSegmenterTaskQueue, defaultPluginConfig,
 								   subsamplingRate, targetWidth, targetHeight);
-	renderingContext->setPluginProperty(pluginProperty);
 	return renderingContext;
 }
 
