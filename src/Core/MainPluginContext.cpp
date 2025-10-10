@@ -191,7 +191,7 @@ void MainPluginContext::update(obs_data_t *settings)
 	if (auto _renderingContext = getRenderingContext()) {
 		FilterLevel filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
 		if (filterLevel == FilterLevel::Default) {
-			filterLevel = FilterLevel::GuidedFilter;
+			_renderingContext->filterLevel = FilterLevel::GuidedFilter;
 		} else {
 			_renderingContext->filterLevel = filterLevel;
 		}
