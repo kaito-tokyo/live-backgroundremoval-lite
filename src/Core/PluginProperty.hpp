@@ -39,7 +39,7 @@ struct PluginProperty {
 
 	double maskGamma = 2.5;
 	double maskLowerBoundAmpDb = -25.0;
-	double maskUpperBoundMarginAmpDb = 25.0;
+	double maskUpperBoundMarginAmpDb = -25.0;
 };
 
 } // namespace LiveBackgroundRemovalLite

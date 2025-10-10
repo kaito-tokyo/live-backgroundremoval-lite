@@ -137,7 +137,7 @@ public:
 
 	void drawWithRefinedMask(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
 				 gs_texture_t *maskTexture, double gamma, double lowerBound,
-				 double upperBound) const noexcept
+				 double upperBoundMargin) const noexcept
 	{
 		while (gs_effect_loop(effect.get(), "DrawWithRefinedMask")) {
 			gs_effect_set_texture(textureImage, sourceTexture);
@@ -145,7 +145,7 @@ public:
 
 			gs_effect_set_float(floatGamma, static_cast<float>(gamma));
 			gs_effect_set_float(floatLowerBound, static_cast<float>(lowerBound));
-			gs_effect_set_float(floatUpperBound, static_cast<float>(upperBound));
+			gs_effect_set_float(floatUpperBound, static_cast<float>(1.0 - upperBoundMargin));
 
 			gs_draw_sprite(nullptr, 0, width, height);
 		}
