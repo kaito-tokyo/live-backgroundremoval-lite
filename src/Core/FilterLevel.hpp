@@ -18,8 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <cmath>
-
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
@@ -28,30 +26,6 @@ enum class FilterLevel : int {
 	Passthrough = 100,
 	Segmentation = 200,
 	GuidedFilter = 300,
-};
-
-struct DecibelField {
-	double db;
-	double linear;
-
-	static DecibelField fromDbPow(double dbValue) { return DecibelField(dbValue, std::pow(10.0, dbValue / 10.0)); }
-
-	static DecibelField fromDbAmp(double dbValue) { return DecibelField(dbValue, std::pow(10.0, dbValue / 20.0)); }
-
-private:
-	DecibelField(double _dbValue, double _linearValue) : db(_dbValue), linear(_linearValue) {}
-};
-
-struct PluginProperty {
-	FilterLevel filterLevel = FilterLevel::Default;
-
-	int selfieSegmenterFps = 10;
-
-	DecibelField gfEps = DecibelField::fromDbPow(-40.0);
-
-	double maskGamma = 2.5;
-	DecibelField maskLowerBound = DecibelField::fromDbAmp(-25.0);
-	DecibelField maskUpperBoundMargin = DecibelField::fromDbAmp(-25.0);
 };
 
 } // namespace LiveBackgroundRemovalLite

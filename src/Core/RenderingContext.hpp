@@ -31,9 +31,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "../SelfieSegmenter/SelfieSegmenter.hpp"
 
+#include "FilterLevel.hpp"
 #include "MainEffect.hpp"
 #include "PluginConfig.hpp"
-#include "PluginProperty.hpp"
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
@@ -111,8 +111,6 @@ public:
 			 PluginConfig pluginConfig, std::uint32_t subsamplingRate, std::uint32_t width,
 			 std::uint32_t height);
 	~RenderingContext() noexcept;
-
-	void setPluginProperty(PluginProperty newProperty);
 
 	void videoTick(float seconds);
 	void videoRender();

@@ -99,17 +99,15 @@ std::uint32_t MainPluginContext::getHeight() const noexcept
 
 void MainPluginContext::getDefaults(obs_data_t *data)
 {
-	PluginProperty defaultPluginProperty;
+	obs_data_set_default_int(data, "filterLevel", static_cast<int>(FilterLevel::Default));
 
-	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultPluginProperty.filterLevel));
+	obs_data_set_default_int(data, "selfieSegmenterFps", 10);
 
-	obs_data_set_default_int(data, "selfieSegmenterFps", defaultPluginProperty.selfieSegmenterFps);
+	obs_data_set_default_double(data, "gfEpsDb", -40.0);
 
-	obs_data_set_default_double(data, "gfEpsDb", defaultPluginProperty.gfEps.db);
-
-	obs_data_set_default_double(data, "maskGamma", defaultPluginProperty.maskGamma);
-	obs_data_set_default_double(data, "maskLowerBoundDb", defaultPluginProperty.maskLowerBound.db);
-	obs_data_set_default_double(data, "maskUpperBoundMarginDb", defaultPluginProperty.maskUpperBoundMargin.db);
+	obs_data_set_default_double(data, "maskGamma", 2.5);
+	obs_data_set_default_double(data, "maskLowerBoundDb", -25.0);
+	obs_data_set_default_double(data, "maskUpperBoundMarginDb", -25.0);
 }
 
 obs_properties_t *MainPluginContext::getProperties()
@@ -191,7 +189,12 @@ obs_properties_t *MainPluginContext::getProperties()
 void MainPluginContext::update(obs_data_t *settings)
 {
 	if (auto _renderingContext = getRenderingContext()) {
-		_renderingContext->filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+		FilterLevel filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+		if (filterLevel == FilterLevel::Default) {
+			filterLevel = FilterLevel::GuidedFilter;
+		} else {
+			_renderingContext->filterLevel = filterLevel;
+		}
 
 		_renderingContext->selfieSegmenterFps =
 			static_cast<float>(obs_data_get_int(settings, "selfieSegmenterFps"));
