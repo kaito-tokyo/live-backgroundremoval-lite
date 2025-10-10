@@ -21,6 +21,12 @@
     "gtest",
     "ncnn",
     {
+      "name": "ncnn",
+      "features": [
+        "vulkan"
+      ]
+    },
+    {
       "name": "opencv4",
       "default-features": false,
       "features": [
