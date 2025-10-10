@@ -201,9 +201,14 @@ void MainPluginContext::update(obs_data_t *settings)
 	newPluginProperty.maskLowerBoundAmpDb = obs_data_get_double(settings, "maskLowerBoundDb");
 	newPluginProperty.maskUpperBoundMarginAmpDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
 
-	pluginProperty = newPluginProperty;
+	std::shared_ptr<RenderingContext> _renderingContext;
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		pluginProperty = newPluginProperty;
+		_renderingContext = renderingContext;
+	}
 
-	if (auto _renderingContext = getRenderingContext()) {
+	if (_renderingContext) {
 		_renderingContext->applyPluginProperty(pluginProperty);
 	}
 }
