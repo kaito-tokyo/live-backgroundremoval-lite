@@ -37,11 +37,12 @@ jobs:
       - name: "Checkout project repository"
         uses: "actions/checkout@v5"
 
-      - name: "Add user"
+      - name: "Setup buildeer"
         run: |
           useradd -m builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
           chown -R builder:builder .
+          pacman -Sy --noconform
 
       - name: "Build"
         working-directory: "unsupported/arch/live-backgroundremoval-lite"
