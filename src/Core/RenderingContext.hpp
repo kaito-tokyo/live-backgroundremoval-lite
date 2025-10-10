@@ -31,9 +31,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "../SelfieSegmenter/SelfieSegmenter.hpp"
 
+#include "FilterLevel.hpp"
 #include "MainEffect.hpp"
 #include "PluginConfig.hpp"
-#include "PluginProperty.hpp"
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
@@ -87,8 +87,18 @@ public:
 private:
 	const BridgeUtils::unique_gs_texture_t r32fGFTemporary1Sub;
 
-	PluginProperty pluginProperty;
+public:
+	std::atomic<FilterLevel> filterLevel;
 
+	std::atomic<float> selfieSegmenterFps;
+
+	std::atomic<float> gfEps;
+
+	std::atomic<float> maskGamma;
+	std::atomic<float> maskLowerBound;
+	std::atomic<float> maskUpperBoundMargin;
+
+private:
 	float timeSinceLastSelfieSegmentation = 0.0f;
 	std::uint64_t lastFrameTimestamp = 0;
 	std::atomic<bool> doesNextVideoRenderReceiveNewFrame = false;
@@ -102,8 +112,6 @@ public:
 			 std::uint32_t height);
 	~RenderingContext() noexcept;
 
-	void setPluginProperty(PluginProperty newProperty);
-
 	void videoTick(float seconds);
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
@@ -114,7 +122,7 @@ private:
 	void renderSegmenterInput(gs_texture_t *bgrxOriginalImage);
 	void renderSegmentationMask();
 	void calculateDifferenceWithMask();
-	void renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask);
+	void renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask, float gfEps);
 	void kickSegmentationTask();
 };
 

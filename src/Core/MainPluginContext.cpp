@@ -188,21 +188,25 @@ obs_properties_t *MainPluginContext::getProperties()
 
 void MainPluginContext::update(obs_data_t *settings)
 {
-	pluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
-
-	pluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
-
-	pluginProperty.gfEpsDb = obs_data_get_double(settings, "gfEpsDb");
-	pluginProperty.gfEps = PluginProperty::dbToLinearPow(pluginProperty.gfEpsDb);
-
-	pluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
-	pluginProperty.maskLowerBoundDb = obs_data_get_double(settings, "maskLowerBoundDb");
-	pluginProperty.maskLowerBound = PluginProperty::dbToLinearAmp(pluginProperty.maskLowerBoundDb);
-	pluginProperty.maskUpperBoundMarginDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
-	pluginProperty.maskUpperBound = 1.0 - PluginProperty::dbToLinearAmp(pluginProperty.maskUpperBoundMarginDb);
-
 	if (auto _renderingContext = getRenderingContext()) {
-		_renderingContext->setPluginProperty(pluginProperty);
+		FilterLevel filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+		if (filterLevel == FilterLevel::Default) {
+			_renderingContext->filterLevel = FilterLevel::GuidedFilter;
+		} else {
+			_renderingContext->filterLevel = filterLevel;
+		}
+
+		_renderingContext->selfieSegmenterFps =
+			static_cast<float>(obs_data_get_int(settings, "selfieSegmenterFps"));
+
+		_renderingContext->gfEps =
+			static_cast<float>(std::pow(10.0, obs_data_get_double(settings, "gfEpsDb") / 10.0));
+
+		_renderingContext->maskGamma = static_cast<float>(obs_data_get_double(settings, "maskGamma"));
+		_renderingContext->maskLowerBound =
+			static_cast<float>(std::pow(10.0, obs_data_get_double(settings, "maskLowerBoundDb") / 20.0));
+		_renderingContext->maskUpperBoundMargin = static_cast<float>(
+			std::pow(10.0, obs_data_get_double(settings, "maskUpperBoundMarginDb") / 20.0));
 	}
 }
 
@@ -316,7 +320,6 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 	auto renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
 								   selfieSegmenterTaskQueue, defaultPluginConfig,
 								   subsamplingRate, targetWidth, targetHeight);
-	renderingContext->setPluginProperty(pluginProperty);
 	return renderingContext;
 }
 
