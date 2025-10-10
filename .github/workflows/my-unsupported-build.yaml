@@ -1,4 +1,4 @@
-name: "Tests"
+name: "Unsupported Build"
 
 on:
   push:
@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 30
 
     container:
-      image: archlinux:latest
+      image: "archlinux:base-devel"
 
     steps:
       - name: "Checkout project repository"
