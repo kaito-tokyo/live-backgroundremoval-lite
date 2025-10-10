@@ -73,7 +73,7 @@ if(USE_PKGCONFIG)
   )
 
   pkg_check_modules(PC_OPENCV REQUIRED opencv4)
-  add_library(opencv INTERFACE IMPORTED GLOBAL)
+  add_library(opencv_all INTERFACE IMPORTED GLOBAL)
   set_target_properties(
     opencv_all
     PROPERTIES
