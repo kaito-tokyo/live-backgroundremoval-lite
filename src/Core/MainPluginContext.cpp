@@ -31,6 +31,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
 
+using namespace KaitoTokyo::BridgeUtils;
+
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
