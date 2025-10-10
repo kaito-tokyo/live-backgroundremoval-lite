@@ -1,0 +1,42 @@
+name: "Tests"
+
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: "bash"
+
+env:
+  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json,read"
+  VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
+
+permissions:
+  contents: "read"
+  packages: "read"
+
+jobs:
+  BuildOnArch:
+    runs-on: "ubuntu-24.04"
+
+    timeout-minutes: 30
+
+    container:
+      image: archlinux:latest
+
+    steps:
+      - name: "Checkout project repository"
+        uses: "actions/checkout@v5"
+
+      - name: "Build"
+        working-directory: "unsupported/arch/live-backgroundremoval-lite"
+        run: "makepkg -i"
