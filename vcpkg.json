@@ -19,7 +19,6 @@
     },
     "fmt",
     "gtest",
-    "ncnn",
     {
       "name": "ncnn",
       "features": [
