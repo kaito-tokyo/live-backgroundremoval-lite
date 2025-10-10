@@ -28,5 +28,19 @@ enum class FilterLevel : int {
 	GuidedFilter = 300,
 };
 
+struct PluginProperty {
+	FilterLevel filterLevel = FilterLevel::Default;
+
+	int selfieSegmenterFps = 10;
+
+	int subsamplingRate = 4;
+
+	double gfEpsPowDb = -40.0;
+
+	double maskGamma = 2.5;
+	double maskLowerBoundAmpDb = -25.0;
+	double maskUpperBoundMarginAmpDb = 25.0;
+};
+
 } // namespace LiveBackgroundRemovalLite
 } // namespace KaitoTokyo

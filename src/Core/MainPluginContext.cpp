@@ -32,7 +32,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "RenderingContext.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
-using namespace KaitoTokyo::BridgeUtils;
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
@@ -99,15 +98,17 @@ std::uint32_t MainPluginContext::getHeight() const noexcept
 
 void MainPluginContext::getDefaults(obs_data_t *data)
 {
-	obs_data_set_default_int(data, "filterLevel", static_cast<int>(FilterLevel::Default));
+	PluginProperty defaultProperty;
 
-	obs_data_set_default_int(data, "selfieSegmenterFps", 10);
+	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
-	obs_data_set_default_double(data, "gfEpsDb", -40.0);
+	obs_data_set_default_int(data, "selfieSegmenterFps", defaultProperty.selfieSegmenterFps);
 
-	obs_data_set_default_double(data, "maskGamma", 2.5);
-	obs_data_set_default_double(data, "maskLowerBoundDb", -25.0);
-	obs_data_set_default_double(data, "maskUpperBoundMarginDb", -25.0);
+	obs_data_set_default_double(data, "gfEpsDb", defaultProperty.gfEpsPowDb);
+
+	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
+	obs_data_set_default_double(data, "maskLowerBoundDb", defaultProperty.maskLowerBoundAmpDb);
+	obs_data_set_default_double(data, "maskUpperBoundMarginDb", defaultProperty.maskUpperBoundMarginAmpDb);
 }
 
 obs_properties_t *MainPluginContext::getProperties()
@@ -188,25 +189,22 @@ obs_properties_t *MainPluginContext::getProperties()
 
 void MainPluginContext::update(obs_data_t *settings)
 {
+	PluginProperty newPluginProperty;
+
+	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+
+	newPluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
+
+	newPluginProperty.gfEpsPowDb = obs_data_get_double(settings, "gfEpsDb");
+
+	newPluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
+	newPluginProperty.maskLowerBoundAmpDb = obs_data_get_double(settings, "maskLowerBoundDb");
+	newPluginProperty.maskUpperBoundMarginAmpDb = obs_data_get_double(settings, "maskUpperBoundMarginDb");
+
+	pluginProperty = newPluginProperty;
+
 	if (auto _renderingContext = getRenderingContext()) {
-		FilterLevel filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
-		if (filterLevel == FilterLevel::Default) {
-			_renderingContext->filterLevel = FilterLevel::GuidedFilter;
-		} else {
-			_renderingContext->filterLevel = filterLevel;
-		}
-
-		_renderingContext->selfieSegmenterFps =
-			static_cast<float>(obs_data_get_int(settings, "selfieSegmenterFps"));
-
-		_renderingContext->gfEps =
-			static_cast<float>(std::pow(10.0, obs_data_get_double(settings, "gfEpsDb") / 10.0));
-
-		_renderingContext->maskGamma = static_cast<float>(obs_data_get_double(settings, "maskGamma"));
-		_renderingContext->maskLowerBound =
-			static_cast<float>(std::pow(10.0, obs_data_get_double(settings, "maskLowerBoundDb") / 20.0));
-		_renderingContext->maskUpperBoundMargin = static_cast<float>(
-			std::pow(10.0, obs_data_get_double(settings, "maskUpperBoundMarginDb") / 20.0));
+		_renderingContext->applyPluginProperty(pluginProperty);
 	}
 }
 
@@ -320,6 +318,7 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 	auto renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
 								   selfieSegmenterTaskQueue, defaultPluginConfig,
 								   subsamplingRate, targetWidth, targetHeight);
+	renderingContext->applyPluginProperty(pluginProperty);
 	return renderingContext;
 }
 

@@ -36,7 +36,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "../SelfieSegmenter/SelfieSegmenter.hpp"
 
-#include "FilterLevel.hpp"
+#include "PluginProperty.hpp"
 #include "MainEffect.hpp"
 
 namespace KaitoTokyo {
@@ -53,7 +53,9 @@ private:
 	const MainEffect mainEffect;
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
+
 	std::uint32_t subsamplingRate = 4;
+	PluginProperty pluginProperty;
 
 	mutable std::mutex renderingContextMutex;
 	std::shared_ptr<RenderingContext> renderingContext;
@@ -99,6 +101,7 @@ public:
 
 private:
 	std::shared_ptr<RenderingContext> createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight);
+	void applyPluginProperty(const std::shared_ptr<RenderingContext> &_renderingContext);
 };
 
 } // namespace LiveBackgroundRemovalLite
