@@ -71,11 +71,24 @@ if(USE_PKGCONFIG)
       INTERFACE_LINK_LIBRARIES "${PC_NCNN_LIBRARIES}"
       INTERFACE_COMPILE_DEFINITIONS "${PC_NCNN_CFLAGS_OTHER}"
   )
+
+  pkg_check_modules(PC_OPENCV REQUIRED opencv4)
+  add_library(opencv INTERFACE IMPORTED GLOBAL)
+  set_target_properties(
+    opencv_all
+    PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${PC_OPENCV_INCLUDE_DIRS}"
+      INTERFACE_LINK_LIBRARIES "${PC_OPENCV_LIBRARIES}"
+      INTERFACE_COMPILE_DEFINITIONS "${PC_OPENCV_CFLAGS_OTHER}"
+  )
+  set(OPENCV_LIBS opencv_all)
 else()
   find_package(Backward CONFIG)
   find_package(CURL CONFIG REQUIRED)
   find_package(fmt CONFIG REQUIRED)
   find_package(ncnn CONFIG REQUIRED)
+  find_package(OpenCV CONFIG REQUIRED)
+  set(OPENCV_LIBS opencv_core opencv_imgproc opencv_imgcodecs)
 endif()
 
 target_compile_definitions(
@@ -93,7 +106,10 @@ target_sources(
     src/SelfieSegmenter/SelfieSegmenter.cpp
     src/plugin-main.c
 )
-target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OBS::libobs CURL::libcurl fmt::fmt ncnn)
+target_link_libraries(
+  ${CMAKE_PROJECT_NAME}
+  PUBLIC OBS::libobs CURL::libcurl fmt::fmt ncnn ${OPENCV_LIBS}
+)
 if(Backward_FOUND)
   target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Backward::Backward)
   target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE HAVE_BACKWARD)
