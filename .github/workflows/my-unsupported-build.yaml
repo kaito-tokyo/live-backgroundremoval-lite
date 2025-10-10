@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - "main"
-  pull_request:
-    branches:
-      - "main"
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
@@ -22,7 +19,6 @@ env:
 
 permissions:
   contents: "read"
-  packages: "read"
 
 jobs:
   BuildOnArch:
