@@ -11,6 +11,117 @@
   },
   "modules": [
     {
+      "name": "opencv4",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-D CMAKE_BUILD_TYPE=Release",
+        "-D BUILD_SHARED_LIBS=ON",
+        "-D OPENCV_GENERATE_PKGCONFIG=ON",
+        "-D BUILD_TESTS=OFF",
+        "-D BUILD_PERF_TESTS=OFF",
+        "-D BUILD_EXAMPLES=OFF",
+        "-D BUILD_DOCS=OFF",
+        "-D BUILD_opencv_apps=OFF",
+        "-D BUILD_opencv_java=OFF",
+        "-D BUILD_WITH_DEBUG_INFO=ON",
+        "-D BUILD_ZLIB=OFF",
+        "-D BUILD_PNG=OFF",
+        "-D BUILD_JPEG=OFF",
+        "-D BUILD_TIFF=OFF",
+        "-D BUILD_WEBP=OFF",
+        "-D BUILD_OPENEXR=OFF",
+        "-D BUILD_OPENJPEG=OFF",
+        "-D BUILD_TBB=OFF",
+        "-D BUILD_PROTOBUF=OFF",
+        "-D WITH_FFMPEG=OFF",
+        "-D WITH_GSTREAMER=OFF",
+        "-D WITH_GTK=OFF",
+        "-D WITH_QT=OFF",
+        "-D WITH_CUDA=OFF",
+        "-D WITH_EIGEN=OFF",
+        "-D WITH_OPENCL=OFF",
+        "-D WITH_OPENGL=OFF",
+        "-D WITH_VTK=OFF"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/opencv/opencv.git",
+          "tag": "4.11.0",
+          "commit": "31b0eeea0b44b370fd0712312df4214d4ae1b158"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0001-disable-downloading.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0002-install-options.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0003-force-package-requirements.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0004-fix-eigen.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0005-fix-policy-CMP0057.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0006-fix-uwp.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0008-devendor-quirc.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0009-fix-protobuf.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0010-fix-uwp-tiff-imgcodecs.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0011-remove-python2.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0012-miss-openexr.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0014-fix-cmake-in-list.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0015-fix-freetype.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0017-fix-flatbuffers.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0019-opencl-kernel.patch"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0020-fix-narrow-filesystem.diff"
+        },
+        {
+          "type": "patch",
+          "path": "patches/opencv4/0021-fix-qt-gen-def.patch"
+        }
+      ]
+    },
+    {
       "name": "ncnn",
       "buildsystem": "cmake-ninja",
       "builddir": true,
