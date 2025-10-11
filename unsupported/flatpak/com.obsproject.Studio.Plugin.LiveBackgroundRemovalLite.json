@@ -36,6 +36,7 @@
         "-D BUILD_PROTOBUF=OFF",
         "-D WITH_FFMPEG=OFF",
         "-D WITH_GSTREAMER=OFF",
+        "-D WITH_IPP=OFF",
         "-D WITH_GTK=OFF",
         "-D WITH_QT=OFF",
         "-D WITH_CUDA=OFF",
