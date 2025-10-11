@@ -62,18 +62,35 @@ if [ -z "${COMMIT_HASH}" ]; then
     exit 1
 fi
 
-# Update YAML file (macOS/BSD sed compatible)
-sed -i '' "/name: ${PKG_NAME}/,/- type: git/{
-s/tag: .*/tag: ${NEW_VERSION}/
-s/commit: .*/commit: '${COMMIT_HASH}'/
-}" "${FLATPAK_YAML_PATH}"
-
+# Update JSON file using jq
+FLATPAK_JSON_PATH="${REPO_ROOT}/unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.json"
+jq --arg ver "$NEW_VERSION" --arg hash "$COMMIT_HASH" '
+    (.modules[] | select(.name == "live-backgroundremoval-lite").sources[] | select(.type == "git")) 
+    |= (.tag = $ver | .commit = $hash)
+' "$FLATPAK_JSON_PATH" > "$FLATPAK_JSON_PATH.tmp"
+if [ $? -ne 0 ]; then
+    echo "❌ Error: jq failed to update the JSON manifest."
+    rm -f "$FLATPAK_JSON_PATH.tmp"
+    exit 1
+fi
+if [ ! -s "$FLATPAK_JSON_PATH.tmp" ]; then
+    echo "❌ Error: jq produced an empty output file. Manifest not updated."
+    rm -f "$FLATPAK_JSON_PATH.tmp"
+    exit 1
+fi
+mv "$FLATPAK_JSON_PATH.tmp" "$FLATPAK_JSON_PATH"
 # Update metainfo.xml file
-xmlstarlet ed -L \
-    -i "/component/releases/release[1]" -t elem -n "release" \
-    -i "/component/releases/release[1]" -t attr -n "version" -v "${NEW_VERSION}" \
-    -i "/component/releases/release[1]" -t attr -n "date" -v "${CURRENT_DATE}" \
-    "${FLATPAK_METAINFO_PATH}"
+
+# Add release only if not already present
+if ! xmlstarlet sel -t -c "/component/releases/release[@version='${NEW_VERSION}']" "${FLATPAK_METAINFO_PATH}" | grep -q .; then
+    xmlstarlet ed -L \
+        -i "/component/releases/release[1]" -t elem -n "release" \
+        -i "/component/releases/release[1]" -t attr -n "version" -v "${NEW_VERSION}" \
+        -i "/component/releases/release[1]" -t attr -n "date" -v "${CURRENT_DATE}" \
+        "${FLATPAK_METAINFO_PATH}"
+else
+    echo "  ℹ️ metainfo.xml: release ${NEW_VERSION} already exists, not adding duplicate."
+fi
 
 echo "  ✅ Flatpak manifests updated."
 echo "--------------------------------------------------"
