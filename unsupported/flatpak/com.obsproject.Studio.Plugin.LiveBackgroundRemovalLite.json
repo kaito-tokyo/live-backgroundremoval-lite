@@ -27,6 +27,7 @@
         "-D WITH_JPEG=ON",
         "-D WITH_PNG=ON",
         "-D WITH_TIFF=ON",
+        "-D BUILD_opencv_gapi=OFF",
         "-D WITH_JASPER=OFF",
         "-D WITH_WEBP=OFF",
         "-D WITH_OPENJPEG=OFF",
