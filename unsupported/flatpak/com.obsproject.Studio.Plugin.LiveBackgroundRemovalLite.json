@@ -145,7 +145,8 @@
         "-DCMAKE_BUILD_TYPE=Release",
         "-DCMAKE_PREFIX_PATH=/app/plugins/LiveBackgroundRemovalLite",
         "-DENABLE_FRONTEND_API=ON",
-        "-DENABLE_QT=ON"
+        "-DENABLE_QT=ON",
+        "-DUSE_PKGCONFIG=ON"
       ],
       "sources": [
         {
