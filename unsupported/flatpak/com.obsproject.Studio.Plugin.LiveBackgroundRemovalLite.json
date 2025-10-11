@@ -42,7 +42,17 @@
         "-D WITH_EIGEN=OFF",
         "-D WITH_OPENCL=OFF",
         "-D WITH_OPENGL=OFF",
-        "-D WITH_VTK=OFF"
+        "-D WITH_VTK=OFF",
+        "-D WITH_JPEG=ON",
+        "-D WITH_PNG=ON",
+        "-D WITH_TIFF=ON",
+        "-D WITH_WEBP=OFF",
+        "-D WITH_OPENJPEG=OFF",
+        "-D WITH_OPENEXR=OFF",
+        "-D WITH_JASPER=OFF",
+        "-D WITH_AVIF=OFF",
+        "-D WITH_GDAL=OFF",
+        "-D WITH_GDCM=OFF"
       ],
       "sources": [
         {
