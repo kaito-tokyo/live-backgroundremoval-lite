@@ -66,3 +66,23 @@ jobs:
       - name: "Build"
         working-directory: "unsupported/arch/live-backgroundremoval-lite-git"
         run: "sudo -u builder makepkg -s --noconfirm"
+
+  BuildForFlatpak:
+    runs-on: "ubuntu-24.04"
+
+    container:
+      image: "ghcr.io/flathub-infra/flatpak-github-actions:kde-6.8"
+      options: "--privileged"
+
+    timeout-minutes: 30
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Build Flatpak"
+        uses: "flatpak/flatpak-github-actions/flatpak-builder@10a3c29f0162516f0f68006be14c92f34bd4fa6c"
+        with:
+          bundle: "com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite"
+          manifest-path: "unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml"
+          cache-key: "flatpak-builder-${{ github.sha }}"
