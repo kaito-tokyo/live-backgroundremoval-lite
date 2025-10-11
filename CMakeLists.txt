@@ -117,10 +117,36 @@ target_sources(
   PRIVATE
     src/SelfieSegmenter/SelfieSegmenter.cpp
 )
+target_include_directories(
+  SelfieSegmenter
+  PUBLIC
+    ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter
+)
 target_link_libraries(
   SelfieSegmenter
   PUBLIC ncnn
 )
+
+add_library(UpdateChecker INTERFACE)
+target_include_directories(
+  UpdateChecker
+  INTERFACE
+    ${CMAKE_SOURCE_DIR}/src/UpdateChecker
+)
+target_link_libraries(
+  UpdateChecker
+  INTERFACE CURL::libcurl
+)
+
+add_library(BridgeUtils INTERFACE)
+target_include_directories(
+  BridgeUtils
+  INTERFACE
+    ${CMAKE_SOURCE_DIR}/src/BridgeUtils
+)
+target_link_libraries(
+  BridgeUtils
+  INTERFACE OBS::libobs fmt::fmt)
 
 target_compile_definitions(
   ${CMAKE_PROJECT_NAME}
@@ -138,7 +164,7 @@ target_sources(
 )
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs CURL::libcurl fmt::fmt SelfieSegmenter
+  PUBLIC OBS::libobs BridgeUtils SelfieSegmenter UpdateChecker
 )
 if(Backward_FOUND)
   target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Backward::Backward)
