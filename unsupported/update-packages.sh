@@ -80,11 +80,17 @@ if [ ! -s "$FLATPAK_JSON_PATH.tmp" ]; then
 fi
 mv "$FLATPAK_JSON_PATH.tmp" "$FLATPAK_JSON_PATH"
 # Update metainfo.xml file
-xmlstarlet ed -L \
-    -i "/component/releases/release[1]" -t elem -n "release" \
-    -i "/component/releases/release[1]" -t attr -n "version" -v "${NEW_VERSION}" \
-    -i "/component/releases/release[1]" -t attr -n "date" -v "${CURRENT_DATE}" \
-    "${FLATPAK_METAINFO_PATH}"
+
+# Add release only if not already present
+if ! xmlstarlet sel -t -c "/component/releases/release[@version='${NEW_VERSION}']" "${FLATPAK_METAINFO_PATH}" | grep -q .; then
+    xmlstarlet ed -L \
+        -i "/component/releases/release[1]" -t elem -n "release" \
+        -i "/component/releases/release[1]" -t attr -n "version" -v "${NEW_VERSION}" \
+        -i "/component/releases/release[1]" -t attr -n "date" -v "${CURRENT_DATE}" \
+        "${FLATPAK_METAINFO_PATH}"
+else
+    echo "  ℹ️ metainfo.xml: release ${NEW_VERSION} already exists, not adding duplicate."
+fi
 
 echo "  ✅ Flatpak manifests updated."
 echo "--------------------------------------------------"
