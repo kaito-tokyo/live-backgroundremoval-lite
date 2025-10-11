@@ -67,7 +67,7 @@ jobs:
         working-directory: "unsupported/arch/live-backgroundremoval-lite-git"
         run: "sudo -u builder makepkg -s --noconfirm"
 
-  BuildForFlatpak:
+  BuildFlatpak:
     runs-on: "ubuntu-24.04"
 
     container:
