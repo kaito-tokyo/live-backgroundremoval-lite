@@ -81,7 +81,7 @@ jobs:
         uses: "actions/checkout@v5"
 
       - name: "Build Flatpak"
-        uses: "flatpak/flatpak-github-actions/flatpak-builder@10a3c29f0162516f0f68006be14c92f34bd4fa6c"
+        uses: "flatpak/flatpak-github-actions/flatpak-builder@v6"
         with:
           bundle: "com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite"
           manifest-path: "unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml"
