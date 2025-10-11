@@ -119,7 +119,7 @@ target_sources(
 )
 target_link_libraries(
   SelfieSegmenter
-  PUBLIC ncnn opencv_core opencv_imgproc opencv_imgcodecs
+  PUBLIC ncnn
 )
 
 target_compile_definitions(
