@@ -40,6 +40,7 @@ To initiate a new release, the user will instruct Gemini to start the process (e
       ```
       jq '.version = "<new_version>"' buildspec.json > buildspec.json.tmp && mv buildspec.json.tmp buildspec.json
       ```
+      Do not change by yourself; use `jq` to avoid formatting issues.
 
 3.  **Create & Merge Pull Request (PR)**:
     * **ACTION**: Create a PR for the version update.
