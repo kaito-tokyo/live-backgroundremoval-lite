@@ -152,7 +152,8 @@
         {
           "type": "git",
           "url": "https://github.com/kaito-tokyo/live-backgroundremoval-lite.git",
-          "branch": "fix-flatpak",
+          "tag": "1.8.6",
+          "commit": "0929e9c47c62a9184b69162adcd53d9b60a9dcf1",
           "x-checker-data": {
             "type": "git",
             "tag-pattern": "^([\\d.]+)$"
