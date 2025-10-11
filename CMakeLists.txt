@@ -42,58 +42,62 @@ option(USE_PKGCONFIG "Use pkg-config to find dependencies" OFF)
 if(USE_PKGCONFIG)
   find_package(PkgConfig REQUIRED)
 
+  # --- CURL ---
   pkg_check_modules(PC_CURL REQUIRED libcurl)
-  add_library(CURL::libcurl INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    CURL::libcurl
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_CURL_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_CURL_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "${PC_CURL_LIBRARIES}"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_CURL_CFLAGS_OTHER}"
-  )
+  add_library(CURL::libcurl INTERFACE IMPORTED)
+  target_link_libraries(CURL::libcurl INTERFACE ${PC_CURL_LIBRARIES})
+  target_include_directories(CURL::libcurl INTERFACE ${PC_CURL_INCLUDE_DIRS})
+  target_compile_definitions(CURL::libcurl INTERFACE ${PC_CURL_CFLAGS_OTHER})
 
+  # --- fmt ---
   pkg_check_modules(PC_FMT REQUIRED fmt)
-  add_library(fmt::fmt INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    fmt::fmt
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_FMT_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_FMT_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "${PC_FMT_LIBRARIES}"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_FMT_CFLAGS_OTHER}"
-  )
+  add_library(fmt::fmt INTERFACE IMPORTED)
+  target_link_libraries(fmt::fmt INTERFACE ${PC_FMT_LIBRARIES})
+  target_include_directories(fmt::fmt INTERFACE ${PC_FMT_INCLUDE_DIRS})
+  target_compile_definitions(fmt::fmt INTERFACE ${PC_FMT_CFLAGS_OTHER})
 
+  # --- ncnn ---
   pkg_check_modules(PC_NCNN REQUIRED ncnn)
-  add_library(ncnn INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    ncnn
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_NCNN_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_NCNN_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "${PC_NCNN_LIBRARIES}"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_NCNN_CFLAGS_OTHER}"
-  )
+  add_library(ncnn::ncnn INTERFACE IMPORTED)
+  target_link_libraries(ncnn::ncnn INTERFACE ${PC_NCNN_LIBRARIES})
+  target_include_directories(ncnn::ncnn INTERFACE ${PC_NCNN_INCLUDE_DIRS})
+  target_compile_definitions(ncnn::ncnn INTERFACE ${PC_NCNN_CFLAGS_OTHER})
 
+  # --- OpenCV ---
   pkg_check_modules(PC_OPENCV REQUIRED opencv4)
-  add_library(opencv_all INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    opencv_all
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_OPENCV_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_OPENCV_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "${PC_OPENCV_LIBRARIES}"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_OPENCV_CFLAGS_OTHER}"
-  )
-  set(OPENCV_LIBS opencv_all)
+  add_library(OpenCV::opencv_core INTERFACE IMPORTED)
+  target_link_libraries(OpenCV::opencv_core INTERFACE opencv_core)
+  target_include_directories(OpenCV::opencv_core INTERFACE ${PC_OPENCV_INCLUDE_DIRS})
+  target_compile_definitions(OpenCV::opencv_core INTERFACE ${PC_OPENCV_CFLAGS_OTHER})
+  add_library(OpenCV::opencv_imgproc INTERFACE IMPORTED)
+  target_link_libraries(OpenCV::opencv_imgproc INTERFACE opencv_imgproc)
+  add_library(OpenCV::opencv_imgcodecs INTERFACE IMPORTED)
+  target_link_libraries(OpenCV::opencv_imgcodecs INTERFACE opencv_imgcodecs)
 else()
   find_package(Backward CONFIG)
   find_package(CURL CONFIG REQUIRED)
   find_package(fmt CONFIG REQUIRED)
   find_package(ncnn CONFIG REQUIRED)
   find_package(OpenCV CONFIG REQUIRED)
-  set(OPENCV_LIBS opencv_core opencv_imgproc opencv_imgcodecs)
+
+  add_library(ncnn::ncnn ALIAS ncnn)
+  add_library(OpenCV::opencv_core ALIAS opencv_core)
+  add_library(OpenCV::opencv_imgproc ALIAS opencv_imgproc)
+  add_library(OpenCV::opencv_imgcodecs ALIAS opencv_imgcodecs)
 endif()
+
+add_library(SelfieSegmenter STATIC)
+target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/SelfieSegmenter.cpp)
+target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
+target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn)
+
+add_library(UpdateChecker INTERFACE)
+target_include_directories(UpdateChecker INTERFACE ${CMAKE_SOURCE_DIR}/src/UpdateChecker)
+target_link_libraries(UpdateChecker INTERFACE CURL::libcurl)
+
+add_library(BridgeUtils INTERFACE)
+target_include_directories(BridgeUtils INTERFACE ${CMAKE_SOURCE_DIR}/src/BridgeUtils)
+target_link_libraries(BridgeUtils INTERFACE OBS::libobs fmt::fmt)
 
 target_compile_definitions(
   ${CMAKE_PROJECT_NAME}
@@ -107,13 +111,9 @@ target_sources(
     src/Core/MainPluginContext_c.cpp
     src/Core/MainPluginContext.cpp
     src/Core/RenderingContext.cpp
-    src/SelfieSegmenter/SelfieSegmenter.cpp
     src/plugin-main.c
 )
-target_link_libraries(
-  ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs CURL::libcurl fmt::fmt ncnn ${OPENCV_LIBS}
-)
+target_link_libraries(${CMAKE_PROJECT_NAME} PUBLIC OBS::libobs BridgeUtils SelfieSegmenter UpdateChecker)
 if(Backward_FOUND)
   target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Backward::Backward)
   target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE HAVE_BACKWARD)
@@ -125,10 +125,7 @@ set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_nam
 if(BUILD_TESTING)
   enable_testing()
 
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/stb")
-
   find_package(GTest CONFIG REQUIRED)
-  find_package(Stb MODULE REQUIRED)
 
   add_subdirectory(tests)
 endif()

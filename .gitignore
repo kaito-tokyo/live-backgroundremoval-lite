@@ -11,7 +11,12 @@
 !/docs
 !/src
 !/tests
-!/unsupported
+!/unsupported/arch/*/PKGBUILD
+!/unsupported/arch/README.md
+!/unsupported/flatpak/patches/*
+!/unsupported/flatpak/*.xml
+!/unsupported/flatpak/*.json
+!/unsupported/flatpak/README.md
 !/vcpkg-overlay-ports
 !/vcpkg-triplets
 !.aiexclude

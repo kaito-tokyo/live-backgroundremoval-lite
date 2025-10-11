@@ -16,24 +16,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <SelfieSegmenter.hpp>
+
 #include <gtest/gtest.h>
-#include <SelfieSegmenter/SelfieSegmenter.hpp>
-#include <ncnn/net.h>
+
 #include <vector>
 #include <string>
 #include <cstdint>
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
 
-// JPEG(BGR) -> BGRA loader
+#include <ncnn/net.h>
+#include <opencv2/opencv.hpp>
+
+// JPEG(BGR) -> BGRA loader using OpenCV
 static bool load_jpg_bgra(const std::string &filename, std::vector<uint8_t> &out_bgra, int &width, int &height)
 {
-	int n;
-	unsigned char *data = stbi_load(filename.c_str(), &width, &height, &n, 4);
-	if (!data)
+	cv::Mat img = cv::imread(filename, cv::IMREAD_COLOR);
+	if (img.empty())
 		return false;
-	out_bgra.assign(data, data + width * height * 4);
-	stbi_image_free(data);
+	cv::Mat img_bgra;
+	cv::cvtColor(img, img_bgra, cv::COLOR_BGR2BGRA);
+	width = img_bgra.cols;
+	height = img_bgra.rows;
+	out_bgra.assign(img_bgra.data, img_bgra.data + width * height * 4);
 	return true;
 }
 
@@ -73,18 +77,16 @@ TEST(SelfieSegmenterTest, ProcessRealImage)
 	EXPECT_GT(nonzero, 0);
 
 	// Load reference mask image (PNG, grayscale)
-	int ref_w = 0, ref_h = 0, ref_c = 0;
-	unsigned char *ref_data = stbi_load(kTestImageMask, &ref_w, &ref_h, &ref_c, 1);
-	ASSERT_TRUE(ref_data != nullptr);
-	ASSERT_EQ(ref_w, SelfieSegmenter::INPUT_WIDTH);
-	ASSERT_EQ(ref_h, SelfieSegmenter::INPUT_HEIGHT);
+	cv::Mat ref_img = cv::imread(kTestImageMask, cv::IMREAD_GRAYSCALE);
+	ASSERT_FALSE(ref_img.empty());
+	ASSERT_EQ(ref_img.cols, SelfieSegmenter::INPUT_WIDTH);
+	ASSERT_EQ(ref_img.rows, SelfieSegmenter::INPUT_HEIGHT);
 	// Compare pixel-wise
 	int same = 0;
 	for (int i = 0; i < SelfieSegmenter::PIXEL_COUNT; ++i) {
-		if (std::abs(int(mask[i]) - int(ref_data[i])) <= 1)
+		if (std::abs(int(mask[i]) - int(ref_img.data[i])) <= 1)
 			++same;
 	}
-	stbi_image_free(ref_data);
 	double ratio = double(same) / SelfieSegmenter::PIXEL_COUNT;
 	EXPECT_GE(ratio, 0.95);
 }

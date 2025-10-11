@@ -60,13 +60,13 @@ jobs:
         run: ".github/scripts/install-vcpkg-macos.bash"
 
       - name: "Configure"
-        run: "cmake --preset macos-testing-ci"
+        run: "cmake --preset macos"
         
       - name: "Build"
-        run: "cmake --build --preset macos-testing-ci"
+        run: "cmake --build --preset macos"
         
       - name: "Run tests"
-        run: "ctest --preset macos-testing-ci --verbose"
+        run: "ctest --preset macos --verbose"
 
   TestOnWindows:
     runs-on: "windows-2022"
@@ -103,13 +103,13 @@ jobs:
         run: "$VCPKG_ROOT/vcpkg install --triplet x64-windows-static-md-obs"
 
       - name: "Configure"
-        run: "cmake --preset windows-testing-ci-x64"
+        run: "cmake --preset windows-x64"
 
       - name: "Build"
-        run: "cmake --build --preset windows-testing-ci-x64"
+        run: "cmake --build --preset windows-x64"
         
       - name: "Run tests"
-        run: "ctest --preset windows-testing-ci-x64 --verbose"
+        run: "ctest --preset windows-x64 --verbose"
 
   TestOnUbuntu:
     runs-on: "ubuntu-24.04"
@@ -164,10 +164,10 @@ jobs:
         run: "$VCPKG_ROOT/vcpkg install --triplet x64-linux-obs"
 
       - name: "Configure"
-        run: "cmake --preset ubuntu-testing-ci-x86_64"
+        run: "cmake --preset ubuntu-x86_64"
 
       - name: "Build"
-        run: "cmake --build --preset ubuntu-testing-ci-x86_64"
+        run: "cmake --build --preset ubuntu-x86_64"
         
       - name: "Run tests"
-        run: "ctest --preset ubuntu-testing-ci-x86_64 --verbose"
+        run: "ctest --preset ubuntu-x86_64 --verbose"
