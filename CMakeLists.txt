@@ -79,6 +79,11 @@ else()
   find_package(fmt CONFIG REQUIRED)
   find_package(ncnn CONFIG REQUIRED)
   find_package(OpenCV CONFIG REQUIRED)
+
+  add_library(ncnn::ncnn ALIAS ncnn)
+  add_library(OpenCV::opencv_core ALIAS opencv_core)
+  add_library(OpenCV::opencv_imgproc ALIAS opencv_imgproc)
+  add_library(OpenCV::opencv_imgcodecs ALIAS opencv_imgcodecs)
 endif()
 
 add_library(SelfieSegmenter STATIC)
