@@ -67,8 +67,18 @@ FLATPAK_JSON_PATH="${REPO_ROOT}/unsupported/flatpak/com.obsproject.Studio.Plugin
 jq --arg ver "$NEW_VERSION" --arg hash "$COMMIT_HASH" '
     (.modules[] | select(.name == "live-backgroundremoval-lite").sources[] | select(.type == "git")) 
     |= (.tag = $ver | .commit = $hash)
-' "$FLATPAK_JSON_PATH" > "$FLATPAK_JSON_PATH.tmp" && mv "$FLATPAK_JSON_PATH.tmp" "$FLATPAK_JSON_PATH"
-
+' "$FLATPAK_JSON_PATH" > "$FLATPAK_JSON_PATH.tmp"
+if [ $? -ne 0 ]; then
+    echo "❌ Error: jq failed to update the JSON manifest."
+    rm -f "$FLATPAK_JSON_PATH.tmp"
+    exit 1
+fi
+if [ ! -s "$FLATPAK_JSON_PATH.tmp" ]; then
+    echo "❌ Error: jq produced an empty output file. Manifest not updated."
+    rm -f "$FLATPAK_JSON_PATH.tmp"
+    exit 1
+fi
+mv "$FLATPAK_JSON_PATH.tmp" "$FLATPAK_JSON_PATH"
 # Update metainfo.xml file
 xmlstarlet ed -L \
     -i "/component/releases/release[1]" -t elem -n "release" \
