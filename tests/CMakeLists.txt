@@ -1,10 +1,7 @@
 include(GoogleTest)
 
 # # SelfieSegmenter_test
-add_executable(
-  SelfieSegmenter_test
-  SelfieSegmenter/SelfieSegmenter_test.cpp
-)
+add_executable(SelfieSegmenter_test SelfieSegmenter/SelfieSegmenter_test.cpp)
 target_compile_definitions(
   SelfieSegmenter_test
   PRIVATE DATA_DIR=\"${CMAKE_SOURCE_DIR}/data\" TESTS_DIR=\"${CMAKE_SOURCE_DIR}/tests\" NOMINMAX
