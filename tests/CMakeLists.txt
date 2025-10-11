@@ -1,18 +1,12 @@
 include(GoogleTest)
 
 # SelfieSegmenter_test
-add_executable(
-  SelfieSegmenter_test
-  SelfieSegmenter/SelfieSegmenter_test.cpp
-)
+add_executable(SelfieSegmenter_test SelfieSegmenter/SelfieSegmenter_test.cpp)
 target_compile_definitions(
   SelfieSegmenter_test
   PRIVATE DATA_DIR=\"${CMAKE_SOURCE_DIR}/data\" TESTS_DIR=\"${CMAKE_SOURCE_DIR}/tests\" NOMINMAX
 )
-target_link_libraries(
-  SelfieSegmenter_test
-  PRIVATE GTest::gtest_main SelfieSegmenter opencv_core opencv_imgcodecs
-)
+target_link_libraries(SelfieSegmenter_test PRIVATE GTest::gtest_main SelfieSegmenter opencv_core opencv_imgcodecs)
 gtest_discover_tests(SelfieSegmenter_test DISCOVERY_MODE PRE_TEST)
 
 add_executable(UpdateChecker_test UpdateChecker/UpdateChecker_test.cpp)
