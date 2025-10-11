@@ -42,67 +42,38 @@ option(USE_PKGCONFIG "Use pkg-config to find dependencies" OFF)
 if(USE_PKGCONFIG)
   find_package(PkgConfig REQUIRED)
 
+  # --- CURL ---
   pkg_check_modules(PC_CURL REQUIRED libcurl)
-  add_library(CURL::libcurl INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    CURL::libcurl
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_CURL_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_CURL_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "${PC_CURL_LIBRARIES}"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_CURL_CFLAGS_OTHER}"
-  )
+  add_library(CURL::libcurl INTERFACE IMPORTED)
+  target_link_libraries(CURL::libcurl INTERFACE ${PC_CURL_LIBRARIES})
+  target_include_directories(CURL::libcurl INTERFACE ${PC_CURL_INCLUDE_DIRS})
+  target_compile_definitions(CURL::libcurl INTERFACE ${PC_CURL_CFLAGS_OTHER})
 
+  # --- fmt ---
   pkg_check_modules(PC_FMT REQUIRED fmt)
-  add_library(fmt::fmt INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    fmt::fmt
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_FMT_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_FMT_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "${PC_FMT_LIBRARIES}"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_FMT_CFLAGS_OTHER}"
-  )
+  add_library(fmt::fmt INTERFACE IMPORTED)
+  target_link_libraries(fmt::fmt INTERFACE ${PC_FMT_LIBRARIES})
+  target_include_directories(fmt::fmt INTERFACE ${PC_FMT_INCLUDE_DIRS})
+  target_compile_definitions(fmt::fmt INTERFACE ${PC_FMT_CFLAGS_OTHER})
 
+  # --- ncnn ---
   pkg_check_modules(PC_NCNN REQUIRED ncnn)
-  add_library(ncnn INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    ncnn
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_NCNN_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_NCNN_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "${PC_NCNN_LIBRARIES}"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_NCNN_CFLAGS_OTHER}"
-  )
+  add_library(ncnn INTERFACE IMPORTED)
+  target_link_libraries(ncnn INTERFACE ${PC_NCNN_LIBRARIES})
+  target_include_directories(ncnn INTERFACE ${PC_NCNN_INCLUDE_DIRS})
+  target_compile_definitions(ncnn INTERFACE ${PC_NCNN_CFLAGS_OTHER})
 
+  # --- OpenCV ---
   pkg_check_modules(PC_OPENCV REQUIRED opencv4)
-  add_library(opencv_core INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    opencv_core
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_OPENCV_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_OPENCV_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "opencv_core"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_OPENCV_CFLAGS_OTHER}"
-  )
-  add_library(opencv_imgproc INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    opencv_imgproc
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_OPENCV_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_OPENCV_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "opencv_imgproc"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_OPENCV_CFLAGS_OTHER}"
-  )
-  add_library(opencv_imgcodecs INTERFACE IMPORTED GLOBAL)
-  set_target_properties(
-    opencv_imgcodecs
-    PROPERTIES
-      INTERFACE_INCLUDE_DIRECTORIES "${PC_OPENCV_INCLUDE_DIRS}"
-      INTERFACE_LINK_DIRECTORIES "${PC_OPENCV_LIBRARY_DIRS}"
-      INTERFACE_LINK_LIBRARIES "opencv_imgcodecs"
-      INTERFACE_COMPILE_DEFINITIONS "${PC_OPENCV_CFLAGS_OTHER}"
-  )
+  add_library(opencv_core INTERFACE IMPORTED)
+  target_link_libraries(opencv_core INTERFACE opencv_core)
+  target_link_libraries(opencv_core INTERFACE ${PC_OPENCV_LIBRARIES})
+  target_include_directories(opencv_core INTERFACE ${PC_OPENCV_INCLUDE_DIRS})
+  target_compile_definitions(opencv_core INTERFACE ${PC_OPENCV_CFLAGS_OTHER})
+  add_library(opencv_imgproc INTERFACE IMPORTED)
+  target_link_libraries(opencv_imgproc INTERFACE opencv_imgproc)
+  add_library(opencv_imgcodecs INTERFACE IMPORTED)
+  target_link_libraries(opencv_imgcodecs INTERFACE opencv_imgcodecs)
 else()
   find_package(Backward CONFIG)
   find_package(CURL CONFIG REQUIRED)
