@@ -58,21 +58,21 @@ if(USE_PKGCONFIG)
 
   # --- ncnn ---
   pkg_check_modules(PC_NCNN REQUIRED ncnn)
-  add_library(ncnn INTERFACE IMPORTED)
-  target_link_libraries(ncnn INTERFACE ${PC_NCNN_LIBRARIES})
-  target_include_directories(ncnn INTERFACE ${PC_NCNN_INCLUDE_DIRS})
-  target_compile_definitions(ncnn INTERFACE ${PC_NCNN_CFLAGS_OTHER})
+  add_library(ncnn::ncnn INTERFACE IMPORTED)
+  target_link_libraries(ncnn::ncnn INTERFACE ${PC_NCNN_LIBRARIES})
+  target_include_directories(ncnn::ncnn INTERFACE ${PC_NCNN_INCLUDE_DIRS})
+  target_compile_definitions(ncnn::ncnn INTERFACE ${PC_NCNN_CFLAGS_OTHER})
 
   # --- OpenCV ---
   pkg_check_modules(PC_OPENCV REQUIRED opencv4)
-  add_library(opencv_core INTERFACE IMPORTED)
-  target_link_libraries(opencv_core INTERFACE opencv_core)
-  target_include_directories(opencv_core INTERFACE ${PC_OPENCV_INCLUDE_DIRS})
-  target_compile_definitions(opencv_core INTERFACE ${PC_OPENCV_CFLAGS_OTHER})
-  add_library(opencv_imgproc INTERFACE IMPORTED)
-  target_link_libraries(opencv_imgproc INTERFACE opencv_imgproc)
-  add_library(opencv_imgcodecs INTERFACE IMPORTED)
-  target_link_libraries(opencv_imgcodecs INTERFACE opencv_imgcodecs)
+  add_library(OpenCV::opencv_core INTERFACE IMPORTED)
+  target_link_libraries(OpenCV::opencv_core INTERFACE opencv_core)
+  target_include_directories(OpenCV::opencv_core INTERFACE ${PC_OPENCV_INCLUDE_DIRS})
+  target_compile_definitions(OpenCV::opencv_core INTERFACE ${PC_OPENCV_CFLAGS_OTHER})
+  add_library(OpenCV::opencv_imgproc INTERFACE IMPORTED)
+  target_link_libraries(OpenCV::opencv_imgproc INTERFACE opencv_imgproc)
+  add_library(OpenCV::opencv_imgcodecs INTERFACE IMPORTED)
+  target_link_libraries(OpenCV::opencv_imgcodecs INTERFACE opencv_imgcodecs)
 else()
   find_package(Backward CONFIG)
   find_package(CURL CONFIG REQUIRED)
@@ -94,7 +94,7 @@ target_include_directories(
 )
 target_link_libraries(
   SelfieSegmenter
-  PUBLIC ncnn
+  PUBLIC ncnn::ncnn
 )
 
 add_library(UpdateChecker INTERFACE)
@@ -146,8 +146,6 @@ set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_nam
 
 if(BUILD_TESTING)
   enable_testing()
-
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/share/stb")
 
   find_package(GTest CONFIG REQUIRED)
 
