@@ -51,7 +51,7 @@ If you wish to proceed with building the plugin from these local files, you will
       * `build-dir` is a temporary directory for the build process.
 
     ```bash
-    flatpak-builder --user --install --force-clean build-dir com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml
+    flatpak-builder --user --install --force-clean build-dir com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.json
     ```
 
 This will build the plugin and all its dependencies from source and install it as an extension for the OBS Studio Flatpak. Once complete, you can run OBS Studio, and the plugin will be available.

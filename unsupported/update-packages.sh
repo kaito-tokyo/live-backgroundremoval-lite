@@ -62,11 +62,12 @@ if [ -z "${COMMIT_HASH}" ]; then
     exit 1
 fi
 
-# Update YAML file (macOS/BSD sed compatible)
-sed -i '' "/name: ${PKG_NAME}/,/- type: git/{
-s/tag: .*/tag: ${NEW_VERSION}/
-s/commit: .*/commit: '${COMMIT_HASH}'/
-}" "${FLATPAK_YAML_PATH}"
+# Update JSON file using jq
+FLATPAK_JSON_PATH="${REPO_ROOT}/unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.json"
+jq --arg ver "$NEW_VERSION" --arg hash "$COMMIT_HASH" '
+    (.modules[] | select(.name == "live-backgroundremoval-lite").sources[] | select(.type == "git")) 
+    |= (.tag = $ver | .commit = $hash)
+' "$FLATPAK_JSON_PATH" > "$FLATPAK_JSON_PATH.tmp" && mv "$FLATPAK_JSON_PATH.tmp" "$FLATPAK_JSON_PATH"
 
 # Update metainfo.xml file
 xmlstarlet ed -L \

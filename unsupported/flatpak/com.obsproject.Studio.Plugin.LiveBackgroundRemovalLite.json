@@ -1,0 +1,71 @@
+{
+  "id": "com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite",
+  "branch": "stable",
+  "runtime": "com.obsproject.Studio",
+  "runtime-version": "stable",
+  "sdk": "org.kde.Sdk//6.8",
+  "build-extension": true,
+  "separate-locales": false,
+  "build-options": {
+    "prefix": "/app/plugins/LiveBackgroundRemovalLite"
+  },
+  "modules": [
+    {
+      "name": "ncnn",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_INSTALL_INCLUDEDIR=include",
+        "-DNCNN_SHARED_LIB=ON",
+        "-DNCNN_BUILD_TESTS=OFF",
+        "-DNCNN_BUILD_EXAMPLES=OFF",
+        "-DNCNN_BUILD_TOOLS=OFF"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/Tencent/ncnn.git",
+          "tag": "20250916",
+          "commit": "c4193aadbbb56582aa87b1850dd3d98fb8fd936d"
+        }
+      ]
+    },
+    {
+      "name": "live-backgroundremoval-lite",
+      "buildsystem": "cmake-ninja",
+      "builddir": true,
+      "config-opts": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_PREFIX_PATH=/app/plugins/LiveBackgroundRemovalLite",
+        "-DENABLE_FRONTEND_API=ON",
+        "-DENABLE_QT=ON",
+        "-DUSE_PKGCONFIG=ON"
+      ],
+      "sources": [
+        {
+          "type": "git",
+          "url": "https://github.com/kaito-tokyo/live-backgroundremoval-lite.git",
+          "tag": "1.8.6",
+          "commit": "0929e9c47c62a9184b69162adcd53d9b60a9dcf1",
+          "x-checker-data": {
+            "type": "git",
+            "tag-pattern": "^([\\d.]+)$"
+          }
+        },
+        {
+          "type": "file",
+          "path": "com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.metainfo.xml"
+        }
+      ],
+      "post-install": [
+        "install -Dm644 --target-directory=${FLATPAK_DEST}/share/metainfo ${FLATPAK_BUILDER_BUILDDIR}/${FLATPAK_ID}.metainfo.xml"
+      ]
+    }
+  ],
+  "cleanup": [
+    "/include",
+    "/lib/cmake",
+    "/lib/pkgconfig"
+  ]
+}
