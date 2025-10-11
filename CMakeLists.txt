@@ -78,7 +78,7 @@ if(USE_PKGCONFIG)
   pkg_check_modules(PC_OPENCV REQUIRED opencv4)
   add_library(opencv_core INTERFACE IMPORTED GLOBAL)
   set_target_properties(
-    opencv_all
+    opencv_core
     PROPERTIES
       INTERFACE_INCLUDE_DIRECTORIES "${PC_OPENCV_INCLUDE_DIRS}"
       INTERFACE_LINK_DIRECTORIES "${PC_OPENCV_LIBRARY_DIRS}"
@@ -111,6 +111,17 @@ else()
   find_package(OpenCV CONFIG REQUIRED)
 endif()
 
+add_library(SelfieSegmenter STATIC)
+target_sources(
+  SelfieSegmenter
+  PRIVATE
+    src/SelfieSegmenter/SelfieSegmenter.cpp
+)
+target_link_libraries(
+  SelfieSegmenter
+  PUBLIC ncnn opencv_core opencv_imgproc opencv_imgcodecs
+)
+
 target_compile_definitions(
   ${CMAKE_PROJECT_NAME}
   PRIVATE PLUGIN_NAME="${CMAKE_PROJECT_NAME}" PLUGIN_VERSION="${CMAKE_PROJECT_VERSION}"
@@ -123,12 +134,11 @@ target_sources(
     src/Core/MainPluginContext_c.cpp
     src/Core/MainPluginContext.cpp
     src/Core/RenderingContext.cpp
-    src/SelfieSegmenter/SelfieSegmenter.cpp
     src/plugin-main.c
 )
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs CURL::libcurl fmt::fmt ncnn opencv_core opencv_imgproc opencv_imgcodecs
+  PUBLIC OBS::libobs CURL::libcurl fmt::fmt SelfieSegmenter
 )
 if(Backward_FOUND)
   target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE Backward::Backward)
