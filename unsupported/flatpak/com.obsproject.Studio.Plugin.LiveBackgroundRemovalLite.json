@@ -27,7 +27,6 @@
         "-D WITH_JPEG=ON",
         "-D WITH_PNG=ON",
         "-D WITH_TIFF=ON",
-        "-D BUILD_opencv_gapi=OFF",
         "-D WITH_JASPER=OFF",
         "-D WITH_WEBP=OFF",
         "-D WITH_OPENJPEG=OFF",
@@ -50,10 +49,6 @@
           "url": "https://github.com/opencv/opencv.git",
           "tag": "4.11.0",
           "commit": "31b0eeea0b44b370fd0712312df4214d4ae1b158"
-        },
-        {
-          "type": "patch",
-          "path": "patches/opencv4/0001-disable-downloading.patch"
         },
         {
           "type": "patch",
