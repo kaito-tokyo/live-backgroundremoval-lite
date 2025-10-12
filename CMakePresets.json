@@ -208,6 +208,11 @@
       "configuration": "RelWithDebInfo"
     },
     {
+      "name": "macos-homebrew",
+      "configurePreset": "macos-homebrew",
+      "configuration": "RelWithDebInfo"
+    },
+    {
       "name": "windows-x64",
       "configurePreset": "windows-x64",
       "configuration": "RelWithDebInfo"
