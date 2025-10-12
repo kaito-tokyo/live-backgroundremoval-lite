@@ -99,7 +99,7 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 	obs_data_set_default_double(data, "maskLowerBoundAmpDb", defaultProperty.maskLowerBoundAmpDb);
 	obs_data_set_default_double(data, "maskUpperBoundMarginAmpDb", defaultProperty.maskUpperBoundMarginAmpDb);
 
-	obs_data_set_default_double(data, "timeAveragedFilteringAlpha", 0.1f);
+	obs_data_set_default_double(data, "timeAveragedFilteringAlpha", 0.1);
 }
 
 obs_properties_t *MainPluginContext::getProperties()
