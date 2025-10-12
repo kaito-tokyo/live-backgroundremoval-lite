@@ -93,11 +93,13 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_int(data, "selfieSegmenterFps", defaultProperty.selfieSegmenterFps);
 
-	obs_data_set_default_double(data, "gfEpsPowDb", defaultProperty.gfEpsPowDb);
+	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
 
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
 	obs_data_set_default_double(data, "maskLowerBoundAmpDb", defaultProperty.maskLowerBoundAmpDb);
 	obs_data_set_default_double(data, "maskUpperBoundMarginAmpDb", defaultProperty.maskUpperBoundMarginAmpDb);
+
+	obs_data_set_default_double(data, "timeAveragedFilteringAlpha", 0.1f);
 }
 
 obs_properties_t *MainPluginContext::getProperties()
@@ -159,13 +161,17 @@ obs_properties_t *MainPluginContext::getProperties()
 
 	obs_properties_add_int_slider(props, "selfieSegmenterFps", obs_module_text("selfieSegmenterFps"), 1, 30, 1);
 
-	obs_properties_add_float_slider(props, "gfEpsPowDb", obs_module_text("gfEpsPowDb"), -60.0, -20.0, 0.1);
+	obs_properties_add_float_slider(props, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
+					-20.0, 0.1);
 
 	obs_properties_add_float_slider(props, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0, 0.01);
 	obs_properties_add_float_slider(props, "maskLowerBoundAmpDb", obs_module_text("maskLowerBoundAmpDb"), -80.0,
 					-10.0, 0.1);
 	obs_properties_add_float_slider(props, "maskUpperBoundMarginAmpDb",
 					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
+
+	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha",
+					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
 
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
@@ -204,11 +210,13 @@ void MainPluginContext::update(obs_data_t *settings)
 
 	newPluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
 
-	newPluginProperty.gfEpsPowDb = obs_data_get_double(settings, "gfEpsPowDb");
+	newPluginProperty.guidedFilterEpsPowDb = obs_data_get_double(settings, "guidedFilterEpsPowDb");
 
 	newPluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
 	newPluginProperty.maskLowerBoundAmpDb = obs_data_get_double(settings, "maskLowerBoundAmpDb");
 	newPluginProperty.maskUpperBoundMarginAmpDb = obs_data_get_double(settings, "maskUpperBoundMarginAmpDb");
+
+	newPluginProperty.timeAveragedFilteringAlpha = obs_data_get_double(settings, "timeAveragedFilteringAlpha");
 
 	std::shared_ptr<RenderingContext> _renderingContext;
 	{

@@ -101,11 +101,13 @@ public:
 
 	std::atomic<float> selfieSegmenterFps;
 
-	std::atomic<float> gfEps;
+	std::atomic<float> guidedFilterEps;
 
 	std::atomic<float> maskGamma;
 	std::atomic<float> maskLowerBound;
 	std::atomic<float> maskUpperBoundMargin;
+
+	std::atomic<float> timeAveragedFilterAlpha;
 
 private:
 	float timeSinceLastSelfieSegmentation = 0.0f;
@@ -135,7 +137,7 @@ public:
 
 		selfieSegmenterFps = static_cast<float>(pluginProperty.selfieSegmenterFps);
 
-		gfEps = static_cast<float>(std::pow(10.0, pluginProperty.gfEpsPowDb / 10.0));
+		guidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
 
 		maskGamma = static_cast<float>(pluginProperty.maskGamma);
 		maskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
@@ -149,7 +151,7 @@ private:
 	void renderSegmenterInput(gs_texture_t *bgrxOriginalImage);
 	void renderSegmentationMask();
 	void calculateDifferenceWithMask();
-	void renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask, float gfEps);
+	void renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask, float eps);
 	void renderTimeAveragedMask(const BridgeUtils::unique_gs_texture_t &targetTexture,
 				    const BridgeUtils::unique_gs_texture_t &previousMaskTexture,
 				    const BridgeUtils::unique_gs_texture_t &sourceTexture, float alpha);

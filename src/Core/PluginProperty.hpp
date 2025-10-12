@@ -39,11 +39,13 @@ struct PluginProperty {
 
 	int subsamplingRate = 4;
 
-	double gfEpsPowDb = -40.0;
+	double guidedFilterEpsPowDb = -40.0;
 
 	double maskGamma = 2.5;
 	double maskLowerBoundAmpDb = -25.0;
 	double maskUpperBoundMarginAmpDb = -25.0;
+
+	double timeAveragedFilteringAlpha = 0.1;
 };
 
 } // namespace LiveBackgroundRemovalLite
