@@ -70,7 +70,7 @@ if(USE_PKGCONFIG)
   target_link_libraries(OpenCV::opencv_imgproc INTERFACE opencv_imgproc)
   add_library(OpenCV::opencv_imgcodecs INTERFACE IMPORTED)
   target_link_libraries(OpenCV::opencv_imgcodecs INTERFACE opencv_imgcodecs)
-elseif(NOT VCPKG_TARGET_TRIPLET STREQUAL "")
+elseif(${VCPKG_TARGET_TRIPLET})
   list(PREPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
 
   find_package(Backward CONFIG)
