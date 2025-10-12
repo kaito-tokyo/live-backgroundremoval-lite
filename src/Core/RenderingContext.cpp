@@ -214,9 +214,9 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, g
 
 void RenderingContext::renderTimeAveragedMask(const unique_gs_texture_t &targetTexture,
 					      const unique_gs_texture_t &previousMaskTexture,
-					      const unique_gs_texture_t &sourceTexture)
+					      const unique_gs_texture_t &sourceTexture, float alpha)
 {
-	mainEffect.timeAveragedFiltering(targetTexture, previousMaskTexture, sourceTexture, 0.9f);
+	mainEffect.timeAveragedFiltering(targetTexture, previousMaskTexture, sourceTexture, alpha);
 }
 
 void RenderingContext::kickSegmentationTask()
@@ -276,7 +276,7 @@ void RenderingContext::videoRender()
 		if (_filterLevel >= FilterLevel::TimeAveragedFilter) {
 			int nextIndex = 1 - currentTimeAveragedMaskIndex;
 			renderTimeAveragedMask(r8TimeAveragedMasks[nextIndex],
-					       r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GFResult);
+					       r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GFResult, 0.1f);
 			currentTimeAveragedMaskIndex = nextIndex;
 		}
 	}

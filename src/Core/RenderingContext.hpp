@@ -128,7 +128,7 @@ public:
 	void applyPluginProperty(const PluginProperty &pluginProperty)
 	{
 		if (pluginProperty.filterLevel == FilterLevel::Default) {
-			filterLevel = FilterLevel::GuidedFilter;
+			filterLevel = FilterLevel::TimeAveragedFilter;
 		} else {
 			filterLevel = pluginProperty.filterLevel;
 		}
@@ -152,7 +152,7 @@ private:
 	void renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask, float gfEps);
 	void renderTimeAveragedMask(const BridgeUtils::unique_gs_texture_t &targetTexture,
 				    const BridgeUtils::unique_gs_texture_t &previousMaskTexture,
-				    const BridgeUtils::unique_gs_texture_t &sourceTexture);
+				    const BridgeUtils::unique_gs_texture_t &sourceTexture, float alpha);
 	void kickSegmentationTask();
 };
 

@@ -376,7 +376,7 @@ public:
 				   std::uint32_t width = 0, std::uint32_t height = 0) const noexcept
 	{
 		TextureRenderGuard textureRenderGuard(targetTexture);
-		while (gs_effect_loop(effect.get(), "FinalizeGuidedFilter")) {
+		while (gs_effect_loop(effect.get(), "TimeAveragedFilter")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
 			gs_effect_set_texture(textureImage1, previousMaskTexture.get());
 			gs_effect_set_float(floatAlpha, alpha);

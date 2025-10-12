@@ -374,7 +374,7 @@ float4 PSFinalizeGuidedFilter(VertInOut vert_in) : TARGET
 	return float4(value, value, value, 1.0f);
 }
 
-float PSTimeAveragedFilter(VertInOut vert_in) : TARGET
+float4 PSTimeAveragedFilter(VertInOut vert_in) : TARGET
 {
 	float2 uv = vert_in.uv;
 
