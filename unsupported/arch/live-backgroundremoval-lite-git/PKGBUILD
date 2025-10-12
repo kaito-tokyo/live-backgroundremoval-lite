@@ -11,7 +11,7 @@ depends=('obs-studio' 'curl' 'fmt' 'ncnn' 'opencv')
 makedepends=('git' 'cmake' 'ninja')
 provides=("${_pkgname}" "${_pkgname}-debug")
 conflicts=("${_pkgname}" "${_pkgname}-debug")
-source=("${_pkgname}::git+https://github.com/kaito-tokyo/${_pkgname}.git#branch=vulkan-arch")
+source=("${_pkgname}::git+https://github.com/kaito-tokyo/${_pkgname}.git")
 sha256sums=('SKIP')
 
 pkgver() {
