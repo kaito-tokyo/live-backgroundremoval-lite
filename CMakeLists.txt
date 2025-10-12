@@ -34,9 +34,8 @@ if(ENABLE_QT)
   )
 endif()
 
-set(VCPKG_INSTALLED_DIR "${CMAKE_SOURCE_DIR}/vcpkg_installed")
-list(PREPEND CMAKE_PREFIX_PATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
-
+set(VCPKG_TARGET_TRIPLET "Specify the VCPKG target triplet" CACHE STRING "")
+option(BUILD_TESTING "Build tests" OFF)
 option(USE_PKGCONFIG "Use pkg-config to find dependencies" OFF)
 
 if(USE_PKGCONFIG)
@@ -74,6 +73,10 @@ if(USE_PKGCONFIG)
   add_library(OpenCV::opencv_imgcodecs INTERFACE IMPORTED)
   target_link_libraries(OpenCV::opencv_imgcodecs INTERFACE opencv_imgcodecs)
 else()
+  if(VCPKG_TARGET_TRIPLET)
+    list(PREPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
+  endif()
+
   find_package(Backward CONFIG)
   find_package(CURL CONFIG REQUIRED)
   find_package(fmt CONFIG REQUIRED)
