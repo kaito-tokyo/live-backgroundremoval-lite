@@ -16,16 +16,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "RenderingContext.hpp"
+
 #include <array>
 
-#include "RenderingContext.hpp"
 #include "../BridgeUtils/AsyncTextureReader.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
 
+namespace KaitoTokyo {
+namespace LiveBackgroundRemovalLite {
+
 namespace {
 
-std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
+inline std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
 {
 	using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 
@@ -62,20 +66,17 @@ inline std::vector<unique_gs_texture_t> createReductionPyramid(std::uint32_t wid
 
 } // anonymous namespace
 
-namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
-
 RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
-				   const ncnn::Net &_selfieSegmenterNet, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-				   PluginConfig _pluginConfig, std::uint32_t _subsamplingRate, std::uint32_t _width,
-				   std::uint32_t _height)
+				   PluginConfig _pluginConfig, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
+				   int ncnnNumThreads, int ncnnGpuIndex, std::uint32_t _subsamplingRate,
+				   std::uint32_t _width, std::uint32_t _height)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
-	  readerSegmenterInput(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX),
-	  selfieSegmenter(_selfieSegmenterNet),
-	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
 	  pluginConfig(_pluginConfig),
+	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
+	  selfieSegmenter(selfieSegmenterNet),
+	  readerSegmenterInput(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX),
 	  subsamplingRate(_subsamplingRate),
 	  width(_width),
 	  height(_height),
@@ -102,6 +103,18 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r32fGFTemporary1Sub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET))
 {
+	selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
+	selfieSegmenterNet.opt.num_threads = ncnnNumThreads;
+	selfieSegmenterNet.opt.use_local_pool_allocator = true;
+	selfieSegmenterNet.opt.openmp_blocktime = 1;
+
+	if (int ret = selfieSegmenterNet.load_param(pluginConfig.selfieSegmenterParamPath.c_str())) {
+		throw std::runtime_error("Failed to load selfie segmenter param: " + std::to_string(ret));
+	}
+
+	if (int ret = selfieSegmenterNet.load_model(pluginConfig.selfieSegmenterBinPath.c_str())) {
+		throw std::runtime_error("Failed to load selfie segmenter bin: " + std::to_string(ret));
+	}
 }
 
 RenderingContext::~RenderingContext() noexcept {}

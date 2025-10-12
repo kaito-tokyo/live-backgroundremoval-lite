@@ -31,6 +31,12 @@ struct PluginConfig {
 	std::string latestVersionURL =
 		"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
 
+	std::string selfieSegmenterParamPath =
+		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.param").get();
+
+	std::string selfieSegmenterBinPath =
+		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.bin").get();
+
 	static PluginConfig load()
 	{
 		using namespace KaitoTokyo::BridgeUtils;
@@ -44,8 +50,16 @@ struct PluginConfig {
 			return pluginConfig;
 		}
 
-		if (const char *str = obs_data_get_string(data.get(), "latestVersionURL"); str) {
+		if (const char *str = obs_data_get_string(data.get(), "latestVersionURL")) {
 			pluginConfig.latestVersionURL = str;
+		}
+
+		if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterParamPath")) {
+			pluginConfig.selfieSegmenterParamPath = str;
+		}
+
+		if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterBinPath")) {
+			pluginConfig.selfieSegmenterBinPath = str;
 		}
 
 		return pluginConfig;

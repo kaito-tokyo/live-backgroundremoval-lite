@@ -30,6 +30,7 @@ enum class FilterLevel : int {
 
 struct PluginProperty {
 	int ncnnGpuIndex = -1;
+	int ncnnNumThreads = 2;
 
 	FilterLevel filterLevel = FilterLevel::Default;
 

@@ -56,7 +56,6 @@ private:
 	std::shared_future<std::string> latestVersionFuture;
 	const MainEffect mainEffect;
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
-	ncnn::Net selfieSegmenterNet;
 
 	std::uint32_t subsamplingRate = 4;
 	PluginProperty pluginProperty;

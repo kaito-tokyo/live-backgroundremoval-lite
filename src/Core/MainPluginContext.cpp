@@ -47,26 +47,6 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 	  latestVersionFuture(_latestVersionFuture),
 	  selfieSegmenterTaskQueue(logger, 1)
 {
-	selfieSegmenterNet.opt.num_threads = 2;
-	selfieSegmenterNet.opt.use_local_pool_allocator = true;
-	selfieSegmenterNet.opt.openmp_blocktime = 1;
-
-	unique_bfree_char_t paramPath = unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.param");
-	if (!paramPath) {
-		throw std::runtime_error("Failed to find model param file");
-	}
-	unique_bfree_char_t binPath = unique_obs_module_file("models/mediapipe_selfie_segmentation_int8.ncnn.bin");
-	if (!binPath) {
-		throw std::runtime_error("Failed to find model bin file");
-	}
-
-	if (selfieSegmenterNet.load_param(paramPath.get()) != 0) {
-		throw std::runtime_error("Failed to load model param");
-	}
-	if (selfieSegmenterNet.load_model(binPath.get()) != 0) {
-		throw std::runtime_error("Failed to load model bin");
-	}
-
 	update(settings);
 }
 
@@ -103,6 +83,7 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 	PluginProperty defaultProperty;
 
 	obs_data_set_default_int(data, "ncnnGpuIndex", defaultProperty.ncnnGpuIndex);
+	obs_data_set_default_int(data, "ncnnNumThreads", defaultProperty.ncnnNumThreads);
 
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
@@ -124,7 +105,7 @@ obs_properties_t *MainPluginContext::getProperties()
 		if (latestVersionFuture.valid()) {
 			if (latestVersionFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
 				const std::string latestVersion = latestVersionFuture.get();
-				logger.info("Latest version: {}", latestVersion);
+				logger.info("CurrentVersion: {}, Latest version: {}", PLUGIN_VERSION, latestVersion);
 				if (latestVersion == PLUGIN_VERSION) {
 					updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
 				} else {
@@ -142,33 +123,22 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
 #if NCNN_VULKAN == 1
-    constexpr bool ncnnGpuSupported = true;
-    int gpuCount = ncnn::get_gpu_count();
-#else
-	constexpr bool ncnnGpuSupported = false;
-	int gpuCount = 0;
-#endif
+	obs_property_t *propNcnnGpuIndex = obs_properties_add_list(
+		props, "ncnnGpuIndex", obs_module_text("ncnnGpuList"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
-	if (ncnnGpuSupported) {
-		if (gpuCount == 0) {
-			obs_properties_add_text(props, "gpuStatus", obs_module_text("gpuStatusGpuNotFound"), OBS_TEXT_INFO);
-		} else {
-			obs_property_t *propGpuList =
-				obs_properties_add_list(props, "ncnnGpuList", obs_module_text("ncnnGpuList"), OBS_COMBO_TYPE_LIST,
-							OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(propNcnnGpuIndex, obs_module_text("ncnnGpuListUseCpu"), -1);
 
-			ncnnGpuNames.resize(gpuCount);
-
-			obs_property_list_add_int(propGpuList, obs_module_text("ncnnGpuListUseCpu"), -1);
-
-			for (int i = 0; i < gpuCount; ++i) {
-				ncnnGpuNames[i] = std::to_string(i);
-				obs_property_list_add_int(propGpuList, ncnnGpuNames[i].c_str(), i);
-			}
-		}
-	} else {
-		obs_properties_add_text(props, "gpuStatus", obs_module_text("gpuStatusNCpuOnly"), OBS_TEXT_INFO);
+	int ncnnGpuCount = ncnn::get_gpu_count();
+	ncnnGpuNames.resize(ncnnGpuCount);
+	for (int i = 0; i < ncnnGpuCount; ++i) {
+		ncnnGpuNames[i] = std::to_string(i);
+		obs_property_list_add_int(propNcnnGpuIndex, ncnnGpuNames[i].c_str(), i);
 	}
+
+	obs_properties_add_int_slider(props, "ncnnNumThreads", obs_module_text("ncnnNumThreads"), 0, 32, 1);
+#else
+	obs_properties_add_text(props, "gpuStatus", obs_module_text("gpuStatusCpuOnly"), OBS_TEXT_INFO);
+#endif
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
 								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
@@ -224,8 +194,6 @@ void MainPluginContext::update(obs_data_t *settings)
 {
 	PluginProperty newPluginProperty;
 
-	newPluginProperty.ncnnGpuIndex = obs_data_get_int(settings, "ncnnGpuIndex");
-
 	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
 
 	newPluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
@@ -239,8 +207,32 @@ void MainPluginContext::update(obs_data_t *settings)
 	std::shared_ptr<RenderingContext> _renderingContext;
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex);
+
+		bool doesRenewRenderingContext = false;
+
+		int ncnnGpuIndex = obs_data_get_int(settings, "ncnnGpuIndex");
+		if (pluginProperty.ncnnGpuIndex != ncnnGpuIndex) {
+			doesRenewRenderingContext = true;
+		}
+		newPluginProperty.ncnnGpuIndex = ncnnGpuIndex;
+
+		int ncnnNumThreads = obs_data_get_int(settings, "ncnnNumThreads");
+		if (pluginProperty.ncnnNumThreads != ncnnNumThreads) {
+			doesRenewRenderingContext = true;
+		}
+		newPluginProperty.ncnnNumThreads = ncnnNumThreads;
+
 		pluginProperty = newPluginProperty;
 		_renderingContext = renderingContext;
+
+		if (_renderingContext && doesRenewRenderingContext) {
+			GraphicsContextGuard graphicsContextGuard;
+			std::shared_ptr<RenderingContext> newRenderingContext =
+				createRenderingContext(_renderingContext->width, _renderingContext->height);
+			renderingContext = newRenderingContext;
+			_renderingContext = newRenderingContext;
+			GsUnique::drain();
+		}
 	}
 
 	if (_renderingContext) {
@@ -353,11 +345,10 @@ try {
 std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std::uint32_t targetWidth,
 									    std::uint32_t targetHeight)
 {
-	PluginConfig defaultPluginConfig;
-
-	auto renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterNet,
-								   selfieSegmenterTaskQueue, defaultPluginConfig,
-								   subsamplingRate, targetWidth, targetHeight);
+	PluginConfig pluginConfig(PluginConfig::load());
+	auto renderingContext = std::make_shared<RenderingContext>(
+		source, logger, mainEffect, pluginConfig, selfieSegmenterTaskQueue, pluginProperty.ncnnNumThreads,
+		pluginProperty.ncnnGpuIndex, subsamplingRate, targetWidth, targetHeight);
 	renderingContext->applyPluginProperty(pluginProperty);
 	return renderingContext;
 }
