@@ -101,6 +101,8 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r32fSubGFA(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFB(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r8TimeAveragedMasks{make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET),
+			      make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)},
 	  r32fGFTemporary1Sub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET))
 {
 	selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
@@ -186,7 +188,7 @@ void RenderingContext::renderSegmentationMask()
 }
 
 void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask,
-					  float gfEps)
+					  float eps)
 {
 	mainEffect.resampleByNearestR8(widthSub, heightSub, r8SubGFGuide.get(), r16fOriginalGrayscale);
 
@@ -204,10 +206,17 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, g
 
 	mainEffect.calculateGuidedFilterAAndB(widthSub, heightSub, r32fSubGFA.get(), r32fSubGFB.get(),
 					      r32fSubGFMeanGuideSq.get(), r32fSubGFMeanGuide.get(),
-					      r32fSubGFMeanGuideSource.get(), r32fSubGFMeanSource.get(), gfEps);
+					      r32fSubGFMeanGuideSource.get(), r32fSubGFMeanSource.get(), eps);
 
 	mainEffect.finalizeGuidedFilter(width, height, r8GFResult.get(), r16fOriginalGrayscale, r32fSubGFA.get(),
 					r32fSubGFB.get());
+}
+
+void RenderingContext::renderTimeAveragedMask(const unique_gs_texture_t &targetTexture,
+					      const unique_gs_texture_t &previousMaskTexture,
+					      const unique_gs_texture_t &sourceTexture, float alpha)
+{
+	mainEffect.timeAveragedFiltering(targetTexture, previousMaskTexture, sourceTexture, alpha);
 }
 
 void RenderingContext::kickSegmentationTask()
@@ -231,11 +240,13 @@ void RenderingContext::videoRender()
 {
 	FilterLevel _filterLevel = filterLevel;
 
-	float _gfEps = gfEps;
+	float _guidedFilterEps = guidedFilterEps;
 
 	float _maskGamma = maskGamma;
 	float _maskLowerBound = maskLowerBound;
 	float _maskUpperBoundMargin = maskUpperBoundMargin;
+
+	float _timeAveragedFilteringAlpha = timeAveragedFilteringAlpha;
 
 	const bool needNewFrame = doesNextVideoRenderReceiveNewFrame;
 	if (needNewFrame) {
@@ -261,7 +272,15 @@ void RenderingContext::videoRender()
 		}
 
 		if (_filterLevel >= FilterLevel::GuidedFilter) {
-			renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get(), _gfEps);
+			renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get(), _guidedFilterEps);
+		}
+
+		if (_filterLevel >= FilterLevel::TimeAveragedFilter) {
+			std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex;
+			renderTimeAveragedMask(r8TimeAveragedMasks[nextIndex],
+					       r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GFResult,
+					       _timeAveragedFilteringAlpha);
+			currentTimeAveragedMaskIndex = nextIndex;
 		}
 	}
 
@@ -271,6 +290,10 @@ void RenderingContext::videoRender()
 		mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
 	} else if (_filterLevel == FilterLevel::GuidedFilter) {
 		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(), _maskGamma,
+					       _maskLowerBound, _maskUpperBoundMargin);
+	} else if (_filterLevel == FilterLevel::TimeAveragedFilter) {
+		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(),
+					       r8TimeAveragedMasks[currentTimeAveragedMaskIndex].get(), _maskGamma,
 					       _maskLowerBound, _maskUpperBoundMargin);
 	} else {
 		// Draw nothing to prevent unexpected background disclosure
