@@ -58,8 +58,7 @@
       "generator": "Xcode",
       "cacheVariables": {
         "BUILD_TESTING": true,
-        "BUILD_WITH_HOMEBREW": true,
-        "VCPKG_TARGET_TRIPLET": ""
+        "BUILD_WITH_HOMEBREW": true
       }
     },
     {
