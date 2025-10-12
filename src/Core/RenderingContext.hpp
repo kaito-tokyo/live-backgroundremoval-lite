@@ -90,6 +90,9 @@ public:
 	const BridgeUtils::unique_gs_texture_t r32fSubGFB;
 	const BridgeUtils::unique_gs_texture_t r8GFResult;
 
+	const std::array<BridgeUtils::unique_gs_texture_t, 2> r8TimeAveragedMasks;
+	std::size_t currentTimeAveragedMaskIndex = 0;
+
 private:
 	const BridgeUtils::unique_gs_texture_t r32fGFTemporary1Sub;
 
@@ -147,6 +150,9 @@ private:
 	void renderSegmentationMask();
 	void calculateDifferenceWithMask();
 	void renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask, float gfEps);
+	void renderTimeAveragedMask(const BridgeUtils::unique_gs_texture_t &targetTexture,
+				    const BridgeUtils::unique_gs_texture_t &previousMaskTexture,
+				    const BridgeUtils::unique_gs_texture_t &sourceTexture);
 	void kickSegmentationTask();
 };
 

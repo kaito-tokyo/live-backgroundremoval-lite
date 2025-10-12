@@ -26,6 +26,7 @@ enum class FilterLevel : int {
 	Passthrough = 100,
 	Segmentation = 200,
 	GuidedFilter = 300,
+	TimeAveragedFilter = 400,
 };
 
 struct PluginProperty {

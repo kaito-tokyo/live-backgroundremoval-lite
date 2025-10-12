@@ -79,6 +79,43 @@ struct RenderTargetGuard {
 	}
 };
 
+struct TextureRenderGuard {
+	gs_texture_t *previousRenderTarget;
+	gs_zstencil_t *previousZStencil;
+	gs_color_space previousColorSpace;
+
+	explicit TextureRenderGuard(const BridgeUtils::unique_gs_texture_t &targetTexture)
+		: previousRenderTarget(gs_get_render_target()),
+		  previousZStencil(gs_get_zstencil_target()),
+		  previousColorSpace(gs_get_color_space())
+	{
+		gs_set_render_target_with_color_space(targetTexture.get(), nullptr, GS_CS_709_EXTENDED);
+
+		gs_viewport_push();
+		gs_projection_push();
+		gs_matrix_push();
+		gs_blend_state_push();
+
+		std::uint32_t targetWidth = gs_texture_get_width(targetTexture.get());
+		std::uint32_t targetHeight = gs_texture_get_height(targetTexture.get());
+		gs_set_viewport(0, 0, static_cast<int>(targetWidth), static_cast<int>(targetHeight));
+		gs_ortho(0.0f, static_cast<float>(targetWidth), 0.0f, static_cast<float>(targetHeight), -100.0f,
+			 100.0f);
+		gs_matrix_identity();
+		gs_blend_function(GS_BLEND_ONE, GS_BLEND_ZERO);
+	}
+
+	~TextureRenderGuard()
+	{
+		gs_blend_state_pop();
+		gs_matrix_pop();
+		gs_projection_pop();
+		gs_viewport_pop();
+
+		gs_set_render_target_with_color_space(previousRenderTarget, previousZStencil, previousColorSpace);
+	}
+};
+
 class MainEffect {
 public:
 	const BridgeUtils::unique_gs_effect_t effect = nullptr;
@@ -96,6 +133,7 @@ public:
 	gs_eparam_t *const floatGamma = nullptr;
 	gs_eparam_t *const floatLowerBound = nullptr;
 	gs_eparam_t *const floatUpperBound = nullptr;
+	gs_eparam_t *const floatAlpha = nullptr;
 
 	MainEffect(const BridgeUtils::unique_bfree_char_t &effectPath, const BridgeUtils::ILogger &logger)
 		: effect(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
@@ -108,7 +146,8 @@ public:
 		  floatEps(main_effect_detail::getEffectParam(effect, "eps", logger)),
 		  floatGamma(main_effect_detail::getEffectParam(effect, "gamma", logger)),
 		  floatLowerBound(main_effect_detail::getEffectParam(effect, "lowerBound", logger)),
-		  floatUpperBound(main_effect_detail::getEffectParam(effect, "upperBound", logger))
+		  floatUpperBound(main_effect_detail::getEffectParam(effect, "upperBound", logger)),
+		  floatAlpha(main_effect_detail::getEffectParam(effect, "alpha", logger))
 	{
 	}
 
@@ -328,6 +367,20 @@ public:
 			gs_effect_set_texture(textureImage2, sourceBTexture);
 
 			gs_draw_sprite(nullptr, 0, width, height);
+		}
+	}
+
+	void timeAveragedFiltering(const BridgeUtils::unique_gs_texture_t &targetTexture,
+				   const BridgeUtils::unique_gs_texture_t &previousMaskTexture,
+				   const BridgeUtils::unique_gs_texture_t &sourceTexture, float alpha,
+				   std::uint32_t width = 0, std::uint32_t height = 0) const noexcept
+	{
+		TextureRenderGuard textureRenderGuard(targetTexture);
+		while (gs_effect_loop(effect.get(), "FinalizeGuidedFilter")) {
+			gs_effect_set_texture(textureImage, sourceTexture.get());
+			gs_effect_set_texture(textureImage1, previousMaskTexture.get());
+			gs_effect_set_float(floatAlpha, alpha);
+			gs_draw_sprite(sourceTexture.get(), 0, width, height);
 		}
 	}
 };

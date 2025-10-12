@@ -49,6 +49,8 @@ uniform float upperBound;
 // Parameters for the Guided Filter
 uniform float eps; ///< A small epsilon value to prevent division by zero when calculating coefficient 'a'.
 
+uniform float alpha;
+
 // --- Sampler States (How textures are sampled) ---
 
 /// @brief Sampler with linear interpolation (Bilinear). Used for filtering and smooth scaling.
@@ -372,6 +374,18 @@ float4 PSFinalizeGuidedFilter(VertInOut vert_in) : TARGET
 	return float4(value, value, value, 1.0f);
 }
 
+float PSTimeAveragedFilter(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+
+	float x0 = image.Sample(point_sampler, uv).r;
+	float x1 = image1.Sample(point_sampler, uv).r;
+
+	float y = alpha * x0 + (1.0f - alpha) * x1;
+
+	return float4(y, y, y, 1.0f);
+}
+
 // --- Techniques (Shader pass definitions) ---
 
 technique Draw
@@ -498,4 +512,14 @@ technique FinalizeGuidedFilter
 		vertex_shader = VSDefault(vert_in);
 		pixel_shader = PSFinalizeGuidedFilter(vert_in);
 	}
+}
+
+technique TimeAveragedFilter
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSTimeAveragedFilter(vert_in);
+	}
+
 }

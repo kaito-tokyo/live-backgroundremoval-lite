@@ -101,6 +101,8 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r32fSubGFA(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFB(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r8GFResult(make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r8TimeAveragedMasks{make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET),
+			      make_unique_gs_texture(width, height, GS_R8, 1, NULL, GS_RENDER_TARGET)},
 	  r32fGFTemporary1Sub(make_unique_gs_texture(widthSub, heightSub, GS_R32F, 1, NULL, GS_RENDER_TARGET))
 {
 	selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
@@ -210,6 +212,13 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, g
 					r32fSubGFB.get());
 }
 
+void RenderingContext::renderTimeAveragedMask(const unique_gs_texture_t &targetTexture,
+					      const unique_gs_texture_t &previousMaskTexture,
+					      const unique_gs_texture_t &sourceTexture)
+{
+	mainEffect.timeAveragedFiltering(targetTexture, previousMaskTexture, sourceTexture, 0.9f);
+}
+
 void RenderingContext::kickSegmentationTask()
 {
 	auto &readerSegmenterInputBuffer = readerSegmenterInput.getBuffer();
@@ -263,6 +272,11 @@ void RenderingContext::videoRender()
 		if (_filterLevel >= FilterLevel::GuidedFilter) {
 			renderGuidedFilter(r32fOriginalGrayscale.get(), r8SegmentationMask.get(), _gfEps);
 		}
+
+		if (_filterLevel >= FilterLevel::TimeAveragedFilter) {
+			renderTimeAveragedMask(r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GFResult,
+					       r8TimeAveragedMasks[1 - currentTimeAveragedMaskIndex]);
+		}
 	}
 
 	if (_filterLevel == FilterLevel::Passthrough) {
@@ -271,6 +285,10 @@ void RenderingContext::videoRender()
 		mainEffect.drawWithMask(width, height, bgrxOriginalImage.get(), r8SegmentationMask.get());
 	} else if (_filterLevel == FilterLevel::GuidedFilter) {
 		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(), r8GFResult.get(), _maskGamma,
+					       _maskLowerBound, _maskUpperBoundMargin);
+	} else if (_filterLevel == FilterLevel::TimeAveragedFilter) {
+		mainEffect.drawWithRefinedMask(width, height, bgrxOriginalImage.get(),
+					       r8TimeAveragedMasks[currentTimeAveragedMaskIndex].get(), _maskGamma,
 					       _maskLowerBound, _maskUpperBoundMargin);
 	} else {
 		// Draw nothing to prevent unexpected background disclosure
