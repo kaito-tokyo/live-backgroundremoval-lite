@@ -55,7 +55,7 @@ private:
 	const MainEffect mainEffect;
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
 
-	std::atomic<std::uint32_t> pluginState;
+	std::atomic<std::uint32_t> pluginState = 0;
 
 	std::uint32_t subsamplingRate = 4;
 	PluginProperty pluginProperty;

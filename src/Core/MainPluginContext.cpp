@@ -37,31 +37,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
 
+#include "../BridgeUtils/ObsLogger.hpp"
+
 using namespace KaitoTokyo::BridgeUtils;
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
-
-namespace {
-
-inline std::uint32_t getCurrentPluginState(obs_source_t *source) noexcept
-{
-	std::uint32_t state = 0;
-
-	if (obs_source_t *const parent = obs_filter_get_parent(source)) {
-		if (obs_source_active(parent)) {
-			state |= MainPluginContext::IsActiveBit;
-		}
-
-		if (obs_source_showing(parent)) {
-			state |= MainPluginContext::IsVisibleBit;
-		}
-	}
-
-	return state;
-}
-
-}
 
 MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source,
 				     std::shared_future<std::string> _latestVersionFuture,
@@ -70,8 +51,7 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 	  logger(_logger),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
 	  latestVersionFuture(_latestVersionFuture),
-	  selfieSegmenterTaskQueue(logger, 1),
-	  pluginState(getCurrentPluginState(source))
+	  selfieSegmenterTaskQueue(logger, 1)
 {
 	update(settings);
 }
@@ -162,11 +142,11 @@ obs_properties_t *MainPluginContext::getProperties()
 		ncnnGpuNames[i] = std::to_string(i);
 		obs_property_list_add_int(propNcnnGpuIndex, ncnnGpuNames[i].c_str(), i);
 	}
-
-	obs_properties_add_int_slider(props, "ncnnNumThreads", obs_module_text("ncnnNumThreads"), 0, 32, 1);
 #else
 	obs_properties_add_text(props, "gpuStatus", obs_module_text("gpuStatusCpuOnly"), OBS_TEXT_INFO);
 #endif
+
+	obs_properties_add_int_slider(props, "ncnnNumThreads", obs_module_text("ncnnNumThreads"), 0, 32, 1);
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
 								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
@@ -276,34 +256,20 @@ void MainPluginContext::update(obs_data_t *settings)
 	}
 }
 
-void MainPluginContext::activate()
-{
-	pluginState.fetch_or(IsActiveBit, std::memory_order_release);
-}
+void MainPluginContext::activate() {}
 
-void MainPluginContext::deactivate()
-{
-	pluginState.fetch_and(~IsActiveBit, std::memory_order_release);
-	std::lock_guard<std::mutex> lock(renderingContextMutex);
-	renderingContext.reset();
-}
+void MainPluginContext::deactivate() {}
 
-void MainPluginContext::show()
-{
-	pluginState.fetch_or(IsVisibleBit, std::memory_order_release);
-}
+void MainPluginContext::show() {}
 
-void MainPluginContext::hide()
-{
-	pluginState.fetch_and(~IsVisibleBit, std::memory_order_release);
-}
+void MainPluginContext::hide() {}
 
 void MainPluginContext::videoTick(float seconds)
 {
-	auto _pluginState = pluginState.load();
-
-	if (!(_pluginState & IsActiveBit)) {
-		return;
+	if (obs_source_t *const parent = obs_filter_get_parent(source)) {
+		if (!obs_source_active(parent)) {
+			return;
+		}
 	}
 
 	obs_source_t *target = obs_filter_get_target(source);
@@ -339,12 +305,11 @@ void MainPluginContext::videoTick(float seconds)
 
 void MainPluginContext::videoRender()
 {
-	auto _pluginState = pluginState.load();
-
-	constexpr auto required = IsActiveBit | IsVisibleBit;
-	if ((_pluginState & required) != required) {
-		// Draw nothing to prevent unexpected background disclosure
-		return;
+	if (obs_source_t *const parent = obs_filter_get_parent(source)) {
+		if (!obs_source_active(parent) || !obs_source_showing(parent)) {
+			// Draw nothing to prevent unexpected background disclosure
+			return;
+		}
 	}
 
 	if (auto _renderingContext = getRenderingContext()) {
@@ -358,11 +323,10 @@ void MainPluginContext::videoRender()
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 try {
-	auto _pluginState = pluginState.load();
-
-	constexpr auto required = IsActiveBit | IsVisibleBit;
-	if ((_pluginState & required) != required) {
-		return frame;
+	if (obs_source_t *const parent = obs_filter_get_parent(source)) {
+		if (!obs_source_active(parent) || !obs_source_showing(parent)) {
+			return frame;
+		}
 	}
 
 	if (auto _renderingContext = getRenderingContext()) {
