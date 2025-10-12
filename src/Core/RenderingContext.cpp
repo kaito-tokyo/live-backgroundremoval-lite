@@ -270,10 +270,6 @@ void RenderingContext::videoRender()
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
-	logger.info("properties: subsamplingRate={}, filterLevel={}, selfieSegmenterFps={}, gfEps={}, maskGamma={}, "
-		    "maskLowerBound={}, maskUpperBoundMargin={}",
-		    subsamplingRate, static_cast<int>(filterLevel.load()), selfieSegmenterFps.load(), gfEps.load(),
-		    maskGamma.load(), maskLowerBound.load(), maskUpperBoundMargin.load());
 	return frame;
 }
 
