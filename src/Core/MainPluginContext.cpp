@@ -42,6 +42,25 @@ using namespace KaitoTokyo::BridgeUtils;
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
+namespace {
+
+inline std::uint32_t getCurrentPluginState(obs_source_t *source) noexcept
+{
+	std::uint32_t state = 0;
+
+	if (obs_source_active(source)) {
+		state |= MainPluginContext::IsActiveBit;
+	}
+
+	if (obs_source_showing(source)) {
+		state |= MainPluginContext::IsVisibleBit;
+	}
+
+	return state;
+}
+
+}
+
 MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source,
 				     std::shared_future<std::string> _latestVersionFuture,
 				     const BridgeUtils::ILogger &_logger)
@@ -49,7 +68,8 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 	  logger(_logger),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
 	  latestVersionFuture(_latestVersionFuture),
-	  selfieSegmenterTaskQueue(logger, 1)
+	  selfieSegmenterTaskQueue(logger, 1),
+	  pluginState(getCurrentPluginState(source))
 {
 	update(settings);
 }
