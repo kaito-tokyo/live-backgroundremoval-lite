@@ -56,7 +56,6 @@ private:
 	std::shared_future<std::string> latestVersionFuture;
 	const MainEffect mainEffect;
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
-	ncnn::Net selfieSegmenterNet;
 
 	std::uint32_t subsamplingRate = 4;
 	PluginProperty pluginProperty;
@@ -69,6 +68,8 @@ private:
 	std::atomic<std::uint32_t> pluginState = 0;
 
 	std::atomic<DebugWindow *> debugWindow = nullptr;
+
+	std::vector<std::string> ncnnGpuNames;
 
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source,

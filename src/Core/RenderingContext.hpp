@@ -22,7 +22,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <atomic>
 #include <cstdint>
 
+#ifdef PREFIXED_NCNN_HEADERS
 #include <ncnn/net.h>
+#else
+#include <net.h>
+#endif
 
 #include "../BridgeUtils/AsyncTextureReader.hpp"
 #include "../BridgeUtils/GsUnique.hpp"
@@ -44,12 +48,14 @@ private:
 	const BridgeUtils::ILogger &logger;
 	const MainEffect &mainEffect;
 
-	BridgeUtils::AsyncTextureReader readerSegmenterInput;
-	SelfieSegmenter selfieSegmenter;
+	const PluginConfig pluginConfig;
+
 	BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
+	ncnn::Net selfieSegmenterNet;
+	SelfieSegmenter selfieSegmenter;
+	BridgeUtils::AsyncTextureReader readerSegmenterInput;
 
 public:
-	const PluginConfig pluginConfig;
 	const std::uint32_t subsamplingRate;
 	const std::uint32_t width;
 	const std::uint32_t height;
@@ -107,8 +113,8 @@ private:
 
 public:
 	RenderingContext(obs_source_t *source, const BridgeUtils::ILogger &logger, const MainEffect &mainEffect,
-			 const ncnn::Net &selfieSegmenterNet, BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue,
-			 PluginConfig pluginConfig, std::uint32_t subsamplingRate, std::uint32_t width,
+			 PluginConfig pluginConfig, BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue,
+			 int ncnnNumThreads, int ncnnGpuIndex, std::uint32_t subsamplingRate, std::uint32_t width,
 			 std::uint32_t height);
 	~RenderingContext() noexcept;
 
