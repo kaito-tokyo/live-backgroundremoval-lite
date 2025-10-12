@@ -24,6 +24,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
+#include <gpu.h>
+
 #include "../BridgeUtils/GsUnique.hpp"
 #include "../BridgeUtils/ObsLogger.hpp"
 #include "../BridgeUtils/ObsUnique.hpp"
@@ -100,6 +102,8 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 {
 	PluginProperty defaultProperty;
 
+	obs_data_set_default_int(data, "ncnnGpuIndex", -1);
+
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
 	obs_data_set_default_int(data, "selfieSegmenterFps", defaultProperty.selfieSegmenterFps);
@@ -136,6 +140,35 @@ obs_properties_t *MainPluginContext::getProperties()
 		logger.error("Failed to check for updates: unknown error");
 	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
+
+#if NCNN_VULKAN == 1
+    constexpr bool ncnnGpuSupported = true;
+    int gpuCount = ncnn::get_gpu_count();
+#else
+	constexpr bool ncnnGpuSupported = false;
+	int gpuCount = 0;
+#endif
+
+	if (ncnnGpuSupported) {
+		if (gpuCount == 0) {
+			obs_properties_add_text(props, "gpuStatus", obs_module_text("gpuStatusGpuNotFound"), OBS_TEXT_INFO);
+		} else {
+			obs_property_t *propGpuList =
+				obs_properties_add_list(props, "ncnnGpuList", obs_module_text("ncnnGpuList"), OBS_COMBO_TYPE_LIST,
+							OBS_COMBO_FORMAT_INT);
+
+			ncnnGpuNames.resize(gpuCount);
+
+			obs_property_list_add_int(propGpuList, obs_module_text("ncnnGpuListUseCpu"), -1);
+
+			for (int i = 0; i < gpuCount; ++i) {
+				ncnnGpuNames[i] = std::to_string(i);
+				obs_property_list_add_int(propGpuList, ncnnGpuNames[i].c_str(), i);
+			}
+		}
+	} else {
+		obs_properties_add_text(props, "gpuStatus", obs_module_text("gpuStatusNCpuOnly"), OBS_TEXT_INFO);
+	}
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
 								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);

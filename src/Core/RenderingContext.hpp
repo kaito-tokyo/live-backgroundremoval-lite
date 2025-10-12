@@ -22,7 +22,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <atomic>
 #include <cstdint>
 
+#ifdef PREFIXED_NCNN_HEADERS
 #include <ncnn/net.h>
+#else
+#include <net.h>
+#endif
 
 #include "../BridgeUtils/AsyncTextureReader.hpp"
 #include "../BridgeUtils/GsUnique.hpp"
