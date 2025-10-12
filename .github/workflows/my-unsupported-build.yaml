@@ -21,6 +21,26 @@ permissions:
   contents: "read"
 
 jobs:
+  TestOnMacOSHomebrew:
+    runs-on: "macos-15"
+    timeout-minutes: 30
+
+    steps:
+      - name: "Checkout project repository"
+        uses: "actions/checkout@v5"
+
+      - name: "Install dependencies"
+        run: "brew install fmt googletest ncnn opencv"
+
+      - name: "Configure"
+        run: "cmake --preset macos-homebrew"
+        
+      - name: "Build"
+        run: "cmake --build --preset macos-homebrew"
+
+      - name: "Run tests"
+        run: "ctest --preset macos-homebrew --verbose"
+
   BuildOnArch:
     runs-on: "ubuntu-24.04"
 
