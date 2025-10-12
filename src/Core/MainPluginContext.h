@@ -44,18 +44,12 @@ class DebugWindow;
 class RenderingContext;
 
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
-public:
-	static constexpr std::uint32_t IsActiveBit = 1 << 0;
-	static constexpr std::uint32_t IsVisibleBit = 1 << 1;
-
 private:
 	obs_source_t *const source;
 	const BridgeUtils::ILogger &logger;
 	std::shared_future<std::string> latestVersionFuture;
 	const MainEffect mainEffect;
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
-
-	std::atomic<std::uint32_t> pluginState = 0;
 
 	std::uint32_t subsamplingRate = 4;
 	PluginProperty pluginProperty;
