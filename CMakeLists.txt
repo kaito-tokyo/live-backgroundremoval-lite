@@ -34,6 +34,7 @@ if(ENABLE_QT)
   )
 endif()
 
+set(VCPKG_TARGET_TRIPLET "Specify the VCPKG target triplet" CACHE STRING "")
 option(USE_PKGCONFIG "Use pkg-config to find dependencies" OFF)
 
 if(USE_PKGCONFIG)
