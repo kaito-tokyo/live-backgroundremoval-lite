@@ -40,14 +40,14 @@ option(USE_PKGCONFIG "Use pkg-config to find dependencies" OFF)
 set(VCPKG_TARGET_TRIPLET "Specify the VCPKG target triplet" CACHE STRING "")
 
 if(VCPKG_TARGET_TRIPLET)
-  set(VCPKG_PREFIX "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
+  list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
 
-  find_package(Backward CONFIG NO_DEFAULT_PATH HINTS ${VCPKG_PREFIX})
+  find_package(Backward CONFIG)
 
-  find_package(CURL CONFIG REQUIRED NO_DEFAULT_PATH HINTS ${VCPKG_PREFIX})
-  find_package(fmt CONFIG REQUIRED NO_DEFAULT_PATH HINTS ${VCPKG_PREFIX})
-  find_package(ncnn CONFIG REQUIRED NO_DEFAULT_PATH HINTS ${VCPKG_PREFIX})
-  find_package(OpenCV CONFIG REQUIRED NO_DEFAULT_PATH HINTS ${VCPKG_PREFIX})
+  find_package(CURL CONFIG REQUIRED)
+  find_package(fmt CONFIG REQUIRED)
+  find_package(ncnn CONFIG REQUIRED)
+  find_package(OpenCV CONFIG REQUIRED)
 
   add_library(ncnn::ncnn ALIAS ncnn)
   add_library(OpenCV::opencv_core ALIAS opencv_core)
