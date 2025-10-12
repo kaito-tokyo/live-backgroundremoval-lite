@@ -14,14 +14,25 @@
 2. Run `cmake --build --preset macos-testing`.
 3. Run `ctest --preset macos-testing --rerun-failed --output-on-failure`.
 
-## Testing the Plugin with OBS
+## Testing the Plugin with OBS on Mac (Standard)
 
-1. Run `cmake --preset macos-testing` only if CMake-related changes were made.
+1. Run `cmake --preset macos` only if CMake-related changes were made.
 2. Run:
    ```
-   cmake --build --preset macos-testing && \
+   cmake --build --preset macos && \
    rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin && \
    cp -r ./build_macos/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
+   ```
+
+
+## Testing the Plugin with OBS on Mac (Homebrew)
+
+1. Run `cmake --preset macos-homebrew` only if CMake-related changes were made.
+2. Run:
+   ```
+   cmake --build --preset macos-homebrew && \
+   rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin && \
+   cp -r ./build_homebrew/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
    ```
 
 ## Release Automation
