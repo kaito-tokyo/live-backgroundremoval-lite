@@ -246,7 +246,7 @@ void RenderingContext::videoRender()
 	float _maskLowerBound = maskLowerBound;
 	float _maskUpperBoundMargin = maskUpperBoundMargin;
 
-	float _timeAveragedFilterAlpha = timeAveragedFilterAlpha;
+	float _timeAveragedFilteringAlpha = timeAveragedFilteringAlpha;
 
 	const bool needNewFrame = doesNextVideoRenderReceiveNewFrame;
 	if (needNewFrame) {
@@ -279,7 +279,7 @@ void RenderingContext::videoRender()
 			int nextIndex = 1 - currentTimeAveragedMaskIndex;
 			renderTimeAveragedMask(r8TimeAveragedMasks[nextIndex],
 					       r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GFResult,
-					       _timeAveragedFilterAlpha);
+					       _timeAveragedFilteringAlpha);
 			currentTimeAveragedMaskIndex = nextIndex;
 		}
 	}

@@ -107,7 +107,7 @@ public:
 	std::atomic<float> maskLowerBound;
 	std::atomic<float> maskUpperBoundMargin;
 
-	std::atomic<float> timeAveragedFilterAlpha;
+	std::atomic<float> timeAveragedFilteringAlpha;
 
 private:
 	float timeSinceLastSelfieSegmentation = 0.0f;
@@ -143,6 +143,8 @@ public:
 		maskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
 		maskUpperBoundMargin =
 			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
+
+		timeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
 	}
 
 private:
