@@ -274,8 +274,10 @@ void RenderingContext::videoRender()
 		}
 
 		if (_filterLevel >= FilterLevel::TimeAveragedFilter) {
-			renderTimeAveragedMask(r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GFResult,
-					       r8TimeAveragedMasks[1 - currentTimeAveragedMaskIndex]);
+			int nextIndex = 1 - currentTimeAveragedMaskIndex;
+			renderTimeAveragedMask(r8TimeAveragedMasks[nextIndex],
+					       r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GFResult);
+			currentTimeAveragedMaskIndex = nextIndex;
 		}
 	}
 
