@@ -276,7 +276,7 @@ void RenderingContext::videoRender()
 		}
 
 		if (_filterLevel >= FilterLevel::TimeAveragedFilter) {
-			int nextIndex = 1 - currentTimeAveragedMaskIndex;
+			std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex;
 			renderTimeAveragedMask(r8TimeAveragedMasks[nextIndex],
 					       r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GFResult,
 					       _timeAveragedFilteringAlpha);
