@@ -37,7 +37,7 @@ endif()
 option(BUILD_TESTING "Build tests" OFF)
 option(BUILD_WITH_HOMEBREW "Build with Homebrew on macOS" OFF)
 option(USE_PKGCONFIG "Use pkg-config to find dependencies" OFF)
-set(VCPKG_TARGET_TRIPLET "Specify the VCPKG target triplet" CACHE STRING "")
+set(VCPKG_TARGET_TRIPLET "Specify the VCPKG target triplet" CACHE STRING)
 
 if(VCPKG_TARGET_TRIPLET)
   list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
