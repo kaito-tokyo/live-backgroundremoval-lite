@@ -75,7 +75,7 @@ elseif(USE_PKGCONFIG)
   add_library(ncnn::ncnn INTERFACE IMPORTED)
   target_link_libraries(ncnn::ncnn INTERFACE ${PC_NCNN_LIBRARIES})
   target_include_directories(ncnn::ncnn INTERFACE ${PC_NCNN_INCLUDE_DIRS})
-  target_compile_definitions(ncnn::ncnn INTERFACE ${PC_NCNN_CFLAGS_OTHER} -DPREFIXED_NCNN_HEADERS)
+  target_compile_definitions(ncnn::ncnn INTERFACE ${PC_NCNN_CFLAGS_OTHER} PREFIXED_NCNN_HEADERS)
 
   # --- OpenCV ---
   pkg_check_modules(PC_OPENCV REQUIRED opencv4)
