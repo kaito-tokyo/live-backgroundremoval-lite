@@ -48,12 +48,14 @@ inline std::uint32_t getCurrentPluginState(obs_source_t *source) noexcept
 {
 	std::uint32_t state = 0;
 
-	if (obs_source_active(source)) {
-		state |= MainPluginContext::IsActiveBit;
-	}
+	if (obs_source_t *const parent = obs_filter_get_parent(source)) {
+		if (obs_source_active(parent)) {
+			state |= MainPluginContext::IsActiveBit;
+		}
 
-	if (obs_source_showing(source)) {
-		state |= MainPluginContext::IsVisibleBit;
+		if (obs_source_showing(parent)) {
+			state |= MainPluginContext::IsVisibleBit;
+		}
 	}
 
 	return state;
