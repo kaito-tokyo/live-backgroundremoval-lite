@@ -102,7 +102,7 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 {
 	PluginProperty defaultProperty;
 
-	obs_data_set_default_int(data, "ncnnGpuIndex", -1);
+	obs_data_set_default_int(data, "ncnnGpuIndex", defaultProperty.ncnnGpuIndex);
 
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
@@ -223,6 +223,8 @@ obs_properties_t *MainPluginContext::getProperties()
 void MainPluginContext::update(obs_data_t *settings)
 {
 	PluginProperty newPluginProperty;
+
+	newPluginProperty.ncnnGpuIndex = obs_data_get_int(settings, "ncnnGpuIndex");
 
 	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
 

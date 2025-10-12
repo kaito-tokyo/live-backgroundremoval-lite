@@ -29,6 +29,8 @@ enum class FilterLevel : int {
 };
 
 struct PluginProperty {
+	int ncnnGpuIndex = -1;
+
 	FilterLevel filterLevel = FilterLevel::Default;
 
 	int selfieSegmenterFps = 10;
