@@ -24,7 +24,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
+#ifdef PREFIXED_NCNN_HEADERS
+#include <ncnn/gpu.h>
+#else
 #include <gpu.h>
+#endif
 
 #include "../BridgeUtils/GsUnique.hpp"
 #include "../BridgeUtils/ObsLogger.hpp"
