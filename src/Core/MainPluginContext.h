@@ -57,10 +57,6 @@ private:
 	mutable std::mutex renderingContextMutex;
 	std::shared_ptr<RenderingContext> renderingContext;
 
-	static constexpr std::uint32_t IsActiveBit = 1 << 0;
-	static constexpr std::uint32_t IsVisibleBit = 1 << 1;
-	std::atomic<std::uint32_t> pluginState = 0;
-
 	std::atomic<DebugWindow *> debugWindow = nullptr;
 
 	std::vector<std::string> ncnnGpuNames;
