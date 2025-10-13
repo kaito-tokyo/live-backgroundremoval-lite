@@ -152,7 +152,8 @@
         {
           "type": "git",
           "url": "https://github.com/kaito-tokyo/live-backgroundremoval-lite.git",
-          "branch": "fix-unsupported",
+          "tag": "2.1.0",
+          "commit": "6178c5933313d4d804fa15a907419cb81cf1aac7",
           "x-checker-data": {
             "type": "git",
             "tag-pattern": "^([\\d.]+)$"
