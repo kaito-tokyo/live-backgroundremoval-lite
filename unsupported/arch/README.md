@@ -17,7 +17,7 @@ If you wish to proceed with building the plugin from these local files, you will
 Ensure you have the `base-devel` group, `git`, and `debugedit` installed on your system:
 
 ```bash
-sudo pacman -S --needed base-devel git debugedit
+sudo pacman -S --needed base-devel git
 ```
 
 ### Build and Install Steps
