@@ -1,7 +1,7 @@
 # Maintainer: Kaito Udagawa <umireon at kaito dot tokyo>
 pkgname=live-backgroundremoval-lite-git
 _pkgname="${pkgname%-git}"
-pkgver=1.8.7.r1.gbbfb18b
+pkgver=2.1.0.r2.g54725c5
 pkgrel=1
 pkgdesc='Live Background Removal Lite for OBS Studio'
 arch=('x86_64')
