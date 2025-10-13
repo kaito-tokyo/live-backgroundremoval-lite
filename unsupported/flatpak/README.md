@@ -26,14 +26,16 @@ If you wish to proceed with building the plugin from these local files, you will
     sudo dnf install flatpak-builder
     # On Debian/Ubuntu
     sudo apt install flatpak-builder
+    # On Arch Linux
+    sudo pacman -S flatpak-builder
     ```
 
 2.  **Set up the Flathub remote and install necessary components.**
     The build process requires the KDE SDK, and you will need the OBS Studio Flatpak to run the plugin.
 
     ```bash
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    flatpak install flathub org.kde.Sdk//6.8 com.obsproject.Studio
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    sudo flatpak install flathub org.kde.Sdk//6.8 com.obsproject.Studio
     ```
 
 ### Build and Install Steps
