@@ -55,6 +55,8 @@ jobs:
             -Name "GitHub" \
             -UserName "${{ github.repository_owner }}" \
             -Password "${{ secrets.GITHUB_TOKEN }}"
+          mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
+            -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
 
       - name: "Install dependencies from vcpkg"
         run: ".github/scripts/install-vcpkg-macos.bash"
