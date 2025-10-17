@@ -64,9 +64,14 @@ const tagName = release.tag_name;
       >Flatpak</a
     >
   </div>
-  <div class="links">
-    <a href={githubURL}>GitHub</a>
-  </div>
+  <nav>
+    <ul>
+      <li><a href={joinURL(BASE_URL, "gpu/")}>GPU Acceleration</a></li>
+      <li><a href={joinURL(BASE_URL, "building/ubuntu/")}>Building on Ubuntu</a></li>
+      <li><a href={joinURL(BASE_URL, "building/arch/")}>Building on Arch Linux</a></li>
+      <li><a href={githubURL}>GitHub Repository</a></li>
+    </ul>
+  </nav>
 </Layout>
 
 <style>

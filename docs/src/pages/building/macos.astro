@@ -1,0 +1,71 @@
+---
+title: "Building on macOS"
+---
+
+# Building on macOS
+
+This page describes how to build the Live Background Removal Lite plugin on macOS.
+
+## Prerequisites
+
+- [Homebrew](https://brew.sh/)
+- CMake (version 3.20 or later)
+- Xcode (including Command Line Tools)
+- Ninja (recommended)
+
+## Installing Dependencies
+
+Install required tools using Homebrew:
+
+```sh
+brew install cmake ninja
+```
+
+## Build Steps
+
+1. Clone the repository.
+2. Open a terminal and navigate to the project root directory.
+3. Run the following commands:
+
+### Standard Build
+
+```sh
+cmake --preset macos
+cmake --build --preset macos
+```
+
+### Build for OBS (Homebrew version)
+
+```sh
+cmake --preset macos-homebrew
+cmake --build --preset macos-homebrew
+```
+
+## Running Tests
+
+```sh
+cmake --preset macos-testing
+cmake --build --preset macos-testing
+ctest --preset macos-testing --rerun-failed --output-on-failure
+```
+
+## Testing the Plugin with OBS
+
+After building, copy the plugin to the OBS plugins directory:
+
+Standard version:
+```sh
+rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin
+cp -r ./build_macos/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
+```
+
+Homebrew version:
+```sh
+rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin
+cp -r ./build_homebrew/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
+```
+
+## Troubleshooting
+
+- If the build fails due to outdated CMake or Xcode, please use the latest versions.
+- If dependency installation fails, try updating Homebrew (`brew update`).
