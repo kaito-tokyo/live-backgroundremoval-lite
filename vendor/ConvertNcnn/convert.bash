@@ -25,21 +25,22 @@ rm -rf .venv
 $PYTHON -m venv .venv
 . .venv/bin/activate
 
-pip install huggingface_hub pnnx kaggle
+pip install huggingface_hub pnnx numpy
 
 hf download \
     onnx-community/mediapipe_selfie_segmentation_landscape \
     --local-dir mediapipe_selfie_segmentation_landscape
 
-pnnx mediapipe_selfie_segmentation_landscape/onnx/model.onnx inputshape="[1,3,144,256]"
-
 curl -L -o lfw-dataset.zip "https://www.kaggle.com/api/v1/datasets/download/jessicali9530/lfw-dataset"
 mkdir -p lfw
 unzip -qo lfw-dataset.zip -d lfw
 
-find lfw/lfw-deepfunneled/lfw-deepfunneled -type f > mediapipe_selfie_segmentation_landscape/onnx/imagelist.txt
+find $(pwd)/lfw/lfw-deepfunneled/lfw-deepfunneled -type f > mediapipe_selfie_segmentation_landscape/onnx/imagelist.txt
 
-cd "$(dirname "$0")/mediapipe_selfie_segmentation_landscape/onnx"
+cd "mediapipe_selfie_segmentation_landscape/onnx"
+
+pnnx model.onnx inputshape="[1,3,144,256]"
+
 ncnnoptimize model.ncnn.param model.ncnn.bin model-opt.ncnn.param model-opt.ncnn.bin 0
 
 ncnn2table model-opt.ncnn.param model-opt.ncnn.bin imagelist.txt model.table \
