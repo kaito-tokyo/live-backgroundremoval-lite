@@ -12,7 +12,7 @@ if ! [[ -d ncnn ]]; then
 fi
 
 cmake -B build_ncnn \
-  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DCMAKE_BUILD_TYPE=Release \
   -DNCNN_BUILD_TOOLS=ON \
   -DNCNN_BUILD_EXAMPLES=OFF \
   -DNCNN_BUILD_BENCHMARK=OFF \
