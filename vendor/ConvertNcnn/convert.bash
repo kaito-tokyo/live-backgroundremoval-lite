@@ -12,7 +12,7 @@ if ! [[ -d ncnn ]]; then
 fi
 
 cmake -B build_ncnn \
-  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
   -DNCNN_BUILD_TOOLS=ON \
   -DNCNN_BUILD_EXAMPLES=OFF \
   -DNCNN_BUILD_BENCHMARK=OFF \
@@ -20,6 +20,8 @@ cmake -B build_ncnn \
   ncnn
 
 cmake --build build_ncnn
+
+PATH="$(pwd)/build_ncnn/tools:$(pwd)/build_ncnn/tools/quantize:$PATH"
 
 rm -rf .venv
 $PYTHON -m venv .venv
