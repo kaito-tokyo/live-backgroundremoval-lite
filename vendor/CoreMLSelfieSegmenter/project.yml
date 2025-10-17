@@ -1,0 +1,56 @@
+name: CoreMLSelfieSegmenter
+options:
+  bundleIdPrefix: tokyo.kaito.live-backgroundremoval-lite.coreml-selfie-segmenter
+  deploymentTarget:
+    macOS: "12.0"
+
+settings:
+  base:
+    ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: YES
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_MODULE_VERIFIER: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    GENERATE_INFOPLIST_FILE: YES
+    MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS: gnu17 gnu++17
+
+targets:
+  CoreMLSelfieSegmenter:
+    type: framework
+    platform: macOS
+    sources:
+      - path: Sources/
+    dependencies:
+      - sdk: CoreML.framework
+      - sdk: Vision.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: tokyo.kaito.live-backgroundremoval-lite.coreml-selfie-segmenter
+      configs:
+        Debug:
+          CODE_SIGN_STYLE: Automatic
+        Release:
+          CODE_SIGN_STYLE: Automatic
+
+  CoreMLSelfieSegmenterTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests/
+    dependencies:
+      - target: CoreMLSelfieSegmenter
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: tokyo.kaito.live-backgroundremoval-lite.coreml-selfie-segmenter-tests
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+
+schemes:
+  CoreMLSelfieSegmenter:
+    build:
+      targets:
+        CoreMLSelfieSegmenter: all
+        CoreMLSelfieSegmenterTests: testing
+    test:
+      config: Debug
+      targets:
+        - CoreMLSelfieSegmenterTests
