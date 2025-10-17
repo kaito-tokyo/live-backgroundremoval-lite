@@ -21,6 +21,9 @@
 !/unsupported/flatpak/README.md
 !/vcpkg-overlay-ports
 !/vcpkg-triplets
+!/vendor
+/vendor/ConvertNcnn/*
+!/vendor/ConvertNcnn/convert.bash
 !.aiexclude
 !.clang-format
 !.gersemirc
