@@ -1,0 +1,56 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { joinURL } from "ufo";
+const { BASE_URL } = import.meta.env;
+---
+
+<Layout title="Building Live Background Removal Lite on macOS" lang="en">
+  <h1>Building Live Background Removal Lite on macOS</h1>
+  <p>
+    <strong>Prerequisite:</strong> Homebrew must be installed on your system. If you do not have Homebrew, follow the instructions at <a href="https://brew.sh/" target="_blank" rel="noopener noreferrer">brew.sh</a>.
+  </p>
+  <p>
+    To build Live Background Removal Lite on macOS, you need to install OBS Studio and all required dependencies using <code>brew</code>. <strong>Do not use vcpkg.</strong>
+  </p>
+  <h2>Install OBS Studio</h2>
+  <p>
+    Install OBS Studio using Homebrew:
+  </p>
+  <pre><code>brew install obs</code></pre>
+  <h2>Steps</h2>
+  <ol>
+    <li>
+      <strong>Install build tools and dependencies:</strong>
+      <pre><code>brew install cmake git pkg-config opencv curl fmt</code></pre>
+    </li>
+    <li>
+      <strong>Clone the repository:</strong>
+      <pre><code>git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
+cd live-backgroundremoval-lite</code></pre>
+    </li>
+    <li>
+      <strong>Configure the build (using CMake preset):</strong>
+      <pre><code>cmake --preset macos-homebrew</code></pre>
+    </li>
+    <li>
+      <strong>Build the plugin (using CMake preset):</strong>
+      <pre><code>cmake --build --preset macos-homebrew</code></pre>
+    </li>
+    <li>
+      <strong>Install the plugin:</strong>
+      <pre><code>rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin
+cp -r ./build_homebrew/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
+</code></pre>
+      <p>
+        This will install the plugin to the OBS Studio plugins directory for your user account.
+      </p>
+    </li>
+    <li>
+      <strong>Restart OBS Studio</strong> to load the plugin.
+    </li>
+  </ol>
+  <p>
+    For more details, see the <a href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">contribution guide</a>.
+  </p>
+  <a href={joinURL(BASE_URL, "")}>Back to Top</a>
+</Layout>

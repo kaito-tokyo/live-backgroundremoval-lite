@@ -1,0 +1,36 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { joinURL } from "ufo";
+const { BASE_URL } = import.meta.env;
+---
+
+<Layout title="Building Live Background Removal Lite on Arch Linux" lang="en">
+  <h1>Building Live Background Removal Lite on Arch Linux</h1>
+  <p>
+    The recommended way to build Live Background Removal Lite on Arch Linux is to use the provided <code>PKGBUILD</code> script in <a href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch">unsupported/arch/</a>.
+  </p>
+  <h2>Steps</h2>
+  <ol>
+    <li>
+      <strong>Install required build tools:</strong>
+      <pre><code>sudo pacman -S base-devel git</code></pre>
+    </li>
+    <li>
+      <strong>Clone the repository:</strong>
+      <pre><code>git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
+cd live-backgroundremoval-lite/unsupported/arch</code></pre>
+    </li>
+    <li>
+      <strong>Build and install the package:</strong>
+      <pre><code>makepkg -si</code></pre>
+      <p>This will build the plugin and install it to your system.</p>
+    </li>
+    <li>
+      <strong>Restart OBS Studio</strong> to load the plugin.
+    </li>
+  </ol>
+  <p>
+    For more details, see the <a href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch#readme">Arch Linux packaging documentation</a>.
+  </p>
+  <a href={joinURL(BASE_URL, "")}>Back to Top</a>
+</Layout>
