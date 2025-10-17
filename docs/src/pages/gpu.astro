@@ -44,11 +44,13 @@ const { BASE_URL } = import.meta.env;
   </p>
   <h2>GPU Offloading Plans</h2>
   <p>
-    For users who need to minimize CPU load—such as gamers or those running other demanding applications—we plan to provide GPU offloading implementations. Currently, GPU inference support is available for Linux. You can enable GPU inference by building the plugin from source for your environment.
+    For users who need to minimize CPU load—such as gamers or those running other demanding applications—we plan to provide GPU offloading implementations.
+    <br />
+    <strong>Currently, GPU inference support is available for Linux and macOS.</strong> You can enable GPU inference by building the plugin from source for your environment.
   </p>
   <h2>How to Enable GPU Inference</h2>
   <ol>
-    <li>Build the plugin from source with GPU support enabled (Linux only at present).
+    <li>Build the plugin from source with GPU support enabled (Linux and macOS are supported).
       <ul>
         <li>
           See <a href={joinURL(BASE_URL, "building/macos/")}>macOS build instructions</a>
