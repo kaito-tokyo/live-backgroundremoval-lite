@@ -199,7 +199,8 @@ void DebugWindow::updatePreview()
 										 renderingContext->height, GS_R32F);
 		newRenderData->readerMaskRoiR8 = std::make_unique<AsyncTextureReader>(
 			renderingContext->maskRoiWidth, renderingContext->maskRoiHeight, GS_R8);
-		newRenderData->reader256Bgrx = std::make_unique<AsyncTextureReader>(256, 256, GS_BGRX);
+		newRenderData->reader256Bgrx = std::make_unique<AsyncTextureReader>(
+			SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX);
 		newRenderData->readerSubR8 = std::make_unique<AsyncTextureReader>(renderingContext->widthSub,
 										  renderingContext->heightSub, GS_R8);
 		newRenderData->readerR32fSub = std::make_unique<AsyncTextureReader>(

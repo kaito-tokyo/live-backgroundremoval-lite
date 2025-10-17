@@ -48,8 +48,8 @@ static bool load_jpg_bgra(const std::string &filename, std::vector<uint8_t> &out
 
 using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 
-const char kParamPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation.ncnn.param";
-const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation.ncnn.bin";
+const char kParamPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
+const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
 const char kTestImage[] = TESTS_DIR "/SelfieSegmenter/selfie001.jpg";
 const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_mask.png";
 

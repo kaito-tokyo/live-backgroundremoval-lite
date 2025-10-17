@@ -86,7 +86,7 @@ private:
 class SelfieSegmenter {
 public:
 	static constexpr int INPUT_WIDTH = 256;
-	static constexpr int INPUT_HEIGHT = 256;
+	static constexpr int INPUT_HEIGHT = 144;
 	static constexpr int PIXEL_COUNT = INPUT_WIDTH * INPUT_HEIGHT;
 
 private:
