@@ -1,0 +1,53 @@
+---
+import Layout from "../../layouts/Layout.astro";
+const { BASE_URL } = import.meta.env;
+---
+
+<Layout title="Building on Ubuntu" lang="en">
+  <h1>Building Live Background Removal Lite on Ubuntu</h1>
+  <p>
+    To build Live Background Removal Lite on Ubuntu, install all required dependencies using <code>apt</code> and follow the steps below. <strong>Do not use vcpkg.</strong>
+  </p>
+  <h2>Steps</h2>
+  <ol>
+    <li>
+      <strong>Install build tools and dependencies:</strong>
+      <pre><code>sudo apt update
+sudo apt install -y build-essential cmake git pkg-config \
+  libopencv-dev libcurl4-openssl-dev libfmt-dev libssl-dev \
+  qtbase5-dev qtbase5-private-dev qtchooser qt5-qmake qtbase5-dev-tools \
+  libqt5svg5-dev libqt5widgets5 libqt5gui5 libqt5core5a \
+  libwolfssl-dev libstb-dev libgtest-dev libgmock-dev
+</code></pre>
+      <p>
+        If you are building for Ubuntu 22.04 or later, you may need to adjust package names for Qt6.
+      </p>
+    </li>
+    <li>
+      <strong>Clone the repository:</strong>
+      <pre><code>git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
+cd live-backgroundremoval-lite</code></pre>
+    </li>
+    <li>
+      <strong>Configure the build:</strong>
+      <pre><code>cmake -B build -DCMAKE_BUILD_TYPE=Release</code></pre>
+    </li>
+    <li>
+      <strong>Build the plugin:</strong>
+      <pre><code>cmake --build build --parallel</code></pre>
+    </li>
+    <li>
+      <strong>Install the plugin:</strong>
+      <pre><code>sudo cp -r build/live-backgroundremoval-lite.plugin /usr/lib/obs-plugins/</code></pre>
+      <p>
+        Adjust the destination path if your OBS installation uses a different plugin directory.
+      </p>
+    </li>
+    <li>
+      <strong>Restart OBS Studio</strong> to load the plugin.
+    </li>
+  </ol>
+  <p>
+    For more details, see the <a href={BASE_URL + "CONTRIBUTING.md"}>contribution guide</a>.
+  </p>
+</Layout>
