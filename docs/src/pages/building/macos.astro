@@ -1,71 +1,54 @@
 ---
-title: "Building on macOS"
+import Layout from "../../layouts/Layout.astro";
+import { joinURL } from "ufo";
+const { BASE_URL } = import.meta.env;
 ---
 
-# Building on macOS
-
-This page describes how to build the Live Background Removal Lite plugin on macOS.
-
-## Prerequisites
-
-- [Homebrew](https://brew.sh/)
-- CMake (version 3.20 or later)
-- Xcode (including Command Line Tools)
-- Ninja (recommended)
-
-## Installing Dependencies
-
-Install required tools using Homebrew:
-
-```sh
-brew install cmake ninja
-```
-
-## Build Steps
-
-1. Clone the repository.
-2. Open a terminal and navigate to the project root directory.
-3. Run the following commands:
-
-### Standard Build
-
-```sh
-cmake --preset macos
-cmake --build --preset macos
-```
-
-### Build for OBS (Homebrew version)
-
-```sh
-cmake --preset macos-homebrew
-cmake --build --preset macos-homebrew
-```
-
-## Running Tests
-
-```sh
-cmake --preset macos-testing
-cmake --build --preset macos-testing
-ctest --preset macos-testing --rerun-failed --output-on-failure
-```
-
-## Testing the Plugin with OBS
-
-After building, copy the plugin to the OBS plugins directory:
-
-Standard version:
-```sh
-rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin
-cp -r ./build_macos/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
-```
-
-Homebrew version:
-```sh
+<Layout title="Building Live Background Removal Lite on macOS" lang="en">
+  <h1>Building Live Background Removal Lite on macOS</h1>
+  <p>
+    To build Live Background Removal Lite on macOS, you need to install OBS Studio and all required dependencies using <code>brew</code>. <strong>Do not use vcpkg.</strong>
+  </p>
+  <h2>Install OBS Studio</h2>
+  <p>
+    Install OBS Studio using Homebrew:
+  </p>
+  <pre><code>brew install obs</code></pre>
+  <h2>Steps</h2>
+  <ol>
+    <li>
+      <strong>Install build tools and dependencies:</strong>
+      <pre><code>brew install cmake git pkg-config opencv curl fmt</code></pre>
+    </li>
+    <li>
+      <strong>Clone the repository:</strong>
+      <pre><code>git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
+cd live-backgroundremoval-lite</code></pre>
+    </li>
+    <li>
+      <strong>Configure the build (using CMake preset):</strong>
+      <pre><code>cmake --preset macos-homebrew</code></pre>
+    </li>
+    <li>
+      <strong>Build the plugin (using CMake preset):</strong>
+      <pre><code>cmake --build --preset macos-homebrew</code></pre>
+    </li>
+    <li>
+      <strong>Install the plugin:</strong>
+      <pre><code>
 rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin
 cp -r ./build_homebrew/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
-```
-
-## Troubleshooting
-
-- If the build fails due to outdated CMake or Xcode, please use the latest versions.
-- If dependency installation fails, try updating Homebrew (`brew update`).
+</code></pre>
+      <p>
+        This will install the plugin to the OBS Studio plugins directory for your user account.
+      </p>
+    </li>
+    <li>
+      <strong>Restart OBS Studio</strong> to load the plugin.
+    </li>
+  </ol>
+  <p>
+    For more details, see the <a href={joinURL(BASE_URL, "CONTRIBUTING.md")}>contribution guide</a>.
+  </p>
+  <a href={joinURL(BASE_URL, "")}>Back to Top</a>
+</Layout>
