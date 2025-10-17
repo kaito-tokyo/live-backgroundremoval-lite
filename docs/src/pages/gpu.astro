@@ -1,0 +1,52 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="GPU Acceleration" lang="en">
+  <h1>GPU Acceleration in Live Background Removal Lite</h1>
+  <p>
+    Live Background Removal Lite consists of three main components:
+    <ul>
+      <li>
+        <strong>Background Segmentation:</strong> Detects and separates the foreground (person) from the background using AI.
+      </li>
+      <li>
+        <strong>Guided Filter:</strong> Refines the segmentation mask to produce smooth and accurate edges.
+      </li>
+      <li>
+        <strong>Temporal Averaging Filter:</strong> Stabilizes the mask over time to reduce flicker and noise.
+      </li>
+    </ul>
+    These components work together to deliver high-quality real-time background removal.
+  </p>
+  <p>
+    Live Background Removal Lite leverages GPU acceleration for optimal performance in several key areas:
+  </p>
+  <ul>
+    <li>
+      <strong>Guided Filter &amp; Temporal Averaging Filter:</strong>
+      These filters are fully GPU-accelerated, ensuring fast and efficient processing.
+    </li>
+    <li>
+      <strong>Background Segmentation (MediaPipe SelfieSegmenter):</strong>
+      The segmentation model exhibits nearly identical computation time characteristics on both CPU and GPU. To make installation easy for everyone, the plugin defaults to CPU inference.
+    </li>
+  </ul>
+  <h2>Why Default to CPU?</h2>
+  <p>
+    Most users can install and use the plugin without any special hardware or configuration. By defaulting to CPU inference, we avoid compatibility issues and ensure a smooth experience for all users.
+  </p>
+  <h2>GPU Offloading Plans</h2>
+  <p>
+    For users who need to minimize CPU load—such as gamers or those running other demanding applications—we plan to provide GPU offloading implementations. Currently, GPU inference support is available for Linux. You can enable GPU inference by building the plugin from source for your environment.
+  </p>
+  <h2>How to Enable GPU Inference</h2>
+  <ol>
+    <li>Build the plugin from source with GPU support enabled (Linux only at present).</li>
+    <li>In the plugin settings, select the GPU you want to use for inference.</li>
+  </ol>
+  <p>
+    We aim to expand GPU offloading support to other platforms in future releases.
+  </p>
+</Layout>
+

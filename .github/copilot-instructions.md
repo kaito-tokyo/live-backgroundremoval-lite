@@ -1,4 +1,4 @@
-# Development Guideline for OBS Background Removal Lite Plugin
+# Development Guideline for Live Background Removal Lite Plugin
 
 - Develop this project using C++17.
 - For empty argument lists, use `()` instead of `(void)`, except within regions marked by `extern "C"`.
