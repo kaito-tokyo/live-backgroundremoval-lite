@@ -17,6 +17,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #import <Foundation/Foundation.h>
+#import <CoreVideo/CoreVideo.h>
+#import <Vision/Vision.h>
 
 NS_ASSUME_NONNULL_BEGIN
+
+@interface SelfieSegmenterLandscapeWrapper : NSObject
+
+- (instancetype)init;
+
+- (nullable float *)performSegmentationWithHandler:(VNImageRequestHandler *)handler
+                                              error:(NSError *_Nullable *_Nullable)error;
+
+@end
+
 NS_ASSUME_NONNULL_END

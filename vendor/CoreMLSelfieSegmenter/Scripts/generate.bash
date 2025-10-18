@@ -19,6 +19,6 @@ fi
 
 .venv/bin/python Scripts/convert.py \
   mediapipe_selfie_segmentation_landscape/onnx/model.onnx \
-  Sources/SelfieSegmenterModel.mlpackage
+  Sources/SelfieSegmenterLandscapeModel.mlpackage
 
 xcodegen generate

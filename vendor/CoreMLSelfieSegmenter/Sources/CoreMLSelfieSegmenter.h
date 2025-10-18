@@ -16,5 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#import "SelfieSegmenterWrapper.h"
-#import "SelfieSegmenterModel.h"
+#import <Foundation/Foundation.h>
+
+FOUNDATION_EXPORT double CoreMLSelfieSegmenterVersionNumber;
+
+FOUNDATION_EXPORT const unsigned char CoreMLSelfieSegmenterVersionString[];
+
+#import <CoreMLSelfieSegmenter/SelfieSegmenterLandscapeWrapper.h>

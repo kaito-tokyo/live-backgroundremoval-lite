@@ -22,7 +22,7 @@ def main():
     mlpackage_model = ct.convert(
         traced_model,
         source="auto",
-        inputs=[ct.ImageType(name="image", shape=example_input.shape, color_layout="RGB")],
+        inputs=[ct.ImageType(name="image", shape=example_input.shape, color_layout="RGB", scale=1/255.0, bias=[0,0,0])],
         outputs=[ct.TensorType(name="segmentationMask")],
         convert_to="mlprogram"
     )
