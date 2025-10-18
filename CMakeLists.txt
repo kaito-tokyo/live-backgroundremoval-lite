@@ -111,6 +111,36 @@ else()
   message(FATAL_ERROR "Either USE_PKGCONFIG or VCPKG_TARGET_TRIPLET must be set.")
 endif()
 
+if(APPLE)
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(DERIVED_DATA_PATH "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Debug")
+  else()
+    set(DERIVED_DATA_PATH "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Release")
+  endif()
+
+  find_library(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH
+              NAMES CoreMLSelfieSegmenter
+              HINTS ${DERIVED_DATA_PATH}
+  )
+
+
+  if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
+    target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE "${COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH}")
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE HAVE_COREML_SELFIE_SEGMENTER)
+
+    set(PLUGIN_BUNDLE_DIR "$<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/../..")
+    set(FRAMEWORKS_DIR "${PLUGIN_BUNDLE_DIR}/Contents/Frameworks")
+    add_custom_command(
+      TARGET ${CMAKE_PROJECT_NAME}
+      POST_BUILD
+      COMMAND mkdir -p "${FRAMEWORKS_DIR}"
+      COMMAND rm -rf "${FRAMEWORKS_DIR}/CoreMLSelfieSegmenter.framework"
+      COMMAND cp -R "${COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH}" "${FRAMEWORKS_DIR}/CoreMLSelfieSegmenter.framework"
+      COMMENT "Copying CoreMLSelfieSegmenter.framework to plugin bundle Frameworks directory (preserving symlinks)"
+    )
+  endif()
+endif()
+
 add_library(SelfieSegmenter STATIC)
 target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/SelfieSegmenter.cpp)
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
