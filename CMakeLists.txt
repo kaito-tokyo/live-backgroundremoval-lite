@@ -113,10 +113,11 @@ endif()
 
 if(APPLE)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(DERIVED_DATA_PATH "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Debug")
+    set(_default_derived_data_path "${CMAKE_BINARY_DIR}/DerivedData/Build/Products/Debug")
   else()
-    set(DERIVED_DATA_PATH "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Release")
+    set(_default_derived_data_path "${CMAKE_BINARY_DIR}/DerivedData/Build/Products/Release")
   endif()
+  set(DERIVED_DATA_PATH "${_default_derived_data_path}" CACHE PATH "Path to Xcode DerivedData build products")
 
   find_library(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH NAMES CoreMLSelfieSegmenter HINTS ${DERIVED_DATA_PATH})
 
