@@ -118,11 +118,7 @@ if(APPLE)
     set(DERIVED_DATA_PATH "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Release")
   endif()
 
-  find_library(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH
-              NAMES CoreMLSelfieSegmenter
-              HINTS ${DERIVED_DATA_PATH}
-  )
-
+  find_library(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH NAMES CoreMLSelfieSegmenter HINTS ${DERIVED_DATA_PATH})
 
   if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
     target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE "${COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH}")
@@ -176,6 +172,11 @@ endif()
 target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
+
+set_target_properties(
+  ${CMAKE_PROJECT_NAME}
+  PROPERTIES XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@loader_path/../Frameworks"
+)
 
 if(BUILD_TESTING)
   enable_testing()

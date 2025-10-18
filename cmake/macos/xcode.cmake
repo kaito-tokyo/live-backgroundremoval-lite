@@ -169,6 +169,6 @@ endif()
 set(CMAKE_COLOR_DIAGNOSTICS TRUE)
 
 # Enable usage of RPATH in build or install configurations
-set(CMAKE_SKIP_RPATH FALSE)
+set(CMAKE_SKIP_RPATH TRUE)
 # Have Xcode set default RPATH entries
 set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")
