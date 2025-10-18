@@ -39,7 +39,7 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
 {
     self = [super init];
     if (self) {
-        NSError *internalError = nil; // Local error for propagation
+        NSError *internalError = nil;  // Local error for propagation
 
         // 1. Load the Core ML model wrapper
         MLModelConfiguration *config = [[MLModelConfiguration alloc] init];
@@ -68,8 +68,7 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
 
         if (!_visionRequest) {
             if (error) {
-                *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
-                                             code:-100
+                *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-100
                                          userInfo:@{NSLocalizedDescriptionKey: @"Failed to create VNCoreMLRequest"}];
             }
             return nil;
@@ -83,8 +82,7 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
     // Step 0: Check if the request was initialized successfully
     if (!self.visionRequest) {
         if (error) {
-            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
-                                         code:-1
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-1
                                      userInfo:@{NSLocalizedDescriptionKey: @"VNCoreMLRequest not initialized"}];
         }
         return NULL;
@@ -114,13 +112,10 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
     // Step 3: Check if the "segmentationMask" was found
     if (!featureObs) {
         if (error) {
-            *error = [NSError
-                errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
-                           code:-2
-                       userInfo:@{
-                           NSLocalizedDescriptionKey:
-                               @"'segmentationMask' feature not found or is not VNCoreMLFeatureValueObservation"
-                       }];
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-2 userInfo:@{
+                NSLocalizedDescriptionKey:
+                    @"'segmentationMask' feature not found or is not VNCoreMLFeatureValueObservation"
+            }];
         }
         return NULL;
     }
@@ -141,8 +136,7 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
     // Step 5: Validate the data type (Float32) and element count (EXPECTED_PIXEL_COUNT)
     if (multiArray.dataType != MLMultiArrayDataTypeFloat32) {
         if (error) {
-            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
-                                         code:-4
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-4
                                      userInfo:@{NSLocalizedDescriptionKey: @"MultiArray is not Float32"}];
         }
         return NULL;
@@ -152,8 +146,7 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
         if (error) {
             NSString *desc = [NSString stringWithFormat:@"Unexpected MultiArray count. Expected %d, got %lld",
                                                         EXPECTED_PIXEL_COUNT, (long long) multiArray.count];
-            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
-                                         code:-5
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-5
                                      userInfo:@{NSLocalizedDescriptionKey: desc}];
         }
         return NULL;
