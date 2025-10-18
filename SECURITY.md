@@ -2,7 +2,7 @@
 
 ## Our Commitment
 
-We always provide secured software with users at the latest release. The Live Background Removal Lite team takes the security of our software seriously, and we appreciate your efforts to responsibly disclose vulnerabilities.
+We always provide secure software to users via the latest release. The Live Background Removal Lite team takes the security of our software seriously, and we appreciate your efforts to responsibly disclose vulnerabilities.
 
 ## Supported Versions
 
