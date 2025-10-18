@@ -24,7 +24,8 @@ def main():
         source="auto",
         inputs=[ct.ImageType(name="image", shape=example_input.shape, color_layout="RGB", scale=1/255.0, bias=[0,0,0])],
         outputs=[ct.TensorType(name="segmentationMask")],
-        convert_to="mlprogram"
+        convert_to="mlprogram",
+        compute_precision=ct.precision.FLOAT16,
     )
     mlpackage_model.save(output_path)
 

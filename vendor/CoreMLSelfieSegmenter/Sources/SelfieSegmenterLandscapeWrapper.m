@@ -6,8 +6,9 @@
 
 #import "SelfieSegmenterLandscapeModel.h"
 
-// 期待されるテンソルのサイズ (1 * 1 * 144 * 256)
 #define EXPECTED_PIXEL_COUNT (144 * 256)
+
+static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegmenterLandscapeWrapperErrorDomain";
 
 @interface SelfieSegmenterLandscapeWrapper ()
 
@@ -16,101 +17,116 @@
 
 @end
 
-
 @implementation SelfieSegmenterLandscapeWrapper
 
-- (instancetype)init {
+- (nullable instancetype)init:(NSError *_Nullable *_Nullable)error
+{
     self = [super init];
     if (self) {
-        NSError *error = nil;
-        
-        // 1. CoreMLモデルラッパーを読み込む
-        MLModelConfiguration *config = [[MLModelConfiguration alloc] init];
-        SelfieSegmenterLandscapeModel *tempModel = [[SelfieSegmenterLandscapeModel alloc] initWithConfiguration:config error:&error];
+        NSError *internalError = nil; // Local error for propagation
 
-        if (!tempModel) {
-            NSLog(@"[MySegmenterBridge] Failed to load CoreML model wrapper: %@", error);
+        // 1. Load the Core ML model wrapper
+        MLModelConfiguration *config = [[MLModelConfiguration alloc] init];
+        SelfieSegmenterLandscapeModel *mlModel =
+            [[SelfieSegmenterLandscapeModel alloc] initWithConfiguration:config error:&internalError];
+
+        if (!mlModel) {
+            if (error) {
+                *error = internalError;
+            }
             return nil;
         }
-        
-        // 2. VNCoreMLModel を作成
-        _visionModel = [VNCoreMLModel modelForMLModel:tempModel.model error:&error];
-        
+
+        // 2. Create the VNCoreMLModel
+        _visionModel = [VNCoreMLModel modelForMLModel:mlModel.model error:&internalError];
+
         if (!_visionModel) {
-            NSLog(@"[MySegmenterBridge] Failed to create VNCoreMLModel: %@", error);
+            if (error) {
+                *error = internalError;
+            }
             return nil;
         }
-        
-        // 3. VNCoreMLRequest を一度だけ作成し、プロパティとして保持
+
+        // 3. Create and store the VNCoreMLRequest
         _visionRequest = [[VNCoreMLRequest alloc] initWithModel:_visionModel];
-        
+
         if (!_visionRequest) {
-            NSLog(@"[MySegmenterBridge] Failed to create VNCoreMLRequest");
+            if (error) {
+                *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
+                                             code:-100
+                                         userInfo:@{NSLocalizedDescriptionKey: @"Failed to create VNCoreMLRequest"}];
+            }
             return nil;
         }
     }
     return self;
 }
 
-// [修正] 戻り値を VNObservation* から float* に変更
-- (nullable float *)performSegmentationWithHandler:(VNImageRequestHandler *)handler
-                                              error:(NSError *_Nullable *_Nullable)error {
-                                                      
-    if (!self.visionRequest) { // initで失敗していた場合
+- (nullable float *)performWithHandler:(VNImageRequestHandler *)handler error:(NSError *_Nullable *_Nullable)error
+{
+    // Step 0: Check if the request was initialized successfully
+    if (!self.visionRequest) {
         if (error) {
-            *error = [NSError errorWithDomain:@"MySegmenterBridgeError"
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
                                          code:-1
                                      userInfo:@{NSLocalizedDescriptionKey: @"VNCoreMLRequest not initialized"}];
         }
         return NULL;
     }
 
-    // 1. リクエストを同期的に実行
+    // Step 1: Perform the Vision request synchronously
     BOOL success = [handler performRequests:@[self.visionRequest] error:error];
 
     if (!success) {
-        // 'error' ポインタは performRequests メソッドが設定してくれます
+        // 'error' pointer is set by the performRequests method on failure
         return NULL;
     }
-    
-    // 2. results から "segmentationMask" を探す
+
+    // Step 2: Find the observation named "segmentationMask" in the results
     VNCoreMLFeatureValueObservation *featureObs = nil;
-    
+
     for (VNObservation *observation in self.visionRequest.results) {
         if ([observation isKindOfClass:[VNCoreMLFeatureValueObservation class]]) {
-            VNCoreMLFeatureValueObservation *tempObs = (VNCoreMLFeatureValueObservation *)observation;
+            VNCoreMLFeatureValueObservation *tempObs = (VNCoreMLFeatureValueObservation *) observation;
             if ([tempObs.featureName isEqualToString:@"segmentationMask"]) {
                 featureObs = tempObs;
                 break;
             }
         }
     }
-    
-    // 3. 目的の Observation が見つからなかった場合
+
+    // Step 3: Check if the "segmentationMask" was found
     if (!featureObs) {
         if (error) {
-            *error = [NSError errorWithDomain:@"MySegmenterBridgeError"
-                                         code:-2
-                                     userInfo:@{NSLocalizedDescriptionKey: @"'segmentationMask' feature not found or is not VNCoreMLFeatureValueObservation"}];
+            *error = [NSError
+                errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
+                           code:-2
+                       userInfo:@{
+                           NSLocalizedDescriptionKey:
+                               @"'segmentationMask' feature not found or is not VNCoreMLFeatureValueObservation"
+                       }];
         }
         return NULL;
     }
 
-    // 4. [修正] MLMultiArray を取り出して検証
+    // Step 4: Validate that the feature type is MLMultiArray
     if (featureObs.featureValue.type != MLFeatureTypeMultiArray) {
         if (error) {
-            *error = [NSError errorWithDomain:@"MySegmenterBridgeError" code:-3
-                                     userInfo:@{NSLocalizedDescriptionKey: @"'segmentationMask' is not MLFeatureTypeMultiArray"}];
+            *error = [NSError
+                errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
+                           code:-3
+                       userInfo:@{NSLocalizedDescriptionKey: @"'segmentationMask' is not MLFeatureTypeMultiArray"}];
         }
         return NULL;
     }
-    
+
     MLMultiArray *multiArray = featureObs.featureValue.multiArrayValue;
 
-    // 5. [修正] データ型とサイズを検証
+    // Step 5: Validate the data type (Float32) and element count (EXPECTED_PIXEL_COUNT)
     if (multiArray.dataType != MLMultiArrayDataTypeFloat32) {
         if (error) {
-            *error = [NSError errorWithDomain:@"MySegmenterBridgeError" code:-4
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
+                                         code:-4
                                      userInfo:@{NSLocalizedDescriptionKey: @"MultiArray is not Float32"}];
         }
         return NULL;
@@ -119,15 +135,16 @@
     if (multiArray.count != EXPECTED_PIXEL_COUNT) {
         if (error) {
             NSString *desc = [NSString stringWithFormat:@"Unexpected MultiArray count. Expected %d, got %lld",
-                              EXPECTED_PIXEL_COUNT, (long long)multiArray.count];
-            *error = [NSError errorWithDomain:@"MySegmenterBridgeError" code:-5
+                                                        EXPECTED_PIXEL_COUNT, (long long) multiArray.count];
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain
+                                         code:-5
                                      userInfo:@{NSLocalizedDescriptionKey: desc}];
         }
         return NULL;
     }
-    
-    // 6. [修正] データポインタ (float*) を返す
-    return (float *)multiArray.dataPointer;
+
+    // Step 6: Return the raw float data pointer
+    return (float *) multiArray.dataPointer;
 }
 
 @end

@@ -1,129 +1,155 @@
-import XCTest
+import AppKit // For NSImage / CGImage (macOS)
 import CoreVideo
-import Vision // VNImageRequestHandler を使うため
-import AppKit // NSImage / CGImage のためにインポート (macOSの場合)
-// import UIKit // (iOSの場合)
-
-// Bridging Header 経由で SelfieSegmenterLandscapeWrapper が
-// import されていることを前提とします。
+import Vision // For VNImageRequestHandler
+import XCTest
 
 final class SelfieSegmenterLandscapeWrapperTests: XCTestCase {
 
-    // モデルの期待する入出力サイズ
+    // Expected model input/output dimensions
     let modelWidth = 256
     let modelHeight = 144
 
-    // MARK: - Test Cases
+    // MARK: - Test Error
 
-    func testSegmentationSuccess() throws {
-        // 1. モデルのセットアップ
-        // (モデルファイルがテストバンドルに追加されている必要がある)
-        let segmenter = SelfieSegmenterLandscapeWrapper()
-        
-        // 2. 入力画像のロード
-        let bundle = Bundle(for: type(of: self))
-        guard let nsImage = bundle.image(forResource: "selfie001"),
+    // Local error enum for test helpers
+    enum TestError: Error {
+        case fileNotFound(String)
+        case maskLoadFailed(String)
+        case maskDataExtractionFailed
+    }
+
+    // MARK: - Success Cases
+
+    /**
+     * Verifies that given a valid image, the wrapper returns a result
+     * that is close to the expected ground truth mask.
+     */
+    func testSegmentationSuccess_ValidImage_ReturnsCorrectMask() throws {
+
+        // 1. Prepare the wrapper and the input handler
+        let segmenter = try SelfieSegmenterLandscapeWrapper()
+
+        guard let nsImage = Bundle(for: type(of: self)).image(forResource: "selfie001"),
               let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil)
         else {
             XCTFail("Failed to load input image 'selfie001'.")
-            return
+            throw TestError.fileNotFound("selfie001")
         }
-        
-        // 3. セグメンテーション実行
         let inputHandler = VNImageRequestHandler(cgImage: cgImage)
-        var error: NSError?
-        
-        // segmenter.performSegmentation は (float *) を返す
-        let resultFloatPtr = try! segmenter.performSegmentation(with: inputHandler)
-        // 4. 正解マスクのロード
-        guard let nsMask = bundle.image(forResource: "selfie001_mask"),
+
+        // 2. Perform segmentation
+        // Note: perform(with:) can throw and returns a nullable pointer (NULL).
+        let resultFloatPtr = try segmenter.perform(with: inputHandler)
+
+        // 3. Check that the returned pointer is not nil (NULL)
+        XCTAssertNotNil(resultFloatPtr, "perform(with:) returned a nil pointer.")
+
+        // 4. Load the ground truth mask
+        guard let nsMask = Bundle(for: type(of: self)).image(forResource: "selfie001_mask"),
               let maskCGImage = nsMask.cgImage(forProposedRect: nil, context: nil, hints: nil)
         else {
             XCTFail("Failed to load mask image 'selfie001_mask'.")
-            return
-        }
-        
-        let pixelCount = modelWidth * modelHeight
-        
-        // 5. 正解マスクのデータ検証と抽出
-        XCTAssertEqual(maskCGImage.width, modelWidth, "Ground truth mask width is incorrect.")
-        XCTAssertEqual(maskCGImage.height, modelHeight, "Ground truth mask height is incorrect.")
-        
-        guard let truthMaskData = extractGrayscaleData(from: maskCGImage, width: modelWidth, height: modelHeight) else {
-            XCTFail("Failed to extract pixel data from ground truth mask.")
-            return
+            throw TestError.maskLoadFailed("selfie001_mask")
         }
 
-        // 6. モデル出力 (float*) を [UInt8] 配列に変換
+        let pixelCount = modelWidth * modelHeight
+
+        // 5. Validate and extract ground truth mask data
+        XCTAssertEqual(maskCGImage.width, modelWidth, "Ground truth mask width is incorrect.")
+        XCTAssertEqual(maskCGImage.height, modelHeight, "Ground truth mask height is incorrect.")
+
+        guard let truthMaskData = extractGrayscaleData(from: maskCGImage, width: modelWidth, height: modelHeight) else {
+            XCTFail("Failed to extract pixel data from ground truth mask.")
+            throw TestError.maskDataExtractionFailed
+        }
+
+        // 6. Convert model output (float*) to [UInt8] array
         var modelMaskData = [UInt8](repeating: 0, count: pixelCount)
         for i in 0..<pixelCount {
             let floatValue = resultFloatPtr[i]
-            
-            // --- ⚠️ モデルの出力範囲に関する仮定 ---
-            // モデルが 0.0-1.0 の範囲のfloatを返すと仮定し、255を乗算する。
-            // もしモデルが 0.0-255.0 の範囲のfloatを返す場合、 * 255.0 は不要。
+
+            // --- ⚠️ Assumption about model output range ---
+            // Assuming the model returns floats in the 0.0-1.0 range, multiply by 255.
+            // If the model returns 0.0-255.0, the * 255.0 is not needed.
             let scaledValue = floatValue * 255.0
-            
-            // 値を 0-255 の UInt8 にクリッピング
+
+            // Clip the value to a 0-255 UInt8
             modelMaskData[i] = UInt8(min(max(scaledValue, 0.0), 255.0))
         }
-        
-        // 7. 2つのマスクを比較
-        // ピクセルごとの完全一致は浮動小数点の誤差で失敗する可能性があるため、
-        // ピクセルごとの「平均絶対誤差 (Mean Absolute Error)」を計算します。
-        
+
+        // 7. Compare the two masks
+        // Calculate the Mean Absolute Error (MAE) per pixel.
         var totalAbsoluteDifference: Double = 0
         for i in 0..<pixelCount {
             let diff = abs(Double(modelMaskData[i]) - Double(truthMaskData[i]))
             totalAbsoluteDifference += diff
         }
-        
+
         let meanAbsoluteError = totalAbsoluteDifference / Double(pixelCount)
-        
-        // 許容誤差 (0-255 のスケールで、ピクセルあたり平均 2.0 の誤差まで許容)
-        // この値は、モデルの精度と正解マスクの品質に応じて調整してください。
+
+        // Tolerance (on a 0-255 scale, allow an average error of 2.0 per pixel)
+        // This value should be adjusted based on model accuracy and mask quality.
         let tolerance: Double = 2.0
-        
+
         XCTAssertLessThan(meanAbsoluteError, tolerance,
                           "Mean Absolute Error (\(meanAbsoluteError)) exceeds tolerance (\(tolerance)). Model mask is not close enough to the ground truth mask.")
     }
-    
-    // MARK: - Helper Functions
-    
+
+    // MARK: - Failure Cases
+
     /**
-     * CGImage から 1ch (グレースケール) の [UInt8] ピクセルデータを抽出します。
-     *
-     * @param cgImage 入力画像
-     * @param width 期待される幅
-     * @param height 期待される高さ
-     * @return 1ピクセル1バイトの UInt8 配列
+     * Verifies that perform(with:) correctly throws an error for
+     * invalid input (e.g., empty data).
+     */
+    func testPerform_InvalidHandler_ThrowsError() throws {
+        // 1. Successfully initialize the wrapper
+        let segmenter = try SelfieSegmenterLandscapeWrapper()
+
+        // 2. Create an invalid handler with empty Data
+        let invalidHandler = VNImageRequestHandler(data: Data())
+
+        // 3. Expect perform(with:) to throw an error
+        //    (The Vision framework (VNErrorDomain) will throw the error)
+        XCTAssertThrowsError(try segmenter.perform(with: invalidHandler)) { error in
+            let nsError = error as NSError
+            print("Caught expected error: \(nsError.domain), Code: \(nsError.code)")
+            XCTAssertEqual(nsError.domain, VNErrorDomain, "Expected a Vision framework error (VNErrorDomain).")
+        }
+    }
+
+    // MARK: - Helper Functions
+
+    /**
+     * Extracts 1-channel (grayscale) [UInt8] pixel data from a CGImage.
+     * (Provided helper function)
      */
     func extractGrayscaleData(from cgImage: CGImage, width: Int, height: Int) -> [UInt8]? {
         guard cgImage.width == width, cgImage.height == height else { return nil }
-        
+
         let pixelCount = width * height
         var grayscaleData = [UInt8](repeating: 0, count: pixelCount)
-        
-        // CGImage が RGBA (4ch) か Grayscale (1ch) かを判別
+
+        // Determine if CGImage is RGBA (4ch) or Grayscale (1ch)
         let bytesPerPixel = cgImage.bitsPerPixel / 8
         let bytesPerRow = cgImage.bytesPerRow
-        
+
         guard let dataProvider = cgImage.dataProvider,
               let cfdata = dataProvider.data,
-              let rawPtr = CFDataGetBytePtr(cfdata) else {
+              let rawPtr = CFDataGetBytePtr(cfdata)
+        else {
             return nil
         }
-        
+
         for y in 0..<height {
             for x in 0..<width {
                 let byteIndex = (y * bytesPerRow) + (x * bytesPerPixel)
-                
-                // 最初のバイト (R または Gray) をマスク値として使用
+
+                // Use the first byte (R or Gray) as the mask value
                 let maskValue = rawPtr[byteIndex]
                 grayscaleData[y * width + x] = maskValue
             }
         }
-        
+
         return grayscaleData
     }
 }
