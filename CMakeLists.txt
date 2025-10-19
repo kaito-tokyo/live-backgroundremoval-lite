@@ -145,7 +145,7 @@ endif()
 add_library(SelfieSegmenter STATIC)
 target_sources(
   SelfieSegmenter
-  PRIVATE src/SelfieSegmenter/ShapeConverter.cpp src/SelfieSegmenter/NcnnSelfieSegmenter.cpp
+  PRIVATE src/SelfieSegmenter/ShapeConverter.cpp
 )
 if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
   target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/CoreMLSelfieSegmenter.mm)

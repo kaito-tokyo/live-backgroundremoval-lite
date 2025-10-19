@@ -8,13 +8,11 @@ target_link_libraries(
   PRIVATE GTest::gtest_main SelfieSegmenter OpenCV::opencv_core OpenCV::opencv_imgproc OpenCV::opencv_imgcodecs
 )
 list(APPEND TEST_LIST NcnnSelfieSegmenter_test)
-gtest_discover_tests(NcnnSelfieSegmenter_test DISCOVERY_MODE PRE_TEST)
 
 # UpdateChecker_test
 add_executable(UpdateChecker_test UpdateChecker/UpdateChecker_test.cpp)
 target_link_libraries(UpdateChecker_test PRIVATE GTest::gtest_main UpdateChecker)
 list(APPEND TEST_LIST UpdateChecker_test)
-gtest_discover_tests(UpdateChecker_test DISCOVERY_MODE PRE_TEST)
 
 if(TARGET KaitoTokyo::CoreMLSelfieSegmenter)
   # CoreMLSelfieSegmenter_test
@@ -24,7 +22,6 @@ if(TARGET KaitoTokyo::CoreMLSelfieSegmenter)
     PRIVATE GTest::gtest_main SelfieSegmenter OpenCV::opencv_core OpenCV::opencv_imgproc OpenCV::opencv_imgcodecs
   )
   list(APPEND TEST_LIST CoreMLSelfieSegmenter_test)
-  gtest_discover_tests(CoreMLSelfieSegmenter_test DISCOVERY_MODE PRE_TEST)
 endif()
 
 
