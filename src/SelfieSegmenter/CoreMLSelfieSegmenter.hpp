@@ -46,9 +46,9 @@ private:
 	std::unique_ptr<CoreMLSelfieSegmenterImpl> pImpl;
 
 public:
-	CoreMLSelfieSegmenter() : maskBuffer(getPixelCount()) {}
+	CoreMLSelfieSegmenter();
 
-	~CoreMLSelfieSegmenter() override = default;
+	~CoreMLSelfieSegmenter() override;
 
 	std::size_t getWidth() const noexcept override { return 256; }
 	std::size_t getHeight() const noexcept override { return 144; }
