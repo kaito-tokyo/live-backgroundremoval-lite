@@ -130,20 +130,22 @@ obs_properties_t *MainPluginContext::getProperties()
 	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
+	obs_property_t *propComputeUnit = obs_properties_add_list(
+		props, "computeUnit", obs_module_text("computeUnit"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+
+	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitDefault"), static_cast<int>(ComputeUnit::Default));
+
 #if NCNN_VULKAN == 1
-	obs_property_t *propNcnnGpuIndex = obs_properties_add_list(
-		props, "ncnnGpuIndex", obs_module_text("ncnnGpuList"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-
-	obs_property_list_add_int(propNcnnGpuIndex, obs_module_text("ncnnGpuListUseCpu"), -1);
-
 	int ncnnGpuCount = ncnn::get_gpu_count();
 	ncnnGpuNames.resize(ncnnGpuCount);
 	for (int i = 0; i < ncnnGpuCount; ++i) {
-		ncnnGpuNames[i] = std::to_string(i);
-		obs_property_list_add_int(propNcnnGpuIndex, ncnnGpuNames[i].c_str(), i);
+		ncnnGpuNames[i] = fmt::format("{} ({})", obs_module_text("computeUnitVulkanGpu"), i);
+		obs_property_list_add_int(propNcnnGpuIndex, ncnnGpuNames[i].c_str(), static_cast<int>(ComputeUnit::NcnnVulkanGpu) + i);
 	}
-#else
-	obs_properties_add_text(props, "gpuStatus", obs_module_text("gpuStatusCpuOnly"), OBS_TEXT_INFO);
+#endif
+
+#if HAVE_COREML_SELFIE_SEGMENTER
+	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCoreML"), static_cast<int>(ComputeUnit::CoreML));
 #endif
 
 	obs_properties_add_int_slider(props, "ncnnNumThreads", obs_module_text("ncnnNumThreads"), 0, 32, 1);

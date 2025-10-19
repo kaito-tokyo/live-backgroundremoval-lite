@@ -10,7 +10,8 @@
                 "PLUGIN_VERSION=\"0.0.0\"",
                 "HAVE_BACKWARD",
                 "DATA_DIR=\".\"",
-                "TESTS_DIR=\".\""
+                "TESTS_DIR=\".\"",
+                "HAVE_COREML_SELFIE_SEGMENTER"
             ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",

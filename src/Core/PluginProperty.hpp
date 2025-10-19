@@ -29,7 +29,15 @@ enum class FilterLevel : int {
 	TimeAveragedFilter = 400,
 };
 
+enum class ComputeUnit : int {
+	Default = 0,
+	CPUOnly = 1 << 16,
+	NcnnVulkanGpu = 1 << 17,
+	CoreML = 1 << 18,
+};
+
 struct PluginProperty {
+	int computationUnit = static_cast<int>(ComputeUnit::Default);
 	int ncnnGpuIndex = -1;
 	int ncnnNumThreads = 2;
 
