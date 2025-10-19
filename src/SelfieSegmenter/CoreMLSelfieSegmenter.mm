@@ -19,10 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #import "CoreMLSelfieSegmenter.hpp"
 
 #import <Foundation/Foundation.h>
+#import <CoreFoundation/CoreFoundation.h>
+#import <CoreGraphics/CoreGraphics.h>
 #import <CoreMLSelfieSegmenter/SelfieSegmenterLandscapeWrapper.h>
 #import <Vision/Vision.h>
-#import <CoreGraphics/CoreGraphics.h>
-#import <CoreFoundation/CoreFoundation.h>
 
 #include <cstdint>
 #include <functional>
@@ -64,14 +64,16 @@ namespace KaitoTokyo {
         {
               private:
             std::unique_ptr<SelfieSegmenterLandscapeWrapper, WrapperDeleter> wrapper;
+            MaskBuffer maskBuffer;
 
               public:
-            CoreMLSelfieSegmenterImpl() : wrapper(std::move(make_unique_wrapper())) {}
+            CoreMLSelfieSegmenterImpl(std::size_t pixelCount) :
+                wrapper(std::move(make_unique_wrapper())), maskBuffer(pixelCount)
+            {}
+            ~CoreMLSelfieSegmenterImpl() = default;
 
-            void process(const std::uint8_t *bgraData)
+            void process(const std::uint8_t *bgraData, const std::size_t pixelCount)
             {
-                const size_t pixelCount = getPixelCount();
-
                 NSError *error = nil;
                 MLMultiArray *maskArray = [wrapper.get() performWithBGRAData:bgraData error:&error];
                 if (!maskArray) {
@@ -83,39 +85,28 @@ namespace KaitoTokyo {
                 // Convert float mask (0.0-1.0) to uint8_t mask (0-255)
                 maskBuffer.write([&](std::uint8_t *dst) {
                     float *maskPtr = (float *) maskArray.dataPointer;
-                    KaitoTokyo::SelfieSegmenter::copy_float32_to_r8(dst, maskPtr, pixelCount);
+                    copy_float32_to_r8(dst, maskPtr, pixelCount);
                 });
+            }
+
+            const std::uint8_t *getMask() const
+            {
+                return maskBuffer.data();
             }
         };
 
-        // --- Public Interface Implementation ---
-
         CoreMLSelfieSegmenter::CoreMLSelfieSegmenter() :
-            maskBuffer(getPixelCount()), pImpl(std::make_unique<CoreMLSelfieSegmenterImpl>())
+            pImpl(std::make_unique<CoreMLSelfieSegmenterImpl>(getPixelCount()))
         {}
-
-        CoreMLSelfieSegmenter::~CoreMLSelfieSegmenter() = default;
 
         void CoreMLSelfieSegmenter::process(const std::uint8_t *bgraData)
         {
-            std::lock_guard<std::mutex> lock(pImpl->mutex);
-
-            const size_t pixelCount = getPixelCount();
-
-            NSError *error = nil;
-            MLMultiArray *maskArray = [pImpl->wrapper.get() performWithBGRAData:(uint8_t *) bgraData error:&error];
-            if (!maskArray) {
-                std::string errMsg = error ? [[error localizedDescription] UTF8String]
-                                           : "Unknown error in CoreML segmentation";
-                throw std::runtime_error(errMsg);
-            }
-
-            // Convert float mask (0.0-1.0) to uint8_t mask (0-255)
-            maskBuffer.write([&](std::uint8_t *dst) {
-                float *maskPtr = (float *) maskArray.dataPointer;
-                KaitoTokyo::SelfieSegmenter::copy_float32_to_r8(dst, maskPtr, pixelCount);
-            });
+            pImpl->process(bgraData);
         }
 
+        const std::uint8_t *getMask() const override
+        {
+            return pImpl->getMask();
+        }
     }  // namespace SelfieSegmenter
 }  // namespace KaitoTokyo
