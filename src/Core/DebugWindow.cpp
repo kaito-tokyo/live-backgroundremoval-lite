@@ -182,28 +182,28 @@ void DebugWindow::updatePreview()
 
 	bool needsRecreation = !currentRenderData ||
 			       (currentRenderData->readerBgrx &&
-				(currentRenderData->readerBgrx->width != renderingContext->width ||
-				 currentRenderData->readerBgrx->height != renderingContext->height)) ||
+				(currentRenderData->readerBgrx->width != renderingContext->region.width ||
+				 currentRenderData->readerBgrx->height != renderingContext->region.height)) ||
 			       (currentRenderData->readerSubR8 &&
-				(currentRenderData->readerSubR8->width != renderingContext->widthSub ||
-				 currentRenderData->readerSubR8->height != renderingContext->heightSub));
+				(currentRenderData->readerSubR8->width != renderingContext->subRegion.width ||
+				 currentRenderData->readerSubR8->height != renderingContext->subRegion.height));
 
 	if (needsRecreation) {
 		GraphicsContextGuard graphicsContextGuard;
 		auto newRenderData = std::make_unique<DebugRenderData>();
-		newRenderData->readerBgrx = std::make_unique<AsyncTextureReader>(renderingContext->width,
-										 renderingContext->height, GS_BGRX);
-		newRenderData->readerR8 =
-			std::make_unique<AsyncTextureReader>(renderingContext->width, renderingContext->height, GS_R8);
-		newRenderData->readerR32f = std::make_unique<AsyncTextureReader>(renderingContext->width,
-										 renderingContext->height, GS_R32F);
+		newRenderData->readerBgrx = std::make_unique<AsyncTextureReader>(
+			renderingContext->region.width, renderingContext->region.height, GS_BGRX);
+		newRenderData->readerR8 = std::make_unique<AsyncTextureReader>(renderingContext->region.width,
+									       renderingContext->region.height, GS_R8);
+		newRenderData->readerR32f = std::make_unique<AsyncTextureReader>(
+			renderingContext->region.width, renderingContext->region.height, GS_R32F);
 		newRenderData->readerMaskRoiR8 = std::make_unique<AsyncTextureReader>(
-			renderingContext->maskRoiWidth, renderingContext->maskRoiHeight, GS_R8);
+			renderingContext->maskRoi.width, renderingContext->maskRoi.height, GS_R8);
 		newRenderData->reader256Bgrx = std::make_unique<AsyncTextureReader>(256, 144, GS_BGRX);
-		newRenderData->readerSubR8 = std::make_unique<AsyncTextureReader>(renderingContext->widthSub,
-										  renderingContext->heightSub, GS_R8);
+		newRenderData->readerSubR8 = std::make_unique<AsyncTextureReader>(
+			renderingContext->subRegion.width, renderingContext->subRegion.height, GS_R8);
 		newRenderData->readerR32fSub = std::make_unique<AsyncTextureReader>(
-			renderingContext->widthSub, renderingContext->heightSub, GS_R32F);
+			renderingContext->subRegion.width, renderingContext->subRegion.height, GS_R32F);
 
 		if (currentRenderData) {
 			oldRenderData.push_back(std::move(currentRenderData));

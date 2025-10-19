@@ -76,12 +76,12 @@ MainPluginContext::~MainPluginContext() noexcept {}
 
 std::uint32_t MainPluginContext::getWidth() const noexcept
 {
-	return renderingContext ? renderingContext->width : 0;
+	return renderingContext ? renderingContext->region.width : 0;
 }
 
 std::uint32_t MainPluginContext::getHeight() const noexcept
 {
-	return renderingContext ? renderingContext->height : 0;
+	return renderingContext ? renderingContext->region.height : 0;
 }
 
 void MainPluginContext::getDefaults(obs_data_t *data)
@@ -243,8 +243,8 @@ void MainPluginContext::update(obs_data_t *settings)
 
 		if (_renderingContext && doesRenewRenderingContext) {
 			GraphicsContextGuard graphicsContextGuard;
-			std::shared_ptr<RenderingContext> newRenderingContext =
-				createRenderingContext(_renderingContext->width, _renderingContext->height);
+			std::shared_ptr<RenderingContext> newRenderingContext = createRenderingContext(
+				_renderingContext->region.width, _renderingContext->region.height);
 			renderingContext = newRenderingContext;
 			_renderingContext = newRenderingContext;
 			GsUnique::drain();
@@ -289,8 +289,8 @@ void MainPluginContext::videoTick(float seconds)
 	std::shared_ptr<RenderingContext> _renderingContext;
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		if (!renderingContext || renderingContext->width != targetWidth ||
-		    renderingContext->height != targetHeight) {
+		if (!renderingContext || renderingContext->region.width != targetWidth ||
+		    renderingContext->region.height != targetHeight) {
 			GraphicsContextGuard graphicsContextGuard;
 			renderingContext = createRenderingContext(targetWidth, targetHeight);
 			GsUnique::drain();

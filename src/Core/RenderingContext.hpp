@@ -44,6 +44,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
+struct RenderingContextRegion {
+	std::uint32_t x;
+	std::uint32_t y;
+	std::uint32_t width;
+	std::uint32_t height;
+};
+
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 private:
 	obs_source_t *const source;
@@ -59,12 +66,10 @@ private:
 
 public:
 	const std::uint32_t subsamplingRate;
-	const std::uint32_t width;
-	const std::uint32_t height;
-	const std::uint32_t widthSub;
-	const std::uint32_t heightSub;
+	const RenderingContextRegion region;
+	const RenderingContextRegion subRegion;
+	const RenderingContextRegion maskRoi;
 
-public:
 	const BridgeUtils::unique_gs_texture_t bgrxOriginalImage;
 	const BridgeUtils::unique_gs_texture_t r32fOriginalGrayscale;
 
@@ -74,11 +79,6 @@ private:
 	std::vector<std::uint8_t> segmenterInputBuffer;
 
 public:
-	const std::uint32_t maskRoiOffsetX;
-	const std::uint32_t maskRoiOffsetY;
-	const std::uint32_t maskRoiWidth;
-	const std::uint32_t maskRoiHeight;
-
 	const BridgeUtils::unique_gs_texture_t r8SegmentationMask;
 
 public:
