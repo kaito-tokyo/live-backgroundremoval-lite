@@ -32,7 +32,7 @@ namespace SelfieSegmenter {
 
 class MaskBuffer {
 public:
-	static constexpr std::size_t ALIGNMENT = 32;
+	constexpr static std::size_t kAlignment = 32;
 
 private:
 	std::pmr::memory_resource &defaultResource;
@@ -46,7 +46,7 @@ private:
 public:
 	explicit MaskBuffer(std::size_t size)
 		: defaultResource(*std::pmr::new_delete_resource()),
-		  alignedResource(ALIGNMENT, &defaultResource),
+		  alignedResource(kAlignment, &defaultResource),
 		  buffers{std::pmr::vector<std::uint8_t>(size, {&alignedResource}),
 			  std::pmr::vector<std::uint8_t>(size, {&alignedResource})},
 		  readableIndex(0)

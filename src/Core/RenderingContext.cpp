@@ -23,6 +23,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "../BridgeUtils/AsyncTextureReader.hpp"
 
 #include "../SelfieSegmenter/NcnnSelfieSegmenter.hpp"
+#include "../SelfieSegmenter/NullSelfieSegmenter.hpp"
+
+#ifdef HAVE_COREML_SELFIE_SEGMENTER
+#include "../SelfieSegmenter/CoreMLSelfieSegmenter.hpp"
+#endif
 
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::SelfieSegmenter;
@@ -31,6 +36,33 @@ namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
 namespace {
+
+inline std::unique_ptr<ISelfieSegmenter> createSelfieSegmenter(const ILogger &logger, const PluginConfig &pluginConfig,
+							       int computeUnit, int numThreads)
+{
+	if (computeUnit == ComputeUnit::kNull) {
+		logger.info("Using null backend for selfie segmenter.");
+		return std::make_unique<NullSelfieSegmenter>();
+	} else if ((computeUnit & ComputeUnit::kCpuOnly) != 0) {
+		logger.info("Using ncnn CPU backend for selfie segmenter.");
+		return std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
+							     pluginConfig.selfieSegmenterBinPath.c_str(), numThreads);
+	} else if ((computeUnit & ComputeUnit::kNcnnVulkanGpu) != 0) {
+		int ncnnGpuIndex = computeUnit & ComputeUnit::kNcnnVulkanGpuIndexMask;
+		logger.info("Using ncnn Vulkan GPU backend (GPU index: {}) for selfie segmenter.", ncnnGpuIndex);
+		return std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
+							     pluginConfig.selfieSegmenterBinPath.c_str(), numThreads,
+							     ncnnGpuIndex);
+#ifdef HAVE_COREML_SELFIE_SEGMENTER
+	} else if ((computeUnit & ComputeUnit::kCoreML) != 0) {
+		logger.info("Using CoreML backend for selfie segmenter.");
+		return std::make_unique<CoreMLSelfieSegmenter>();
+#endif
+	} else {
+		throw std::runtime_error("Unsupported compute unit for selfie segmenter: " +
+					 std::to_string(computeUnit));
+	}
+}
 
 inline RenderingContextRegion getMaskRoiPosition(std::uint32_t width, std::uint32_t height,
 						 const std::unique_ptr<ISelfieSegmenter> &selfieSegmenter)
@@ -55,19 +87,21 @@ inline RenderingContextRegion getMaskRoiPosition(std::uint32_t width, std::uint3
 
 } // anonymous namespace
 
-RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger, const MainEffect &_mainEffect,
-				   PluginConfig _pluginConfig, ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-				   int ncnnNumThreads, int ncnnGpuIndex, std::uint32_t _subsamplingRate,
-				   std::uint32_t width, std::uint32_t height)
+RenderingContext::RenderingContext(obs_source_t *const _source, const BridgeUtils::ILogger &_logger,
+				   const MainEffect &_mainEffect,
+				   BridgeUtils::ThrottledTaskQueue &_selfieSegmenterTaskQueue,
+				   const PluginConfig &_pluginConfig, const std::uint32_t _subsamplingRate,
+				   const std::uint32_t width, const std::uint32_t height, const int _computeUnit,
+				   const int _numThreads)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
-	  pluginConfig(_pluginConfig),
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
-	  selfieSegmenter(std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
-								pluginConfig.selfieSegmenterBinPath.c_str(),
-								ncnnGpuIndex, ncnnNumThreads)),
+	  pluginConfig(_pluginConfig),
 	  subsamplingRate(_subsamplingRate),
+	  computeUnit(_computeUnit),
+	  numThreads(_numThreads),
+	  selfieSegmenter(createSelfieSegmenter(logger, pluginConfig, computeUnit, numThreads)),
 	  region{0, 0, width, height},
 	  subRegion{0, 0, (region.width / subsamplingRate) & ~1u, (region.height / subsamplingRate) & ~1u},
 	  maskRoi(getMaskRoiPosition(region.width, region.height, selfieSegmenter)),
@@ -99,18 +133,6 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  r32fGFTemporary1Sub(
 		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET))
 {
-	selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
-	selfieSegmenterNet.opt.num_threads = ncnnNumThreads;
-	selfieSegmenterNet.opt.use_local_pool_allocator = true;
-	selfieSegmenterNet.opt.openmp_blocktime = 1;
-
-	if (int ret = selfieSegmenterNet.load_param(pluginConfig.selfieSegmenterParamPath.c_str())) {
-		throw std::runtime_error("Failed to load selfie segmenter param: " + std::to_string(ret));
-	}
-
-	if (int ret = selfieSegmenterNet.load_model(pluginConfig.selfieSegmenterBinPath.c_str())) {
-		throw std::runtime_error("Failed to load selfie segmenter bin: " + std::to_string(ret));
-	}
 }
 
 RenderingContext::~RenderingContext() noexcept {}

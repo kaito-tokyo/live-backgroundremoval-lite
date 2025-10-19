@@ -18,41 +18,37 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <atomic>
-#include <memory>
-#include <mutex>
-#include <vector>
-#include <stdexcept>
-#include <string>
-#include <algorithm>
-
 #include "ISelfieSegmenter.hpp"
 #include "MaskBuffer.hpp"
 
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
-class CoreMLSelfieSegmenterImpl;
-
-class CoreMLSelfieSegmenter : public ISelfieSegmenter {
+class NullSelfieSegmenter : public ISelfieSegmenter {
 private:
 	constexpr static std::size_t kWidth = 256;
 	constexpr static std::size_t kHeight = 144;
 	constexpr static std::size_t kPixelCount = kWidth * kHeight;
 
-	std::unique_ptr<CoreMLSelfieSegmenterImpl> pImpl;
+	MaskBuffer maskBuffer;
 
 public:
-	CoreMLSelfieSegmenter();
-	~CoreMLSelfieSegmenter() override;
+	NullSelfieSegmenter() : maskBuffer(kPixelCount) {}
+
+	~NullSelfieSegmenter() override = default;
 
 	std::size_t getWidth() const noexcept override { return kWidth; }
 	std::size_t getHeight() const noexcept override { return kHeight; }
 	std::size_t getPixelCount() const noexcept override { return kPixelCount; }
 
-	void process(const std::uint8_t *bgraData) override;
+	void process(const std::uint8_t *) override {}
 
-	const std::uint8_t *getMask() const override;
+	const std::uint8_t *getMask() const override { return maskBuffer.read(); }
+
+	NullSelfieSegmenter(const NullSelfieSegmenter &) = delete;
+	NullSelfieSegmenter &operator=(const NullSelfieSegmenter &) = delete;
+	NullSelfieSegmenter(NullSelfieSegmenter &&) = delete;
+	NullSelfieSegmenter &operator=(NullSelfieSegmenter &&) = delete;
 };
 
 } // namespace SelfieSegmenter

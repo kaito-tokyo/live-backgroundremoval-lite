@@ -49,7 +49,6 @@ private:
 	const MainEffect mainEffect;
 	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
 
-	std::uint32_t subsamplingRate = 4;
 	PluginProperty pluginProperty;
 
 	mutable std::mutex renderingContextMutex;

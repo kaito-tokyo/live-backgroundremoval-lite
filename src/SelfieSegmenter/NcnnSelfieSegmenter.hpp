@@ -34,26 +34,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "ISelfieSegmenter.hpp"
 #include "MaskBuffer.hpp"
+#include "ShapeConverter.hpp"
 
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
 class NcnnSelfieSegmenter : public ISelfieSegmenter {
 private:
+	constexpr static std::size_t kWidth = 256;
+	constexpr static std::size_t kHeight = 144;
+	constexpr static std::size_t kPixelCount = kWidth * kHeight;
+
 	MaskBuffer maskBuffer;
 
 	ncnn::Net selfieSegmenterNet;
 	ncnn::Mat inputMat;
 	ncnn::Mat outputMat;
 
-	bool isAVX2Available;
-
 public:
-	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int ncnnGpuIndex, int ncnnNumThreads)
-		: maskBuffer(getPixelCount())
+	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int numThreads, int ncnnGpuIndex = -1)
+		: maskBuffer(kPixelCount)
 	{
+		selfieSegmenterNet.opt.num_threads = numThreads;
 		selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
-		selfieSegmenterNet.opt.num_threads = ncnnNumThreads;
 		selfieSegmenterNet.opt.use_local_pool_allocator = true;
 		selfieSegmenterNet.opt.openmp_blocktime = 1;
 
@@ -71,11 +74,29 @@ public:
 
 	~NcnnSelfieSegmenter() override = default;
 
-	std::size_t getWidth() const noexcept override { return 256; }
-	std::size_t getHeight() const noexcept override { return 144; }
-	std::size_t getPixelCount() const noexcept override { return 256 * 144; }
+	std::size_t getWidth() const noexcept override { return kWidth; }
+	std::size_t getHeight() const noexcept override { return kHeight; }
+	std::size_t getPixelCount() const noexcept override { return kPixelCount; }
 
-	void process(const std::uint8_t *bgraData) override;
+	void process(const std::uint8_t *bgraData) override
+	{
+		if (!bgraData) {
+			throw std::invalid_argument(
+				"NcnnSelfieSegmenter::process received null bgraData; expected non-null pointer to 4 * pixelCount (" +
+				std::to_string(getPixelCount()) + ") bytes");
+		}
+
+		copy_r8_bgra_to_float_chw(inputMat.channel(0), inputMat.channel(1), inputMat.channel(2), bgraData,
+					  getPixelCount());
+
+		ncnn::Extractor ex = selfieSegmenterNet.create_extractor();
+		ex.input("in0", inputMat);
+		ex.extract("out0", outputMat);
+
+		maskBuffer.write([this](std::uint8_t *mask) {
+			copy_float32_to_r8(mask, outputMat.channel(0), getPixelCount());
+		});
+	}
 
 	const std::uint8_t *getMask() const override { return maskBuffer.read(); }
 };

@@ -99,8 +99,7 @@ namespace KaitoTokyo {
             }
         };
 
-        CoreMLSelfieSegmenter::CoreMLSelfieSegmenter() :
-            pImpl(std::make_unique<CoreMLSelfieSegmenterImpl>(getPixelCount()))
+        CoreMLSelfieSegmenter::CoreMLSelfieSegmenter() : pImpl(std::make_unique<CoreMLSelfieSegmenterImpl>(kPixelCount))
         {}
 
         CoreMLSelfieSegmenter::~CoreMLSelfieSegmenter() = default;

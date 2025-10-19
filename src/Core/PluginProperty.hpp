@@ -29,13 +29,23 @@ enum class FilterLevel : int {
 	TimeAveragedFilter = 400,
 };
 
+namespace ComputeUnit {
+constexpr int kAuto = 0;
+constexpr int kNull = 0xffff;
+constexpr int kCpuOnly = 1 << 16;
+constexpr int kNcnnVulkanGpu = 1 << 17;
+constexpr int kNcnnVulkanGpuIndexMask = 0xffff;
+constexpr int kCoreML = 1 << 18;
+} // namespace ComputeUnit
+
 struct PluginProperty {
-	int ncnnGpuIndex = -1;
-	int ncnnNumThreads = 2;
+	int computeUnit = ComputeUnit::kAuto;
+
+	int numThreads = 2;
 
 	FilterLevel filterLevel = FilterLevel::Default;
 
-	int selfieSegmenterFps = 15;
+	int selfieSegmenterFps = 60;
 
 	int subsamplingRate = 4;
 
@@ -45,7 +55,7 @@ struct PluginProperty {
 	double maskLowerBoundAmpDb = -25.0;
 	double maskUpperBoundMarginAmpDb = -25.0;
 
-	double timeAveragedFilteringAlpha = 0.1;
+	double timeAveragedFilteringAlpha = 0.5;
 };
 
 } // namespace LiveBackgroundRemovalLite

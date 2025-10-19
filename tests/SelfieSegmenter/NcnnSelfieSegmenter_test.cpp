@@ -18,25 +18,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <gtest/gtest.h>
 
-#include <CoreMLSelfieSegmenter.hpp>
+#include <NcnnSelfieSegmenter.hpp>
 
-#include <vector>
+#include <cstddef>
 #include <string>
-#include <cstdint>
 
 #include <opencv2/opencv.hpp>
 
+#ifdef PREFIXED_NCNN_HEADERS
+#include <ncnn/net.h>
+#else
+#include <net.h>
+#endif
+
 using namespace KaitoTokyo::SelfieSegmenter;
 
-const char kTestImage[] = TESTS_DIR "/SelfieSegmenter/selfie001.jpg";
-const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_coreml.png";
+const char kParamPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
+const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
 
-TEST(CoreMLSelfieSegmenterTest, Construction)
+const char kTestImage[] = TESTS_DIR "/SelfieSegmenter/selfie001.jpg";
+const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_ncnn.png";
+
+TEST(NcnnSelfieSegmenterTest, Construction)
 {
-	CoreMLSelfieSegmenter selfieSegmenter;
+	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
 }
 
-TEST(CoreMLSelfieSegmenterTest, ProcessRealImage)
+TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 {
 	// Set up
 	int width = 256;
@@ -56,7 +64,7 @@ TEST(CoreMLSelfieSegmenterTest, ProcessRealImage)
 	ASSERT_EQ(refImage.channels(), 1);
 
 	// Test
-	CoreMLSelfieSegmenter selfieSegmenter;
+	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
 	ASSERT_EQ(selfieSegmenter.getWidth(), static_cast<std::size_t>(width));
 	ASSERT_EQ(selfieSegmenter.getHeight(), static_cast<std::size_t>(height));
 	ASSERT_EQ(selfieSegmenter.getPixelCount(), static_cast<std::size_t>(width * height));
