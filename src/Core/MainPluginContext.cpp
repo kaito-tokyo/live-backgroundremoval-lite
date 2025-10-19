@@ -152,7 +152,7 @@ obs_properties_t *MainPluginContext::getProperties()
 #endif
 
 	obs_properties_add_int_slider(props, "numThreads", obs_module_text("numThreads"), 0,
-				      std::thread::hardware_concurrency(), 1);
+				      std::max<unsigned>(1, std::thread::hardware_concurrency()), 1);
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
 								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
