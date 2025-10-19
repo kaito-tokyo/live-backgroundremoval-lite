@@ -71,8 +71,8 @@ public:
 	const RenderingContextRegion subRegion;
 	const RenderingContextRegion maskRoi;
 
-	const BridgeUtils::unique_gs_texture_t bgrxOriginalImage;
-	const BridgeUtils::unique_gs_texture_t r32fOriginalGrayscale;
+	const BridgeUtils::unique_gs_texture_t bgrxSource;
+	const BridgeUtils::unique_gs_texture_t r8Grayscale;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader;
@@ -82,6 +82,9 @@ private:
 
 public:
 	const BridgeUtils::unique_gs_texture_t r8SegmentationMask;
+
+private:
+	const BridgeUtils::unique_gs_texture_t r32fSubGFIntermediate;
 
 public:
 	const BridgeUtils::unique_gs_texture_t r8SubGFGuide;
@@ -96,9 +99,6 @@ public:
 
 	const std::array<BridgeUtils::unique_gs_texture_t, 2> r8TimeAveragedMasks;
 	std::size_t currentTimeAveragedMaskIndex = 0;
-
-private:
-	const BridgeUtils::unique_gs_texture_t r32fGFTemporary1Sub;
 
 public:
 	std::atomic<FilterLevel> filterLevel;
@@ -222,18 +222,6 @@ public:
 			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
 		logger.info("Mask upper bound margin set to {}", maskUpperBoundMargin.load());
 	}
-
-private:
-	void renderOriginalImage();
-	void renderOriginalGrayscale(gs_texture_t *bgrxOriginalImage);
-	void renderSegmenterInput(gs_texture_t *bgrxOriginalImage);
-	void renderSegmentationMask();
-	void calculateDifferenceWithMask();
-	void renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask, float eps);
-	void renderTimeAveragedMask(const BridgeUtils::unique_gs_texture_t &targetTexture,
-				    const BridgeUtils::unique_gs_texture_t &previousMaskTexture,
-				    const BridgeUtils::unique_gs_texture_t &sourceTexture, float alpha);
-	void kickSegmentationTask();
 };
 
 } // namespace LiveBackgroundRemovalLite
