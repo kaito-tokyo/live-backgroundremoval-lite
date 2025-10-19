@@ -56,11 +56,11 @@ final class SelfieSegmenterLandscapeWrapperTests: XCTestCase {
     let inputHandler = VNImageRequestHandler(cgImage: cgImage)
 
     // 2. Perform segmentation
-    // Note: perform(with:) can throw and returns a nullable pointer (NULL).
-    let resultFloatPtr = try segmenter.perform(with: inputHandler)
+    // Note: perform(with:) can throw and returns a nullable MLMultiArray.
+    let resultArray = try segmenter.perform(with: inputHandler)
 
-    // 3. Check that the returned pointer is not nil (NULL)
-    XCTAssertNotNil(resultFloatPtr, "perform(with:) returned a nil pointer.")
+    // 3. Check that the returned MLMultiArray is not nil
+    XCTAssertNotNil(resultArray, "perform(with:) returned nil.")
 
     // 4. Load the ground truth mask
     guard let nsMask = Bundle(for: type(of: self)).image(forResource: "selfie001_mask"),
@@ -84,17 +84,16 @@ final class SelfieSegmenterLandscapeWrapperTests: XCTestCase {
       throw TestError.maskDataExtractionFailed
     }
 
-    // 6. Convert model output (float*) to [UInt8] array
+    // 6. Convert MLMultiArray to [UInt8] array
+    XCTAssertEqual(resultArray.dataType, .float32, "MLMultiArray must be Float32")
     var modelMaskData = [UInt8](repeating: 0, count: pixelCount)
+    let floatPtr = UnsafeMutableBufferPointer<Float>(
+      start: resultArray.dataPointer.assumingMemoryBound(to: Float.self),
+      count: pixelCount
+    )
     for i in 0..<pixelCount {
-      let floatValue = resultFloatPtr[i]
-
-      // --- ⚠️ Assumption about model output range ---
-      // Assuming the model returns floats in the 0.0-1.0 range, multiply by 255.
-      // If the model returns 0.0-255.0, the * 255.0 is not needed.
+      let floatValue = floatPtr[i]
       let scaledValue = floatValue * 255.0
-
-      // Clip the value to a 0-255 UInt8
       modelMaskData[i] = UInt8(min(max(scaledValue, 0.0), 255.0))
     }
 
@@ -116,6 +115,131 @@ final class SelfieSegmenterLandscapeWrapperTests: XCTestCase {
       meanAbsoluteError, tolerance,
       "Mean Absolute Error (\(meanAbsoluteError)) exceeds tolerance (\(tolerance)). Model mask is not close enough to the ground truth mask."
     )
+  }
+
+  /**
+   * Verifies that performWithBGRAData returns a correct mask for a valid BGRA buffer.
+   */
+  func testSegmentationSuccess_BGRAData_ReturnsCorrectMask() throws {
+    let segmenter = try SelfieSegmenterLandscapeWrapper()
+
+    // 1. Load input image and convert to BGRA8888 buffer
+    guard let nsImage = Bundle(for: type(of: self)).image(forResource: "selfie001"),
+      let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    else {
+      XCTFail("Failed to load input image 'selfie001'.")
+      throw TestError.fileNotFound("selfie001")
+    }
+    let width = modelWidth
+    let height = modelHeight
+    let bytesPerPixel = 4
+    let bytesPerRow = width * bytesPerPixel
+    var bgraData = [UInt8](repeating: 0, count: width * height * bytesPerPixel)
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard
+      let ctx = CGContext(
+        data: &bgraData,
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: bytesPerRow,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
+          | CGBitmapInfo.byteOrder32Little.rawValue
+      )
+    else {
+      XCTFail("Failed to create CGContext for BGRA conversion.")
+      throw TestError.maskDataExtractionFailed
+    }
+    ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+    // 2. Call performWithBGRAData
+    let resultArray = try segmenter.perform(withBGRAData: &bgraData)
+    XCTAssertEqual(resultArray.dataType, .float32, "MLMultiArray must be Float32")
+
+    // 3. Load ground truth mask
+    guard let nsMask = Bundle(for: type(of: self)).image(forResource: "selfie001_mask"),
+      let maskCGImage = nsMask.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    else {
+      XCTFail("Failed to load mask image 'selfie001_mask'.")
+      throw TestError.maskLoadFailed("selfie001_mask")
+    }
+    let pixelCount = width * height
+    XCTAssertEqual(maskCGImage.width, width, "Ground truth mask width is incorrect.")
+    XCTAssertEqual(maskCGImage.height, height, "Ground truth mask height is incorrect.")
+    guard let truthMaskData = extractGrayscaleData(from: maskCGImage, width: width, height: height)
+    else {
+      XCTFail("Failed to extract pixel data from ground truth mask.")
+      throw TestError.maskDataExtractionFailed
+    }
+
+    // 4. Convert MLMultiArray to [UInt8] array
+    var modelMaskData = [UInt8](repeating: 0, count: pixelCount)
+    let floatPtr = UnsafeMutableBufferPointer<Float>(
+      start: resultArray.dataPointer.assumingMemoryBound(to: Float.self),
+      count: pixelCount
+    )
+    for i in 0..<pixelCount {
+      let floatValue = floatPtr[i]
+      let scaledValue = floatValue * 255.0
+      modelMaskData[i] = UInt8(min(max(scaledValue, 0.0), 255.0))
+    }
+
+    // 5. Compare the two masks (MAE)
+    var totalAbsoluteDifference: Double = 0
+    for i in 0..<pixelCount {
+      let diff = abs(Double(modelMaskData[i]) - Double(truthMaskData[i]))
+      totalAbsoluteDifference += diff
+    }
+    let meanAbsoluteError = totalAbsoluteDifference / Double(pixelCount)
+    let tolerance: Double = 2.0
+    XCTAssertLessThan(
+      meanAbsoluteError, tolerance,
+      "Mean Absolute Error (\(meanAbsoluteError)) exceeds tolerance (\(tolerance)). Model mask is not close enough to the ground truth mask."
+    )
+  }
+
+  /**
+   * Measures the performance of perform(withBGRAData:) on a valid BGRA buffer.
+   */
+  func testPerformance_BGRAData() throws {
+    let segmenter = try SelfieSegmenterLandscapeWrapper()
+    // Prepare BGRA buffer from test image
+    guard let nsImage = Bundle(for: type(of: self)).image(forResource: "selfie001"),
+      let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    else {
+      XCTFail("Failed to load input image 'selfie001'.")
+      throw TestError.fileNotFound("selfie001")
+    }
+    let width = modelWidth
+    let height = modelHeight
+    let bytesPerPixel = 4
+    let bytesPerRow = width * bytesPerPixel
+    var bgraData = [UInt8](repeating: 0, count: width * height * bytesPerPixel)
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard
+      let ctx = CGContext(
+        data: &bgraData,
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: bytesPerRow,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
+          | CGBitmapInfo.byteOrder32Little.rawValue
+      )
+    else {
+      XCTFail("Failed to create CGContext for BGRA conversion.")
+      throw TestError.maskDataExtractionFailed
+    }
+    ctx.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+    // Performance measurement
+    measure {
+      let resultArray = try? segmenter.perform(withBGRAData: &bgraData)
+      XCTAssertNotNil(resultArray, "performWithBGRAData returned nil in performance test.")
+      XCTAssertEqual(resultArray?.dataType, .float32, "MLMultiArray must be Float32 in performance test.")
+    }
   }
 
   // MARK: - Failure Cases

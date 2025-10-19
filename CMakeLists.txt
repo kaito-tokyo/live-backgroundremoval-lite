@@ -113,16 +113,20 @@ endif()
 
 if(APPLE)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(_default_derived_data_path "${CMAKE_BINARY_DIR}/DerivedData/Build/Products/Debug")
+    set(_default_derived_data_path "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Debug")
   else()
-    set(_default_derived_data_path "${CMAKE_BINARY_DIR}/DerivedData/Build/Products/Release")
+    set(_default_derived_data_path "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Release")
   endif()
   set(DERIVED_DATA_PATH "${_default_derived_data_path}" CACHE PATH "Path to Xcode DerivedData build products")
 
   find_library(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH NAMES CoreMLSelfieSegmenter HINTS ${DERIVED_DATA_PATH})
 
   if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
-    target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE "${COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH}")
+    add_library(KaitoTokyo::CoreMLSelfieSegmenter UNKNOWN IMPORTED)
+    set_target_properties(
+      KaitoTokyo::CoreMLSelfieSegmenter
+      PROPERTIES IMPORTED_LOCATION "${COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH}"
+    )
     target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE HAVE_COREML_SELFIE_SEGMENTER)
 
     set(PLUGIN_BUNDLE_DIR "$<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/../..")
@@ -143,6 +147,10 @@ target_sources(
   SelfieSegmenter
   PRIVATE src/SelfieSegmenter/ShapeConverter.cpp src/SelfieSegmenter/NcnnSelfieSegmenter.cpp
 )
+if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
+  target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/CoreMLSelfieSegmenter.mm)
+  target_link_libraries(SelfieSegmenter PUBLIC KaitoTokyo::CoreMLSelfieSegmenter)
+endif()
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
 target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn)
 

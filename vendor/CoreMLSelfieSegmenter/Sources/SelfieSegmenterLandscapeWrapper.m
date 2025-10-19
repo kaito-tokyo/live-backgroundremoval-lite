@@ -22,6 +22,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #import "SelfieSegmenterLandscapeModel.h"
 
+#define MODEL_INPUT_WIDTH 256
+#define MODEL_INPUT_HEIGHT 144
 #define EXPECTED_PIXEL_COUNT (144 * 256)
 
 static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegmenterLandscapeWrapperErrorDomain";
@@ -30,6 +32,7 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
 
 @property (nonatomic, strong) VNCoreMLModel *visionModel;
 @property (nonatomic, strong) VNCoreMLRequest *visionRequest;
+@property (nonatomic, assign) CVPixelBufferRef cachedPixelBuffer;
 
 @end
 
@@ -73,11 +76,34 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
             }
             return nil;
         }
+        // Allocate cached CVPixelBuffer
+        _cachedPixelBuffer = NULL;
+        const OSType pixelFormat = kCVPixelFormatType_32BGRA;
+        NSDictionary *attrs = @{};
+        CVReturn status = CVPixelBufferCreate(kCFAllocatorDefault, MODEL_INPUT_WIDTH, MODEL_INPUT_HEIGHT, pixelFormat,
+                                              (__bridge CFDictionaryRef) attrs, &_cachedPixelBuffer);
+        if (status != kCVReturnSuccess || !_cachedPixelBuffer) {
+            if (error) {
+                *error =
+                    [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-101
+                                    userInfo:@{NSLocalizedDescriptionKey: @"Failed to allocate cached CVPixelBuffer"}];
+            }
+            return nil;
+        }
     }
     return self;
 }
 
-- (nullable float *)performWithHandler:(VNImageRequestHandler *)handler error:(NSError *_Nullable *_Nullable)error
+- (void)dealloc
+{
+    if (_cachedPixelBuffer) {
+        CFRelease(_cachedPixelBuffer);
+        _cachedPixelBuffer = NULL;
+    }
+}
+
+- (nullable MLMultiArray *)performWithHandler:(VNImageRequestHandler *)handler
+                                        error:(NSError *_Nullable *_Nullable)error
 {
     // Step 0: Check if the request was initialized successfully
     if (!self.visionRequest) {
@@ -133,27 +159,65 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
 
     MLMultiArray *multiArray = featureObs.featureValue.multiArrayValue;
 
-    // Step 5: Validate the data type (Float32) and element count (EXPECTED_PIXEL_COUNT)
-    if (multiArray.dataType != MLMultiArrayDataTypeFloat32) {
+    // Step 5: Check if multiArray is NULL
+    if (!multiArray) {
         if (error) {
-            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-4
-                                     userInfo:@{NSLocalizedDescriptionKey: @"MultiArray is not Float32"}];
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-6
+                                     userInfo:@{NSLocalizedDescriptionKey: @"'segmentationMask' MLMultiArray is NULL"}];
         }
         return NULL;
     }
 
-    if (multiArray.count != EXPECTED_PIXEL_COUNT) {
+    return multiArray;
+}
+
+- (nullable MLMultiArray *)performWithBGRAData:(const uint8_t *_Nonnull)bgraData
+                                         error:(NSError *_Nullable *_Nullable)error;
+{
+    // Step 1: Validate input
+    if (!bgraData) {
         if (error) {
-            NSString *desc = [NSString stringWithFormat:@"Unexpected MultiArray count. Expected %d, got %lld",
-                                                        EXPECTED_PIXEL_COUNT, (long long) multiArray.count];
-            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-5
-                                     userInfo:@{NSLocalizedDescriptionKey: desc}];
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-10
+                                     userInfo:@{NSLocalizedDescriptionKey: @"Input BGRA data is NULL"}];
+        }
+        return NULL;
+    }
+    if (!_cachedPixelBuffer) {
+        if (error) {
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-14
+                                     userInfo:@{NSLocalizedDescriptionKey: @"Cached CVPixelBuffer is not allocated"}];
         }
         return NULL;
     }
 
-    // Step 6: Return the raw float data pointer
-    return (float *) multiArray.dataPointer;
+    // Step 2: Copy BGRA data into cached pixel buffer
+    CVPixelBufferLockBaseAddress(_cachedPixelBuffer, 0);
+    void *baseAddress = CVPixelBufferGetBaseAddress(_cachedPixelBuffer);
+    if (!baseAddress) {
+        CVPixelBufferUnlockBaseAddress(_cachedPixelBuffer, 0);
+        if (error) {
+            *error =
+                [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-12
+                                userInfo:@{NSLocalizedDescriptionKey: @"Failed to get base address of CVPixelBuffer"}];
+        }
+        return NULL;
+    }
+    memcpy(baseAddress, bgraData, MODEL_INPUT_HEIGHT * MODEL_INPUT_WIDTH * 4);
+    CVPixelBufferUnlockBaseAddress(_cachedPixelBuffer, 0);
+
+    // Step 3: Create VNImageRequestHandler
+    VNImageRequestHandler *handler = [[VNImageRequestHandler alloc] initWithCVPixelBuffer:_cachedPixelBuffer
+                                                                                  options:@{}];
+    if (!handler) {
+        if (error) {
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-13
+                                     userInfo:@{NSLocalizedDescriptionKey: @"Failed to create VNImageRequestHandler"}];
+        }
+        return NULL;
+    }
+    // Step 4: Perform segmentation
+    MLMultiArray *result = [self performWithHandler:handler error:error];
+    return result;
 }
 
 @end

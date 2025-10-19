@@ -3,6 +3,7 @@ import onnx
 from onnx2torch import convert
 import coremltools as ct
 import sys
+import numpy as np
 
 INPUT_SHAPE = (1, 3, 144, 256)
 
@@ -26,6 +27,7 @@ def main():
         outputs=[ct.TensorType(name="segmentationMask")],
         convert_to="mlprogram",
         compute_precision=ct.precision.FLOAT16,
+        minimum_deployment_target=ct.target.macOS12
     )
     mlpackage_model.save(output_path)
 

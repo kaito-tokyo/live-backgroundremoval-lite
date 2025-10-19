@@ -189,3 +189,23 @@ Copy the plugin to: `~/Library/Application Support/obs-studio/plugins/`
 
 Once you have copied the plugin, launch OBS Studio. The plugin should now be available.
 If you encounter any issues, please feel free to report them by opening an issue.
+
+
+## How to test on Mac
+
+1. Run:
+   ```
+   (
+     cd vendor/CoreMLSelfieSegmenter && \
+     xcodegen generate && \
+     ./Scripts/build.bash
+   )
+   ```
+2. Run `.github/scripts/install-vcpkg-macos.bash`
+3. Run `cmake --preset macos`
+4. Run:
+   ```
+   cmake --build --preset macos && \
+   rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin && \
+   cp -r ./build_macos/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins
+   ```
