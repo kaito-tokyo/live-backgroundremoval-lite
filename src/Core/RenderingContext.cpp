@@ -25,6 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "../SelfieSegmenter/NcnnSelfieSegmenter.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
+using namespace KaitoTokyo::SelfieSegmenter;
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
