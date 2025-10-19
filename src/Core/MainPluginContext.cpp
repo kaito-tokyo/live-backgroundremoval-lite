@@ -167,7 +167,7 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
 				  static_cast<int>(FilterLevel::TimeAveragedFilter));
 
-	obs_properties_add_int_slider(props, "selfieSegmenterFps", obs_module_text("selfieSegmenterFps"), 1, 30, 1);
+	obs_properties_add_int_slider(props, "selfieSegmenterFps", obs_module_text("selfieSegmenterFps"), 1, 60, 1);
 
 	obs_properties_add_float_slider(props, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
 					-20.0, 0.1);

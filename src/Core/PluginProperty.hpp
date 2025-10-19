@@ -43,7 +43,7 @@ struct PluginProperty {
 
 	FilterLevel filterLevel = FilterLevel::Default;
 
-	int selfieSegmenterFps = 15;
+	int selfieSegmenterFps = 60;
 
 	int subsamplingRate = 4;
 
@@ -53,7 +53,7 @@ struct PluginProperty {
 	double maskLowerBoundAmpDb = -25.0;
 	double maskUpperBoundMarginAmpDb = -25.0;
 
-	double timeAveragedFilteringAlpha = 0.1;
+	double timeAveragedFilteringAlpha = 0.5;
 };
 
 } // namespace LiveBackgroundRemovalLite
