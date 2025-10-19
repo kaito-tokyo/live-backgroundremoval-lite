@@ -79,7 +79,7 @@ jobs:
         uses: "actions/checkout@v5"
 
       - name: "Test CoreMLSelfieSegmenter"
-        working-directory: "vendor/CoreMLSelfieSegmenter/Scripts"
+        working-directory: "vendor/CoreMLSelfieSegmenter"
         run: "./Scripts/test.bash"
 
   TestOnWindows:
