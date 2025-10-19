@@ -141,15 +141,14 @@ void RenderingContext::videoTick(float seconds)
 {
 	FilterLevel _filterLevel = filterLevel;
 
-	float _selfieSegmenterFps = selfieSegmenterFps;
+	float _selfieSegmenterInterval = selfieSegmenterInterval;
 
-	if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
+	if (_filterLevel >= FilterLevel::Segmentation) {
 		timeSinceLastSelfieSegmentation += seconds;
-		const float interval = 1.0f / _selfieSegmenterFps;
 
-		if (timeSinceLastSelfieSegmentation >= interval) {
-			timeSinceLastSelfieSegmentation -= interval;
-			kickSegmentationTask();
+		if (timeSinceLastSelfieSegmentation >= _selfieSegmenterInterval) {
+			timeSinceLastSelfieSegmentation -= _selfieSegmenterInterval;
+			doesNextVideoRenderKickSelfieSegmentation = true;
 		}
 	}
 
@@ -266,10 +265,8 @@ void RenderingContext::videoRender()
 
 	float _timeAveragedFilteringAlpha = timeAveragedFilteringAlpha;
 
-	const bool needNewFrame = doesNextVideoRenderReceiveNewFrame;
-	if (needNewFrame) {
-		doesNextVideoRenderReceiveNewFrame = false;
-
+	const bool _doesNextVideoRenderReceiveNewFrame = doesNextVideoRenderReceiveNewFrame.exchange(false);
+	if (_doesNextVideoRenderReceiveNewFrame) {
 		if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
 			try {
 				bgrxSegmenterInputReader.sync();
@@ -292,7 +289,7 @@ void RenderingContext::videoRender()
 		}
 
 		if (_filterLevel >= FilterLevel::Segmentation) {
-			if (isStrictlySyncing) {
+			if (isStrictlySyncing && doesNextVideoRenderKickSelfieSegmentation.exchange(false)) {
 				bgrxSegmenterInputReader.sync();
 				selfieSegmenter->process(bgrxSegmenterInputReader.getBuffer().data());
 			}
@@ -327,8 +324,13 @@ void RenderingContext::videoRender()
 		// Draw nothing to prevent unexpected background disclosure
 	}
 
-	if (needNewFrame && _filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
+	if (_doesNextVideoRenderReceiveNewFrame && _filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
 		bgrxSegmenterInputReader.stage(bgrxSegmenterInput);
+	}
+
+	if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing &&
+	    doesNextVideoRenderKickSelfieSegmentation.exchange(false)) {
+		kickSegmentationTask();
 	}
 }
 

@@ -47,7 +47,7 @@ struct PluginProperty {
 
 	bool isStrictlySyncing = false;
 
-	int selfieSegmenterFps = 60;
+	int selfieSegmenterFps = 0;
 
 	int subsamplingRate = 4;
 

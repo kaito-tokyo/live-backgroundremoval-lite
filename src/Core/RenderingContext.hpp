@@ -105,7 +105,7 @@ public:
 
 	std::atomic<bool> isStrictlySyncing;
 
-	std::atomic<float> selfieSegmenterFps;
+	std::atomic<float> selfieSegmenterInterval;
 
 	std::atomic<float> guidedFilterEps;
 
@@ -117,6 +117,8 @@ public:
 
 private:
 	float timeSinceLastSelfieSegmentation = 0.0f;
+	std::atomic<bool> doesNextVideoRenderKickSelfieSegmentation = false;
+
 	std::uint64_t lastFrameTimestamp = 0;
 	std::atomic<bool> doesNextVideoRenderReceiveNewFrame = false;
 
@@ -127,31 +129,9 @@ public:
 	{
 
 		if (computeUnit == ComputeUnit::kAuto) {
-			logger.info("Auto-detecting compute unit for selfie segmenter...");
-#ifdef HAVE_COREML_SELFIE_SEGMENTER
-			logger.info("Selecting CoreML on Apple platforms.");
-			return ComputeUnit::kCoreML;
-#elif defined(NCNN_VULKAN)
-#if NCNN_VULKAN == 1
-			if (ncnn::get_gpu_count() > 0) {
-				logger.info(
-					"Vulkan-compatible GPU detected. Selecting ncnn Vulkan backend with GPU index 0.");
-				return ComputeUnit::kNcnnVulkanGpu;
-			} else {
-				logger.info("No Vulkan-compatible GPU detected. Falling back to ncnn CPU.");
-				return ComputeUnit::kCpuOnly;
-			}
-#else
-			logger.info("ncnn built without Vulkan support. Falling back to ncnn CPU.");
+			logger.info("Automatically selecting compute unit...");
+			logger.info("Selecting ncnn CPU backend because it is the most efficient.");
 			return ComputeUnit::kCpuOnly;
-#endif
-#elif defined(__APPLE__)
-			logger.info("Falling back to ncnn CPU backend due to lack of CoreML support.");
-			return ComputeUnit::kCpuOnly;
-#else
-			logger.info("Selecting ncnn CPU backend.");
-			return ComputeUnit::kCpuOnly;
-#endif
 		} else if ((computeUnit & ComputeUnit::kNcnnVulkanGpu) != 0) {
 #ifdef NCNN_VULKAN
 #if NCNN_VULKAN == 1
@@ -198,21 +178,39 @@ public:
 
 	void applyPluginProperty(const PluginProperty &pluginProperty)
 	{
-		if (pluginProperty.filterLevel == FilterLevel::Default) {
-			filterLevel = FilterLevel::TimeAveragedFilter;
-		} else {
-			filterLevel = pluginProperty.filterLevel;
-		}
-		logger.info("Filter level set to {}", static_cast<int>(filterLevel.load()));
-
 		isStrictlySyncing = pluginProperty.isStrictlySyncing;
 		logger.info("Strict syncing is {}", isStrictlySyncing.load() ? "enabled" : "disabled");
 
-		selfieSegmenterFps = static_cast<float>(pluginProperty.selfieSegmenterFps);
-		logger.info("Selfie segmenter FPS set to {}", selfieSegmenterFps.load());
+		if (pluginProperty.filterLevel == FilterLevel::Default) {
+			if (pluginProperty.isStrictlySyncing) {
+				filterLevel = FilterLevel::GuidedFilter;
+			} else {
+				filterLevel = FilterLevel::TimeAveragedFilter;
+			}
+			logger.info("Default filter level is parsed to be {}", static_cast<int>(filterLevel.load()));
+		} else {
+			filterLevel = pluginProperty.filterLevel;
+			logger.info("Filter level set to {}", static_cast<int>(filterLevel.load()));
+		}
+
+		if (pluginProperty.selfieSegmenterFps == 0) {
+			if (pluginProperty.isStrictlySyncing) {
+				selfieSegmenterInterval = 1.0f / 15.0f;
+			} else {
+				selfieSegmenterInterval = 1.0f / 60.0f;
+			}
+			logger.info("Default selfie segmenter interval is parsed to be {}",
+				    selfieSegmenterInterval.load());
+		} else {
+			selfieSegmenterInterval = 1.0f / static_cast<float>(pluginProperty.selfieSegmenterFps);
+		}
+		logger.info("Selfie segmenter interval set to {}", selfieSegmenterInterval.load());
 
 		guidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
 		logger.info("Guided filter epsilon set to {}", guidedFilterEps.load());
+
+		timeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
+		logger.info("Time-averaged filtering alpha set to {}", timeAveragedFilteringAlpha.load());
 
 		maskGamma = static_cast<float>(pluginProperty.maskGamma);
 		logger.info("Mask gamma set to {}", maskGamma.load());
@@ -223,9 +221,6 @@ public:
 		maskUpperBoundMargin =
 			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
 		logger.info("Mask upper bound margin set to {}", maskUpperBoundMargin.load());
-
-		timeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
-		logger.info("Time-averaged filtering alpha set to {}", timeAveragedFilteringAlpha.load());
 	}
 
 private:
