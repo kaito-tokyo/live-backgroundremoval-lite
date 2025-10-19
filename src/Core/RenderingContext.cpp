@@ -292,8 +292,7 @@ void RenderingContext::videoRender()
 		}
 
 		if (_filterLevel >= FilterLevel::Segmentation) {
-			if (isStrictlySyncing && doesNextVideoRenderKickSelfieSegmentation) {
-				doesNextVideoRenderKickSelfieSegmentation = false;
+			if (isStrictlySyncing && doesNextVideoRenderKickSelfieSegmentation.exchange(false)) {
 				bgrxSegmenterInputReader.sync();
 				selfieSegmenter->process(bgrxSegmenterInputReader.getBuffer().data());
 			}
