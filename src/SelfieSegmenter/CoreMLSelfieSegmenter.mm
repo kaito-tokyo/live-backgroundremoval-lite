@@ -69,8 +69,7 @@ namespace KaitoTokyo {
             mutable std::mutex processMutex;
 
               public:
-            CoreMLSelfieSegmenterImpl(std::size_t pixelCount) :
-                wrapper(make_unique_wrapper()), maskBuffer(pixelCount)
+            CoreMLSelfieSegmenterImpl(std::size_t pixelCount) : wrapper(make_unique_wrapper()), maskBuffer(pixelCount)
             {}
             ~CoreMLSelfieSegmenterImpl() = default;
 
@@ -99,7 +98,7 @@ namespace KaitoTokyo {
                 return maskBuffer.read();
             }
         };
-    
+
         void SelfieSegmenter::CoreMLSelfieSegmenter::process(const std::uint8_t *bgraData)
         {
             pImpl->process(bgraData, getPixelCount());
