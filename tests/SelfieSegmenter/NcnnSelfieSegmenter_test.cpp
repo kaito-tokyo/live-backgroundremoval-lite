@@ -41,7 +41,7 @@ const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_ncnn.png";
 
 TEST(NcnnSelfieSegmenterTest, Construction)
 {
-	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 0);
+	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
 }
 
 TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
@@ -64,7 +64,7 @@ TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 	ASSERT_EQ(refImage.channels(), 1);
 
 	// Test
-	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 0);
+	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
 	ASSERT_EQ(selfieSegmenter.getWidth(), static_cast<std::size_t>(width));
 	ASSERT_EQ(selfieSegmenter.getHeight(), static_cast<std::size_t>(height));
 	ASSERT_EQ(selfieSegmenter.getPixelCount(), static_cast<std::size_t>(width * height));

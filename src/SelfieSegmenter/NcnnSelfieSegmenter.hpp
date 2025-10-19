@@ -55,8 +55,8 @@ public:
 	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int numThreads, int ncnnGpuIndex = -1)
 		: maskBuffer(kPixelCount)
 	{
-		selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
 		selfieSegmenterNet.opt.num_threads = numThreads;
+		selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
 		selfieSegmenterNet.opt.use_local_pool_allocator = true;
 		selfieSegmenterNet.opt.openmp_blocktime = 1;
 
