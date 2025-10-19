@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <future>
 #include <stdexcept>
+#include <thread>
 
 #include <obs-module.h>
 #include <obs-frontend-api.h>
@@ -150,7 +151,8 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCoreML"), ComputeUnit::kCoreML);
 #endif
 
-	obs_properties_add_int_slider(props, "numThreads", obs_module_text("numThreads"), 0, 32, 1);
+	obs_properties_add_int_slider(props, "numThreads", obs_module_text("numThreads"), 0,
+				      std::thread::hardware_concurrency(), 1);
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
 								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
