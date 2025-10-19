@@ -42,7 +42,7 @@ private:
 public:
 	CoreMLSelfieSegmenter();
 
-	~CoreMLSelfieSegmenter() override;
+	~CoreMLSelfieSegmenter() override = default;
 
 	std::size_t getWidth() const noexcept override { return 256; }
 	std::size_t getHeight() const noexcept override { return 144; }

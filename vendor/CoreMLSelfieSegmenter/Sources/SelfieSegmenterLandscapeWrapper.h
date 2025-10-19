@@ -59,7 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable MLMultiArray *)performWithHandler:(VNImageRequestHandler *_Nonnull)handler
                                         error:(NSError *_Nullable *_Nullable)error;
 
-- (nullable MLMultiArray *)performWithBGRAData:(uint8_t *_Nonnull)bgraData error:(NSError *_Nullable *_Nullable)error;
+- (nullable MLMultiArray *)performWithBGRAData:(const uint8_t *_Nonnull)bgraData error:(NSError *_Nullable *_Nullable)error;
 
 @end
 

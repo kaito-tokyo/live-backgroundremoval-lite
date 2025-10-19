@@ -171,7 +171,7 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
     return multiArray;
 }
 
-- (nullable MLMultiArray *)performWithBGRAData:(uint8_t *_Nonnull)bgraData error:(NSError *_Nullable *_Nullable)error;
+- (nullable MLMultiArray *)performWithBGRAData:(const uint8_t *_Nonnull)bgraData error:(NSError *_Nullable *_Nullable)error;
 {
     // Step 1: Validate input
     if (!bgraData) {

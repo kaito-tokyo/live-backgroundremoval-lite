@@ -24,9 +24,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreFoundation/CoreFoundation.h>
 
+#include <cstdint>
 #include <functional>
 #include <memory>
-#include <mutex>
 #include <stdexcept>
 #include <vector>
 
@@ -35,16 +35,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace KaitoTokyo {
     namespace SelfieSegmenter {
         namespace {
-            inline void wrapperDeleter(SelfieSegmenterLandscapeWrapper *ptr)
-            {
-                if (ptr) {
-                    CFRelease(ptr);
+            struct WrapperDeleter {
+                void operator()(SelfieSegmenterLandscapeWrapper *ptr) const {
+                    if (ptr) {
+                        CFRelease(ptr);
+                    }
                 }
-            }
+            };
 
-            inline std::unique_ptr<SelfieSegmenterLandscapeWrapper, decltype(&wrapperDeleter)> make_unique_wrapper() {
+            inline std::unique_ptr<SelfieSegmenterLandscapeWrapper, WrapperDeleter> make_unique_wrapper()
+            {
                 NSError *error = nil;
-    
+
                 // ARC manages rawWrapper in this local scope
                 SelfieSegmenterLandscapeWrapper *rawWrapper = [[SelfieSegmenterLandscapeWrapper alloc] init:&error];
                 if (!rawWrapper) {
@@ -52,25 +54,36 @@ namespace KaitoTokyo {
                 }
 
                 // Transfer ownership to the C++ unique_ptr via CFBridgingRetain
-                return std::make_unique<SelfieSegmenterLandscapeWrapper, decltype(&wrapperDeleter)>(
-                    reinterpret_cast<SelfieSegmenterLandscapeWrapper *>(CFBridgingRetain(rawWrapper))
-                );
+                return std::unique_ptr<SelfieSegmenterLandscapeWrapper, WrapperDeleter>(
+                    reinterpret_cast<SelfieSegmenterLandscapeWrapper *>(CFBridgingRetain(rawWrapper)));
             }
-        } // anonymous namespace
+        }  // anonymous namespace
 
         class CoreMLSelfieSegmenterImpl
         {
               private:
-            std::mutex mutex;
-            std::unique_ptr<SelfieSegmenterLandscapeWrapper, decltype(&wrapperDeleter)> wrapper;
+            std::unique_ptr<SelfieSegmenterLandscapeWrapper, WrapperDeleter> wrapper;
 
               public:
-            CoreMLSelfieSegmenterImpl() : wrapper(std::move(make_unique_wrapper()))
-            {
-            }
+            CoreMLSelfieSegmenterImpl() : wrapper(std::move(make_unique_wrapper())) {}
 
-            // Destructor is default, unique_ptr calls wrapperDeleter automatically
-            ~CoreMLSelfieSegmenterImpl() = default;
+            void process(const std::uint8_t *bgraData) {
+                const size_t pixelCount = getPixelCount();
+
+                NSError *error = nil;
+                MLMultiArray *maskArray = [wrapper.get() performWithBGRAData:bgraData error:&error];
+                if (!maskArray) {
+                    std::string errMsg = error ? [[error localizedDescription] UTF8String]
+                                            : "Unknown error in CoreML segmentation";
+                    throw std::runtime_error(errMsg);
+                }
+
+                // Convert float mask (0.0-1.0) to uint8_t mask (0-255)
+                maskBuffer.write([&](std::uint8_t *dst) {
+                    float *maskPtr = (float *) maskArray.dataPointer;
+                    KaitoTokyo::SelfieSegmenter::copy_float32_to_r8(dst, maskPtr, pixelCount);
+                });
+            }
         };
 
         // --- Public Interface Implementation ---
@@ -88,7 +101,7 @@ namespace KaitoTokyo {
             const size_t pixelCount = getPixelCount();
 
             NSError *error = nil;
-            MLMultiArray *maskArray = [pImpl->wrapper.get() performWithBGRAData:(uint8_t *)bgraData error:&error];
+            MLMultiArray *maskArray = [pImpl->wrapper.get() performWithBGRAData:(uint8_t *) bgraData error:&error];
             if (!maskArray) {
                 std::string errMsg = error ? [[error localizedDescription] UTF8String]
                                            : "Unknown error in CoreML segmentation";
@@ -97,7 +110,7 @@ namespace KaitoTokyo {
 
             // Convert float mask (0.0-1.0) to uint8_t mask (0-255)
             maskBuffer.write([&](std::uint8_t *dst) {
-                float *maskPtr = (float *)maskArray.dataPointer;
+                float *maskPtr = (float *) maskArray.dataPointer;
                 KaitoTokyo::SelfieSegmenter::copy_float32_to_r8(dst, maskPtr, pixelCount);
             });
         }
