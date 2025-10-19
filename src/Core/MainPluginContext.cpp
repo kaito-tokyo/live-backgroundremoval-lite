@@ -89,29 +89,30 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 {
 	PluginProperty defaultProperty;
 
+	obs_data_set_default_bool(data, "isStrictlySyncing", defaultProperty.isStrictlySyncing);
+
+	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
+
+	obs_data_set_default_int(data, "selfieSegmenterFps", defaultProperty.selfieSegmenterFps);
+
 	obs_data_set_default_int(data, "computeUnit", defaultProperty.computeUnit);
 
 	obs_data_set_default_int(data, "numThreads", defaultProperty.numThreads);
 
-	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
-
-	obs_data_set_default_bool(data, "isStrictlySyncing", defaultProperty.isStrictlySyncing);
-
-	obs_data_set_default_int(data, "selfieSegmenterFps", defaultProperty.selfieSegmenterFps);
-
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
+
+	obs_data_set_default_double(data, "timeAveragedFilteringAlpha", 0.1);
 
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
 	obs_data_set_default_double(data, "maskLowerBoundAmpDb", defaultProperty.maskLowerBoundAmpDb);
 	obs_data_set_default_double(data, "maskUpperBoundMarginAmpDb", defaultProperty.maskUpperBoundMarginAmpDb);
-
-	obs_data_set_default_double(data, "timeAveragedFilteringAlpha", 0.1);
 }
 
 obs_properties_t *MainPluginContext::getProperties()
 {
 	obs_properties_t *props = obs_properties_create();
 
+	// Update notifier
 	const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
 	try {
 		if (latestVersionFuture.valid()) {
@@ -134,57 +135,7 @@ obs_properties_t *MainPluginContext::getProperties()
 	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
-	obs_property_t *propComputeUnit = obs_properties_add_list(props, "computeUnit", obs_module_text("computeUnit"),
-								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-
-	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitAuto"), ComputeUnit::kAuto);
-	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCpuOnly"), ComputeUnit::kCpuOnly);
-
-#if NCNN_VULKAN == 1
-	int ncnnGpuCount = ncnn::get_gpu_count();
-	ncnnGpuNames.resize(ncnnGpuCount);
-	for (int i = 0; i < std::min(ncnnGpuCount, ComputeUnit::kNcnnVulkanGpuIndexMask); ++i) {
-		ncnnGpuNames[i] = fmt::format("{} ({})", obs_module_text("computeUnitVulkanGpu"), i);
-		obs_property_list_add_int(propComputeUnit, ncnnGpuNames[i].c_str(), ComputeUnit::kNcnnVulkanGpu | i);
-	}
-#endif
-
-#if HAVE_COREML_SELFIE_SEGMENTER
-	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCoreML"), ComputeUnit::kCoreML);
-#endif
-
-	obs_properties_add_int_slider(props, "numThreads", obs_module_text("numThreads"), 0,
-				      std::thread::hardware_concurrency(), 1);
-
-	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
-								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
-				  static_cast<int>(FilterLevel::Default));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelPassthrough"),
-				  static_cast<int>(FilterLevel::Passthrough));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
-				  static_cast<int>(FilterLevel::Segmentation));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
-				  static_cast<int>(FilterLevel::GuidedFilter));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
-				  static_cast<int>(FilterLevel::TimeAveragedFilter));
-
-	obs_properties_add_bool(props, "isStrictlySyncing", obs_module_text("isStrictlySyncing"));
-
-	obs_properties_add_int_slider(props, "selfieSegmenterFps", obs_module_text("selfieSegmenterFps"), 1, 60, 1);
-
-	obs_properties_add_float_slider(props, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
-					-20.0, 0.1);
-
-	obs_properties_add_float_slider(props, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0, 0.01);
-	obs_properties_add_float_slider(props, "maskLowerBoundAmpDb", obs_module_text("maskLowerBoundAmpDb"), -80.0,
-					-10.0, 0.1);
-	obs_properties_add_float_slider(props, "maskUpperBoundMarginAmpDb",
-					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
-
-	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha",
-					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
-
+	// Debug button
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
@@ -210,6 +161,64 @@ obs_properties_t *MainPluginContext::getProperties()
 			return false;
 		},
 		this);
+
+	// Strictly syncing
+	obs_properties_add_bool(props, "isStrictlySyncing", obs_module_text("isStrictlySyncing"));
+
+	// Filter level
+	obs_properties_add_int_slider(props, "numThreads", obs_module_text("numThreads"), 0,
+				      std::thread::hardware_concurrency(), 1);
+
+	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
+								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
+				  static_cast<int>(FilterLevel::Default));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelPassthrough"),
+				  static_cast<int>(FilterLevel::Passthrough));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
+				  static_cast<int>(FilterLevel::Segmentation));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
+				  static_cast<int>(FilterLevel::GuidedFilter));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
+				  static_cast<int>(FilterLevel::TimeAveragedFilter));
+
+	// Selfie segmenter FPS
+	obs_properties_add_int_slider(props, "selfieSegmenterFps", obs_module_text("selfieSegmenterFps"), 1, 60, 1);
+
+	// Compute unit
+	obs_property_t *propComputeUnit = obs_properties_add_list(props, "computeUnit", obs_module_text("computeUnit"),
+								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+
+	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitAuto"), ComputeUnit::kAuto);
+	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCpuOnly"), ComputeUnit::kCpuOnly);
+
+#if NCNN_VULKAN == 1
+	int ncnnGpuCount = ncnn::get_gpu_count();
+	ncnnGpuNames.resize(ncnnGpuCount);
+	for (int i = 0; i < std::min(ncnnGpuCount, ComputeUnit::kNcnnVulkanGpuIndexMask); ++i) {
+		ncnnGpuNames[i] = fmt::format("{} ({})", obs_module_text("computeUnitVulkanGpu"), i);
+		obs_property_list_add_int(propComputeUnit, ncnnGpuNames[i].c_str(), ComputeUnit::kNcnnVulkanGpu | i);
+	}
+#endif
+
+#if HAVE_COREML_SELFIE_SEGMENTER
+	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCoreML"), ComputeUnit::kCoreML);
+#endif
+
+	// Guided filter
+	obs_properties_add_float_slider(props, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
+					-20.0, 0.1);
+
+	// Time-averaged filtering
+	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha",
+					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
+
+	// Mask application
+	obs_properties_add_float_slider(props, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0, 0.01);
+	obs_properties_add_float_slider(props, "maskLowerBoundAmpDb", obs_module_text("maskLowerBoundAmpDb"), -80.0,
+					-10.0, 0.1);
+	obs_properties_add_float_slider(props, "maskUpperBoundMarginAmpDb",
+					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
 
 	return props;
 }

@@ -141,14 +141,13 @@ void RenderingContext::videoTick(float seconds)
 {
 	FilterLevel _filterLevel = filterLevel;
 
-	float _selfieSegmenterFps = selfieSegmenterFps;
+	float _selfieSegmenterInterval = selfieSegmenterInterval;
 
 	if (_filterLevel >= FilterLevel::Segmentation) {
 		timeSinceLastSelfieSegmentation += seconds;
-		const float interval = 1.0f / _selfieSegmenterFps;
 
-		if (timeSinceLastSelfieSegmentation >= interval) {
-			timeSinceLastSelfieSegmentation -= interval;
+		if (timeSinceLastSelfieSegmentation >= _selfieSegmenterInterval) {
+			timeSinceLastSelfieSegmentation -= _selfieSegmenterInterval;
 			doesNextVideoRenderKickSelfieSegmentation = true;
 		}
 	}
