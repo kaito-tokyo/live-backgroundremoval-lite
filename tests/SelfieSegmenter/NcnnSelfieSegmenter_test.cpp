@@ -41,7 +41,7 @@ const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_ncnn.png";
 
 TEST(NcnnSelfieSegmenterTest, Construction)
 {
-	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, -1, 1);
+	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 0);
 }
 
 TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
