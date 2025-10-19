@@ -368,7 +368,7 @@ void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel
 			       const std::size_t pixelCount)
 {
 #if defined(SELFIE_SEGMENTER_HAVE_NEON)
-	copy_r8_bgra_to_float_chw_neon(rChannel, gChannel, bChannel, bgraData, pixelCount);
+	copy_r8_bgra_to_float_chw_naive(rChannel, gChannel, bChannel, bgraData, pixelCount);
 #elif defined(SELFIE_SEGMENTER_CHECK_AVX2)
 	static const bool is_avx2_available = check_if_avx2_available();
 	if (is_avx2_available) {
@@ -384,7 +384,7 @@ void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel
 void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
 #if defined(SELFIE_SEGMENTER_HAVE_NEON)
-	copy_float32_to_r8_neon(dst, src, pixel_count);
+	copy_float32_to_r8_naive(dst, src, pixel_count);
 #else
 	copy_float32_to_r8_naive(dst, src, pixel_count);
 #endif

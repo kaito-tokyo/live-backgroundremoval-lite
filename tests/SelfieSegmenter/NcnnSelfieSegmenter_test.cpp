@@ -32,24 +32,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <opencv2/opencv.hpp>
 
-using namespace KaitoTokyo::SelfieSegmenter;
+#include <iostream>
 
-// JPEG(BGR) -> BGRA loader using OpenCV
-static bool load_jpg_bgra(const std::string &filename, std::vector<uint8_t> &out_bgra, int &width, int &height)
-{
-	cv::Mat img = cv::imread(filename, cv::IMREAD_COLOR);
-	if (img.empty())
-		return false;
-	cv::Mat img_bgra;
-	cv::cvtColor(img, img_bgra, cv::COLOR_BGR2BGRA);
-	width = img_bgra.cols;
-	height = img_bgra.rows;
-	out_bgra.assign(img_bgra.data, img_bgra.data + width * height * 4);
-	return true;
-}
+using namespace KaitoTokyo::SelfieSegmenter;
 
 const char kParamPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
 const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
+
 const char kTestImage[] = TESTS_DIR "/SelfieSegmenter/selfie001.jpg";
 const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_mask.png";
 
@@ -60,32 +49,37 @@ TEST(NcnnSelfieSegmenterTest, Construction)
 
 TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 {
-	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, -1, 1);
-	std::vector<uint8_t> bgra;
-	int w = 0, h = 0;
-	ASSERT_TRUE(load_jpg_bgra(kTestImage, bgra, w, h));
-	ASSERT_EQ(w, selfieSegmenter.getWidth());
-	ASSERT_EQ(h, selfieSegmenter.getHeight());
-	selfieSegmenter.process(bgra.data());
-	const auto &mask = selfieSegmenter.getMask();
-	// Check mask is not all zero
-	int nonzero = 0;
-	for (size_t i = 0; i < selfieSegmenter.getPixelCount(); ++i) {
-		nonzero += (mask[i] != 0);
-	}
-	EXPECT_GT(nonzero, 0);
+	// Fixtures
+	int width = 256;
+	int height = 144;
 
-	// Load reference mask image (PNG, grayscale)
-	cv::Mat ref_img = cv::imread(kTestImageMask, cv::IMREAD_GRAYSCALE);
-	ASSERT_FALSE(ref_img.empty());
-	ASSERT_EQ(ref_img.cols, selfieSegmenter.getWidth());
-	ASSERT_EQ(ref_img.rows, selfieSegmenter.getHeight());
-	// Compare pixel-wise
-	int same = 0;
-	for (std::size_t i = 0; i < selfieSegmenter.getPixelCount(); ++i) {
-		if (std::abs(int(mask[i]) - int(ref_img.data[i])) <= 1)
-			++same;
-	}
-	double ratio = double(same) / selfieSegmenter.getPixelCount();
-	EXPECT_GE(ratio, 0.95);
+	cv::Mat bgrImage = cv::imread(kTestImage, cv::IMREAD_COLOR), bgraImage;
+	cv::cvtColor(bgrImage, bgraImage, cv::COLOR_BGR2BGRA);
+	ASSERT_FALSE(bgraImage.empty());
+	ASSERT_EQ(bgraImage.cols, width);
+	ASSERT_EQ(bgraImage.rows, height);
+	ASSERT_EQ(bgraImage.channels(), 4);
+
+	cv::Mat refImage = cv::imread(kTestImageMask, cv::IMREAD_GRAYSCALE);
+	ASSERT_FALSE(refImage.empty());
+	ASSERT_EQ(refImage.cols, width);
+	ASSERT_EQ(refImage.rows, height);
+	ASSERT_EQ(refImage.channels(), 1);
+
+	// Test
+	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 0);
+	EXPECT_EQ(selfieSegmenter.getWidth(), static_cast<std::size_t>(width));
+	EXPECT_EQ(selfieSegmenter.getHeight(), static_cast<std::size_t>(height));
+	EXPECT_EQ(selfieSegmenter.getPixelCount(), static_cast<std::size_t>(width * height));
+
+	selfieSegmenter.process(bgraImage.data);
+
+	cv::Mat maskImage((int)selfieSegmenter.getHeight(), (int)selfieSegmenter.getWidth(), CV_8UC1);
+	std::memcpy(maskImage.data, selfieSegmenter.getMask(), selfieSegmenter.getPixelCount());
+
+	EXPECT_GT(cv::countNonZero(maskImage), 0);
+
+	cv::Mat diffImage;
+	cv::absdiff(refImage, maskImage, diffImage);
+	EXPECT_LT(cv::norm(diffImage, cv::NORM_L1), width * height);
 }
