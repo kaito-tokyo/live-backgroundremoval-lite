@@ -67,19 +67,19 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  selfieSegmenter(std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
 								pluginConfig.selfieSegmenterBinPath.c_str(),
 								ncnnGpuIndex, ncnnNumThreads)),
-	  readerSegmenterInput(static_cast<std::uint32_t>(selfieSegmenter->getWidth()),
-			       static_cast<std::uint32_t>(selfieSegmenter->getHeight()), GS_BGRX),
 	  subsamplingRate(_subsamplingRate),
 	  region{0, 0, width, height},
 	  subRegion{0, 0, (region.width / subsamplingRate) & ~1u, (region.height / subsamplingRate) & ~1u},
+	  maskRoi(getMaskRoiPosition(region.width, region.height, selfieSegmenter)),
 	  bgrxOriginalImage(make_unique_gs_texture(region.width, region.height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  r32fOriginalGrayscale(
 		  make_unique_gs_texture(region.width, region.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  bgrxSegmenterInput(make_unique_gs_texture(static_cast<std::uint32_t>(selfieSegmenter->getWidth()),
 						    static_cast<std::uint32_t>(selfieSegmenter->getHeight()), GS_BGRX,
 						    1, NULL, GS_RENDER_TARGET)),
+	  bgrxSegmenterInputReader(static_cast<std::uint32_t>(selfieSegmenter->getWidth()),
+				   static_cast<std::uint32_t>(selfieSegmenter->getHeight()), GS_BGRX),
 	  segmenterInputBuffer(selfieSegmenter->getPixelCount() * 4),
-	  maskRoi(getMaskRoiPosition(region.width, region.height, selfieSegmenter)),
 	  r8SegmentationMask(make_unique_gs_texture(maskRoi.width, maskRoi.height, GS_R8, 1, NULL, GS_DYNAMIC)),
 	  r8SubGFGuide(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r8SubGFSource(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
@@ -216,8 +216,9 @@ void RenderingContext::renderTimeAveragedMask(const unique_gs_texture_t &targetT
 
 void RenderingContext::kickSegmentationTask()
 {
-	auto &readerSegmenterInputBuffer = readerSegmenterInput.getBuffer();
-	std::copy(readerSegmenterInputBuffer.begin(), readerSegmenterInputBuffer.end(), segmenterInputBuffer.begin());
+	auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader.getBuffer();
+	std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
+		  segmenterInputBuffer.begin());
 	selfieSegmenterTaskQueue.push(
 		[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
 			if (auto self = weakSelf.lock()) {
@@ -249,7 +250,7 @@ void RenderingContext::videoRender()
 
 		if (_filterLevel >= FilterLevel::Segmentation) {
 			try {
-				readerSegmenterInput.sync();
+				bgrxSegmenterInputReader.sync();
 			} catch (const std::exception &e) {
 				logger.error("Failed to sync texture reader: {}", e.what());
 			}
@@ -295,7 +296,7 @@ void RenderingContext::videoRender()
 	}
 
 	if (needNewFrame && _filterLevel >= FilterLevel::Segmentation) {
-		readerSegmenterInput.stage(bgrxSegmenterInput);
+		bgrxSegmenterInputReader.stage(bgrxSegmenterInput);
 	}
 }
 
