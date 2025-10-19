@@ -266,10 +266,8 @@ void RenderingContext::videoRender()
 
 	float _timeAveragedFilteringAlpha = timeAveragedFilteringAlpha;
 
-	const bool needNewFrame = doesNextVideoRenderReceiveNewFrame;
-	if (needNewFrame) {
-		doesNextVideoRenderReceiveNewFrame = false;
-
+	const bool _doesNextVideoRenderReceiveNewFrame = doesNextVideoRenderReceiveNewFrame.exchange(false);
+	if (_doesNextVideoRenderReceiveNewFrame) {
 		if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
 			try {
 				bgrxSegmenterInputReader.sync();
@@ -327,13 +325,12 @@ void RenderingContext::videoRender()
 		// Draw nothing to prevent unexpected background disclosure
 	}
 
-	if (needNewFrame && _filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
+	if (_doesNextVideoRenderReceiveNewFrame && _filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
 		bgrxSegmenterInputReader.stage(bgrxSegmenterInput);
 	}
 
 	if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing &&
-	    doesNextVideoRenderKickSelfieSegmentation) {
-		doesNextVideoRenderKickSelfieSegmentation = false;
+	    doesNextVideoRenderKickSelfieSegmentation.exchange(false)) {
 		kickSegmentationTask();
 	}
 }
