@@ -61,7 +61,7 @@ inline void copy_float32_to_r8_naive(std::uint8_t *dst, const float *src, std::s
 
 #ifdef SELFIE_SEGMENTER_HAVE_NEON
 
-// channels and bgraData must be 16-byte aligned
+// For best performance, channels and bgraData should be 16-byte aligned (NEON loads tolerate unaligned addresses)
 inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, float *bChannel,
 					   const std::uint8_t *bgraData, const std::size_t pixelCount)
 {
