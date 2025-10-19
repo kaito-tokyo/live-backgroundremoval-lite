@@ -37,7 +37,7 @@ const char kParamPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landsc
 const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
 
 const char kTestImage[] = TESTS_DIR "/SelfieSegmenter/selfie001.jpg";
-const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_mask.png";
+const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_ncnn.png";
 
 TEST(NcnnSelfieSegmenterTest, Construction)
 {
