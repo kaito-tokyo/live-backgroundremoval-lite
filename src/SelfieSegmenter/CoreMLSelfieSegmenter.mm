@@ -99,6 +99,12 @@ namespace KaitoTokyo {
             }
         };
 
+        CoreMLSelfieSegmenter::CoreMLSelfieSegmenter() :
+            pImpl(std::make_unique<CoreMLSelfieSegmenterImpl>(getPixelCount()))
+        {}
+
+        CoreMLSelfieSegmenter::~CoreMLSelfieSegmenter() = default;
+
         void SelfieSegmenter::CoreMLSelfieSegmenter::process(const std::uint8_t *bgraData)
         {
             pImpl->process(bgraData, getPixelCount());
