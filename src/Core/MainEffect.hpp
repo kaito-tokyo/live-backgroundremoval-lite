@@ -180,7 +180,7 @@ public:
 
 		while (gs_effect_loop(gsEffect.get(), "Draw")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
-			gs_draw_sprite(sourceTexture.get(), 0, width, height);
+			gs_draw_sprite(sourceTexture.get(), 0, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
 		}
 	}
 
@@ -191,7 +191,7 @@ public:
 
 		while (gs_effect_loop(gsEffect.get(), "ConvertToGrayscale")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
-			gs_draw_sprite(sourceTexture.get(), 0, 0.0f, 0.0f);
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
 
@@ -202,7 +202,7 @@ public:
 
 		while (gs_effect_loop(gsEffect.get(), "ResampleByNearestR8")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
-			gs_draw_sprite(targetTexture.get(), 0, 0.0f, 0.0f);
+			gs_draw_sprite(targetTexture.get(), 0, 0u, 0u);
 		}
 	}
 
@@ -218,7 +218,7 @@ public:
 			while (gs_effect_loop(gsEffect.get(), "HorizontalBoxFilterR8KS17")) {
 				gs_effect_set_texture(textureImage, sourceTexture.get());
 				gs_effect_set_float(floatTexelWidth, texelWidth);
-				gs_draw_sprite(sourceTexture.get(), 0, 0.0f, 0.0f);
+				gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 			}
 		}
 
@@ -230,7 +230,7 @@ public:
 			while (gs_effect_loop(gsEffect.get(), "VerticalBoxFilterR8KS17")) {
 				gs_effect_set_texture(textureImage, intermediateTexture.get());
 				gs_effect_set_float(floatTexelHeight, texelHeight);
-				gs_draw_sprite(intermediateTexture.get(), 0, 0.0f, 0.0f);
+				gs_draw_sprite(intermediateTexture.get(), 0, 0u, 0u);
 			}
 		}
 	}
@@ -249,7 +249,7 @@ public:
 				gs_effect_set_texture(textureImage, sourceTexture1.get());
 				gs_effect_set_texture(textureImage1, sourceTexture2.get());
 				gs_effect_set_float(floatTexelWidth, texelWidth);
-				gs_draw_sprite(sourceTexture1.get(), 0, 0.0f, 0.0f);
+				gs_draw_sprite(sourceTexture1.get(), 0, 0u, 0u);
 			}
 		}
 
@@ -261,7 +261,7 @@ public:
 			while (gs_effect_loop(gsEffect.get(), "VerticalBoxFilterR8KS17")) {
 				gs_effect_set_texture(textureImage, intermediateTexture.get());
 				gs_effect_set_float(floatTexelHeight, texelHeight);
-				gs_draw_sprite(intermediateTexture.get(), 0, 0.0f, 0.0f);
+				gs_draw_sprite(intermediateTexture.get(), 0, 0u, 0u);
 			}
 		}
 	}
@@ -278,7 +278,7 @@ public:
 			while (gs_effect_loop(gsEffect.get(), "HorizontalBoxFilterWithSqR8KS17")) {
 				gs_effect_set_texture(textureImage, sourceTexture.get());
 				gs_effect_set_float(floatTexelWidth, texelWidth);
-				gs_draw_sprite(sourceTexture.get(), 0, 0.0f, 0.0f);
+				gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 			}
 		}
 
@@ -290,7 +290,7 @@ public:
 			while (gs_effect_loop(gsEffect.get(), "VerticalBoxFilterR8KS17")) {
 				gs_effect_set_texture(textureImage, intermediateTexture.get());
 				gs_effect_set_float(floatTexelHeight, texelHeight);
-				gs_draw_sprite(intermediateTexture.get(), 0, 0.0f, 0.0f);
+				gs_draw_sprite(intermediateTexture.get(), 0, 0u, 0u);
 			}
 		}
 	}
@@ -313,7 +313,7 @@ public:
 				gs_effect_set_texture(textureImage3, sourceMeanSourceTexture.get());
 				gs_effect_set_float(floatEps, eps);
 
-				gs_draw_sprite(sourceMeanGuideSqTexture.get(), 0, 0.0f, 0.0f);
+				gs_draw_sprite(sourceMeanGuideSqTexture.get(), 0, 0u, 0u);
 			}
 		}
 
@@ -325,7 +325,7 @@ public:
 				gs_effect_set_texture(textureImage1, sourceMeanSourceTexture.get());
 				gs_effect_set_texture(textureImage2, sourceMeanGuideTexture.get());
 
-				gs_draw_sprite(targetATexture.get(), 0, 0.0f, 0.0f);
+				gs_draw_sprite(targetATexture.get(), 0, 0u, 0u);
 			}
 		}
 	}
@@ -342,7 +342,7 @@ public:
 			gs_effect_set_texture(textureImage1, sourceATexture.get());
 			gs_effect_set_texture(textureImage2, sourceBTexture.get());
 
-			gs_draw_sprite(sourceGuideTexture.get(), 0, 0.0f, 0.0f);
+			gs_draw_sprite(sourceGuideTexture.get(), 0, 0u, 0u);
 		}
 	}
 
@@ -358,7 +358,7 @@ public:
 			gs_effect_set_texture(textureImage1, previousMaskTexture.get());
 			gs_effect_set_float(floatAlpha, alpha);
 
-			gs_draw_sprite(sourceTexture.get(), 0, 0.0f, 0.0f);
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
 
@@ -366,7 +366,7 @@ public:
 	{
 		while (gs_effect_loop(gsEffect.get(), "Draw")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
-			gs_draw_sprite(sourceTexture.get(), 0, 0.0f, 0.0f);
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
 
@@ -376,7 +376,7 @@ public:
 		while (gs_effect_loop(gsEffect.get(), "DrawWithMask")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
 			gs_effect_set_texture(textureImage1, maskTexture.get());
-			gs_draw_sprite(sourceTexture.get(), 0, 0.0f, 0.0f);
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
 
@@ -392,7 +392,7 @@ public:
 			gs_effect_set_float(floatLowerBound, static_cast<float>(lowerBound));
 			gs_effect_set_float(floatUpperBound, static_cast<float>(1.0 - upperBoundMargin));
 
-			gs_draw_sprite(sourceTexture.get(), 0, 0.0f, 0.0f);
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
 };
