@@ -39,7 +39,7 @@ constexpr int kCoreML = 1 << 18;
 struct PluginProperty {
 	int computeUnit = ComputeUnit::kAuto;
 
-	int ncnnNumThreads = 2;
+	int numThreads = 2;
 
 	FilterLevel filterLevel = FilterLevel::Default;
 
