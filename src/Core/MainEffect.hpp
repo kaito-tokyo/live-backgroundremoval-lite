@@ -180,7 +180,8 @@ public:
 
 		while (gs_effect_loop(gsEffect.get(), "Draw")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
-			gs_draw_sprite(sourceTexture.get(), 0, static_cast<uint32_t>(width), static_cast<uint32_t>(height));
+			gs_draw_sprite(sourceTexture.get(), 0, static_cast<uint32_t>(width),
+				       static_cast<uint32_t>(height));
 		}
 	}
 
