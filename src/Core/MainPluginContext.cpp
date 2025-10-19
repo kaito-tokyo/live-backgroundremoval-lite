@@ -95,6 +95,8 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
+	obs_data_set_default_bool(data, "isStrictlySyncing", defaultProperty.isStrictlySyncing);
+
 	obs_data_set_default_int(data, "selfieSegmenterFps", defaultProperty.selfieSegmenterFps);
 
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
@@ -167,6 +169,8 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
 				  static_cast<int>(FilterLevel::TimeAveragedFilter));
 
+	obs_properties_add_bool(props, "isStrictlySyncing", obs_module_text("isStrictlySyncing"));
+
 	obs_properties_add_int_slider(props, "selfieSegmenterFps", obs_module_text("selfieSegmenterFps"), 1, 60, 1);
 
 	obs_properties_add_float_slider(props, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
@@ -215,6 +219,8 @@ void MainPluginContext::update(obs_data_t *settings)
 	PluginProperty newPluginProperty;
 
 	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
+
+	newPluginProperty.isStrictlySyncing = obs_data_get_bool(settings, "isStrictlySyncing");
 
 	newPluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
 

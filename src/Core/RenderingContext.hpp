@@ -103,6 +103,8 @@ private:
 public:
 	std::atomic<FilterLevel> filterLevel;
 
+	std::atomic<bool> isStrictlySyncing;
+
 	std::atomic<float> selfieSegmenterFps;
 
 	std::atomic<float> guidedFilterEps;
@@ -201,17 +203,29 @@ public:
 		} else {
 			filterLevel = pluginProperty.filterLevel;
 		}
+		logger.info("Filter level set to {}", static_cast<int>(filterLevel.load()));
+
+		isStrictlySyncing = pluginProperty.isStrictlySyncing;
+		logger.info("Strict syncing is {}", isStrictlySyncing.load() ? "enabled" : "disabled");
 
 		selfieSegmenterFps = static_cast<float>(pluginProperty.selfieSegmenterFps);
+		logger.info("Selfie segmenter FPS set to {}", selfieSegmenterFps.load());
 
 		guidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
+		logger.info("Guided filter epsilon set to {}", guidedFilterEps.load());
 
 		maskGamma = static_cast<float>(pluginProperty.maskGamma);
+		logger.info("Mask gamma set to {}", maskGamma.load());
+
 		maskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
+		logger.info("Mask lower bound set to {}", maskLowerBound.load());
+
 		maskUpperBoundMargin =
 			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
+		logger.info("Mask upper bound margin set to {}", maskUpperBoundMargin.load());
 
 		timeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
+		logger.info("Time-averaged filtering alpha set to {}", timeAveragedFilteringAlpha.load());
 	}
 
 private:

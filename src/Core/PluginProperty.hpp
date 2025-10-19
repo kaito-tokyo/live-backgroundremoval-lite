@@ -45,6 +45,8 @@ struct PluginProperty {
 
 	FilterLevel filterLevel = FilterLevel::Default;
 
+	bool isStrictlySyncing = false;
+
 	int selfieSegmenterFps = 60;
 
 	int subsamplingRate = 4;
