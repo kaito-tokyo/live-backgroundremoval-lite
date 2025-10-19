@@ -65,7 +65,6 @@ public:
 	const std::uint8_t *read() const
 	{
 		return buffers[readableIndex.load(std::memory_order_acquire)].data();
-		;
 	}
 
 	MaskBuffer(const MaskBuffer &) = delete;

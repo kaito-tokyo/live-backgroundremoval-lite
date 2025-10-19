@@ -113,9 +113,9 @@ endif()
 
 if(APPLE)
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(_default_derived_data_path "${CMAKE_BINARY_DIR}/DerivedData/Build/Products/Debug")
+    set(_default_derived_data_path "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Debug")
   else()
-    set(_default_derived_data_path "${CMAKE_BINARY_DIR}/DerivedData/Build/Products/Release")
+    set(_default_derived_data_path "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Release")
   endif()
   set(DERIVED_DATA_PATH "${_default_derived_data_path}" CACHE PATH "Path to Xcode DerivedData build products")
 
@@ -148,6 +148,7 @@ if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
     SelfieSegmenter
     PRIVATE src/SelfieSegmenter/CoreMLSelfieSegmenter.mm
   )
+  target_link_libraries(SelfieSegmenter PRIVATE "${COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH}")
 endif()
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
 target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn)

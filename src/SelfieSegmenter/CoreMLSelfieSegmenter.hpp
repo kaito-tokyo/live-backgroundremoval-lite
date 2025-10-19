@@ -47,7 +47,7 @@ public:
 
 	void process(const std::uint8_t *bgraData) override;
 
-	const std::uint8_t *getMask() const override { return maskBuffer.read(); }
+	const std::uint8_t *getMask() const override;
 };
 
 } // namespace SelfieSegmenter
