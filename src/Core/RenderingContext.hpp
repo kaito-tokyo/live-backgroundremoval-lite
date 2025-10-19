@@ -117,6 +117,8 @@ public:
 
 private:
 	float timeSinceLastSelfieSegmentation = 0.0f;
+	std::atomic<bool> doesNextVideoRenderKickSelfieSegmentation = false;
+
 	std::uint64_t lastFrameTimestamp = 0;
 	std::atomic<bool> doesNextVideoRenderReceiveNewFrame = false;
 

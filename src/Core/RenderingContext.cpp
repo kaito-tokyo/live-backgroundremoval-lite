@@ -143,13 +143,13 @@ void RenderingContext::videoTick(float seconds)
 
 	float _selfieSegmenterFps = selfieSegmenterFps;
 
-	if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
+	if (_filterLevel >= FilterLevel::Segmentation) {
 		timeSinceLastSelfieSegmentation += seconds;
 		const float interval = 1.0f / _selfieSegmenterFps;
 
 		if (timeSinceLastSelfieSegmentation >= interval) {
 			timeSinceLastSelfieSegmentation -= interval;
-			kickSegmentationTask();
+			doesNextVideoRenderKickSelfieSegmentation = true;
 		}
 	}
 
@@ -292,7 +292,8 @@ void RenderingContext::videoRender()
 		}
 
 		if (_filterLevel >= FilterLevel::Segmentation) {
-			if (isStrictlySyncing) {
+			if (isStrictlySyncing && doesNextVideoRenderKickSelfieSegmentation) {
+				doesNextVideoRenderKickSelfieSegmentation = false;
 				bgrxSegmenterInputReader.sync();
 				selfieSegmenter->process(bgrxSegmenterInputReader.getBuffer().data());
 			}
@@ -329,6 +330,12 @@ void RenderingContext::videoRender()
 
 	if (needNewFrame && _filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
 		bgrxSegmenterInputReader.stage(bgrxSegmenterInput);
+	}
+
+	if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing &&
+	    doesNextVideoRenderKickSelfieSegmentation) {
+		doesNextVideoRenderKickSelfieSegmentation = false;
+		kickSegmentationTask();
 	}
 }
 
