@@ -79,10 +79,7 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
         // Allocate cached CVPixelBuffer
         _cachedPixelBuffer = NULL;
         const OSType pixelFormat = kCVPixelFormatType_32BGRA;
-        NSDictionary *attrs = @{
-            (NSString *) kCVPixelBufferCGImageCompatibilityKey: @YES,
-            (NSString *) kCVPixelBufferCGBitmapContextCompatibilityKey: @YES
-        };
+        NSDictionary *attrs = @{};
         CVReturn status = CVPixelBufferCreate(kCFAllocatorDefault, MODEL_INPUT_WIDTH, MODEL_INPUT_HEIGHT, pixelFormat,
                                               (__bridge CFDictionaryRef) attrs, &_cachedPixelBuffer);
         if (status != kCVReturnSuccess || !_cachedPixelBuffer) {
