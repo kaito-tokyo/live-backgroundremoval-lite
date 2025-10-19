@@ -56,7 +56,6 @@ const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_mask.png";
 TEST(SelfieSegmenterTest, Construction)
 {
 	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, -1, 1);
-	EXPECT_EQ(selfieSegmenter.getMask().size(), selfieSegmenter.getPixelCount());
 }
 
 TEST(SelfieSegmenterTest, ProcessRealImage)
@@ -71,8 +70,9 @@ TEST(SelfieSegmenterTest, ProcessRealImage)
 	const auto &mask = selfieSegmenter.getMask();
 	// Check mask is not all zero
 	int nonzero = 0;
-	for (auto v : mask)
-		nonzero += (v != 0);
+	for (size_t i = 0; i < selfieSegmenter.getPixelCount(); ++i) {
+		nonzero += (mask[i] != 0);
+	}
 	EXPECT_GT(nonzero, 0);
 
 	// Load reference mask image (PNG, grayscale)

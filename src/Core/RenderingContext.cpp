@@ -177,7 +177,7 @@ void RenderingContext::renderSegmenterInput(gs_texture_t *bgrxOriginalImage)
 void RenderingContext::renderSegmentationMask()
 {
 	const std::uint8_t *segmentationMaskData =
-		selfieSegmenter->getMask().data() + (maskRoi.y * selfieSegmenter->getWidth() + maskRoi.x);
+		selfieSegmenter->getMask() + (maskRoi.y * selfieSegmenter->getWidth() + maskRoi.x);
 	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData,
 			     static_cast<std::uint32_t>(selfieSegmenter->getWidth()), 0);
 }

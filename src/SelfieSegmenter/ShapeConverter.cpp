@@ -18,6 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "ShapeConverter.hpp"
 
+#include <cstring>
+
 #if defined(_M_X64) || defined(__x86_64__)
 #define SELFIE_SEGMENTER_CHECK_AVX2
 #if defined(_MSC_VER)
@@ -47,6 +49,13 @@ inline void copy_r8_bgra_to_float_chw_naive(float *rChannel, float *gChannel, fl
 		bChannel[i] = (static_cast<float>(bgraData[i * 4 + 0])) / 255.0f;
 		gChannel[i] = (static_cast<float>(bgraData[i * 4 + 1])) / 255.0f;
 		rChannel[i] = (static_cast<float>(bgraData[i * 4 + 2])) / 255.0f;
+	}
+}
+
+inline void copy_float32_to_r8_naive(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+{
+	for (std::size_t i = 0; i < pixel_count; i++) {
+		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
 	}
 }
 
@@ -91,6 +100,128 @@ inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, flo
 		bChannel[i] = static_cast<float>(pixelPtr[0]) * norm_factor;
 		gChannel[i] = static_cast<float>(pixelPtr[1]) * norm_factor;
 		rChannel[i] = static_cast<float>(pixelPtr[2]) * norm_factor;
+	}
+}
+
+// dst and src must be 16-byte aligned
+inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+{
+	constexpr std::size_t FLOATS_PER_LOOP = 32;
+	constexpr std::size_t FLOATS_PER_LOOP_4X = 4;
+
+	constexpr float scale_factor = 255.0f;
+
+	std::size_t i = 0;
+
+	std::size_t neon_limit = (pixel_count / FLOATS_PER_LOOP) * FLOATS_PER_LOOP;
+	for (; i < neon_limit; i += FLOATS_PER_LOOP) {
+		// --- Block 1: Pixels 0-15 ---
+
+		// 1.1 Load 16 floats (Block 1)
+		float32x4_t v_f32_1 = vld1q_f32(src + i + 0);
+		float32x4_t v_f32_2 = vld1q_f32(src + i + 4);
+		float32x4_t v_f32_3 = vld1q_f32(src + i + 8);
+		float32x4_t v_f32_4 = vld1q_f32(src + i + 12);
+
+		// --- Block 2: Pixels 16-31 ---
+
+		// 1.2 Load 16 floats (Block 2)
+		float32x4_t v_f32_5 = vld1q_f32(src + i + 16);
+		float32x4_t v_f32_6 = vld1q_f32(src + i + 20);
+		float32x4_t v_f32_7 = vld1q_f32(src + i + 24);
+		float32x4_t v_f32_8 = vld1q_f32(src + i + 28);
+
+		// 2.1 Scale (Block 1)
+		v_f32_1 = vmulq_n_f32(v_f32_1, scale_factor);
+		v_f32_2 = vmulq_n_f32(v_f32_2, scale_factor);
+		v_f32_3 = vmulq_n_f32(v_f32_3, scale_factor);
+		v_f32_4 = vmulq_n_f32(v_f32_4, scale_factor);
+
+		// 2.2 Scale (Block 2)
+		v_f32_5 = vmulq_n_f32(v_f32_5, scale_factor);
+		v_f32_6 = vmulq_n_f32(v_f32_6, scale_factor);
+		v_f32_7 = vmulq_n_f32(v_f32_7, scale_factor);
+		v_f32_8 = vmulq_n_f32(v_f32_8, scale_factor);
+
+		// 3.1 Convert f32 -> u32 (Block 1)
+		uint32x4_t v_u32_1 = vcvtq_u32_f32(v_f32_1);
+		uint32x4_t v_u32_2 = vcvtq_u32_f32(v_f32_2);
+		uint32x4_t v_u32_3 = vcvtq_u32_f32(v_f32_3);
+		uint32x4_t v_u32_4 = vcvtq_u32_f32(v_f32_4);
+
+		// 3.2 Convert f32 -> u32 (Block 2)
+		uint32x4_t v_u32_5 = vcvtq_u32_f32(v_f32_5);
+		uint32x4_t v_u32_6 = vcvtq_u32_f32(v_f32_6);
+		uint32x4_t v_u32_7 = vcvtq_u32_f32(v_f32_7);
+		uint32x4_t v_u32_8 = vcvtq_u32_f32(v_f32_8);
+
+		// 4.1 Narrow u32 -> u16 (Block 1)
+		uint16x4_t v_u16_1 = vmovn_u32(v_u32_1);
+		uint16x4_t v_u16_2 = vmovn_u32(v_u32_2);
+		uint16x4_t v_u16_3 = vmovn_u32(v_u32_3);
+		uint16x4_t v_u16_4 = vmovn_u32(v_u32_4);
+
+		// 4.2 Narrow u32 -> u16 (Block 2)
+		uint16x4_t v_u16_5 = vmovn_u32(v_u32_5);
+		uint16x4_t v_u16_6 = vmovn_u32(v_u32_6);
+		uint16x4_t v_u16_7 = vmovn_u32(v_u32_7);
+		uint16x4_t v_u16_8 = vmovn_u32(v_u32_8);
+
+		// 5.1 Combine & Narrow u16 -> u8 (Block 1)
+		uint16x8_t v_u16_lo_1 = vcombine_u16(v_u16_1, v_u16_2);
+		uint16x8_t v_u16_hi_1 = vcombine_u16(v_u16_3, v_u16_4);
+		uint8x8_t v_u8_lo_1 = vmovn_u16(v_u16_lo_1);
+		uint8x8_t v_u8_hi_1 = vmovn_u16(v_u16_hi_1);
+
+		// 5.2 Combine & Narrow u16 -> u8 (Block 2)
+		uint16x8_t v_u16_lo_2 = vcombine_u16(v_u16_5, v_u16_6);
+		uint16x8_t v_u16_hi_2 = vcombine_u16(v_u16_7, v_u16_8);
+		uint8x8_t v_u8_lo_2 = vmovn_u16(v_u16_lo_2);
+		uint8x8_t v_u8_hi_2 = vmovn_u16(v_u16_hi_2);
+
+		// 6.1 Combine & Store (Block 1)
+		uint8x16_t v_out_1 = vcombine_u8(v_u8_lo_1, v_u8_hi_1);
+		vst1q_u8(dst + i, v_out_1);
+
+		// 6.2 Combine & Store (Block 2)
+		uint8x16_t v_out_2 = vcombine_u8(v_u8_lo_2, v_u8_hi_2);
+		vst1q_u8(dst + i + 16, v_out_2);
+	}
+
+	// --- Remainder Loop (4 pixels at a time) ---
+	std::size_t neon_limit_4x = (pixel_count / FLOATS_PER_LOOP_4X) * FLOATS_PER_LOOP_4X;
+	for (; i < neon_limit_4x; i += FLOATS_PER_LOOP_4X) {
+		float32x4_t v_f32 = vld1q_f32(src + i);
+		v_f32 = vmulq_n_f32(v_f32, scale_factor);
+		uint32x4_t v_u32 = vcvtq_u32_f32(v_f32);
+		uint16x4_t v_u16 = vmovn_u32(v_u32);
+		uint16x8_t v_u16_full = vcombine_u16(v_u16, vdup_n_u16(0));
+		uint8x8_t v_u8 = vmovn_u16(v_u16_full);
+		vst1_lane_u32(reinterpret_cast<uint32_t *>(dst + i), vreinterpret_u32_u8(v_u8), 0);
+	}
+
+	// --- Final 0-3 pixels (Temporary Buffer) ---
+	std::size_t remaining_pixels = pixel_count - i;
+	if (remaining_pixels > 0) {
+		// 1. & 2. Allocate aligned temp buffers on the stack
+		alignas(16) float temp_src[FLOATS_PER_LOOP_4X] = {0.0f};
+		alignas(4) uint8_t temp_dst[FLOATS_PER_LOOP_4X];
+
+		// 3a. Copy remaining pixels (1, 2, or 3) to temp buffer
+		std::memcpy(temp_src, src + i, remaining_pixels * sizeof(float));
+		// The rest are already 0.0f, which safely converts to 0.
+
+		// 4. Run the 4-pixel NEON conversion on the temp buffer
+		float32x4_t v_f32 = vld1q_f32(temp_src);
+		v_f32 = vmulq_n_f32(v_f32, scale_factor);
+		uint32x4_t v_u32 = vcvtq_u32_f32(v_f32);
+		uint16x4_t v_u16 = vmovn_u32(v_u32);
+		uint16x8_t v_u16_full = vcombine_u16(v_u16, vdup_n_u16(0));
+		uint8x8_t v_u8 = vmovn_u16(v_u16_full);
+		vst1_lane_u32(reinterpret_cast<uint32_t *>(temp_dst), vreinterpret_u32_u8(v_u8), 0);
+
+		// 5. Copy the valid results from temp buffer to the real destination
+		std::memcpy(dst + i, temp_dst, remaining_pixels * sizeof(std::uint8_t));
 	}
 }
 
@@ -190,6 +321,15 @@ void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel
 	}
 #else
 	copy_r8_bgra_to_float_chw_naive(rChannel, gChannel, bChannel, bgraData, pixelCount);
+#endif
+}
+
+void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+{
+#if defined(SELFIE_SEGMENTER_HAVE_NEON)
+	copy_float32_to_r8_neon(dst, src, pixel_count);
+#else
+	copy_float32_to_r8_naive(dst, src, pixel_count);
 #endif
 }
 

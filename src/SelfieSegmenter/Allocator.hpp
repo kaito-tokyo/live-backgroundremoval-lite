@@ -18,35 +18,40 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <array>
 #include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <mutex>
-#include <vector>
+#include <limits>
+#include <memory>
+#include <new>
+
+#include <memory_resource>
 
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
-class ISelfieSegmenter {
-protected:
-	ISelfieSegmenter() = default;
+class ForceAlignmentResource : public std::pmr::memory_resource {
+private:
+	std::pmr::memory_resource *upstream;
+	std::size_t required_alignment;
 
 public:
-	virtual ~ISelfieSegmenter() = default;
+	explicit ForceAlignmentResource(std::size_t _alignment, std::pmr::memory_resource *_upstream)
+		: upstream(_upstream),
+		  required_alignment(_alignment)
+	{
+	}
 
-	virtual std::size_t getWidth() const noexcept = 0;
-	virtual std::size_t getHeight() const noexcept = 0;
-	virtual std::size_t getPixelCount() const noexcept = 0;
+protected:
+	void *do_allocate(std::size_t bytes, std::size_t) override
+	{
+		return upstream->allocate(bytes, required_alignment);
+	}
 
-	virtual void process(const std::uint8_t *bgraData) = 0;
+	void do_deallocate(void *p, std::size_t bytes, std::size_t) override
+	{
+		upstream->deallocate(p, bytes, required_alignment);
+	}
 
-	virtual const std::uint8_t *getMask() const = 0;
-
-	ISelfieSegmenter(const ISelfieSegmenter &) = delete;
-	ISelfieSegmenter &operator=(const ISelfieSegmenter &) = delete;
-	ISelfieSegmenter(ISelfieSegmenter &&) = delete;
-	ISelfieSegmenter &operator=(ISelfieSegmenter &&) = delete;
+	bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override { return this == &other; }
 };
 
 } // namespace SelfieSegmenter
