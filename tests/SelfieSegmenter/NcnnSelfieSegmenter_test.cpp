@@ -49,7 +49,7 @@ TEST(NcnnSelfieSegmenterTest, Construction)
 
 TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 {
-	// Fixtures
+	// Set up
 	int width = 256;
 	int height = 144;
 
@@ -68,12 +68,13 @@ TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 
 	// Test
 	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 0);
-	EXPECT_EQ(selfieSegmenter.getWidth(), static_cast<std::size_t>(width));
-	EXPECT_EQ(selfieSegmenter.getHeight(), static_cast<std::size_t>(height));
-	EXPECT_EQ(selfieSegmenter.getPixelCount(), static_cast<std::size_t>(width * height));
+	ASSERT_EQ(selfieSegmenter.getWidth(), static_cast<std::size_t>(width));
+	ASSERT_EQ(selfieSegmenter.getHeight(), static_cast<std::size_t>(height));
+	ASSERT_EQ(selfieSegmenter.getPixelCount(), static_cast<std::size_t>(width * height));
 
 	selfieSegmenter.process(bgraImage.data);
 
+	// Verify
 	cv::Mat maskImage((int)selfieSegmenter.getHeight(), (int)selfieSegmenter.getWidth(), CV_8UC1);
 	std::memcpy(maskImage.data, selfieSegmenter.getMask(), selfieSegmenter.getPixelCount());
 
