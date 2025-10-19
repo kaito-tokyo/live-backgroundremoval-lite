@@ -66,7 +66,8 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  selfieSegmenter(std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
 								pluginConfig.selfieSegmenterBinPath.c_str(),
 								ncnnGpuIndex, ncnnNumThreads)),
-	  readerSegmenterInput(selfieSegmenter->getWidth(), selfieSegmenter->getHeight(), GS_BGRX),
+	  readerSegmenterInput(static_cast<std::uint32_t>(selfieSegmenter->getWidth()),
+			       static_cast<std::uint32_t>(selfieSegmenter->getHeight()), GS_BGRX),
 	  subsamplingRate(_subsamplingRate),
 	  region{0, 0, width, height},
 	  subRegion{0, 0, (region.width / subsamplingRate) & ~1u, (region.height / subsamplingRate) & ~1u},
@@ -176,7 +177,8 @@ void RenderingContext::renderSegmentationMask()
 {
 	const std::uint8_t *segmentationMaskData =
 		selfieSegmenter->getMask().data() + (maskRoi.y * selfieSegmenter->getWidth() + maskRoi.x);
-	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, selfieSegmenter->getWidth(), 0);
+	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData,
+			     static_cast<std::uint32_t>(selfieSegmenter->getWidth()), 0);
 }
 
 void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask,
