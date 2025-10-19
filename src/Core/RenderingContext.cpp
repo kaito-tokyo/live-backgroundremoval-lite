@@ -168,7 +168,7 @@ void RenderingContext::renderSegmenterInput(gs_texture_t *bgrxOriginalImage)
 	gs_clear(GS_CLEAR_COLOR, &blackColor, 1.0f, 0);
 
 	gs_set_viewport(maskRoi.x, maskRoi.y, maskRoi.width, maskRoi.height);
-	gs_ortho(0.0f, static_cast<float>(maskRoi.width), 0.0f, static_cast<float>(maskRoi.height), -100.0f, 100.0f);
+	gs_ortho(0.0f, static_cast<float>(region.width), 0.0f, static_cast<float>(region.height), -100.0f, 100.0f);
 	gs_matrix_identity();
 
 	mainEffect.draw(region.width, region.height, bgrxOriginalImage);
@@ -203,7 +203,7 @@ void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, g
 					      r32fSubGFMeanGuideSq.get(), r32fSubGFMeanGuide.get(),
 					      r32fSubGFMeanGuideSource.get(), r32fSubGFMeanSource.get(), eps);
 
-	mainEffect.finalizeGuidedFilter(subRegion.width, subRegion.height, r8GFResult.get(), r16fOriginalGrayscale,
+	mainEffect.finalizeGuidedFilter(region.width, region.height, r8GFResult.get(), r16fOriginalGrayscale,
 					r32fSubGFA.get(), r32fSubGFB.get());
 }
 
