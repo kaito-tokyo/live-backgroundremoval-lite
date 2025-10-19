@@ -53,12 +53,12 @@ const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscap
 const char kTestImage[] = TESTS_DIR "/SelfieSegmenter/selfie001.jpg";
 const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_mask.png";
 
-TEST(SelfieSegmenterTest, Construction)
+TEST(NcnnSelfieSegmenterTest, Construction)
 {
 	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, -1, 1);
 }
 
-TEST(SelfieSegmenterTest, ProcessRealImage)
+TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 {
 	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, -1, 1);
 	std::vector<uint8_t> bgra;

@@ -17,7 +17,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <gtest/gtest.h>
-#include <UpdateChecker/UpdateChecker.hpp>
+
+#include <UpdateChecker.hpp>
+
 #include <curl/curl.h>
 
 class UpdateCheckerTest : public ::testing::Test {
