@@ -34,32 +34,39 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 namespace KaitoTokyo {
     namespace SelfieSegmenter {
-        // --- Pimpl Implementation ---
-
-        class CoreMLSelfieSegmenterImpl
-        {
-              private:
-            static void wrapperDeleter(SelfieSegmenterLandscapeWrapper *ptr)
+        namespace {
+            inline void wrapperDeleter(SelfieSegmenterLandscapeWrapper *ptr)
             {
                 if (ptr) {
                     CFRelease(ptr);
                 }
             }
 
-              public:
-            std::mutex mutex;
-            std::unique_ptr<SelfieSegmenterLandscapeWrapper, decltype(&wrapperDeleter)> wrapper;
-
-            CoreMLSelfieSegmenterImpl() : wrapper(nullptr, &wrapperDeleter)
-            {
+            inline std::unique_ptr<SelfieSegmenterLandscapeWrapper, decltype(&wrapperDeleter)> make_unique_wrapper() {
                 NSError *error = nil;
+    
                 // ARC manages rawWrapper in this local scope
                 SelfieSegmenterLandscapeWrapper *rawWrapper = [[SelfieSegmenterLandscapeWrapper alloc] init:&error];
                 if (!rawWrapper) {
                     throw std::runtime_error([[error localizedDescription] UTF8String]);
                 }
+
                 // Transfer ownership to the C++ unique_ptr via CFBridgingRetain
-                wrapper.reset((SelfieSegmenterLandscapeWrapper *) CFBridgingRetain(rawWrapper));
+                return std::make_unique<SelfieSegmenterLandscapeWrapper, decltype(&wrapperDeleter)>(
+                    reinterpret_cast<SelfieSegmenterLandscapeWrapper *>(CFBridgingRetain(rawWrapper))
+                );
+            }
+        } // anonymous namespace
+
+        class CoreMLSelfieSegmenterImpl
+        {
+              private:
+            std::mutex mutex;
+            std::unique_ptr<SelfieSegmenterLandscapeWrapper, decltype(&wrapperDeleter)> wrapper;
+
+              public:
+            CoreMLSelfieSegmenterImpl() : wrapper(std::move(make_unique_wrapper()))
+            {
             }
 
             // Destructor is default, unique_ptr calls wrapperDeleter automatically

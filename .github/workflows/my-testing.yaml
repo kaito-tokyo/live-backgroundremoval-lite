@@ -78,6 +78,9 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
+      - name: "Install xcodegen"
+        run: "brew install xcodegen"
+
       - name: "Generate Xcodeproj"
         working-directory: "vendor/CoreMLSelfieSegmenter"
         run: "xcodegen generate"
