@@ -99,19 +99,16 @@ namespace KaitoTokyo {
                 return maskBuffer.read();
             }
         };
-
-        CoreMLSelfieSegmenter::CoreMLSelfieSegmenter() :
-            pImpl(std::make_unique<CoreMLSelfieSegmenterImpl>(getPixelCount()))
-        {}
-
-        void CoreMLSelfieSegmenter::process(const std::uint8_t *bgraData)
+    
+        void SelfieSegmenter::CoreMLSelfieSegmenter::process(const std::uint8_t *bgraData)
         {
             pImpl->process(bgraData, getPixelCount());
         }
 
-        const std::uint8_t *CoreMLSelfieSegmenter::getMask() const
+        const std::uint8_t *SelfieSegmenter::CoreMLSelfieSegmenter::getMask() const
         {
             return pImpl->getMask();
         }
+
     }  // namespace SelfieSegmenter
 }  // namespace KaitoTokyo

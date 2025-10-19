@@ -32,9 +32,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
+class CoreMLSelfieSegmenterImpl;
+
 class CoreMLSelfieSegmenter : public ISelfieSegmenter {
 private:
-	struct CoreMLSelfieSegmenterImpl;
 	std::unique_ptr<CoreMLSelfieSegmenterImpl> pImpl;
 
 public:
