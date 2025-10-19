@@ -143,7 +143,7 @@ void RenderingContext::videoTick(float seconds)
 
 	float _selfieSegmenterFps = selfieSegmenterFps;
 
-	if (_filterLevel >= FilterLevel::Segmentation) {
+	if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
 		timeSinceLastSelfieSegmentation += seconds;
 		const float interval = 1.0f / _selfieSegmenterFps;
 
@@ -270,7 +270,7 @@ void RenderingContext::videoRender()
 	if (needNewFrame) {
 		doesNextVideoRenderReceiveNewFrame = false;
 
-		if (_filterLevel >= FilterLevel::Segmentation) {
+		if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
 			try {
 				bgrxSegmenterInputReader.sync();
 			} catch (const std::exception &e) {
@@ -280,12 +280,22 @@ void RenderingContext::videoRender()
 
 		renderOriginalImage();
 
+		if (_filterLevel >= FilterLevel::Segmentation) {
+			renderSegmenterInput(bgrxOriginalImage.get());
+			if (isStrictlySyncing) {
+				bgrxSegmenterInputReader.stage(bgrxSegmenterInput);
+			}
+		}
+
 		if (_filterLevel >= FilterLevel::GuidedFilter) {
 			renderOriginalGrayscale(bgrxOriginalImage.get());
 		}
 
 		if (_filterLevel >= FilterLevel::Segmentation) {
-			renderSegmenterInput(bgrxOriginalImage.get());
+			if (isStrictlySyncing) {
+				bgrxSegmenterInputReader.sync();
+				selfieSegmenter->process(bgrxSegmenterInputReader.getBuffer().data());
+			}
 			renderSegmentationMask();
 		}
 
@@ -317,7 +327,7 @@ void RenderingContext::videoRender()
 		// Draw nothing to prevent unexpected background disclosure
 	}
 
-	if (needNewFrame && _filterLevel >= FilterLevel::Segmentation) {
+	if (needNewFrame && _filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
 		bgrxSegmenterInputReader.stage(bgrxSegmenterInput);
 	}
 }
