@@ -29,16 +29,16 @@ enum class FilterLevel : int {
 	TimeAveragedFilter = 400,
 };
 
-enum class ComputeUnit : int {
-	Default = 0,
-	CPUOnly = 1 << 16,
-	NcnnVulkanGpu = 1 << 17,
-	CoreML = 1 << 18,
-};
+namespace ComputeUnit {
+constexpr int kDefault = 0;
+constexpr int kCPUOnly = 1 << 16;
+constexpr int kNcnnVulkanGpu = 1 << 17;
+constexpr int kCoreML = 1 << 18;
+} // namespace ComputeUnit
 
 struct PluginProperty {
-	int computationUnit = static_cast<int>(ComputeUnit::Default);
-	int ncnnGpuIndex = -1;
+	int computeUnit = ComputeUnit::kDefault;
+
 	int ncnnNumThreads = 2;
 
 	FilterLevel filterLevel = FilterLevel::Default;

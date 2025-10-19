@@ -151,7 +151,7 @@ if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
   target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/CoreMLSelfieSegmenter.mm)
   target_link_libraries(
     SelfieSegmenter
-    PUBLIC "-framework CoreML" "-framework Vision" KaitoTokyo::CoreMLSelfieSegmenter
+    PUBLIC "-framework Foundation" "-framework CoreML" "-framework Vision" KaitoTokyo::CoreMLSelfieSegmenter
   )
 endif()
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)

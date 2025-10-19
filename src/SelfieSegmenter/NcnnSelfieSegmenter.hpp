@@ -49,7 +49,7 @@ private:
 	bool isAVX2Available;
 
 public:
-	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int ncnnGpuIndex, int ncnnNumThreads)
+	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int ncnnNumThreads, int ncnnGpuIndex = -1)
 		: maskBuffer(getPixelCount())
 	{
 		selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;

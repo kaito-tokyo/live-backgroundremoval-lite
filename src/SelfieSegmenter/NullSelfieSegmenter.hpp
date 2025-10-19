@@ -18,36 +18,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <array>
-#include <cstddef>
-#include <cstdint>
-#include <functional>
-#include <mutex>
-#include <vector>
+#include "ISelfieSegmenter.hpp"
+#include "MaskBuffer.hpp"
 
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
-class ISelfieSegmenter {
-protected:
-	ISelfieSegmenter() = default;
+class NullSelfieSegmenter : public ISelfieSegmenter {
+private:
+	MaskBuffer maskBuffer;
 
 public:
-	virtual ~ISelfieSegmenter() = default;
+	NullSelfieSegmenter()
+		: maskBuffer(getPixelCount())
+	{
+	}
 
-	virtual std::size_t getWidth() const noexcept = 0;
-	virtual std::size_t getHeight() const noexcept = 0;
-	virtual std::size_t getPixelCount() const noexcept = 0;
-	virtual bool isValid() const noexcept { return true; }
+	~NullSelfieSegmenter() override = default;
 
-	virtual void process(const std::uint8_t *bgraData) = 0;
+    std::size_t getWidth() const noexcept override { return 0; }
+    std::size_t getHeight() const noexcept override { return 0; }
+    std::size_t getPixelCount() const noexcept override { return 0; }
+    bool isValid() const noexcept override { return false; }
 
-	virtual const std::uint8_t *getMask() const = 0;
-
-	ISelfieSegmenter(const ISelfieSegmenter &) = delete;
-	ISelfieSegmenter &operator=(const ISelfieSegmenter &) = delete;
-	ISelfieSegmenter(ISelfieSegmenter &&) = delete;
-	ISelfieSegmenter &operator=(ISelfieSegmenter &&) = delete;
+    NullSelfieSegmenter(const NullSelfieSegmenter &) = delete;
+    NullSelfieSegmenter &operator=(const NullSelfieSegmenter &) = delete;
+    NullSelfieSegmenter(NullSelfieSegmenter &&) = delete;
+    NullSelfieSegmenter &operator=(NullSelfieSegmenter &&) = delete;
 };
 
 } // namespace SelfieSegmenter

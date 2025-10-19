@@ -88,7 +88,8 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 {
 	PluginProperty defaultProperty;
 
-	obs_data_set_default_int(data, "ncnnGpuIndex", defaultProperty.ncnnGpuIndex);
+	obs_data_set_default_int(data, "computeUnit", defaultProperty.computeUnit);
+
 	obs_data_set_default_int(data, "ncnnNumThreads", defaultProperty.ncnnNumThreads);
 
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
@@ -133,19 +134,19 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_property_t *propComputeUnit = obs_properties_add_list(
 		props, "computeUnit", obs_module_text("computeUnit"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
-	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitDefault"), static_cast<int>(ComputeUnit::Default));
+	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitDefault"), ComputeUnit::kDefault);
 
 #if NCNN_VULKAN == 1
 	int ncnnGpuCount = ncnn::get_gpu_count();
 	ncnnGpuNames.resize(ncnnGpuCount);
 	for (int i = 0; i < ncnnGpuCount; ++i) {
 		ncnnGpuNames[i] = fmt::format("{} ({})", obs_module_text("computeUnitVulkanGpu"), i);
-		obs_property_list_add_int(propNcnnGpuIndex, ncnnGpuNames[i].c_str(), static_cast<int>(ComputeUnit::NcnnVulkanGpu) + i);
+		obs_property_list_add_int(propComputeUnit, ncnnGpuNames[i].c_str(), ComputeUnit::kNcnnVulkanGpu + i);
 	}
 #endif
 
 #if HAVE_COREML_SELFIE_SEGMENTER
-	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCoreML"), static_cast<int>(ComputeUnit::CoreML));
+	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCoreML"), ComputeUnit::kCoreML);
 #endif
 
 	obs_properties_add_int_slider(props, "ncnnNumThreads", obs_module_text("ncnnNumThreads"), 0, 32, 1);
@@ -228,11 +229,11 @@ void MainPluginContext::update(obs_data_t *settings)
 
 		bool doesRenewRenderingContext = false;
 
-		int ncnnGpuIndex = obs_data_get_int(settings, "ncnnGpuIndex");
-		if (pluginProperty.ncnnGpuIndex != ncnnGpuIndex) {
+		int computeUnit = obs_data_get_int(settings, "computeUnit");
+		if (pluginProperty.computeUnit != computeUnit) {
 			doesRenewRenderingContext = true;
 		}
-		newPluginProperty.ncnnGpuIndex = ncnnGpuIndex;
+		newPluginProperty.computeUnit = computeUnit;
 
 		int ncnnNumThreads = obs_data_get_int(settings, "ncnnNumThreads");
 		if (pluginProperty.ncnnNumThreads != ncnnNumThreads) {
