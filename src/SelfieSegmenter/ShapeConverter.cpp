@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "ShapeConverter.hpp"
 
-#include <algorithm>
+#include <cstring>
 
 #if defined(_M_X64) || defined(__x86_64__)
 #define SELFIE_SEGMENTER_CHECK_AVX2
@@ -103,16 +103,17 @@ inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, flo
 	}
 }
 
+// dst and src must be 16-byte aligned
 inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
-	// Process 32 pixels at a time to maximize ILP on Apple cores
 	constexpr std::size_t FLOATS_PER_LOOP = 32;
+	constexpr std::size_t FLOATS_PER_LOOP_4X = 4;
 
 	constexpr float scale_factor = 255.0f;
 
-	std::size_t neon_limit = (pixel_count / FLOATS_PER_LOOP) * FLOATS_PER_LOOP;
 	std::size_t i = 0;
 
+	std::size_t neon_limit = (pixel_count / FLOATS_PER_LOOP) * FLOATS_PER_LOOP;
 	for (; i < neon_limit; i += FLOATS_PER_LOOP) {
 		// --- Block 1: Pixels 0-15 ---
 
@@ -187,10 +188,40 @@ inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::si
 		vst1q_u8(dst + i + 16, v_out_2);
 	}
 
-	// Handle remaining elements (scalar)
-	for (; i < pixel_count; ++i) {
-		// No rounding or clamping, rely on standard C++ (float -> u8) truncation
-		dst[i] = static_cast<std::uint8_t>(src[i] * scale_factor);
+	// --- Remainder Loop (4 pixels at a time) ---
+	std::size_t neon_limit_4x = (pixel_count / FLOATS_PER_LOOP_4X) * FLOATS_PER_LOOP_4X;
+	for (; i < neon_limit_4x; i += FLOATS_PER_LOOP_4X) {
+		float32x4_t v_f32 = vld1q_f32(src + i);
+		v_f32 = vmulq_n_f32(v_f32, scale_factor);
+		uint32x4_t v_u32 = vcvtq_u32_f32(v_f32);
+		uint16x4_t v_u16 = vmovn_u32(v_u32);
+		uint16x8_t v_u16_full = vcombine_u16(v_u16, vdup_n_u16(0));
+		uint8x8_t v_u8 = vmovn_u16(v_u16_full);
+		vst1_lane_u32(reinterpret_cast<uint32_t *>(dst + i), vreinterpret_u32_u8(v_u8), 0);
+	}
+
+	// --- Final 0-3 pixels (Temporary Buffer) ---
+	std::size_t remaining_pixels = pixel_count - i;
+	if (remaining_pixels > 0) {
+		// 1. & 2. Allocate aligned temp buffers on the stack
+		alignas(16) float temp_src[FLOATS_PER_LOOP_4X] = {0.0f};
+		alignas(4) uint8_t temp_dst[FLOATS_PER_LOOP_4X];
+
+		// 3a. Copy remaining pixels (1, 2, or 3) to temp buffer
+		std::memcpy(temp_src, src + i, remaining_pixels * sizeof(float));
+		// The rest are already 0.0f, which safely converts to 0.
+
+		// 4. Run the 4-pixel NEON conversion on the temp buffer
+		float32x4_t v_f32 = vld1q_f32(temp_src);
+		v_f32 = vmulq_n_f32(v_f32, scale_factor);
+		uint32x4_t v_u32 = vcvtq_u32_f32(v_f32);
+		uint16x4_t v_u16 = vmovn_u32(v_u32);
+		uint16x8_t v_u16_full = vcombine_u16(v_u16, vdup_n_u16(0));
+		uint8x8_t v_u8 = vmovn_u16(v_u16_full);
+		vst1_lane_u32(reinterpret_cast<uint32_t *>(temp_dst), vreinterpret_u32_u8(v_u8), 0);
+
+		// 5. Copy the valid results from temp buffer to the real destination
+		std::memcpy(dst + i, temp_dst, remaining_pixels * sizeof(std::uint8_t));
 	}
 }
 
