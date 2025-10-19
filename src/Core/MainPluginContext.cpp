@@ -352,9 +352,12 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 									    std::uint32_t targetHeight)
 {
 	PluginConfig pluginConfig(PluginConfig::load());
+
+	int computeUnit = RenderingContext::getActualComputeUnit(logger, pluginProperty.computeUnit);
+
 	auto renderingContext = std::make_shared<RenderingContext>(
 		source, logger, mainEffect, selfieSegmenterTaskQueue, pluginConfig, pluginProperty.subsamplingRate,
-		targetWidth, targetHeight, pluginProperty.computeUnit, pluginProperty.numThreads);
+		targetWidth, targetHeight, computeUnit, pluginProperty.numThreads);
 	renderingContext->applyPluginProperty(pluginProperty);
 	return renderingContext;
 }

@@ -40,51 +40,28 @@ namespace {
 inline std::unique_ptr<ISelfieSegmenter> createSelfieSegmenter(const ILogger &logger, const PluginConfig &pluginConfig,
 							       int computeUnit, int numThreads)
 {
-	if (computeUnit == ComputeUnit::kAuto) {
-		logger.info("Auto-detecting compute unit for selfie segmenter...");
-#ifdef HAVE_COREML_SELFIE_SEGMENTER
-		logger.info("Selecting CoreML on Apple platforms.");
-		computeUnit = ComputeUnit::kCoreML;
-#elif NCNN_VULKAN == 1
-		if (ncnn::get_gpu_count() > 0) {
-			logger.info("Vulkan-compatible GPU detected. Selecting ncnn Vulkan backend.");
-			computeUnit = ComputeUnit::kNcnnVulkanGpu;
-		} else {
-			logger.info("No Vulkan-compatible GPU detected. Falling back to ncnn CPU.");
-			computeUnit = ComputeUnit::kCpuOnly;
-		}
-#elif defined(__APPLE__)
-		logger.info("Falling back to ncnn CPU backend due to lack of CoreML support.");
-		computeUnit = ComputeUnit::kCpuOnly;
-#else
-		logger.info("Selecting ncnn CPU backend.");
-		computeUnit = ComputeUnit::kCpuOnly;
-#endif
-	}
 
 	if ((computeUnit & ComputeUnit::kCpuOnly) != 0) {
 		logger.info("Using ncnn CPU backend for selfie segmenter.");
 		return std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
 							     pluginConfig.selfieSegmenterBinPath.c_str(), numThreads);
+	} else if ((computeUnit & ComputeUnit::kNull) != 0) {
+		logger.info("Using null backend for selfie segmenter.");
+		return std::make_unique<NullSelfieSegmenter>();
 	} else if ((computeUnit & ComputeUnit::kNcnnVulkanGpu) != 0) {
-		int ncnnGpuIndex = computeUnit & 0xffff;
+		int ncnnGpuIndex = computeUnit & ComputeUnit::kNcnnVulkanGpuIndexMask;
 		logger.info("Using ncnn Vulkan GPU backend (GPU index: {}) for selfie segmenter.", ncnnGpuIndex);
 		return std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
 							     pluginConfig.selfieSegmenterBinPath.c_str(), numThreads,
 							     ncnnGpuIndex);
-	} else if ((computeUnit & ComputeUnit::kCoreML) != 0) {
 #ifdef HAVE_COREML_SELFIE_SEGMENTER
+	} else if ((computeUnit & ComputeUnit::kCoreML) != 0) {
 		logger.info("Using CoreML backend for selfie segmenter.");
 		return std::make_unique<CoreMLSelfieSegmenter>();
-#else
-		logger.error(
-			"CoreML backend selected for selfie segmenter, but CoreML support is not compiled in. Using null segmenter.");
-		return std::make_unique<NullSelfieSegmenter>();
 #endif
 	} else {
-		logger.error("Unknown compute unit selected for selfie segmenter: {}. Using null segmenter.",
-			     computeUnit);
-		return std::make_unique<NullSelfieSegmenter>();
+		throw std::runtime_error("Unsupported compute unit for selfie segmenter: " +
+					       std::to_string(computeUnit));
 	}
 }
 
@@ -123,7 +100,7 @@ RenderingContext::RenderingContext(obs_source_t *const _source, const BridgeUtil
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
 	  pluginConfig(_pluginConfig),
 	  subsamplingRate(_subsamplingRate),
-	  computeUnit(_computeUnit),
+	  computeUnit(getActualComputeUnit(logger, _computeUnit)),
 	  numThreads(_numThreads),
 	  selfieSegmenter(createSelfieSegmenter(logger, pluginConfig, computeUnit, numThreads)),
 	  region{0, 0, width, height},

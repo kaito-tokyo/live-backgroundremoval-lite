@@ -31,8 +31,10 @@ enum class FilterLevel : int {
 
 namespace ComputeUnit {
 constexpr int kAuto = 0;
+constexpr int kNull = 0xffff;
 constexpr int kCpuOnly = 1 << 16;
 constexpr int kNcnnVulkanGpu = 1 << 17;
+constexpr int kNcnnVulkanGpuIndexMask = 0xffff;
 constexpr int kCoreML = 1 << 18;
 } // namespace ComputeUnit
 

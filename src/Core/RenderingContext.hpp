@@ -121,6 +121,68 @@ private:
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 public:
+	static int getActualComputeUnit(const BridgeUtils::ILogger &logger, int computeUnit)
+	{
+
+		if (computeUnit == ComputeUnit::kAuto) {
+			logger.info("Auto-detecting compute unit for selfie segmenter...");
+#ifdef HAVE_COREML_SELFIE_SEGMENTER
+			logger.info("Selecting CoreML on Apple platforms.");
+			return ComputeUnit::kCoreML;
+#elif defined(NCNN_VULKAN)
+#if NCNN_VULKAN == 1
+			if (ncnn::get_gpu_count() > 0) {
+				logger.info("Vulkan-compatible GPU detected. Selecting ncnn Vulkan backend with GPU index 0.");
+				return ComputeUnit::kNcnnVulkanGpu + 0;
+			} else {
+				logger.info("No Vulkan-compatible GPU detected. Falling back to ncnn CPU.");
+				return ComputeUnit::kCpuOnly;
+			}
+#else
+			logger.info("ncnn built without Vulkan support. Falling back to ncnn CPU.");
+			return ComputeUnit::kCpuOnly;
+#endif
+#elif defined(__APPLE__)
+			logger.info("Falling back to ncnn CPU backend due to lack of CoreML support.");
+			return ComputeUnit::kCpuOnly;
+#else
+			logger.info("Selecting ncnn CPU backend.");
+			return ComputeUnit::kCpuOnly;
+#endif
+		} else if ((computeUnit & ComputeUnit::kNcnnVulkanGpu) != 0) {
+#ifdef NCNN_VULKAN
+#if NCNN_VULKAN == 1
+			int ncnnGpuCount = ncnn::get_gpu_count();
+			if (ncnnGpuCount == 0) {
+				logger.error(
+					"ncnn Vulkan GPU backend selected, but no Vulkan-compatible GPU detected. Using null.");
+				return ComputeUnit::kNull;
+			}
+
+			int ncnnGpuIndex = computeUnit & ComputeUnit::kNcnnVulkanGpuIndexMask;
+			if (ncnnGpuIndex >= ncnnGpuCount) {
+				logger.error(
+					"ncnn Vulkan GPU backend selected with invalid GPU index {} (available GPUs: {}). Using null.",
+					ncnnGpuIndex, ncnnGpuCount);
+				return ComputeUnit::kNull;
+			}
+
+			return computeUnit;
+#else
+			logger.error(
+				"ncnn Vulkan GPU backend selected, but ncnn is built without Vulkan support. Using null segmenter.");
+			return ComputeUnit::kNull;
+#endif
+#else
+			logger.error(
+				"ncnn Vulkan GPU backend selected, but ncnn is built without Vulkan support. Using null.");
+			return ComputeUnit::kNull;
+#endif
+		} else {
+			return computeUnit;
+		}
+	}
+
 	RenderingContext(obs_source_t *const source, const BridgeUtils::ILogger &logger, const MainEffect &mainEffect,
 			 BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
 			 const std::uint32_t subsamplingRate, const std::uint32_t width, const std::uint32_t height,
