@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#pragma once
+
 #include <cstddef>
 #include <cstdint>
 
@@ -25,7 +27,7 @@ namespace SelfieSegmenter {
 void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel, const std::uint8_t *bgra_data,
 			       const std::size_t pixelCount);
 
-inline void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_count);
+void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_count);
 
 } // namespace SelfieSegmenter
 } // namespace KaitoTokyo

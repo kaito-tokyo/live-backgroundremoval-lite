@@ -52,10 +52,10 @@ inline void copy_r8_bgra_to_float_chw_naive(float *rChannel, float *gChannel, fl
 	}
 }
 
-inline void copy_float_to_clamped_r8_naive(std::uint8_t *dstPtr, float *srcPtr, std::size_t pixelCount)
+inline void copy_float32_to_r8_naive(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
-	for (std::size_t i = 0; i < pixelCount; i++) {
-		dstPtr[i] = static_cast<std::uint8_t>(std::clamp(srcPtr[i] * 255.f, 0.f, 255.f));
+	for (std::size_t i = 0; i < pixel_count; i++) {
+		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
 	}
 }
 
@@ -293,7 +293,7 @@ void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel
 #endif
 }
 
-inline void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
 #if defined(SELFIE_SEGMENTER_HAVE_NEON)
 	copy_float32_to_r8_neon(dst, src, pixel_count);
