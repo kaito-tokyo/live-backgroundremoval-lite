@@ -16,33 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "NcnnSelfieSegmenter.hpp"
-
-#include "ShapeConverter.hpp"
+#include <cstddef>
+#include <cstdint>
 
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
-void NcnnSelfieSegmenter::process(const std::uint8_t *bgraData)
-{
-	if (!bgraData) {
-		throw std::invalid_argument("bgraData is null");
-	}
-
-	copy_r8_bgra_to_float_chw(inputMat.channel(0), inputMat.channel(1), inputMat.channel(2), bgraData,
-				  getPixelCount());
-
-	ncnn::Extractor ex = selfieSegmenterNet.create_extractor();
-	ex.input("in0", inputMat);
-	ex.extract("out0", outputMat);
-
-	const float *srcPtr = outputMat.channel(0);
-	maskBuffer.write([this, srcPtr](std::vector<std::uint8_t> &mask) {
-		for (std::size_t i = 0; i < getPixelCount(); i++) {
-			mask[i] = static_cast<std::uint8_t>(std::max(0.f, std::min(255.f, srcPtr[i] * 255.f)));
-		}
-	});
-}
+void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel, const std::uint8_t *bgra_data,
+			       const std::size_t pixelCount);
 
 } // namespace SelfieSegmenter
 } // namespace KaitoTokyo

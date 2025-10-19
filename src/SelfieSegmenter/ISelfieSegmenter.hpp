@@ -26,16 +26,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <vector>
 
 namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
+namespace SelfieSegmenter {
 
-class SelfieSegmenterMaskBuffer {
+class MaskBuffer {
 private:
 	std::array<std::vector<std::uint8_t>, 2> buffers;
 	std::atomic<std::size_t> readableIndex;
 	mutable std::mutex bufferMutex;
 
 public:
-	explicit SelfieSegmenterMaskBuffer(std::size_t size)
+	explicit MaskBuffer(std::size_t size)
 		: buffers{std::vector<std::uint8_t>(size), std::vector<std::uint8_t>(size)},
 		  readableIndex(0)
 	{
@@ -52,10 +52,10 @@ public:
 
 	const std::vector<std::uint8_t> &read() const { return buffers[readableIndex.load(std::memory_order_acquire)]; }
 
-	SelfieSegmenterMaskBuffer(const SelfieSegmenterMaskBuffer &) = delete;
-	SelfieSegmenterMaskBuffer &operator=(const SelfieSegmenterMaskBuffer &) = delete;
-	SelfieSegmenterMaskBuffer(SelfieSegmenterMaskBuffer &&) = delete;
-	SelfieSegmenterMaskBuffer &operator=(SelfieSegmenterMaskBuffer &&) = delete;
+	MaskBuffer(const MaskBuffer &) = delete;
+	MaskBuffer &operator=(const MaskBuffer &) = delete;
+	MaskBuffer(MaskBuffer &&) = delete;
+	MaskBuffer &operator=(MaskBuffer &&) = delete;
 };
 
 class ISelfieSegmenter {
@@ -79,5 +79,5 @@ public:
 	ISelfieSegmenter &operator=(ISelfieSegmenter &&) = delete;
 };
 
-} // namespace LiveBackgroundRemovalLite
+} // namespace SelfieSegmenter
 } // namespace KaitoTokyo
