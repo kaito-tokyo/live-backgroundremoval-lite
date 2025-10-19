@@ -40,6 +40,10 @@ namespace SelfieSegmenter {
 
 class NcnnSelfieSegmenter : public ISelfieSegmenter {
 private:
+	constexpr static std::size_t WIDTH = 256;
+	constexpr static std::size_t HEIGHT = 144;
+	constexpr static std::size_t PIXEL_COUNT = WIDTH * HEIGHT;
+
 	MaskBuffer maskBuffer;
 
 	ncnn::Net selfieSegmenterNet;
@@ -71,10 +75,9 @@ public:
 
 	~NcnnSelfieSegmenter() override = default;
 
-	std::size_t getWidth() const noexcept override { return 256; }
-	std::size_t getHeight() const noexcept override { return 144; }
-	std::size_t getPixelCount() const noexcept override { return 256 * 144; }
-	const char *getBackendName() const noexcept override { return "ncnn"; }
+	std::size_t getWidth() const noexcept override { return WIDTH; }
+	std::size_t getHeight() const noexcept override { return HEIGHT; }
+	std::size_t getPixelCount() const noexcept override { return PIXEL_COUNT; }
 
 	void process(const std::uint8_t *bgraData) override;
 
