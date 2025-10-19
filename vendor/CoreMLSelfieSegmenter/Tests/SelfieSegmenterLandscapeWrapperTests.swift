@@ -56,11 +56,11 @@ final class SelfieSegmenterLandscapeWrapperTests: XCTestCase {
     let inputHandler = VNImageRequestHandler(cgImage: cgImage)
 
     // 2. Perform segmentation
-    // Note: perform(with:) can throw and returns a nullable pointer (NULL).
-    let resultFloatPtr = try segmenter.perform(with: inputHandler)
+    // Note: perform(with:) can throw and returns a nullable MLMultiArray.
+    let resultArray = try segmenter.perform(with: inputHandler)
 
-    // 3. Check that the returned pointer is not nil (NULL)
-    XCTAssertNotNil(resultFloatPtr, "perform(with:) returned a nil pointer.")
+    // 3. Check that the returned MLMultiArray is not nil
+    XCTAssertNotNil(resultArray, "perform(with:) returned nil.")
 
     // 4. Load the ground truth mask
     guard let nsMask = Bundle(for: type(of: self)).image(forResource: "selfie001_mask"),
@@ -84,17 +84,15 @@ final class SelfieSegmenterLandscapeWrapperTests: XCTestCase {
       throw TestError.maskDataExtractionFailed
     }
 
-    // 6. Convert model output (float*) to [UInt8] array
+    // 6. Convert MLMultiArray to [UInt8] array
     var modelMaskData = [UInt8](repeating: 0, count: pixelCount)
+    let floatPtr = UnsafeMutableBufferPointer<Float>(
+      start: resultArray.dataPointer.assumingMemoryBound(to: Float.self),
+      count: pixelCount
+    )
     for i in 0..<pixelCount {
-      let floatValue = resultFloatPtr[i]
-
-      // --- ⚠️ Assumption about model output range ---
-      // Assuming the model returns floats in the 0.0-1.0 range, multiply by 255.
-      // If the model returns 0.0-255.0, the * 255.0 is not needed.
+      let floatValue = floatPtr[i]
       let scaledValue = floatValue * 255.0
-
-      // Clip the value to a 0-255 UInt8
       modelMaskData[i] = UInt8(min(max(scaledValue, 0.0), 255.0))
     }
 

@@ -80,15 +80,16 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
         _cachedPixelBuffer = NULL;
         const OSType pixelFormat = kCVPixelFormatType_32BGRA;
         NSDictionary *attrs = @{
-            (NSString *)kCVPixelBufferCGImageCompatibilityKey: @YES,
-            (NSString *)kCVPixelBufferCGBitmapContextCompatibilityKey: @YES
+            (NSString *) kCVPixelBufferCGImageCompatibilityKey: @YES,
+            (NSString *) kCVPixelBufferCGBitmapContextCompatibilityKey: @YES
         };
         CVReturn status = CVPixelBufferCreate(kCFAllocatorDefault, MODEL_INPUT_WIDTH, MODEL_INPUT_HEIGHT, pixelFormat,
-                                             (__bridge CFDictionaryRef)attrs, &_cachedPixelBuffer);
+                                              (__bridge CFDictionaryRef) attrs, &_cachedPixelBuffer);
         if (status != kCVReturnSuccess || !_cachedPixelBuffer) {
             if (error) {
-                *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-101
-                                         userInfo:@{NSLocalizedDescriptionKey: @"Failed to allocate cached CVPixelBuffer"}];
+                *error =
+                    [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-101
+                                    userInfo:@{NSLocalizedDescriptionKey: @"Failed to allocate cached CVPixelBuffer"}];
             }
             return nil;
         }
@@ -161,6 +162,15 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
 
     MLMultiArray *multiArray = featureObs.featureValue.multiArrayValue;
 
+    // Step 5: Check if multiArray is NULL
+    if (!multiArray) {
+        if (error) {
+            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-6
+                                     userInfo:@{NSLocalizedDescriptionKey: @"'segmentationMask' MLMultiArray is NULL"}];
+        }
+        return NULL;
+    }
+
     return multiArray;
 }
 
@@ -188,16 +198,18 @@ static NSString *const SelfieSegmenterLandscapeWrapperErrorDomain = @"SelfieSegm
     if (!baseAddress) {
         CVPixelBufferUnlockBaseAddress(_cachedPixelBuffer, 0);
         if (error) {
-            *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-12
-                                     userInfo:@{NSLocalizedDescriptionKey: @"Failed to get base address of CVPixelBuffer"}];
+            *error =
+                [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-12
+                                userInfo:@{NSLocalizedDescriptionKey: @"Failed to get base address of CVPixelBuffer"}];
         }
         return NULL;
     }
     memcpy(baseAddress, bgraData, MODEL_INPUT_HEIGHT * MODEL_INPUT_WIDTH * 4);
     CVPixelBufferUnlockBaseAddress(_cachedPixelBuffer, 0);
-    
+
     // Step 3: Create VNImageRequestHandler
-    VNImageRequestHandler *handler = [[VNImageRequestHandler alloc] initWithCVPixelBuffer:_cachedPixelBuffer options:@{}];
+    VNImageRequestHandler *handler = [[VNImageRequestHandler alloc] initWithCVPixelBuffer:_cachedPixelBuffer
+                                                                                  options:@{}];
     if (!handler) {
         if (error) {
             *error = [NSError errorWithDomain:SelfieSegmenterLandscapeWrapperErrorDomain code:-13
