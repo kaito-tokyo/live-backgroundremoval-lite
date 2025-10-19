@@ -81,7 +81,9 @@ public:
 	void process(const std::uint8_t *bgraData) override
 	{
 		if (!bgraData) {
-			throw std::invalid_argument("bgraData is null");
+			throw std::invalid_argument(
+				"NcnnSelfieSegmenter::process received null bgraData; expected non-null pointer to 4 * pixelCount (" +
+				std::to_string(getPixelCount()) + ") bytes");
 		}
 
 		copy_r8_bgra_to_float_chw(inputMat.channel(0), inputMat.channel(1), inputMat.channel(2), bgraData,
