@@ -36,7 +36,8 @@ namespace KaitoTokyo {
     namespace SelfieSegmenter {
         namespace {
             struct WrapperDeleter {
-                void operator()(SelfieSegmenterLandscapeWrapper *ptr) const {
+                void operator()(SelfieSegmenterLandscapeWrapper *ptr) const
+                {
                     if (ptr) {
                         CFRelease(ptr);
                     }
@@ -67,14 +68,15 @@ namespace KaitoTokyo {
               public:
             CoreMLSelfieSegmenterImpl() : wrapper(std::move(make_unique_wrapper())) {}
 
-            void process(const std::uint8_t *bgraData) {
+            void process(const std::uint8_t *bgraData)
+            {
                 const size_t pixelCount = getPixelCount();
 
                 NSError *error = nil;
                 MLMultiArray *maskArray = [wrapper.get() performWithBGRAData:bgraData error:&error];
                 if (!maskArray) {
                     std::string errMsg = error ? [[error localizedDescription] UTF8String]
-                                            : "Unknown error in CoreML segmentation";
+                                               : "Unknown error in CoreML segmentation";
                     throw std::runtime_error(errMsg);
                 }
 
