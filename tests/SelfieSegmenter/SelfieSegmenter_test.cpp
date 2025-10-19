@@ -16,9 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <NcnnSelfieSegmenter.hpp>
-
 #include <gtest/gtest.h>
+
+#include <NcnnSelfieSegmenter.hpp>
 
 #include <vector>
 #include <string>
@@ -31,6 +31,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #endif
 
 #include <opencv2/opencv.hpp>
+
+using namespace KaitoTokyo::SelfieSegmenter;
 
 // JPEG(BGR) -> BGRA loader using OpenCV
 static bool load_jpg_bgra(const std::string &filename, std::vector<uint8_t> &out_bgra, int &width, int &height)
@@ -45,8 +47,6 @@ static bool load_jpg_bgra(const std::string &filename, std::vector<uint8_t> &out
 	out_bgra.assign(img_bgra.data, img_bgra.data + width * height * 4);
 	return true;
 }
-
-using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 
 const char kParamPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
 const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
