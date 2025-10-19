@@ -70,7 +70,7 @@ jobs:
       - name: "Run tests"
         run: "ctest --preset macos --verbose"
 
-  TestCoreMLSelfierSegmenterOnMacOS:
+  TestCoreMLSelfieSegmenterOnMacOS:
     runs-on: "macos-15"
     timeout-minutes: 30
 
