@@ -157,7 +157,7 @@ public:
 	MainEffect &operator=(MainEffect &&) = delete;
 
 	void drawSource(const BridgeUtils::unique_gs_texture_t &targetTexture,
-			const obs_source_t *source) const noexcept
+			obs_source_t *const source) const noexcept
 	{
 		TextureRenderGuard textureRenderGuard(targetTexture);
 
