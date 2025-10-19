@@ -118,7 +118,7 @@ struct TextureRenderGuard {
 
 class MainEffect {
 public:
-	const BridgeUtils::unique_gs_effect_t effect = nullptr;
+	const BridgeUtils::unique_gs_effect_t gsEffect = nullptr;
 
 	gs_eparam_t *const textureImage = nullptr;
 
@@ -136,18 +136,18 @@ public:
 	gs_eparam_t *const floatAlpha = nullptr;
 
 	MainEffect(const BridgeUtils::unique_bfree_char_t &effectPath, const BridgeUtils::ILogger &logger)
-		: effect(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
-		  textureImage(main_effect_detail::getEffectParam(effect, "image", logger)),
-		  floatTexelWidth(main_effect_detail::getEffectParam(effect, "texelWidth", logger)),
-		  floatTexelHeight(main_effect_detail::getEffectParam(effect, "texelHeight", logger)),
-		  textureImage1(main_effect_detail::getEffectParam(effect, "image1", logger)),
-		  textureImage2(main_effect_detail::getEffectParam(effect, "image2", logger)),
-		  textureImage3(main_effect_detail::getEffectParam(effect, "image3", logger)),
-		  floatEps(main_effect_detail::getEffectParam(effect, "eps", logger)),
-		  floatGamma(main_effect_detail::getEffectParam(effect, "gamma", logger)),
-		  floatLowerBound(main_effect_detail::getEffectParam(effect, "lowerBound", logger)),
-		  floatUpperBound(main_effect_detail::getEffectParam(effect, "upperBound", logger)),
-		  floatAlpha(main_effect_detail::getEffectParam(effect, "alpha", logger))
+		: gsEffect(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
+		  textureImage(main_effect_detail::getEffectParam(gsEffect, "image", logger)),
+		  floatTexelWidth(main_effect_detail::getEffectParam(gsEffect, "texelWidth", logger)),
+		  floatTexelHeight(main_effect_detail::getEffectParam(gsEffect, "texelHeight", logger)),
+		  textureImage1(main_effect_detail::getEffectParam(gsEffect, "image1", logger)),
+		  textureImage2(main_effect_detail::getEffectParam(gsEffect, "image2", logger)),
+		  textureImage3(main_effect_detail::getEffectParam(gsEffect, "image3", logger)),
+		  floatEps(main_effect_detail::getEffectParam(gsEffect, "eps", logger)),
+		  floatGamma(main_effect_detail::getEffectParam(gsEffect, "gamma", logger)),
+		  floatLowerBound(main_effect_detail::getEffectParam(gsEffect, "lowerBound", logger)),
+		  floatUpperBound(main_effect_detail::getEffectParam(gsEffect, "upperBound", logger)),
+		  floatAlpha(main_effect_detail::getEffectParam(gsEffect, "alpha", logger))
 	{
 	}
 
@@ -156,231 +156,244 @@ public:
 	MainEffect &operator=(const MainEffect &) = delete;
 	MainEffect &operator=(MainEffect &&) = delete;
 
-	void draw(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture) const noexcept
+	void drawSource(const BridgeUtils::unique_gs_texture_t &targetTexture,
+			obs_source_t *const source) const noexcept
 	{
-		while (gs_effect_loop(effect.get(), "Draw")) {
-			gs_effect_set_texture(textureImage, sourceTexture);
-			gs_draw_sprite(nullptr, 0, width, height);
+		TextureRenderGuard textureRenderGuard(targetTexture);
+
+		obs_source_t *target = obs_filter_get_target(source);
+		gs_set_render_target_with_color_space(targetTexture.get(), nullptr, GS_CS_709_EXTENDED);
+		while (gs_effect_loop(gsEffect.get(), "Draw")) {
+			obs_source_video_render(target);
 		}
 	}
 
-	void drawWithMask(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
-			  gs_texture_t *maskTexture) const noexcept
+	void drawRoi(const BridgeUtils::unique_gs_texture_t &targetTexture,
+		     const BridgeUtils::unique_gs_texture_t &sourceTexture, const vec4 *color,
+		     const std::uint32_t width = 0, const std::uint32_t height = 0, const float x = 0.0f,
+		     const float y = 0.0f) const noexcept
 	{
-		while (gs_effect_loop(effect.get(), "DrawWithMask")) {
-			gs_effect_set_texture(textureImage, sourceTexture);
-			gs_effect_set_texture(textureImage1, maskTexture);
-			gs_draw_sprite(nullptr, 0, width, height);
+		TextureRenderGuard renderTargetGuard(targetTexture);
+
+		gs_clear(GS_CLEAR_COLOR, color, 1.0f, 0);
+		gs_matrix_translate3f(-x, -y, 0.0f);
+
+		while (gs_effect_loop(gsEffect.get(), "Draw")) {
+			gs_effect_set_texture(textureImage, sourceTexture.get());
+			gs_draw_sprite(sourceTexture.get(), 0, static_cast<uint32_t>(width),
+				       static_cast<uint32_t>(height));
 		}
 	}
 
-	void drawWithRefinedMask(std::uint32_t width, std::uint32_t height, gs_texture_t *sourceTexture,
-				 gs_texture_t *maskTexture, double gamma, double lowerBound,
-				 double upperBoundMargin) const noexcept
+	void convertToGrayscale(const BridgeUtils::unique_gs_texture_t &targetTexture,
+				const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
-		while (gs_effect_loop(effect.get(), "DrawWithRefinedMask")) {
-			gs_effect_set_texture(textureImage, sourceTexture);
-			gs_effect_set_texture(textureImage1, maskTexture);
+		TextureRenderGuard renderTargetGuard(targetTexture);
 
-			gs_effect_set_float(floatGamma, static_cast<float>(gamma));
-			gs_effect_set_float(floatLowerBound, static_cast<float>(lowerBound));
-			gs_effect_set_float(floatUpperBound, static_cast<float>(1.0 - upperBoundMargin));
-
-			gs_draw_sprite(nullptr, 0, width, height);
+		while (gs_effect_loop(gsEffect.get(), "ConvertToGrayscale")) {
+			gs_effect_set_texture(textureImage, sourceTexture.get());
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
 
-	void resampleByNearestR8(std::uint32_t targetWidth, std::uint32_t targetHeight, gs_texture_t *targetTexture,
-				 gs_texture_t *sourceTexture) const noexcept
+	void resampleByNearestR8(const BridgeUtils::unique_gs_texture_t &targetTexture,
+				 const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
-		RenderTargetGuard renderTargetGuard;
-		TransformStateGuard transformStateGuard;
+		TextureRenderGuard renderTargetGuard(targetTexture);
 
-		gs_set_viewport(0, 0, targetWidth, targetHeight);
-		gs_ortho(0.0f, static_cast<float>(targetWidth), 0.0f, static_cast<float>(targetHeight), -100.0f,
-			 100.0f);
-		gs_matrix_identity();
-
-		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "ResampleByNearestR8")) {
-			gs_effect_set_texture(textureImage, sourceTexture);
-			gs_draw_sprite(nullptr, 0, targetWidth, targetHeight);
+		while (gs_effect_loop(gsEffect.get(), "ResampleByNearestR8")) {
+			gs_effect_set_texture(textureImage, sourceTexture.get());
+			gs_draw_sprite(targetTexture.get(), 0, 0u, 0u);
 		}
 	}
 
-	void convertToGrayscale(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
-				gs_texture_t *sourceTexture) const noexcept
+	void applyBoxFilterR8KS17(const BridgeUtils::unique_gs_texture_t &targetTexture,
+				  const BridgeUtils::unique_gs_texture_t &sourceTexture,
+				  const BridgeUtils::unique_gs_texture_t &intermediateTexture) const noexcept
 	{
-		RenderTargetGuard renderTargetGuard;
-		TransformStateGuard transformStateGuard;
+		{
+			TextureRenderGuard renderTargetGuard(intermediateTexture);
 
-		gs_set_viewport(0, 0, width, height);
-		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
-		gs_matrix_identity();
+			float texelWidth = 1.0f / static_cast<float>(gs_texture_get_width(sourceTexture.get()));
 
-		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "ConvertToGrayscale")) {
-			gs_effect_set_texture(textureImage, sourceTexture);
-			gs_draw_sprite(nullptr, 0, width, height);
+			while (gs_effect_loop(gsEffect.get(), "HorizontalBoxFilterR8KS17")) {
+				gs_effect_set_texture(textureImage, sourceTexture.get());
+				gs_effect_set_float(floatTexelWidth, texelWidth);
+				gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
+			}
+		}
+
+		{
+			TextureRenderGuard renderTargetGuard(targetTexture);
+
+			float texelHeight = 1.0f / static_cast<float>(gs_texture_get_height(intermediateTexture.get()));
+
+			while (gs_effect_loop(gsEffect.get(), "VerticalBoxFilterR8KS17")) {
+				gs_effect_set_texture(textureImage, intermediateTexture.get());
+				gs_effect_set_float(floatTexelHeight, texelHeight);
+				gs_draw_sprite(intermediateTexture.get(), 0, 0u, 0u);
+			}
 		}
 	}
 
-	void applyBoxFilterR8KS17(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
-				  gs_texture_t *sourceTexture, gs_texture_t *temporaryTexture1) const noexcept
+	void applyBoxFilterWithMulR8KS17(const BridgeUtils::unique_gs_texture_t &targetTexture,
+					 const BridgeUtils::unique_gs_texture_t &sourceTexture1,
+					 const BridgeUtils::unique_gs_texture_t &sourceTexture2,
+					 const BridgeUtils::unique_gs_texture_t &intermediateTexture) const noexcept
 	{
-		RenderTargetGuard renderTargetGuard;
-		TransformStateGuard transformStateGuard;
+		{
+			TextureRenderGuard renderTargetGuard(intermediateTexture);
 
-		gs_set_viewport(0, 0, width, height);
-		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
-		gs_matrix_identity();
+			float texelWidth = 1.0f / static_cast<float>(gs_texture_get_width(sourceTexture1.get()));
 
-		const float texelWidth = 1.0f / static_cast<float>(width);
-		const float texelHeight = 1.0f / static_cast<float>(height);
-
-		gs_set_render_target_with_color_space(temporaryTexture1, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "HorizontalBoxFilterR8KS17")) {
-			gs_effect_set_texture(textureImage, sourceTexture);
-			gs_effect_set_float(floatTexelWidth, texelWidth);
-			gs_draw_sprite(nullptr, 0, width, height);
+			while (gs_effect_loop(gsEffect.get(), "HorizontalBoxFilterWithMulR8KS17")) {
+				gs_effect_set_texture(textureImage, sourceTexture1.get());
+				gs_effect_set_texture(textureImage1, sourceTexture2.get());
+				gs_effect_set_float(floatTexelWidth, texelWidth);
+				gs_draw_sprite(sourceTexture1.get(), 0, 0u, 0u);
+			}
 		}
 
-		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "VerticalBoxFilterR8KS17")) {
-			gs_effect_set_texture(textureImage, temporaryTexture1);
-			gs_effect_set_float(floatTexelHeight, texelHeight);
-			gs_draw_sprite(nullptr, 0, width, height);
+		{
+			TextureRenderGuard renderTargetGuard(targetTexture);
+
+			float texelHeight = 1.0f / static_cast<float>(gs_texture_get_height(intermediateTexture.get()));
+
+			while (gs_effect_loop(gsEffect.get(), "VerticalBoxFilterR8KS17")) {
+				gs_effect_set_texture(textureImage, intermediateTexture.get());
+				gs_effect_set_float(floatTexelHeight, texelHeight);
+				gs_draw_sprite(intermediateTexture.get(), 0, 0u, 0u);
+			}
 		}
 	}
 
-	void applyBoxFilterWithMulR8KS17(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
-					 gs_texture_t *source1Texture, gs_texture_t *source2Texture,
-					 gs_texture_t *temporaryTexture1) const noexcept
+	void applyBoxFilterWithSqR8KS17(const BridgeUtils::unique_gs_texture_t &targetTexture,
+					const BridgeUtils::unique_gs_texture_t &sourceTexture,
+					const BridgeUtils::unique_gs_texture_t &intermediateTexture) const noexcept
 	{
-		RenderTargetGuard renderTargetGuard;
-		TransformStateGuard transformStateGuard;
+		{
+			TextureRenderGuard renderTargetGuard(intermediateTexture);
 
-		gs_set_viewport(0, 0, width, height);
-		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
-		gs_matrix_identity();
+			float texelWidth = 1.0f / static_cast<float>(gs_texture_get_width(sourceTexture.get()));
 
-		const float texelWidth = 1.0f / static_cast<float>(width);
-		const float texelHeight = 1.0f / static_cast<float>(height);
-
-		gs_set_render_target_with_color_space(temporaryTexture1, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "HorizontalBoxFilterWithMulR8KS17")) {
-			gs_effect_set_texture(textureImage, source1Texture);
-			gs_effect_set_texture(textureImage1, source2Texture);
-
-			gs_effect_set_float(floatTexelWidth, texelWidth);
-
-			gs_draw_sprite(nullptr, 0, width, height);
+			while (gs_effect_loop(gsEffect.get(), "HorizontalBoxFilterWithSqR8KS17")) {
+				gs_effect_set_texture(textureImage, sourceTexture.get());
+				gs_effect_set_float(floatTexelWidth, texelWidth);
+				gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
+			}
 		}
 
-		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "VerticalBoxFilterR8KS17")) {
-			gs_effect_set_texture(textureImage, temporaryTexture1);
-			gs_effect_set_float(floatTexelHeight, texelHeight);
-			gs_draw_sprite(nullptr, 0, width, height);
+		{
+			TextureRenderGuard renderTargetGuard(targetTexture);
+
+			float texelHeight = 1.0f / static_cast<float>(gs_texture_get_height(intermediateTexture.get()));
+
+			while (gs_effect_loop(gsEffect.get(), "VerticalBoxFilterR8KS17")) {
+				gs_effect_set_texture(textureImage, intermediateTexture.get());
+				gs_effect_set_float(floatTexelHeight, texelHeight);
+				gs_draw_sprite(intermediateTexture.get(), 0, 0u, 0u);
+			}
 		}
 	}
 
-	void applyBoxFilterWithSqR8KS17(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
-					gs_texture_t *sourceTexture, gs_texture_t *temporaryTexture1) const noexcept
+	void calculateGuidedFilterAAndB(const BridgeUtils::unique_gs_texture_t &targetATexture,
+					const BridgeUtils::unique_gs_texture_t &targetBTexture,
+					const BridgeUtils::unique_gs_texture_t &sourceMeanGuideSqTexture,
+					const BridgeUtils::unique_gs_texture_t &sourceMeanGuideTexture,
+					const BridgeUtils::unique_gs_texture_t &sourceMeanGuideSourceTexture,
+					const BridgeUtils::unique_gs_texture_t &sourceMeanSourceTexture,
+					const float eps) const noexcept
 	{
-		RenderTargetGuard renderTargetGuard;
-		TransformStateGuard transformStateGuard;
+		{
+			TextureRenderGuard renderTargetGuard(targetATexture);
 
-		gs_set_viewport(0, 0, width, height);
-		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
-		gs_matrix_identity();
+			while (gs_effect_loop(gsEffect.get(), "CalculateGuidedFilterA")) {
+				gs_effect_set_texture(textureImage, sourceMeanGuideSqTexture.get());
+				gs_effect_set_texture(textureImage1, sourceMeanGuideTexture.get());
+				gs_effect_set_texture(textureImage2, sourceMeanGuideSourceTexture.get());
+				gs_effect_set_texture(textureImage3, sourceMeanSourceTexture.get());
+				gs_effect_set_float(floatEps, eps);
 
-		const float texelWidth = 1.0f / static_cast<float>(width);
-		const float texelHeight = 1.0f / static_cast<float>(height);
-
-		gs_set_render_target_with_color_space(temporaryTexture1, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "HorizontalBoxFilterWithSqR8KS17")) {
-			gs_effect_set_texture(textureImage, sourceTexture);
-			gs_effect_set_float(floatTexelWidth, texelWidth);
-			gs_draw_sprite(nullptr, 0, width, height);
+				gs_draw_sprite(sourceMeanGuideSqTexture.get(), 0, 0u, 0u);
+			}
 		}
 
-		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "VerticalBoxFilterR8KS17")) {
-			gs_effect_set_texture(textureImage, temporaryTexture1);
+		{
+			TextureRenderGuard renderTargetGuard(targetBTexture);
 
-			gs_effect_set_float(floatTexelHeight, texelHeight);
+			while (gs_effect_loop(gsEffect.get(), "CalculateGuidedFilterB")) {
+				gs_effect_set_texture(textureImage, targetATexture.get());
+				gs_effect_set_texture(textureImage1, sourceMeanSourceTexture.get());
+				gs_effect_set_texture(textureImage2, sourceMeanGuideTexture.get());
 
-			gs_draw_sprite(nullptr, 0, width, height);
+				gs_draw_sprite(targetATexture.get(), 0, 0u, 0u);
+			}
 		}
 	}
 
-	void calculateGuidedFilterAAndB(std::uint32_t width, std::uint32_t height, gs_texture_t *targetATexture,
-					gs_texture_t *targetBTexture, gs_texture_t *sourceMeanGuideSqTexture,
-					gs_texture_t *sourceMeanGuideTexture,
-					gs_texture_t *sourceMeanGuideSourceTexture,
-					gs_texture_t *sourceMeanSourceTexture, float eps) const noexcept
+	void finalizeGuidedFilter(const BridgeUtils::unique_gs_texture_t &targetTexture,
+				  const BridgeUtils::unique_gs_texture_t &sourceGuideTexture,
+				  const BridgeUtils::unique_gs_texture_t &sourceATexture,
+				  const BridgeUtils::unique_gs_texture_t &sourceBTexture) const noexcept
 	{
-		RenderTargetGuard renderTargetGuard;
-		TransformStateGuard transformStateGuard;
+		TextureRenderGuard renderTargetGuard(targetTexture);
 
-		gs_set_viewport(0, 0, width, height);
-		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
-		gs_matrix_identity();
+		while (gs_effect_loop(gsEffect.get(), "FinalizeGuidedFilter")) {
+			gs_effect_set_texture(textureImage, sourceGuideTexture.get());
+			gs_effect_set_texture(textureImage1, sourceATexture.get());
+			gs_effect_set_texture(textureImage2, sourceBTexture.get());
 
-		gs_set_render_target_with_color_space(targetATexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "CalculateGuidedFilterA")) {
-			gs_effect_set_texture(textureImage, sourceMeanGuideSqTexture);
-			gs_effect_set_texture(textureImage1, sourceMeanGuideTexture);
-			gs_effect_set_texture(textureImage2, sourceMeanGuideSourceTexture);
-			gs_effect_set_texture(textureImage3, sourceMeanSourceTexture);
-			gs_effect_set_float(floatEps, eps);
-
-			gs_draw_sprite(nullptr, 0, width, height);
-		}
-
-		gs_set_render_target_with_color_space(targetBTexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "CalculateGuidedFilterB")) {
-			gs_effect_set_texture(textureImage, targetATexture);
-			gs_effect_set_texture(textureImage1, sourceMeanSourceTexture);
-			gs_effect_set_texture(textureImage2, sourceMeanGuideTexture);
-
-			gs_draw_sprite(nullptr, 0, width, height);
-		}
-	}
-
-	void finalizeGuidedFilter(std::uint32_t width, std::uint32_t height, gs_texture_t *targetTexture,
-				  gs_texture_t *sourceGuideTexture, gs_texture_t *sourceATexture,
-				  gs_texture_t *sourceBTexture) const noexcept
-	{
-		RenderTargetGuard renderTargetGuard;
-		TransformStateGuard transformStateGuard;
-
-		gs_set_viewport(0, 0, width, height);
-		gs_ortho(0.0f, static_cast<float>(width), 0.0f, static_cast<float>(height), -100.0f, 100.0f);
-		gs_matrix_identity();
-
-		gs_set_render_target_with_color_space(targetTexture, nullptr, GS_CS_SRGB);
-		while (gs_effect_loop(effect.get(), "FinalizeGuidedFilter")) {
-			gs_effect_set_texture(textureImage, sourceGuideTexture);
-			gs_effect_set_texture(textureImage1, sourceATexture);
-			gs_effect_set_texture(textureImage2, sourceBTexture);
-
-			gs_draw_sprite(nullptr, 0, width, height);
+			gs_draw_sprite(sourceGuideTexture.get(), 0, 0u, 0u);
 		}
 	}
 
 	void timeAveragedFiltering(const BridgeUtils::unique_gs_texture_t &targetTexture,
 				   const BridgeUtils::unique_gs_texture_t &previousMaskTexture,
-				   const BridgeUtils::unique_gs_texture_t &sourceTexture, float alpha,
-				   std::uint32_t width = 0, std::uint32_t height = 0) const noexcept
+				   const BridgeUtils::unique_gs_texture_t &sourceTexture,
+				   const float alpha) const noexcept
 	{
 		TextureRenderGuard textureRenderGuard(targetTexture);
-		while (gs_effect_loop(effect.get(), "TimeAveragedFilter")) {
+
+		while (gs_effect_loop(gsEffect.get(), "TimeAveragedFilter")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
 			gs_effect_set_texture(textureImage1, previousMaskTexture.get());
 			gs_effect_set_float(floatAlpha, alpha);
-			gs_draw_sprite(sourceTexture.get(), 0, width, height);
+
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
+		}
+	}
+
+	void directDraw(const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
+	{
+		while (gs_effect_loop(gsEffect.get(), "Draw")) {
+			gs_effect_set_texture(textureImage, sourceTexture.get());
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
+		}
+	}
+
+	void directDrawWithMask(const BridgeUtils::unique_gs_texture_t &sourceTexture,
+				const BridgeUtils::unique_gs_texture_t &maskTexture) const noexcept
+	{
+		while (gs_effect_loop(gsEffect.get(), "DrawWithMask")) {
+			gs_effect_set_texture(textureImage, sourceTexture.get());
+			gs_effect_set_texture(textureImage1, maskTexture.get());
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
+		}
+	}
+
+	void directDrawWithRefinedMask(const BridgeUtils::unique_gs_texture_t &sourceTexture,
+				       const BridgeUtils::unique_gs_texture_t &maskTexture, const double gamma,
+				       const double lowerBound, const double upperBoundMargin) const noexcept
+	{
+		while (gs_effect_loop(gsEffect.get(), "DrawWithRefinedMask")) {
+			gs_effect_set_texture(textureImage, sourceTexture.get());
+			gs_effect_set_texture(textureImage1, maskTexture.get());
+
+			gs_effect_set_float(floatGamma, static_cast<float>(gamma));
+			gs_effect_set_float(floatLowerBound, static_cast<float>(lowerBound));
+			gs_effect_set_float(floatUpperBound, static_cast<float>(1.0 - upperBoundMargin));
+
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
 };

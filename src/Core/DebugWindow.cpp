@@ -48,10 +48,13 @@ constexpr char textureR16fSubGFMeanGuideSource[] = "r16fSubGFMeanGuideSource";
 constexpr char textureR32fSubGFMeanGuideSq[] = "r32fSubGFMeanGuideSq";
 constexpr char textureR32fSubGFA[] = "r32fSubGFA";
 constexpr char textureR32fSubGFB[] = "r32fSubGFB";
-constexpr char textureR8GFResult[] = "r8GFResult";
+constexpr char textureR8GuidedFilterResult[] = "r8GuidedFilterResult";
+constexpr char textureR8TimeAveragedMasks0[] = "r8TimeAveragedMasks[0]";
+constexpr char textureR8TimeAveragedMasks1[] = "r8TimeAveragedMasks[1]";
 
 const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
-const std::vector<std::string> r8Textures = {textureR8GFResult};
+const std::vector<std::string> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0,
+					     textureR8TimeAveragedMasks1};
 const std::vector<std::string> r32fTextures = {textureR32fOriginalGrayscale};
 const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
 const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
@@ -85,7 +88,9 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext
 	previewTextureSelector->addItem(textureR32fSubGFMeanGuideSq);
 	previewTextureSelector->addItem(textureR32fSubGFA);
 	previewTextureSelector->addItem(textureR32fSubGFB);
-	previewTextureSelector->addItem(textureR8GFResult);
+	previewTextureSelector->addItem(textureR8GuidedFilterResult);
+	previewTextureSelector->addItem(textureR8TimeAveragedMasks0);
+	previewTextureSelector->addItem(textureR8TimeAveragedMasks1);
 
 	layout->addWidget(previewTextureSelector);
 
@@ -120,10 +125,10 @@ void DebugWindow::videoRender()
 		auto currentTexture = previewTextureSelector->currentText();
 		if (currentTexture == textureBgrxOriginalImage) {
 			if (renderData->readerBgrx)
-				renderData->readerBgrx->stage(renderingContext->bgrxOriginalImage);
+				renderData->readerBgrx->stage(renderingContext->bgrxSource);
 		} else if (currentTexture == textureR32fOriginalGrayscale) {
 			if (renderData->readerR32f)
-				renderData->readerR32f->stage(renderingContext->r32fOriginalGrayscale);
+				renderData->readerR32f->stage(renderingContext->r32fGrayscale);
 		} else if (currentTexture == textureBgrxSegmenterInput) {
 			if (renderData->reader256Bgrx)
 				renderData->reader256Bgrx->stage(renderingContext->bgrxSegmenterInput);
@@ -154,9 +159,15 @@ void DebugWindow::videoRender()
 		} else if (currentTexture == textureR32fSubGFB) {
 			if (renderData->readerR32fSub)
 				renderData->readerR32fSub->stage(renderingContext->r32fSubGFB);
-		} else if (currentTexture == textureR8GFResult) {
+		} else if (currentTexture == textureR8GuidedFilterResult) {
 			if (renderData->readerR8)
-				renderData->readerR8->stage(renderingContext->r8GFResult);
+				renderData->readerR8->stage(renderingContext->r8GuidedFilterResult);
+		} else if (currentTexture == textureR8TimeAveragedMasks0) {
+			if (renderData->readerR8)
+				renderData->readerR8->stage(renderingContext->r8TimeAveragedMasks[0]);
+		} else if (currentTexture == textureR8TimeAveragedMasks1) {
+			if (renderData->readerR8)
+				renderData->readerR8->stage(renderingContext->r8TimeAveragedMasks[1]);
 		}
 	}
 }
