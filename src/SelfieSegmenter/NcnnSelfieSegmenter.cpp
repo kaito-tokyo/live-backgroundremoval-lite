@@ -36,9 +36,8 @@ void NcnnSelfieSegmenter::process(const std::uint8_t *bgraData)
 	ex.input("in0", inputMat);
 	ex.extract("out0", outputMat);
 
-	maskBuffer.write([this](std::vector<std::uint8_t> &mask) {
-		copy_float32_to_r8(mask.data(), outputMat.channel(0), getPixelCount());
-	});
+	maskBuffer.write(
+		[this](std::uint8_t *mask) { copy_float32_to_r8(mask, outputMat.channel(0), getPixelCount()); });
 }
 
 } // namespace SelfieSegmenter

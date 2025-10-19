@@ -33,6 +33,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #endif
 
 #include "ISelfieSegmenter.hpp"
+#include "MaskBuffer.hpp"
 
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
@@ -76,7 +77,7 @@ public:
 
 	void process(const std::uint8_t *bgraData) override;
 
-	const std::vector<std::uint8_t> &getMask() const override { return maskBuffer.read(); }
+	const std::uint8_t *getMask() const override { return maskBuffer.read(); }
 };
 
 } // namespace SelfieSegmenter
