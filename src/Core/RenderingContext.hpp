@@ -199,7 +199,11 @@ public:
 	void applyPluginProperty(const PluginProperty &pluginProperty)
 	{
 		if (pluginProperty.filterLevel == FilterLevel::Default) {
-			filterLevel = FilterLevel::TimeAveragedFilter;
+			if (pluginProperty.isStrictlySyncing) {
+				filterLevel = FilterLevel::GuidedFilter;
+			} else {
+				filterLevel = FilterLevel::TimeAveragedFilter;
+			}
 		} else {
 			filterLevel = pluginProperty.filterLevel;
 		}
