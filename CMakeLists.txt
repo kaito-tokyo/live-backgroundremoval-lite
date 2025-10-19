@@ -143,10 +143,7 @@ if(APPLE)
 endif()
 
 add_library(SelfieSegmenter STATIC)
-target_sources(
-  SelfieSegmenter
-  PRIVATE src/SelfieSegmenter/ShapeConverter.cpp
-)
+target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/ShapeConverter.cpp)
 if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
   target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/CoreMLSelfieSegmenter.mm)
   target_link_libraries(

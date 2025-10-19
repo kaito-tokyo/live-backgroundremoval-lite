@@ -24,7 +24,6 @@ if(TARGET KaitoTokyo::CoreMLSelfieSegmenter)
   list(APPEND TEST_LIST CoreMLSelfieSegmenter_test)
 endif()
 
-
 foreach(TEST_NAME IN LISTS TEST_LIST)
   set_target_properties(
     ${TEST_NAME}
