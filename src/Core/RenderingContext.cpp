@@ -99,7 +99,7 @@ RenderingContext::RenderingContext(obs_source_t *const _source, const BridgeUtil
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
 	  pluginConfig(_pluginConfig),
 	  subsamplingRate(_subsamplingRate),
-	  computeUnit(getActualComputeUnit(logger, _computeUnit)),
+	  computeUnit(_computeUnit),
 	  numThreads(_numThreads),
 	  selfieSegmenter(createSelfieSegmenter(logger, pluginConfig, computeUnit, numThreads)),
 	  region{0, 0, width, height},
