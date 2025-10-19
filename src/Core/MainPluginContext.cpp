@@ -355,9 +355,10 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 
 	int computeUnit = RenderingContext::getActualComputeUnit(logger, pluginProperty.computeUnit);
 
-	auto renderingContext = std::make_shared<RenderingContext>(
-		source, logger, mainEffect, selfieSegmenterTaskQueue, pluginConfig, pluginProperty.subsamplingRate,
-		targetWidth, targetHeight, computeUnit, pluginProperty.numThreads);
+	auto renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterTaskQueue,
+								   pluginConfig, pluginProperty.subsamplingRate,
+								   targetWidth, targetHeight, computeUnit,
+								   pluginProperty.numThreads);
 	renderingContext->applyPluginProperty(pluginProperty);
 	return renderingContext;
 }

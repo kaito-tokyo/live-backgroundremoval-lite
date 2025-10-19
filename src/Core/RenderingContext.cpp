@@ -61,7 +61,7 @@ inline std::unique_ptr<ISelfieSegmenter> createSelfieSegmenter(const ILogger &lo
 #endif
 	} else {
 		throw std::runtime_error("Unsupported compute unit for selfie segmenter: " +
-					       std::to_string(computeUnit));
+					 std::to_string(computeUnit));
 	}
 }
 

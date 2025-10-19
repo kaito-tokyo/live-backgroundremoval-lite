@@ -132,7 +132,8 @@ public:
 #elif defined(NCNN_VULKAN)
 #if NCNN_VULKAN == 1
 			if (ncnn::get_gpu_count() > 0) {
-				logger.info("Vulkan-compatible GPU detected. Selecting ncnn Vulkan backend with GPU index 0.");
+				logger.info(
+					"Vulkan-compatible GPU detected. Selecting ncnn Vulkan backend with GPU index 0.");
 				return ComputeUnit::kNcnnVulkanGpu + 0;
 			} else {
 				logger.info("No Vulkan-compatible GPU detected. Falling back to ncnn CPU.");
