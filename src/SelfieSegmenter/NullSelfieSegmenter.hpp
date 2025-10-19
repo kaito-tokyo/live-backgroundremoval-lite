@@ -26,20 +26,20 @@ namespace SelfieSegmenter {
 
 class NullSelfieSegmenter : public ISelfieSegmenter {
 private:
-	constexpr static std::size_t WIDTH = 256;
-	constexpr static std::size_t HEIGHT = 144;
-	constexpr static std::size_t PIXEL_COUNT = WIDTH * HEIGHT;
+	constexpr static std::size_t kWidth = 256;
+	constexpr static std::size_t kHeight = 144;
+	constexpr static std::size_t kPixelCount = kWidth * kHeight;
 
 	MaskBuffer maskBuffer;
 
 public:
-	NullSelfieSegmenter() : maskBuffer(getPixelCount()) {}
+	NullSelfieSegmenter() : maskBuffer(kPixelCount) {}
 
 	~NullSelfieSegmenter() override = default;
 
-	std::size_t getWidth() const noexcept override { return WIDTH; }
-	std::size_t getHeight() const noexcept override { return HEIGHT; }
-	std::size_t getPixelCount() const noexcept override { return PIXEL_COUNT; }
+	std::size_t getWidth() const noexcept override { return kWidth; }
+	std::size_t getHeight() const noexcept override { return kHeight; }
+	std::size_t getPixelCount() const noexcept override { return kPixelCount; }
 
 	void process(const std::uint8_t *) override {}
 
