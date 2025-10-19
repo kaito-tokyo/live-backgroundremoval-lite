@@ -78,6 +78,10 @@ jobs:
       - name: "Checkout"
         uses: "actions/checkout@v5"
 
+      - name: "Generate Xcodeproj"
+        working-directory: "vendor/CoreMLSelfieSegmenter"
+        run: "xcodegen generate"
+
       - name: "Test CoreMLSelfieSegmenter"
         working-directory: "vendor/CoreMLSelfieSegmenter"
         run: "./Scripts/test.bash"
