@@ -85,6 +85,7 @@ final class SelfieSegmenterLandscapeWrapperTests: XCTestCase {
     }
 
     // 6. Convert MLMultiArray to [UInt8] array
+    XCTAssertEqual(resultArray.dataType, .float32, "MLMultiArray must be Float32")
     var modelMaskData = [UInt8](repeating: 0, count: pixelCount)
     let floatPtr = UnsafeMutableBufferPointer<Float>(
       start: resultArray.dataPointer.assumingMemoryBound(to: Float.self),
