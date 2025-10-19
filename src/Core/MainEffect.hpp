@@ -202,7 +202,7 @@ public:
 
 		while (gs_effect_loop(gsEffect.get(), "ResampleByNearestR8")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
-			gs_draw_sprite(sourceTexture.get(), 0, 0.0f, 0.0f);
+			gs_draw_sprite(targetTexture.get(), 0, 0.0f, 0.0f);
 		}
 	}
 
@@ -365,7 +365,7 @@ public:
 	void directDraw(const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
 		while (gs_effect_loop(gsEffect.get(), "Draw")) {
-			gs_effect_set_texture(textureImage, sourceTexture);
+			gs_effect_set_texture(textureImage, sourceTexture.get());
 			gs_draw_sprite(sourceTexture.get(), 0, 0.0f, 0.0f);
 		}
 	}

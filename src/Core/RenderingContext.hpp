@@ -72,7 +72,7 @@ public:
 	const RenderingContextRegion maskRoi;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSource;
-	const BridgeUtils::unique_gs_texture_t r8Grayscale;
+	const BridgeUtils::unique_gs_texture_t r32fGrayscale;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader;
@@ -95,7 +95,7 @@ public:
 	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSq;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFA;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFB;
-	const BridgeUtils::unique_gs_texture_t r8GFResult;
+	const BridgeUtils::unique_gs_texture_t r8GuidedFilterResult;
 
 	const std::array<BridgeUtils::unique_gs_texture_t, 2> r8TimeAveragedMasks;
 	std::size_t currentTimeAveragedMaskIndex = 0;

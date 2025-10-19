@@ -106,7 +106,7 @@ RenderingContext::RenderingContext(obs_source_t *const _source, const BridgeUtil
 	  subRegion{0, 0, (region.width / subsamplingRate) & ~1u, (region.height / subsamplingRate) & ~1u},
 	  maskRoi(getMaskRoiPosition(region.width, region.height, selfieSegmenter)),
 	  bgrxSource(make_unique_gs_texture(region.width, region.height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
-	  r8Grayscale(make_unique_gs_texture(region.width, region.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r32fGrayscale(make_unique_gs_texture(region.width, region.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  bgrxSegmenterInput(make_unique_gs_texture(static_cast<std::uint32_t>(selfieSegmenter->getWidth()),
 						    static_cast<std::uint32_t>(selfieSegmenter->getHeight()), GS_BGRX,
 						    1, NULL, GS_RENDER_TARGET)),
@@ -114,6 +114,8 @@ RenderingContext::RenderingContext(obs_source_t *const _source, const BridgeUtil
 				   static_cast<std::uint32_t>(selfieSegmenter->getHeight()), GS_BGRX),
 	  segmenterInputBuffer(selfieSegmenter->getPixelCount() * 4),
 	  r8SegmentationMask(make_unique_gs_texture(maskRoi.width, maskRoi.height, GS_R8, 1, NULL, GS_DYNAMIC)),
+	  r32fSubGFIntermediate(
+		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r8SubGFGuide(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r8SubGFSource(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFMeanGuide(
@@ -126,11 +128,9 @@ RenderingContext::RenderingContext(obs_source_t *const _source, const BridgeUtil
 		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFA(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFB(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r8GFResult(make_unique_gs_texture(region.width, region.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r8GuidedFilterResult(make_unique_gs_texture(region.width, region.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r8TimeAveragedMasks{make_unique_gs_texture(region.width, region.height, GS_R8, 1, NULL, GS_RENDER_TARGET),
-			      make_unique_gs_texture(region.width, region.height, GS_R8, 1, NULL, GS_RENDER_TARGET)},
-	  r32fGFTemporary1Sub(
-		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET))
+			      make_unique_gs_texture(region.width, region.height, GS_R8, 1, NULL, GS_RENDER_TARGET)}
 {
 }
 
@@ -190,7 +190,7 @@ void RenderingContext::videoRender()
 		}
 
 		if (_filterLevel >= FilterLevel::GuidedFilter) {
-			mainEffect.convertToGrayscale(r8Grayscale, bgrxSource);
+			mainEffect.convertToGrayscale(r32fGrayscale, bgrxSource);
 		}
 
 		if (_filterLevel >= FilterLevel::Segmentation) {
@@ -206,7 +206,7 @@ void RenderingContext::videoRender()
 		}
 
 		if (_filterLevel >= FilterLevel::GuidedFilter) {
-			mainEffect.resampleByNearestR8(r8SubGFGuide, r8Grayscale);
+			mainEffect.resampleByNearestR8(r8SubGFGuide, r32fGrayscale);
 
 			mainEffect.resampleByNearestR8(r8SubGFSource, r8SegmentationMask);
 
@@ -222,13 +222,13 @@ void RenderingContext::videoRender()
 							      r32fSubGFMeanGuide, r32fSubGFMeanGuideSource,
 							      r32fSubGFMeanSource, _guidedFilterEps);
 
-			mainEffect.finalizeGuidedFilter(r8GFResult, r8Grayscale, r32fSubGFA, r32fSubGFB);
+			mainEffect.finalizeGuidedFilter(r8GuidedFilterResult, r32fGrayscale, r32fSubGFA, r32fSubGFB);
 		}
 
 		if (_filterLevel >= FilterLevel::TimeAveragedFilter) {
 			std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex;
 			mainEffect.timeAveragedFiltering(r8TimeAveragedMasks[nextIndex],
-							 r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GFResult,
+							 r8TimeAveragedMasks[currentTimeAveragedMaskIndex], r8GuidedFilterResult,
 							 _timeAveragedFilteringAlpha);
 			currentTimeAveragedMaskIndex = nextIndex;
 		}
@@ -239,7 +239,7 @@ void RenderingContext::videoRender()
 	} else if (_filterLevel == FilterLevel::Segmentation) {
 		mainEffect.directDrawWithMask(bgrxSource, r8SegmentationMask);
 	} else if (_filterLevel == FilterLevel::GuidedFilter) {
-		mainEffect.directDrawWithRefinedMask(bgrxSource, r8GFResult, _maskGamma, _maskLowerBound,
+		mainEffect.directDrawWithRefinedMask(bgrxSource, r8GuidedFilterResult, _maskGamma, _maskLowerBound,
 						     _maskUpperBoundMargin);
 	} else if (_filterLevel == FilterLevel::TimeAveragedFilter) {
 		mainEffect.directDrawWithRefinedMask(bgrxSource, r8TimeAveragedMasks[currentTimeAveragedMaskIndex],
