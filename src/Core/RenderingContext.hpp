@@ -61,8 +61,7 @@ private:
 
 	BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
-	std::unique_ptr<ISelfieSegmenter> selfieSegmenter;
-	BridgeUtils::AsyncTextureReader readerSegmenterInput;
+	std::unique_ptr<SelfieSegmenter::ISelfieSegmenter> selfieSegmenter;
 
 public:
 	const std::uint32_t subsamplingRate;
@@ -74,6 +73,7 @@ public:
 	const BridgeUtils::unique_gs_texture_t r32fOriginalGrayscale;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput;
+	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader;
 
 private:
 	std::vector<std::uint8_t> segmenterInputBuffer;

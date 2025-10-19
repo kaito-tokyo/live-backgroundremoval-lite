@@ -35,11 +35,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "ISelfieSegmenter.hpp"
 
 namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
+namespace SelfieSegmenter {
 
 class NcnnSelfieSegmenter : public ISelfieSegmenter {
 private:
-	SelfieSegmenterMaskBuffer maskBuffer;
+	MaskBuffer maskBuffer;
 
 	ncnn::Net selfieSegmenterNet;
 	ncnn::Mat inputMat;
@@ -79,5 +79,5 @@ public:
 	const std::vector<std::uint8_t> &getMask() const override { return maskBuffer.read(); }
 };
 
-} // namespace LiveBackgroundRemovalLite
+} // namespace SelfieSegmenter
 } // namespace KaitoTokyo
