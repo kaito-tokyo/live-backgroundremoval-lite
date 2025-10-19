@@ -25,19 +25,22 @@ namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
 class NullSelfieSegmenter : public ISelfieSegmenter {
+private:
+	MaskBuffer maskBuffer;
+
 public:
-	NullSelfieSegmenter() {}
+	NullSelfieSegmenter() : maskBuffer(getPixelCount()) {}
 
 	~NullSelfieSegmenter() override = default;
 
-	std::size_t getWidth() const noexcept override { return 0; }
-	std::size_t getHeight() const noexcept override { return 0; }
-	std::size_t getPixelCount() const noexcept override { return 0; }
+	std::size_t getWidth() const noexcept override { return 144; }
+	std::size_t getHeight() const noexcept override { return 256; }
+	std::size_t getPixelCount() const noexcept override { return 144 * 256; }
 	const char *getBackendName() const noexcept override { return "null"; }
 
 	void process(const std::uint8_t *) override {}
 
-	const std::uint8_t *getMask() const override { return nullptr; }
+	const std::uint8_t *getMask() const override { return maskBuffer.read(); }
 
 	NullSelfieSegmenter(const NullSelfieSegmenter &) = delete;
 	NullSelfieSegmenter &operator=(const NullSelfieSegmenter &) = delete;

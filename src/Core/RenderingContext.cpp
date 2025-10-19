@@ -40,14 +40,13 @@ namespace {
 inline std::unique_ptr<ISelfieSegmenter> createSelfieSegmenter(const ILogger &logger, const PluginConfig &pluginConfig,
 							       int computeUnit, int numThreads)
 {
-
-	if ((computeUnit & ComputeUnit::kCpuOnly) != 0) {
+	if (computeUnit == ComputeUnit::kNull) {
+		logger.info("Using null backend for selfie segmenter.");
+		return std::make_unique<NullSelfieSegmenter>();
+	} else if ((computeUnit & ComputeUnit::kCpuOnly) != 0) {
 		logger.info("Using ncnn CPU backend for selfie segmenter.");
 		return std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
 							     pluginConfig.selfieSegmenterBinPath.c_str(), numThreads);
-	} else if ((computeUnit & ComputeUnit::kNull) != 0) {
-		logger.info("Using null backend for selfie segmenter.");
-		return std::make_unique<NullSelfieSegmenter>();
 	} else if ((computeUnit & ComputeUnit::kNcnnVulkanGpu) != 0) {
 		int ncnnGpuIndex = computeUnit & ComputeUnit::kNcnnVulkanGpuIndexMask;
 		logger.info("Using ncnn Vulkan GPU backend (GPU index: {}) for selfie segmenter.", ncnnGpuIndex);

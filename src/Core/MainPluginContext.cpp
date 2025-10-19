@@ -141,9 +141,9 @@ obs_properties_t *MainPluginContext::getProperties()
 #if NCNN_VULKAN == 1
 	int ncnnGpuCount = ncnn::get_gpu_count();
 	ncnnGpuNames.resize(ncnnGpuCount);
-	for (int i = 0; i < ncnnGpuCount; ++i) {
+	for (int i = 0; i < std::min(ncnnGpuCount, ComputeUnit::kNcnnVulkanGpuIndexMask); ++i) {
 		ncnnGpuNames[i] = fmt::format("{} ({})", obs_module_text("computeUnitVulkanGpu"), i);
-		obs_property_list_add_int(propComputeUnit, ncnnGpuNames[i].c_str(), ComputeUnit::kNcnnVulkanGpu + i);
+		obs_property_list_add_int(propComputeUnit, ncnnGpuNames[i].c_str(), ComputeUnit::kNcnnVulkanGpu | i);
 	}
 #endif
 
@@ -152,7 +152,7 @@ obs_properties_t *MainPluginContext::getProperties()
 #endif
 
 	obs_properties_add_int_slider(props, "numThreads", obs_module_text("numThreads"), 0,
-				      std::max<unsigned>(1, std::thread::hardware_concurrency()), 1);
+				      std::thread::hardware_concurrency(), 1);
 
 	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
 								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
@@ -359,7 +359,9 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 								   pluginConfig, pluginProperty.subsamplingRate,
 								   targetWidth, targetHeight, computeUnit,
 								   pluginProperty.numThreads);
+
 	renderingContext->applyPluginProperty(pluginProperty);
+
 	return renderingContext;
 }
 
