@@ -20,19 +20,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <NcnnSelfieSegmenter.hpp>
 
-#include <vector>
+#include <cstddef>
 #include <string>
-#include <cstdint>
+
+#include <opencv2/opencv.hpp>
 
 #ifdef PREFIXED_NCNN_HEADERS
 #include <ncnn/net.h>
 #else
 #include <net.h>
 #endif
-
-#include <opencv2/opencv.hpp>
-
-#include <iostream>
 
 using namespace KaitoTokyo::SelfieSegmenter;
 
