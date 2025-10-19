@@ -25,5 +25,7 @@ namespace SelfieSegmenter {
 void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel, const std::uint8_t *bgra_data,
 			       const std::size_t pixelCount);
 
+inline void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_count);
+
 } // namespace SelfieSegmenter
 } // namespace KaitoTokyo
