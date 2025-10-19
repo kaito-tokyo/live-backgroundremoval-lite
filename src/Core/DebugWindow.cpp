@@ -53,7 +53,8 @@ constexpr char textureR8TimeAveragedMasks0[] = "r8TimeAveragedMasks[0]";
 constexpr char textureR8TimeAveragedMasks1[] = "r8TimeAveragedMasks[1]";
 
 const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
-const std::vector<std::string> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0, textureR8TimeAveragedMasks1};
+const std::vector<std::string> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0,
+					     textureR8TimeAveragedMasks1};
 const std::vector<std::string> r32fTextures = {textureR32fOriginalGrayscale};
 const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
 const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
