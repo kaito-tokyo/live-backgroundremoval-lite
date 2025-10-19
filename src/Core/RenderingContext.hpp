@@ -57,7 +57,7 @@ private:
 	const BridgeUtils::ILogger &logger;
 	const MainEffect &mainEffect;
 	BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
-	const PluginConfig &pluginConfig;
+	const PluginConfig pluginConfig;
 
 public:
 	const std::uint32_t subsamplingRate;
