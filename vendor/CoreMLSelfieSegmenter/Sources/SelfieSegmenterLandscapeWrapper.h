@@ -47,19 +47,20 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * This method executes the prepared Vision request using the provided handler.
  * It retrieves the "segmentationMask" output, validates its type (Float32) and dimensions,
- * and returns a direct pointer to the raw mask data.
+ * and returns the MLMultiArray containing the mask data.
  *
  * @param handler The VNImageRequestHandler containing the image to process.
  * @param error On failure (e.g., request failed, mask not found, type mismatch, or size mismatch),
  * this pointer is set to an NSError object describing the problem.
- * @return A direct pointer to the raw `float` (Float32) data of the segmentation mask.
- * Returns `NULL` if the operation fails.
- * @warning The caller does *not* own the memory pointed to by the return value.
- * Its lifetime is tied to the underlying MLMultiArray within the VNObservation,
- * which is held by the VNCoreMLRequest's results.
+ * @return The MLMultiArray (Float32) of the segmentation mask, or NULL if the operation fails.
+ * @warning The caller does *not* own the returned MLMultiArray. Its lifetime is tied to the underlying
+ * VNObservation held by the VNCoreMLRequest's results.
  */
-- (nullable float *)performWithHandler:(VNImageRequestHandler *_Nonnull)handler
-                                 error:(NSError *_Nullable *_Nullable)error;
+- (nullable MLMultiArray *)performWithHandler:(VNImageRequestHandler *_Nonnull)handler
+                                        error:(NSError *_Nullable *_Nullable)error;
+
+- (nullable MLMultiArray *)performWithBGRAData:(uint8_t *_Nonnull)bgraData
+                                         error:(NSError *_Nullable *_Nullable)error;
 
 @end
 

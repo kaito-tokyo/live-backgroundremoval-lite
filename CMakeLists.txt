@@ -143,6 +143,12 @@ target_sources(
   SelfieSegmenter
   PRIVATE src/SelfieSegmenter/ShapeConverter.cpp src/SelfieSegmenter/NcnnSelfieSegmenter.cpp
 )
+if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
+  target_sources(
+    SelfieSegmenter
+    PRIVATE src/SelfieSegmenter/CoreMLSelfieSegmenter.mm
+  )
+endif()
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
 target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn)
 
