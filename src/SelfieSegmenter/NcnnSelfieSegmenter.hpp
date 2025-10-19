@@ -74,6 +74,7 @@ public:
 	std::size_t getWidth() const noexcept override { return 256; }
 	std::size_t getHeight() const noexcept override { return 144; }
 	std::size_t getPixelCount() const noexcept override { return 256 * 144; }
+	const char *getBackendName() const noexcept override { return "ncnn"; }
 
 	void process(const std::uint8_t *bgraData) override;
 

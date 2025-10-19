@@ -131,10 +131,11 @@ obs_properties_t *MainPluginContext::getProperties()
 	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
-	obs_property_t *propComputeUnit = obs_properties_add_list(
-		props, "computeUnit", obs_module_text("computeUnit"), OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_t *propComputeUnit = obs_properties_add_list(props, "computeUnit", obs_module_text("computeUnit"),
+								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
 
-	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitDefault"), ComputeUnit::kDefault);
+	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitAuto"), ComputeUnit::kAuto);
+	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCpuOnly"), ComputeUnit::kCpuOnly);
 
 #if NCNN_VULKAN == 1
 	int ncnnGpuCount = ncnn::get_gpu_count();
@@ -350,8 +351,8 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 {
 	PluginConfig pluginConfig(PluginConfig::load());
 	auto renderingContext = std::make_shared<RenderingContext>(
-		source, logger, mainEffect, pluginConfig, selfieSegmenterTaskQueue, pluginProperty.ncnnNumThreads,
-		pluginProperty.ncnnGpuIndex, subsamplingRate, targetWidth, targetHeight);
+		source, logger, mainEffect, selfieSegmenterTaskQueue, pluginConfig, pluginProperty.subsamplingRate,
+		targetWidth, targetHeight, pluginProperty.computeUnit, pluginProperty.ncnnNumThreads);
 	renderingContext->applyPluginProperty(pluginProperty);
 	return renderingContext;
 }

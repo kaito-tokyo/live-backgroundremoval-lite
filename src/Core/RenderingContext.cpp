@@ -37,51 +37,53 @@ namespace LiveBackgroundRemovalLite {
 
 namespace {
 
-inline std::unique_ptr<ISelfieSegmenter> createSelfieSegmenter(const ILogger &logger, const PluginConfig &pluginConfig, int computeUnit, int numThreads)
+inline std::unique_ptr<ISelfieSegmenter> createSelfieSegmenter(const ILogger &logger, const PluginConfig &pluginConfig,
+							       int computeUnit, int numThreads)
 {
-	if (computeUnit == ComputeUnit::kDefault) {
+	if (computeUnit == ComputeUnit::kAuto) {
 		logger.info("Auto-detecting compute unit for selfie segmenter...");
 #ifdef HAVE_COREML_SELFIE_SEGMENTER
 		logger.info("Selecting CoreML on Apple platforms.");
 		computeUnit = ComputeUnit::kCoreML;
 #elif NCNN_VULKAN == 1
 		if (ncnn::get_gpu_count() > 0) {
-			logger.info("Vulkan-compatible GPU detected. Selecting NCNN Vulkan backend.");
+			logger.info("Vulkan-compatible GPU detected. Selecting ncnn Vulkan backend.");
 			computeUnit = ComputeUnit::kNcnnVulkanGpu;
 		} else {
-			logger.info("No Vulkan-compatible GPU detected. Falling back to NCNN CPU.");
-			computeUnit = ComputeUnit::kCPUOnly;
+			logger.info("No Vulkan-compatible GPU detected. Falling back to ncnn CPU.");
+			computeUnit = ComputeUnit::kCpuOnly;
 		}
 #elif defined(__APPLE__)
-		logger.info("Falling back to NCNN CPU backend due to lack of CoreML support.");
-		computeUnit = ComputeUnit::kCPUOnly;
+		logger.info("Falling back to ncnn CPU backend due to lack of CoreML support.");
+		computeUnit = ComputeUnit::kCpuOnly;
 #else
-		logger.info("Selecting CPU backend of NCNN.");
-		computeUnit = ComputeUnit::kCPUOnly;
+		logger.info("Selecting ncnn CPU backend.");
+		computeUnit = ComputeUnit::kCpuOnly;
 #endif
 	}
 
-	if (computeUnit & ComputeUnit::kCPUOnly != 0) {
-		logger.info("Using NCNN CPU backend for selfie segmenter.");
+	if ((computeUnit & ComputeUnit::kCpuOnly) != 0) {
+		logger.info("Using ncnn CPU backend for selfie segmenter.");
 		return std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
-						pluginConfig.selfieSegmenterBinPath.c_str(),
-						numThreads);
-	} else if (computeUnit & ComputeUnit::kNcnnVulkanGpu != 0) {
+							     pluginConfig.selfieSegmenterBinPath.c_str(), numThreads);
+	} else if ((computeUnit & ComputeUnit::kNcnnVulkanGpu) != 0) {
 		int ncnnGpuIndex = computeUnit & 0xffff;
-		logger.info("Using NCNN Vulkan GPU backend (GPU index: {}) for selfie segmenter.", ncnnGpuIndex);
+		logger.info("Using ncnn Vulkan GPU backend (GPU index: {}) for selfie segmenter.", ncnnGpuIndex);
 		return std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
-						pluginConfig.selfieSegmenterBinPath.c_str(),
-						numThreads, ncnnGpuIndex);
-	} else if (computeUnit & ComputeUnit::kCoreML != 0) {
+							     pluginConfig.selfieSegmenterBinPath.c_str(), numThreads,
+							     ncnnGpuIndex);
+	} else if ((computeUnit & ComputeUnit::kCoreML) != 0) {
 #ifdef HAVE_COREML_SELFIE_SEGMENTER
 		logger.info("Using CoreML backend for selfie segmenter.");
 		return std::make_unique<CoreMLSelfieSegmenter>();
 #else
-		logger.error("CoreML backend selected for selfie segmenter, but CoreML support is not compiled in.");
+		logger.error(
+			"CoreML backend selected for selfie segmenter, but CoreML support is not compiled in. Using null segmenter.");
 		return std::make_unique<NullSelfieSegmenter>();
 #endif
 	} else {
-		logger.error("Unknown compute unit selected for selfie segmenter: {}. Using null segmenter.", computeUnit);
+		logger.error("Unknown compute unit selected for selfie segmenter: {}. Using null segmenter.",
+			     computeUnit);
 		return std::make_unique<NullSelfieSegmenter>();
 	}
 }
@@ -109,27 +111,21 @@ inline RenderingContextRegion getMaskRoiPosition(std::uint32_t width, std::uint3
 
 } // anonymous namespace
 
-RenderingContext::RenderingContext(
-	obs_source_t *const _source,
-	const BridgeUtils::ILogger &_logger,
-	const MainEffect &_mainEffect,
-	const BridgeUtils::ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-	const PluginConfig _pluginConfig,
-	const std::uint32_t _subsamplingRate,
-	const std::uint32_t width,
-	const std::uint32_t height,
-	const int computeUnit,
-	const int ncnnNumThreads
-)
+RenderingContext::RenderingContext(obs_source_t *const _source, const BridgeUtils::ILogger &_logger,
+				   const MainEffect &_mainEffect,
+				   BridgeUtils::ThrottledTaskQueue &_selfieSegmenterTaskQueue,
+				   const PluginConfig &_pluginConfig, const std::uint32_t _subsamplingRate,
+				   const std::uint32_t width, const std::uint32_t height, const int _computeUnit,
+				   const int _numThreads)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
 	  pluginConfig(_pluginConfig),
 	  subsamplingRate(_subsamplingRate),
-	  selfieSegmenter(std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
-								pluginConfig.selfieSegmenterBinPath.c_str(),
-								ncnnGpuIndex, ncnnNumThreads)),
+	  computeUnit(_computeUnit),
+	  numThreads(_numThreads),
+	  selfieSegmenter(createSelfieSegmenter(logger, pluginConfig, computeUnit, numThreads)),
 	  region{0, 0, width, height},
 	  subRegion{0, 0, (region.width / subsamplingRate) & ~1u, (region.height / subsamplingRate) & ~1u},
 	  maskRoi(getMaskRoiPosition(region.width, region.height, selfieSegmenter)),
@@ -161,18 +157,6 @@ RenderingContext::RenderingContext(
 	  r32fGFTemporary1Sub(
 		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET))
 {
-	selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
-	selfieSegmenterNet.opt.num_threads = ncnnNumThreads;
-	selfieSegmenterNet.opt.use_local_pool_allocator = true;
-	selfieSegmenterNet.opt.openmp_blocktime = 1;
-
-	if (int ret = selfieSegmenterNet.load_param(pluginConfig.selfieSegmenterParamPath.c_str())) {
-		throw std::runtime_error("Failed to load selfie segmenter param: " + std::to_string(ret));
-	}
-
-	if (int ret = selfieSegmenterNet.load_model(pluginConfig.selfieSegmenterBinPath.c_str())) {
-		throw std::runtime_error("Failed to load selfie segmenter bin: " + std::to_string(ret));
-	}
 }
 
 RenderingContext::~RenderingContext() noexcept {}

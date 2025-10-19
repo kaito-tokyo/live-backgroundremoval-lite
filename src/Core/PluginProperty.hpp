@@ -30,14 +30,14 @@ enum class FilterLevel : int {
 };
 
 namespace ComputeUnit {
-constexpr int kDefault = 0;
-constexpr int kCPUOnly = 1 << 16;
+constexpr int kAuto = 0;
+constexpr int kCpuOnly = 1 << 16;
 constexpr int kNcnnVulkanGpu = 1 << 17;
 constexpr int kCoreML = 1 << 18;
 } // namespace ComputeUnit
 
 struct PluginProperty {
-	int computeUnit = ComputeUnit::kDefault;
+	int computeUnit = ComputeUnit::kAuto;
 
 	int ncnnNumThreads = 2;
 

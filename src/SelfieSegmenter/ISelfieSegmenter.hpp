@@ -38,7 +38,7 @@ public:
 	virtual std::size_t getWidth() const noexcept = 0;
 	virtual std::size_t getHeight() const noexcept = 0;
 	virtual std::size_t getPixelCount() const noexcept = 0;
-	virtual bool isValid() const noexcept { return true; }
+	virtual const char *getBackendName() const noexcept = 0;
 
 	virtual void process(const std::uint8_t *bgraData) = 0;
 

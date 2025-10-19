@@ -56,15 +56,14 @@ private:
 	obs_source_t *const source;
 	const BridgeUtils::ILogger &logger;
 	const MainEffect &mainEffect;
-	const BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
+	BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
 	const PluginConfig &pluginConfig;
 
 public:
 	const std::uint32_t subsamplingRate;
 	const int computeUnit;
-	const int ncnnNumThreads;
+	const int numThreads;
 
-	ncnn::Net selfieSegmenterNet;
 	std::unique_ptr<SelfieSegmenter::ISelfieSegmenter> selfieSegmenter;
 
 public:
@@ -122,18 +121,10 @@ private:
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 public:
-	RenderingContext(
-		obs_source_t *const source,
-		const BridgeUtils::ILogger &logger,
-		const MainEffect &mainEffect,
-		const BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue,
-		const PluginConfig pluginConfig,
-		const std::uint32_t subsamplingRate,
-		const std::uint32_t width,
-		const std::uint32_t height,
-		const int computeUnit,
-		const int ncnnNumThreads
-	);
+	RenderingContext(obs_source_t *const source, const BridgeUtils::ILogger &logger, const MainEffect &mainEffect,
+			 BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
+			 const std::uint32_t subsamplingRate, const std::uint32_t width, const std::uint32_t height,
+			 const int computeUnit, const int numThreads);
 	~RenderingContext() noexcept;
 
 	void videoTick(float seconds);
