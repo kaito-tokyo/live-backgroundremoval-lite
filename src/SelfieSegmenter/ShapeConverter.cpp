@@ -61,30 +61,87 @@ inline void copy_float32_to_r8_naive(std::uint8_t *dst, const float *src, std::s
 
 #ifdef SELFIE_SEGMENTER_HAVE_NEON
 
+// For best performance, channels and bgraData should be 16-byte aligned (NEON loads tolerate unaligned addresses)
 inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, float *bChannel,
 					   const std::uint8_t *bgraData, const std::size_t pixelCount)
 {
-	constexpr std::size_t PIXELS_PER_LOOP = 8;
+	// Process 16 pixels at a time to maximize ILP
+	constexpr std::size_t PIXELS_PER_LOOP_16X = 16;
+	constexpr std::size_t PIXELS_PER_LOOP_8X = 8;
 
 	constexpr float norm_factor = 1.0f / 255.0f;
-	const float32x4_t v_norm = vdupq_n_f32(norm_factor);
 
-	const std::size_t neon_limit = (pixelCount / PIXELS_PER_LOOP) * PIXELS_PER_LOOP;
+	std::size_t neon_limit_16x = (pixelCount / PIXELS_PER_LOOP_16X) * PIXELS_PER_LOOP_16X;
 	std::size_t i = 0;
-	for (; i < neon_limit; i += PIXELS_PER_LOOP) {
+
+	// --- Main 16-pixel loop ---
+	for (; i < neon_limit_16x; i += PIXELS_PER_LOOP_16X) {
+		// Load 16 pixels (16 * 4 = 64 bytes) and de-interleave
+		uint8x16x4_t bgra_vec = vld4q_u8(bgraData + i * 4);
+
+		// --- Block 1: Pixels 0-7 ---
+		// 1. Widen u8 -> u16
+		uint16x8_t b_u16_1 = vmovl_u8(vget_low_u8(bgra_vec.val[0]));
+		uint16x8_t g_u16_1 = vmovl_u8(vget_low_u8(bgra_vec.val[1]));
+		uint16x8_t r_u16_1 = vmovl_u8(vget_low_u8(bgra_vec.val[2]));
+
+		// 2. Widen u16 -> u32, Convert u32 -> f32, and Scale
+		float32x4_t b_f32_1_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(b_u16_1))), norm_factor);
+		float32x4_t g_f32_1_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(g_u16_1))), norm_factor);
+		float32x4_t r_f32_1_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(r_u16_1))), norm_factor);
+
+		float32x4_t b_f32_1_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(b_u16_1))), norm_factor);
+		float32x4_t g_f32_1_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16_1))), norm_factor);
+		float32x4_t r_f32_1_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16_1))), norm_factor);
+
+		// --- Block 2: Pixels 8-15 ---
+		// 1. Widen u8 -> u16
+		uint16x8_t b_u16_2 = vmovl_u8(vget_high_u8(bgra_vec.val[0]));
+		uint16x8_t g_u16_2 = vmovl_u8(vget_high_u8(bgra_vec.val[1]));
+		uint16x8_t r_u16_2 = vmovl_u8(vget_high_u8(bgra_vec.val[2]));
+
+		// 2. Widen u16 -> u32, Convert u32 -> f32, and Scale
+		float32x4_t b_f32_2_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(b_u16_2))), norm_factor);
+		float32x4_t g_f32_2_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(g_u16_2))), norm_factor);
+		float32x4_t r_f32_2_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(r_u16_2))), norm_factor);
+
+		float32x4_t b_f32_2_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(b_u16_2))), norm_factor);
+		float32x4_t g_f32_2_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16_2))), norm_factor);
+		float32x4_t r_f32_2_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16_2))), norm_factor);
+
+		// --- Store (12 vectors) ---
+		vst1q_f32(bChannel + i, b_f32_1_low);
+		vst1q_f32(bChannel + i + 4, b_f32_1_high);
+		vst1q_f32(gChannel + i, g_f32_1_low);
+		vst1q_f32(gChannel + i + 4, g_f32_1_high);
+		vst1q_f32(rChannel + i, r_f32_1_low);
+		vst1q_f32(rChannel + i + 4, r_f32_1_high);
+
+		vst1q_f32(bChannel + i + 8, b_f32_2_low);
+		vst1q_f32(bChannel + i + 12, b_f32_2_high);
+		vst1q_f32(gChannel + i + 8, g_f32_2_low);
+		vst1q_f32(gChannel + i + 12, g_f32_2_high);
+		vst1q_f32(rChannel + i + 8, r_f32_2_low);
+		vst1q_f32(rChannel + i + 12, r_f32_2_high);
+	}
+
+	// --- Remainder Loop (8 pixels at a time) ---
+	// Handle remaining pixels (0-15) using the original 8-pixel loop
+	const std::size_t neon_limit_8x = (pixelCount / PIXELS_PER_LOOP_8X) * PIXELS_PER_LOOP_8X;
+	for (; i < neon_limit_8x; i += PIXELS_PER_LOOP_8X) {
 		uint8x8x4_t bgra_vec = vld4_u8(bgraData + i * 4);
 
 		uint16x8_t b_u16 = vmovl_u8(bgra_vec.val[0]);
 		uint16x8_t g_u16 = vmovl_u8(bgra_vec.val[1]);
 		uint16x8_t r_u16 = vmovl_u8(bgra_vec.val[2]);
 
-		float32x4_t b_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(b_u16))), v_norm);
-		float32x4_t g_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(g_u16))), v_norm);
-		float32x4_t r_f32_low = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(r_u16))), v_norm);
+		float32x4_t b_f32_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(b_u16))), norm_factor);
+		float32x4_t g_f32_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(g_u16))), norm_factor);
+		float32x4_t r_f32_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(r_u16))), norm_factor);
 
-		float32x4_t b_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(b_u16))), v_norm);
-		float32x4_t g_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16))), v_norm);
-		float32x4_t r_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16))), v_norm);
+		float32x4_t b_f32_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(b_u16))), norm_factor);
+		float32x4_t g_f32_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16))), norm_factor);
+		float32x4_t r_f32_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16))), norm_factor);
 
 		vst1q_f32(bChannel + i, b_f32_low);
 		vst1q_f32(bChannel + i + 4, b_f32_high);
@@ -94,9 +151,9 @@ inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, flo
 		vst1q_f32(rChannel + i + 4, r_f32_high);
 	}
 
+	// --- Final Scalar Loop (0-7 pixels) ---
 	for (; i < pixelCount; ++i) {
 		const std::uint8_t *pixelPtr = bgraData + i * 4;
-
 		bChannel[i] = static_cast<float>(pixelPtr[0]) * norm_factor;
 		gChannel[i] = static_cast<float>(pixelPtr[1]) * norm_factor;
 		rChannel[i] = static_cast<float>(pixelPtr[2]) * norm_factor;
