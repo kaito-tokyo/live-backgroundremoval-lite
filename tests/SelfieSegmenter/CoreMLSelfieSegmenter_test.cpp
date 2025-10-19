@@ -67,8 +67,6 @@ TEST(CoreMLSelfieSegmenterTest, ProcessRealImage)
 	cv::Mat maskImage((int)selfieSegmenter.getHeight(), (int)selfieSegmenter.getWidth(), CV_8UC1);
 	std::memcpy(maskImage.data, selfieSegmenter.getMask(), selfieSegmenter.getPixelCount());
 
-	cv::imwrite("debug.png", maskImage);
-
 	EXPECT_GT(cv::countNonZero(maskImage), 0);
 
 	cv::Mat diffImage;
