@@ -26,8 +26,9 @@ if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
     PRIVATE GTest::gtest_main SelfieSegmenter OpenCV::opencv_core OpenCV::opencv_imgproc OpenCV::opencv_imgcodecs
   )
   target_link_libraries(SelfieSegmenter PRIVATE "${COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH}")
-  set_target_properties(CoreMLSelfieSegmenter_test
-      PROPERTIES
+  set_target_properties(
+    CoreMLSelfieSegmenter_test
+    PROPERTIES
       XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_CURRENT_SOURCE_DIR}/entitlements.plist"
       XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "-"
   )

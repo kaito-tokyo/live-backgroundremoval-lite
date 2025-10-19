@@ -62,10 +62,7 @@ public:
 		readableIndex.store(writeIndex, std::memory_order_release);
 	}
 
-	const std::uint8_t *read() const
-	{
-		return buffers[readableIndex.load(std::memory_order_acquire)].data();
-	}
+	const std::uint8_t *read() const { return buffers[readableIndex.load(std::memory_order_acquire)].data(); }
 
 	MaskBuffer(const MaskBuffer &) = delete;
 	MaskBuffer &operator=(const MaskBuffer &) = delete;
