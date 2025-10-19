@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "SelfieSegmenter.hpp"
+#include "NcnnSelfieSegmenter.hpp"
 
 #if defined(_M_X64) || defined(__x86_64__)
 #define SELFIE_SEGMENTER_CHECK_AVX2
@@ -40,31 +40,34 @@ namespace LiveBackgroundRemovalLite {
 
 namespace {
 
-inline void copyDataToMatNaive(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
+inline void copyDataToMatNaive(ncnn::Mat &inputMat, const std::uint8_t *bgraData, const std::size_t pixelCount)
 {
-	float *r_channel = inputMat.channel(0);
-	float *g_channel = inputMat.channel(1);
-	float *b_channel = inputMat.channel(2);
+	float *rChannel = inputMat.channel(0);
+	float *gChannel = inputMat.channel(1);
+	float *bChannel = inputMat.channel(2);
 
-	for (int i = 0; i < SelfieSegmenter::PIXEL_COUNT; i++) {
-		b_channel[i] = (static_cast<float>(bgra_data[i * 4 + 0])) / 255.0f;
-		g_channel[i] = (static_cast<float>(bgra_data[i * 4 + 1])) / 255.0f;
-		r_channel[i] = (static_cast<float>(bgra_data[i * 4 + 2])) / 255.0f;
+	for (std::size_t i = 0; i < pixelCount; i++) {
+		bChannel[i] = (static_cast<float>(bgraData[i * 4 + 0])) / 255.0f;
+		gChannel[i] = (static_cast<float>(bgraData[i * 4 + 1])) / 255.0f;
+		rChannel[i] = (static_cast<float>(bgraData[i * 4 + 2])) / 255.0f;
 	}
 }
 
 #ifdef SELFIE_SEGMENTER_HAVE_NEON
 
-inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
+inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgraData, const std::size_t pixelCount)
 {
-	const float32x4_t v_norm = vdupq_n_f32(1.0f / 255.0f);
+	const float norm_factor = 1.0f / 255.0f;
+	const float32x4_t v_norm = vdupq_n_f32(norm_factor);
 
-	float *r_channel = inputMat.channel(0);
-	float *g_channel = inputMat.channel(1);
-	float *b_channel = inputMat.channel(2);
+	float *rChannel = inputMat.channel(0);
+	float *gChannel = inputMat.channel(1);
+	float *bChannel = inputMat.channel(2);
 
-	for (int i = 0; i < SelfieSegmenter::PIXEL_COUNT; i += 8) {
-		uint8x8x4_t bgra_vec = vld4_u8(bgra_data + i * 4);
+	const std::size_t neon_limit = (pixelCount / 8) * 8;
+	std::size_t i = 0;
+	for (; i < neon_limit; i += 8) {
+		uint8x8x4_t bgra_vec = vld4_u8(bgraData + i * 4);
 
 		uint16x8_t b_u16 = vmovl_u8(bgra_vec.val[0]);
 		uint16x8_t g_u16 = vmovl_u8(bgra_vec.val[1]);
@@ -78,12 +81,20 @@ inline void copyDataToMatNeon(ncnn::Mat &inputMat, const std::uint8_t *bgra_data
 		float32x4_t g_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16))), v_norm);
 		float32x4_t r_f32_high = vmulq_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16))), v_norm);
 
-		vst1q_f32(b_channel + i, b_f32_low);
-		vst1q_f32(b_channel + i + 4, b_f32_high);
-		vst1q_f32(g_channel + i, g_f32_low);
-		vst1q_f32(g_channel + i + 4, g_f32_high);
-		vst1q_f32(r_channel + i, r_f32_low);
-		vst1q_f32(r_channel + i + 4, r_f32_high);
+		vst1q_f32(bChannel + i, b_f32_low);
+		vst1q_f32(bChannel + i + 4, b_f32_high);
+		vst1q_f32(gChannel + i, g_f32_low);
+		vst1q_f32(gChannel + i + 4, g_f32_high);
+		vst1q_f32(rChannel + i, r_f32_low);
+		vst1q_f32(rChannel + i + 4, r_f32_high);
+	}
+
+	for (; i < pixelCount; ++i) {
+		const std::uint8_t *pixelPtr = bgraData + i * 4;
+
+		bChannel[i] = static_cast<float>(pixelPtr[0]) * norm_factor;
+		gChannel[i] = static_cast<float>(pixelPtr[1]) * norm_factor;
+		rChannel[i] = static_cast<float>(pixelPtr[2]) * norm_factor;
 	}
 }
 
@@ -123,21 +134,23 @@ checkIfAVX2Available()
 __attribute__((target("avx,avx2")))
 #endif
 inline void
-copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
+copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data, const std::size_t pixelCount)
 {
-	float *r_channel = inputMat.channel(0);
-	float *g_channel = inputMat.channel(1);
-	float *b_channel = inputMat.channel(2);
+	float *rChannel = inputMat.channel(0);
+	float *gChannel = inputMat.channel(1);
+	float *bChannel = inputMat.channel(2);
 
-	constexpr int PIXELS_PER_LOOP = 8;
-	const int num_loops = SelfieSegmenter::PIXEL_COUNT / PIXELS_PER_LOOP;
+	constexpr std::size_t PIXELS_PER_LOOP = 8;
 
-	const __m256 v_inv_255 = _mm256_set1_ps(1.0f / 255.0f);
+	const std::size_t avx_limit = (pixelCount / PIXELS_PER_LOOP) * PIXELS_PER_LOOP;
+
+	const float norm_factor = 1.0f / 255.0f;
+	const __m256 v_inv_255 = _mm256_set1_ps(norm_factor);
 	const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF);
 
-	for (int i = 0; i < num_loops; ++i) {
-		const int offset = i * PIXELS_PER_LOOP;
-		const int data_offset = offset * 4;
+	std::size_t i = 0;
+	for (; i < avx_limit; i += PIXELS_PER_LOOP) {
+		const std::size_t data_offset = i * 4;
 
 		__m256i bgra_u32 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(bgra_data + data_offset));
 		__m256i b_u32 = _mm256_and_si256(bgra_u32, mask_u8);
@@ -152,9 +165,17 @@ copyDataToMatAVX2(ncnn::Mat &inputMat, const std::uint8_t *bgra_data)
 		g_ps = _mm256_mul_ps(g_ps, v_inv_255);
 		r_ps = _mm256_mul_ps(r_ps, v_inv_255);
 
-		_mm256_storeu_ps(b_channel + offset, b_ps);
-		_mm256_storeu_ps(g_channel + offset, g_ps);
-		_mm256_storeu_ps(r_channel + offset, r_ps);
+		_mm256_storeu_ps(bChannel + i, b_ps);
+		_mm256_storeu_ps(gChannel + i, g_ps);
+		_mm256_storeu_ps(rChannel + i, r_ps);
+	}
+
+	for (; i < pixelCount; ++i) {
+		const std::uint8_t *pixelPtr = bgra_data + i * 4;
+
+		bChannel[i] = static_cast<float>(pixelPtr[0]) * norm_factor;
+		gChannel[i] = static_cast<float>(pixelPtr[1]) * norm_factor;
+		rChannel[i] = static_cast<float>(pixelPtr[2]) * norm_factor;
 	}
 }
 
@@ -169,57 +190,34 @@ inline bool checkIfAVX2Available()
 
 } // namespace
 
-SelfieSegmenter::SelfieSegmenter(const ncnn::Net &_selfieSegmenterNet)
-	: selfieSegmenterNet(_selfieSegmenterNet),
-	  maskBuffer(PIXEL_COUNT),
-	  isAVX2Available(checkIfAVX2Available())
+void NcnnSelfieSegmenter::process(const std::uint8_t *bgraData)
 {
-	inputMat.create(INPUT_WIDTH, INPUT_HEIGHT, 3, sizeof(float));
-}
-
-void SelfieSegmenter::process(const std::uint8_t *bgra_data)
-{
-	if (!bgra_data) {
-		return;
+	if (!bgraData) {
+		throw std::invalid_argument("bgraData is null");
 	}
 
-	preprocess(bgra_data);
+#if defined(SELFIE_SEGMENTER_HAVE_NEON)
+	copyDataToMatNeon(inputMat, bgraData, getPixelCount());
+#elif defined(SELFIE_SEGMENTER_CHECK_AVX2)
+	if (isAVX2Available) {
+		copyDataToMatAVX2(inputMat, bgraData, getPixelCount());
+	} else {
+		copyDataToMatNaive(inputMat, bgraData, getPixelCount());
+	}
+#else
+	copyDataToMatNaive(inputMat, bgraData, getPixelCount());
+#endif
 
 	ncnn::Extractor ex = selfieSegmenterNet.create_extractor();
 	ex.input("in0", inputMat);
 	ex.extract("out0", outputMat);
 
-	std::vector<std::uint8_t> &maskToWrite = maskBuffer.beginWrite();
-	postprocess(maskToWrite);
-	maskBuffer.commitWrite();
-}
-
-const std::vector<std::uint8_t> &SelfieSegmenter::getMask() const
-{
-	return maskBuffer.read();
-}
-
-void SelfieSegmenter::preprocess(const std::uint8_t *bgra_data)
-{
-#if defined(SELFIE_SEGMENTER_HAVE_NEON)
-	copyDataToMatNeon(inputMat, bgra_data);
-#elif defined(SELFIE_SEGMENTER_CHECK_AVX2)
-	if (isAVX2Available) {
-		copyDataToMatAVX2(inputMat, bgra_data);
-	} else {
-		copyDataToMatNaive(inputMat, bgra_data);
-	}
-#else
-	copyDataToMatNaive(inputMat, bgra_data);
-#endif
-}
-
-void SelfieSegmenter::postprocess(std::vector<std::uint8_t> &mask) const
-{
-	const float *src_ptr = outputMat.channel(0);
-	for (int i = 0; i < PIXEL_COUNT; i++) {
-		mask[i] = static_cast<std::uint8_t>(std::max(0.f, std::min(255.f, src_ptr[i] * 255.f)));
-	}
+	const float *srcPtr = outputMat.channel(0);
+	maskBuffer.write([this, srcPtr](std::vector<std::uint8_t> &mask) {
+		for (std::size_t i = 0; i < getPixelCount(); i++) {
+			mask[i] = static_cast<std::uint8_t>(std::max(0.f, std::min(255.f, srcPtr[i] * 255.f)));
+		}
+	});
 }
 
 } // namespace LiveBackgroundRemovalLite

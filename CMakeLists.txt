@@ -139,7 +139,7 @@ if(APPLE)
 endif()
 
 add_library(SelfieSegmenter STATIC)
-target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/SelfieSegmenter.cpp)
+target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/NcnnSelfieSegmenter.cpp)
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
 target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn)
 

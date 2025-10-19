@@ -16,7 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <SelfieSegmenter.hpp>
+#include <NcnnSelfieSegmenter.hpp>
 
 #include <gtest/gtest.h>
 
@@ -55,26 +55,20 @@ const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_mask.png";
 
 TEST(SelfieSegmenterTest, Construction)
 {
-	ncnn::Net net;
-	ASSERT_EQ(net.load_param(kParamPath), 0);
-	ASSERT_EQ(net.load_model(kBinPath), 0);
-	SelfieSegmenter segmenter(net);
-	EXPECT_EQ(segmenter.getMask().size(), SelfieSegmenter::PIXEL_COUNT);
+	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, -1, 1);
+	EXPECT_EQ(selfieSegmenter.getMask().size(), selfieSegmenter.getPixelCount());
 }
 
 TEST(SelfieSegmenterTest, ProcessRealImage)
 {
-	ncnn::Net net;
-	ASSERT_EQ(net.load_param(kParamPath), 0);
-	ASSERT_EQ(net.load_model(kBinPath), 0);
-	SelfieSegmenter segmenter(net);
+	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, -1, 1);
 	std::vector<uint8_t> bgra;
 	int w = 0, h = 0;
 	ASSERT_TRUE(load_jpg_bgra(kTestImage, bgra, w, h));
-	ASSERT_EQ(w, SelfieSegmenter::INPUT_WIDTH);
-	ASSERT_EQ(h, SelfieSegmenter::INPUT_HEIGHT);
-	segmenter.process(bgra.data());
-	const auto &mask = segmenter.getMask();
+	ASSERT_EQ(w, selfieSegmenter.getWidth());
+	ASSERT_EQ(h, selfieSegmenter.getHeight());
+	selfieSegmenter.process(bgra.data());
+	const auto &mask = selfieSegmenter.getMask();
 	// Check mask is not all zero
 	int nonzero = 0;
 	for (auto v : mask)
@@ -84,14 +78,14 @@ TEST(SelfieSegmenterTest, ProcessRealImage)
 	// Load reference mask image (PNG, grayscale)
 	cv::Mat ref_img = cv::imread(kTestImageMask, cv::IMREAD_GRAYSCALE);
 	ASSERT_FALSE(ref_img.empty());
-	ASSERT_EQ(ref_img.cols, SelfieSegmenter::INPUT_WIDTH);
-	ASSERT_EQ(ref_img.rows, SelfieSegmenter::INPUT_HEIGHT);
+	ASSERT_EQ(ref_img.cols, selfieSegmenter.getWidth());
+	ASSERT_EQ(ref_img.rows, selfieSegmenter.getHeight());
 	// Compare pixel-wise
 	int same = 0;
-	for (int i = 0; i < SelfieSegmenter::PIXEL_COUNT; ++i) {
+	for (std::size_t i = 0; i < selfieSegmenter.getPixelCount(); ++i) {
 		if (std::abs(int(mask[i]) - int(ref_img.data[i])) <= 1)
 			++same;
 	}
-	double ratio = double(same) / SelfieSegmenter::PIXEL_COUNT;
+	double ratio = double(same) / selfieSegmenter.getPixelCount();
 	EXPECT_GE(ratio, 0.95);
 }

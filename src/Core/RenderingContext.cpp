@@ -22,6 +22,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "../BridgeUtils/AsyncTextureReader.hpp"
 
+#include "../SelfieSegmenter/NcnnSelfieSegmenter.hpp"
+
 using namespace KaitoTokyo::BridgeUtils;
 
 namespace KaitoTokyo {
@@ -29,19 +31,20 @@ namespace LiveBackgroundRemovalLite {
 
 namespace {
 
-inline std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height)
+inline std::array<std::uint32_t, 4> getMaskRoiDimension(std::uint32_t width, std::uint32_t height,
+							const std::unique_ptr<ISelfieSegmenter> &selfieSegmenter)
 {
 	using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 
-	double widthScale = static_cast<double>(SelfieSegmenter::INPUT_WIDTH) / static_cast<double>(width);
-	double heightScale = static_cast<double>(SelfieSegmenter::INPUT_HEIGHT) / static_cast<double>(height);
+	double widthScale = static_cast<double>(selfieSegmenter->getWidth()) / static_cast<double>(width);
+	double heightScale = static_cast<double>(selfieSegmenter->getHeight()) / static_cast<double>(height);
 	double scale = std::min(widthScale, heightScale);
 
 	std::uint32_t scaledWidth = static_cast<std::uint32_t>(std::round(width * scale));
 	std::uint32_t scaledHeight = static_cast<std::uint32_t>(std::round(height * scale));
 
-	std::uint32_t offsetX = (SelfieSegmenter::INPUT_WIDTH - scaledWidth) / 2;
-	std::uint32_t offsetY = (SelfieSegmenter::INPUT_HEIGHT - scaledHeight) / 2;
+	std::uint32_t offsetX = (selfieSegmenter->getWidth() - scaledWidth) / 2;
+	std::uint32_t offsetY = (selfieSegmenter->getHeight() - scaledHeight) / 2;
 
 	return {offsetX, offsetY, scaledWidth, scaledHeight};
 }
@@ -75,8 +78,10 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  mainEffect(_mainEffect),
 	  pluginConfig(_pluginConfig),
 	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
-	  selfieSegmenter(selfieSegmenterNet),
-	  readerSegmenterInput(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT, GS_BGRX),
+	  selfieSegmenter(std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
+								pluginConfig.selfieSegmenterBinPath.c_str(),
+								ncnnGpuIndex, ncnnNumThreads)),
+	  readerSegmenterInput(selfieSegmenter->getWidth(), selfieSegmenter->getHeight(), GS_BGRX),
 	  subsamplingRate(_subsamplingRate),
 	  width(_width),
 	  height(_height),
@@ -84,13 +89,13 @@ RenderingContext::RenderingContext(obs_source_t *_source, const ILogger &_logger
 	  heightSub((height / subsamplingRate) & ~1u),
 	  bgrxOriginalImage(make_unique_gs_texture(width, height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  r32fOriginalGrayscale(make_unique_gs_texture(width, height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  bgrxSegmenterInput(make_unique_gs_texture(SelfieSegmenter::INPUT_WIDTH, SelfieSegmenter::INPUT_HEIGHT,
-						    GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
-	  segmenterInputBuffer(SelfieSegmenter::PIXEL_COUNT * 4),
-	  maskRoiOffsetX(getMaskRoiDimension(width, height)[0]),
-	  maskRoiOffsetY(getMaskRoiDimension(width, height)[1]),
-	  maskRoiWidth(getMaskRoiDimension(width, height)[2]),
-	  maskRoiHeight(getMaskRoiDimension(width, height)[3]),
+	  bgrxSegmenterInput(make_unique_gs_texture(selfieSegmenter->getWidth(), selfieSegmenter->getHeight(), GS_BGRX,
+						    1, NULL, GS_RENDER_TARGET)),
+	  segmenterInputBuffer(selfieSegmenter->getPixelCount() * 4),
+	  maskRoiOffsetX(getMaskRoiDimension(width, height, selfieSegmenter)[0]),
+	  maskRoiOffsetY(getMaskRoiDimension(width, height, selfieSegmenter)[1]),
+	  maskRoiWidth(getMaskRoiDimension(width, height, selfieSegmenter)[2]),
+	  maskRoiHeight(getMaskRoiDimension(width, height, selfieSegmenter)[3]),
 	  r8SegmentationMask(make_unique_gs_texture(maskRoiWidth, maskRoiHeight, GS_R8, 1, NULL, GS_DYNAMIC)),
 	  r8SubGFGuide(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r8SubGFSource(make_unique_gs_texture(widthSub, heightSub, GS_R8, 1, NULL, GS_RENDER_TARGET)),
@@ -183,8 +188,8 @@ void RenderingContext::renderSegmenterInput(gs_texture_t *bgrxOriginalImage)
 void RenderingContext::renderSegmentationMask()
 {
 	const std::uint8_t *segmentationMaskData =
-		selfieSegmenter.getMask().data() + (maskRoiOffsetY * SelfieSegmenter::INPUT_WIDTH + maskRoiOffsetX);
-	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, SelfieSegmenter::INPUT_WIDTH, 0);
+		selfieSegmenter->getMask().data() + (maskRoiOffsetY * selfieSegmenter->getWidth() + maskRoiOffsetX);
+	gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData, selfieSegmenter->getWidth(), 0);
 }
 
 void RenderingContext::renderGuidedFilter(gs_texture_t *r16fOriginalGrayscale, gs_texture_t *r8SegmentationMask,
@@ -229,7 +234,7 @@ void RenderingContext::kickSegmentationTask()
 				if (token->load()) {
 					return;
 				}
-				self->selfieSegmenter.process(self->segmenterInputBuffer.data());
+				self->selfieSegmenter->process(self->segmenterInputBuffer.data());
 			} else {
 				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
 			}

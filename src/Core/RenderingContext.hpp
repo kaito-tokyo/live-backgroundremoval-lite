@@ -20,7 +20,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <array>
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
+#include <memory>
 
 #ifdef PREFIXED_NCNN_HEADERS
 #include <ncnn/net.h>
@@ -33,7 +35,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "../BridgeUtils/ILogger.hpp"
 #include "../BridgeUtils/ThrottledTaskQueue.hpp"
 
-#include "../SelfieSegmenter/SelfieSegmenter.hpp"
+#include "../SelfieSegmenter/ISelfieSegmenter.hpp"
 
 #include "MainEffect.hpp"
 #include "PluginConfig.hpp"
@@ -52,7 +54,7 @@ private:
 
 	BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
 	ncnn::Net selfieSegmenterNet;
-	SelfieSegmenter selfieSegmenter;
+	std::unique_ptr<ISelfieSegmenter> selfieSegmenter;
 	BridgeUtils::AsyncTextureReader readerSegmenterInput;
 
 public:

@@ -32,8 +32,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "../BridgeUtils/ILogger.hpp"
 #include "../BridgeUtils/ThrottledTaskQueue.hpp"
 
-#include "../SelfieSegmenter/SelfieSegmenter.hpp"
-
 #include "PluginProperty.hpp"
 #include "MainEffect.hpp"
 
