@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "ShapeConverter.hpp"
 
+#include <cassert>
 #include <cstring>
 
 #if defined(_M_X64) || defined(__x86_64__)
@@ -42,6 +43,14 @@ namespace SelfieSegmenter {
 
 namespace {
 
+/**
+ * @brief Naive C++ implementation for BGRA (uint8_t) to planar float (CHW) conversion.
+ * @param rChannel Pointer to the R channel output (float).
+ * @param gChannel Pointer to the G channel output (float).
+ * @param bChannel Pointer to the B channel output (float).
+ * @param bgraData Pointer to the input BGRA data (uint8_t).
+ * @param pixelCount Total number of pixels to process.
+ */
 inline void copy_r8_bgra_to_float_chw_naive(float *rChannel, float *gChannel, float *bChannel,
 					    const std::uint8_t *bgraData, const std::size_t pixelCount)
 {
@@ -52,6 +61,13 @@ inline void copy_r8_bgra_to_float_chw_naive(float *rChannel, float *gChannel, fl
 	}
 }
 
+/**
+ * @brief Naive C++ implementation for float (0.0f-1.0f) to uint8_t (0-255) conversion.
+ * @param dst Pointer to the output uint8_t buffer.
+ * @param src Pointer to the input float buffer.
+ * @param pixel_count Total number of pixels to process.
+ * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
+ */
 inline void copy_float32_to_r8_naive(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
 	for (std::size_t i = 0; i < pixel_count; i++) {
@@ -61,22 +77,29 @@ inline void copy_float32_to_r8_naive(std::uint8_t *dst, const float *src, std::s
 
 #ifdef SELFIE_SEGMENTER_HAVE_NEON
 
-// For best performance, channels and bgraData should be 16-byte aligned (NEON loads tolerate unaligned addresses)
+/**
+ * @brief NEON optimized implementation for BGRA (uint8_t) to planar float (CHW) conversion.
+ * @param rChannel Pointer to the R channel output (float).
+ * @param gChannel Pointer to the G channel output (float).
+ * @param bChannel Pointer to the B channel output (float).
+ * @param bgraData Pointer to the input BGRA data (uint8_t).
+ * @param pixelCount Total number of pixels to process.
+ */
 inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, float *bChannel,
 					   const std::uint8_t *bgraData, const std::size_t pixelCount)
 {
 	// Process 16 pixels at a time to maximize ILP
-	constexpr std::size_t PIXELS_PER_LOOP_16X = 16;
-	constexpr std::size_t PIXELS_PER_LOOP_8X = 8;
+	constexpr std::size_t PIXELS_PER_LOOP = 16;
 
 	constexpr float norm_factor = 1.0f / 255.0f;
 
-	std::size_t neon_limit_16x = (pixelCount / PIXELS_PER_LOOP_16X) * PIXELS_PER_LOOP_16X;
+	std::size_t neon_limit_16x = (pixelCount / PIXELS_PER_LOOP) * PIXELS_PER_LOOP;
 	std::size_t i = 0;
 
 	// --- Main 16-pixel loop ---
-	for (; i < neon_limit_16x; i += PIXELS_PER_LOOP_16X) {
+	for (; i < neon_limit_16x; i += PIXELS_PER_LOOP) {
 		// Load 16 pixels (16 * 4 = 64 bytes) and de-interleave
+		// vld4q_u8 supports unaligned access on arm64
 		uint8x16x4_t bgra_vec = vld4q_u8(bgraData + i * 4);
 
 		// --- Block 1: Pixels 0-7 ---
@@ -110,6 +133,7 @@ inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, flo
 		float32x4_t r_f32_2_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16_2))), norm_factor);
 
 		// --- Store (12 vectors) ---
+		// vst1q_f32 supports unaligned access on arm64
 		vst1q_f32(bChannel + i, b_f32_1_low);
 		vst1q_f32(bChannel + i + 4, b_f32_1_high);
 		vst1q_f32(gChannel + i, g_f32_1_low);
@@ -125,33 +149,7 @@ inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, flo
 		vst1q_f32(rChannel + i + 12, r_f32_2_high);
 	}
 
-	// --- Remainder Loop (8 pixels at a time) ---
-	// Handle remaining pixels (0-15) using the original 8-pixel loop
-	const std::size_t neon_limit_8x = (pixelCount / PIXELS_PER_LOOP_8X) * PIXELS_PER_LOOP_8X;
-	for (; i < neon_limit_8x; i += PIXELS_PER_LOOP_8X) {
-		uint8x8x4_t bgra_vec = vld4_u8(bgraData + i * 4);
-
-		uint16x8_t b_u16 = vmovl_u8(bgra_vec.val[0]);
-		uint16x8_t g_u16 = vmovl_u8(bgra_vec.val[1]);
-		uint16x8_t r_u16 = vmovl_u8(bgra_vec.val[2]);
-
-		float32x4_t b_f32_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(b_u16))), norm_factor);
-		float32x4_t g_f32_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(g_u16))), norm_factor);
-		float32x4_t r_f32_low = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_low_u16(r_u16))), norm_factor);
-
-		float32x4_t b_f32_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(b_u16))), norm_factor);
-		float32x4_t g_f32_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(g_u16))), norm_factor);
-		float32x4_t r_f32_high = vmulq_n_f32(vcvtq_f32_u32(vmovl_u16(vget_high_u16(r_u16))), norm_factor);
-
-		vst1q_f32(bChannel + i, b_f32_low);
-		vst1q_f32(bChannel + i + 4, b_f32_high);
-		vst1q_f32(gChannel + i, g_f32_low);
-		vst1q_f32(gChannel + i + 4, g_f32_high);
-		vst1q_f32(rChannel + i, r_f32_low);
-		vst1q_f32(rChannel + i + 4, r_f32_high);
-	}
-
-	// --- Final Scalar Loop (0-7 pixels) ---
+	// --- Final Scalar Loop (0-15 pixels) ---
 	for (; i < pixelCount; ++i) {
 		const std::uint8_t *pixelPtr = bgraData + i * 4;
 		bChannel[i] = static_cast<float>(pixelPtr[0]) * norm_factor;
@@ -160,11 +158,16 @@ inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, flo
 	}
 }
 
-// dst and src must be 16-byte aligned
+/**
+ * @brief NEON optimized implementation for float (0.0f-1.0f) to uint8_t (0-255) conversion.
+ * @param dst Pointer to the output uint8_t buffer.
+ * @param src Pointer to the input float buffer.
+ * @param pixel_count Total number of pixels to process.
+ * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
+ */
 inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
 	constexpr std::size_t FLOATS_PER_LOOP = 32;
-	constexpr std::size_t FLOATS_PER_LOOP_4X = 4;
 
 	constexpr float scale_factor = 255.0f;
 
@@ -175,6 +178,7 @@ inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::si
 		// --- Block 1: Pixels 0-15 ---
 
 		// 1.1 Load 16 floats (Block 1)
+		// vld1q_f32 supports unaligned access on arm64
 		float32x4_t v_f32_1 = vld1q_f32(src + i + 0);
 		float32x4_t v_f32_2 = vld1q_f32(src + i + 4);
 		float32x4_t v_f32_3 = vld1q_f32(src + i + 8);
@@ -238,6 +242,7 @@ inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::si
 
 		// 6.1 Combine & Store (Block 1)
 		uint8x16_t v_out_1 = vcombine_u8(v_u8_lo_1, v_u8_hi_1);
+		// vst1q_u8 supports unaligned access on arm64
 		vst1q_u8(dst + i, v_out_1);
 
 		// 6.2 Combine & Store (Block 2)
@@ -245,40 +250,10 @@ inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::si
 		vst1q_u8(dst + i + 16, v_out_2);
 	}
 
-	// --- Remainder Loop (4 pixels at a time) ---
-	std::size_t neon_limit_4x = (pixel_count / FLOATS_PER_LOOP_4X) * FLOATS_PER_LOOP_4X;
-	for (; i < neon_limit_4x; i += FLOATS_PER_LOOP_4X) {
-		float32x4_t v_f32 = vld1q_f32(src + i);
-		v_f32 = vmulq_n_f32(v_f32, scale_factor);
-		uint32x4_t v_u32 = vcvtq_u32_f32(v_f32);
-		uint16x4_t v_u16 = vmovn_u32(v_u32);
-		uint16x8_t v_u16_full = vcombine_u16(v_u16, vdup_n_u16(0));
-		uint8x8_t v_u8 = vmovn_u16(v_u16_full);
-		vst1_lane_u32(reinterpret_cast<uint32_t *>(dst + i), vreinterpret_u32_u8(v_u8), 0);
-	}
-
-	// --- Final 0-3 pixels (Temporary Buffer) ---
-	std::size_t remaining_pixels = pixel_count - i;
-	if (remaining_pixels > 0) {
-		// 1. & 2. Allocate aligned temp buffers on the stack
-		alignas(16) float temp_src[FLOATS_PER_LOOP_4X] = {0.0f};
-		alignas(4) uint8_t temp_dst[FLOATS_PER_LOOP_4X];
-
-		// 3a. Copy remaining pixels (1, 2, or 3) to temp buffer
-		std::memcpy(temp_src, src + i, remaining_pixels * sizeof(float));
-		// The rest are already 0.0f, which safely converts to 0.
-
-		// 4. Run the 4-pixel NEON conversion on the temp buffer
-		float32x4_t v_f32 = vld1q_f32(temp_src);
-		v_f32 = vmulq_n_f32(v_f32, scale_factor);
-		uint32x4_t v_u32 = vcvtq_u32_f32(v_f32);
-		uint16x4_t v_u16 = vmovn_u32(v_u32);
-		uint16x8_t v_u16_full = vcombine_u16(v_u16, vdup_n_u16(0));
-		uint8x8_t v_u8 = vmovn_u16(v_u16_full);
-		vst1_lane_u32(reinterpret_cast<uint32_t *>(temp_dst), vreinterpret_u32_u8(v_u8), 0);
-
-		// 5. Copy the valid results from temp buffer to the real destination
-		std::memcpy(dst + i, temp_dst, remaining_pixels * sizeof(std::uint8_t));
+	// --- Remainder Loop (Naive C++) ---
+	// Handle remaining 0-31 pixels
+	for (; i < pixel_count; ++i) {
+		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
 	}
 }
 
@@ -286,6 +261,10 @@ inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::si
 
 #ifdef SELFIE_SEGMENTER_CHECK_AVX2
 
+/**
+ * @brief Checks if the CPU supports AVX2 instructions and if the OS has enabled them.
+ * @return true if AVX2 is available, false otherwise.
+ */
 #if !defined(_MSC_VER)
 __attribute__((target("xsave")))
 #endif
@@ -301,19 +280,32 @@ check_if_avx2_available()
 #endif
 	};
 
+	// 1. Check for AVX support
 	cpuid(1);
+	bool avx = (cpuInfo[2] & (1 << 28)) != 0;
 	bool osxsave = (cpuInfo[2] & (1 << 27)) != 0;
-	if (!osxsave)
+	if (!avx || !osxsave)
 		return false;
 
+	// 2. Check if OS saves YMM registers
 	unsigned long long xcr_val = _xgetbv(0);
-	if ((xcr_val & 0x6) != 0x6)
+	if ((xcr_val & 0x6) != 0x6) // Check for SSE (bit 1) and AVX (bit 2) state
 		return false;
 
+	// 3. Check for AVX2 support
 	cpuid(7, 0);
-	return (cpuInfo[1] & (1 << 5)) != 0;
+	return (cpuInfo[1] & (1 << 5)) != 0; // Check EBX[5] for AVX2
 }
 
+/**
+ * @brief AVX2 optimized implementation for BGRA (uint8_t) to planar float (CHW) conversion.
+ * (Aligned Version)
+ * @param rChannel Pointer to the R channel output (float). Must be 32-byte aligned.
+ * @param gChannel Pointer to the G channel output (float). Must be 32-byte aligned.
+ * @param bChannel Pointer to the B channel output (float). Must be 32-byte aligned.
+ * @param bgraData Pointer to the input BGRA data (uint8_t). Must be 32-byte aligned.
+ * @param pixelCount Total number of pixels to process.
+ */
 #if !defined(_MSC_VER)
 __attribute__((target("avx,avx2")))
 #endif
@@ -321,58 +313,296 @@ inline void
 copy_r8_bgra_to_float_chw_avx2(float *rChannel, float *gChannel, float *bChannel, const std::uint8_t *bgraData,
 			       const std::size_t pixelCount)
 {
+	// --- 0. Pre-condition checks ---
+	// Assert that input/output pointers are 32-byte aligned
+	assert(reinterpret_cast<std::uintptr_t>(rChannel) % 32 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(gChannel) % 32 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(bChannel) % 32 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(bgraData) % 32 == 0);
+
 	constexpr std::size_t PIXELS_PER_LOOP = 8;
 
+	// Calculate the boundary for the main AVX2 loop (8 pixels per iteration)
 	const std::size_t avx_limit = (pixelCount / PIXELS_PER_LOOP) * PIXELS_PER_LOOP;
 
+	// --- 1. Prepare constant registers ---
 	constexpr float norm_factor = 1.0f / 255.0f;
 	const __m256 v_inv_255 = _mm256_set1_ps(norm_factor);
 	const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF);
 
 	std::size_t i = 0;
+	// --- 2. Main loop (8 pixels per iteration) ---
 	for (; i < avx_limit; i += PIXELS_PER_LOOP) {
 		const std::size_t data_offset = i * 4;
 
-		__m256i bgra_u32 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(bgraData + data_offset));
+		// Step 2a: Load 8 pixels (32 bytes) (Aligned)
+		__m256i bgra_u32 = _mm256_load_si256(reinterpret_cast<const __m256i *>(bgraData + data_offset));
+
+		// Step 2b: Channel separation (deinterleave)
 		__m256i b_u32 = _mm256_and_si256(bgra_u32, mask_u8);
 		__m256i g_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 8), mask_u8);
 		__m256i r_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 16), mask_u8);
 
+		// Step 2c: Convert int32_t to float
 		__m256 b_ps = _mm256_cvtepi32_ps(b_u32);
 		__m256 g_ps = _mm256_cvtepi32_ps(g_u32);
 		__m256 r_ps = _mm256_cvtepi32_ps(r_u32);
 
+		// Step 2d: Normalize (0.0 - 1.0)
 		b_ps = _mm256_mul_ps(b_ps, v_inv_255);
 		g_ps = _mm256_mul_ps(g_ps, v_inv_255);
 		r_ps = _mm256_mul_ps(r_ps, v_inv_255);
 
-		_mm256_storeu_ps(bChannel + i, b_ps);
-		_mm256_storeu_ps(gChannel + i, g_ps);
-		_mm256_storeu_ps(rChannel + i, r_ps);
+		// Step 2e: Store results (Aligned)
+		_mm256_store_ps(bChannel + i, b_ps);
+		_mm256_store_ps(gChannel + i, g_ps);
+		_mm256_store_ps(rChannel + i, r_ps);
 	}
 
+	// --- 3. Handle remaining pixels (1-7 pixels) ---
 	for (; i < pixelCount; ++i) {
 		const std::uint8_t *pixelPtr = bgraData + i * 4;
-
 		bChannel[i] = static_cast<float>(pixelPtr[0]) * norm_factor;
 		gChannel[i] = static_cast<float>(pixelPtr[1]) * norm_factor;
 		rChannel[i] = static_cast<float>(pixelPtr[2]) * norm_factor;
 	}
 }
 
+/**
+ * @brief AVX2 optimized implementation for BGRA (uint8_t) to planar float (CHW) conversion.
+ * (Unaligned Version)
+ * @param rChannel Pointer to the R channel output (float).
+ * @param gChannel Pointer to the G channel output (float).
+ * @param bChannel Pointer to the B channel output (float).
+ * @param bgraData Pointer to the input BGRA data (uint8_t).
+ * @param pixelCount Total number of pixels to process.
+ */
+#if !defined(_MSC_VER)
+__attribute__((target("avx,avx2")))
+#endif
+inline void
+copy_r8_bgra_to_float_chw_avx2_unaligned(float *rChannel, float *gChannel, float *bChannel,
+					 const std::uint8_t *bgraData, const std::size_t pixelCount)
+{
+	constexpr std::size_t PIXELS_PER_LOOP = 8;
+
+	// Calculate the boundary for the main AVX2 loop (8 pixels per iteration)
+	const std::size_t avx_limit = (pixelCount / PIXELS_PER_LOOP) * PIXELS_PER_LOOP;
+
+	// --- 1. Prepare constant registers ---
+	constexpr float norm_factor = 1.0f / 255.0f;
+	const __m256 v_inv_255 = _mm256_set1_ps(norm_factor);
+	const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF);
+
+	std::size_t i = 0;
+	// --- 2. Main loop (8 pixels per iteration) ---
+	for (; i < avx_limit; i += PIXELS_PER_LOOP) {
+		const std::size_t data_offset = i * 4;
+
+		// Step 2a: Load 8 pixels (32 bytes) (Unaligned)
+		__m256i bgra_u32 = _mm256_loadu_si256(reinterpret_cast<const __m256i *>(bgraData + data_offset));
+
+		// Step 2b: Channel separation (deinterleave)
+		__m256i b_u32 = _mm256_and_si256(bgra_u32, mask_u8);
+		__m256i g_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 8), mask_u8);
+		__m256i r_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 16), mask_u8);
+
+		// Step 2c: Convert int32_t to float
+		__m256 b_ps = _mm256_cvtepi32_ps(b_u32);
+		__m256 g_ps = _mm256_cvtepi32_ps(g_u32);
+		__m256 r_ps = _mm256_cvtepi32_ps(r_u32);
+
+		// Step 2d: Normalize (0.0 - 1.0)
+		b_ps = _mm256_mul_ps(b_ps, v_inv_255);
+		g_ps = _mm256_mul_ps(g_ps, v_inv_255);
+		r_ps = _mm256_mul_ps(r_ps, v_inv_255);
+
+		// Step 2e: Store results (Unaligned)
+		_mm256_storeu_ps(bChannel + i, b_ps);
+		_mm256_storeu_ps(gChannel + i, g_ps);
+		_mm256_storeu_ps(rChannel + i, r_ps);
+	}
+
+	// --- 3. Handle remaining pixels (1-7 pixels) ---
+	for (; i < pixelCount; ++i) {
+		const std::uint8_t *pixelPtr = bgraData + i * 4;
+		bChannel[i] = static_cast<float>(pixelPtr[0]) * norm_factor;
+		gChannel[i] = static_cast<float>(pixelPtr[1]) * norm_factor;
+		rChannel[i] = static_cast<float>(pixelPtr[2]) * norm_factor;
+	}
+}
+
+/**
+ * @brief Converts an array of floats (0.0f-1.0f) to an array of uint8_t (0-255).
+ * (Aligned Version)
+ *
+ * @param dst Output buffer (uint8_t*). Must be 32-byte aligned.
+ * @param src Input buffer (float*). Must be 32-byte aligned.
+ * @param pixel_count The number of pixels to process.
+ * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
+ */
+#if !defined(_MSC_VER)
+__attribute__((target("avx,avx2")))
+#endif
+inline void
+convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+{
+	// --- 0. Pre-condition checks (32-byte alignment) ---
+	assert(reinterpret_cast<std::uintptr_t>(dst) % 32 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(src) % 32 == 0);
+
+	// --- 1. Prepare constant registers ---
+	const __m256 v_255 = _mm256_set1_ps(255.0f);
+	const __m256i permute_mask = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
+
+	std::size_t i = 0;
+
+	// --- 2. Main loop (32 pixels per iteration) ---
+	const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
+	for (; i < avx_limit_32; i += 32) {
+
+		// Step 2a: Load (Aligned), multiply, and convert
+		__m256 v_f0 = _mm256_load_ps(src + i + 0);
+		__m256 v_f1 = _mm256_load_ps(src + i + 8);
+		__m256 v_f2 = _mm256_load_ps(src + i + 16);
+		__m256 v_f3 = _mm256_load_ps(src + i + 24);
+
+		v_f0 = _mm256_mul_ps(v_f0, v_255);
+		v_f1 = _mm256_mul_ps(v_f1, v_255);
+		v_f2 = _mm256_mul_ps(v_f2, v_255);
+		v_f3 = _mm256_mul_ps(v_f3, v_255);
+
+		__m256i v0 = _mm256_cvttps_epi32(v_f0); // [i0..i7]
+		__m256i v1 = _mm256_cvttps_epi32(v_f1); // [i8..i15]
+		__m256i v2 = _mm256_cvttps_epi32(v_f2); // [i16..i23]
+		__m256i v3 = _mm256_cvttps_epi32(v_f3); // [i24..i31]
+
+		// Step 2b: Pack (int32 -> int16)
+		__m256i v01_16 = _mm256_packs_epi32(v0, v1);
+		__m256i v23_16 = _mm256_packs_epi32(v2, v3);
+
+		// Step 2c: Pack (int16 -> uint8)
+		__m256i v_interleaved = _mm256_packus_epi16(v01_16, v23_16);
+
+		// Step 2d: Re-order (Permute)
+		__m256i v_result = _mm256_permutevar8x32_epi32(v_interleaved, permute_mask);
+
+		// Step 2e: Store 32 bytes (Aligned)
+		_mm256_store_si256(reinterpret_cast<__m256i *>(dst + i), v_result);
+	}
+
+	// --- 3. Remainder loop (1 pixel per iteration) ---
+	for (; i < pixel_count; ++i) {
+		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
+	}
+}
+
+/**
+ * @brief Converts an array of floats (0.0f-1.0f) to an array of uint8_t (0-255).
+ * (Unaligned Version)
+ *
+ * @param dst Output buffer (uint8_t*).
+ * @param src Input buffer (float*).
+ * @param pixel_count The number of pixels to process.
+ * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
+ */
+#if !defined(_MSC_VER)
+__attribute__((target("avx,avx2")))
+#endif
+inline void
+convert_float_to_uint8_avx2_unaligned(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+{
+	// --- 0. (No pre-condition checks for alignment) ---
+
+	// --- 1. Prepare constant registers ---
+	const __m256 v_255 = _mm256_set1_ps(255.0f);
+	const __m256i permute_mask = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
+
+	std::size_t i = 0;
+
+	// --- 2. Main loop (32 pixels per iteration) ---
+	const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
+	for (; i < avx_limit_32; i += 32) {
+
+		// Step 2a: Load (Unaligned), multiply, and convert
+		__m256 v_f0 = _mm256_loadu_ps(src + i + 0);
+		__m256 v_f1 = _mm256_loadu_ps(src + i + 8);
+		__m256 v_f2 = _mm256_loadu_ps(src + i + 16);
+		__m256 v_f3 = _mm256_loadu_ps(src + i + 24);
+
+		v_f0 = _mm256_mul_ps(v_f0, v_255);
+		v_f1 = _mm256_mul_ps(v_f1, v_255);
+		v_f2 = _mm256_mul_ps(v_f2, v_255);
+		v_f3 = _mm256_mul_ps(v_f3, v_255);
+
+		__m256i v0 = _mm256_cvttps_epi32(v_f0); // [i0..i7]
+		__m256i v1 = _mm256_cvttps_epi32(v_f1); // [i8..i15]
+		__m256i v2 = _mm256_cvttps_epi32(v_f2); // [i16..i23]
+		__m256i v3 = _mm256_cvttps_epi32(v_f3); // [i24..i31]
+
+		// Step 2b: Pack (int32 -> int16)
+		__m256i v01_16 = _mm256_packs_epi32(v0, v1);
+		__m256i v23_16 = _mm256_packs_epi32(v2, v3);
+
+		// Step 2c: Pack (int16 -> uint8)
+		__m256i v_interleaved = _mm256_packus_epi16(v01_16, v23_16);
+
+		// Step 2d: Re-order (Permute)
+		__m256i v_result = _mm256_permutevar8x32_epi32(v_interleaved, permute_mask);
+
+		// Step 2e: Store 32 bytes (Unaligned)
+		_mm256_storeu_si256(reinterpret_cast<__m256i *>(dst + i), v_result);
+	}
+
+	// --- 3. Remainder loop (1 pixel per iteration) ---
+	for (; i < pixel_count; ++i) {
+		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
+	}
+}
+
+/**
+ * @brief Checks if a pointer is aligned to the specified boundary.
+ * @param ptr The pointer to check.
+ * @param alignment The alignment boundary (default is 32 bytes).
+ * @return true if the pointer is aligned, false otherwise.
+ */
+inline bool check_ptr_aligned(const void *ptr, std::size_t alignment = 32)
+{
+	return (reinterpret_cast<std::uintptr_t>(ptr) % alignment) == 0;
+}
+
 #endif // SELFIE_SEGMENTER_CHECK_AVX2
 
 } // namespace
 
+/**
+ * @brief Converts BGRA (uint8_t) image data to planar float (CHW) format.
+ *
+ * This function dispatches to the best available implementation (AVX2, NEON, or naive)
+ * at runtime.
+ *
+ * @param rChannel Pointer to the R channel output (float).
+ * @param gChannel Pointer to the G channel output (float).
+ * @param bChannel Pointer to the B channel output (float).
+ * @param bgraData Pointer to the input BGRA data (uint8_t).
+ * @param pixelCount Total number of pixels to process.
+ */
 void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel, const std::uint8_t *bgraData,
 			       const std::size_t pixelCount)
 {
 #if defined(SELFIE_SEGMENTER_HAVE_NEON)
+	// NEON (arm64) intrinsics used (vld4q_u8, vst1q_f32) support unaligned access.
 	copy_r8_bgra_to_float_chw_neon(rChannel, gChannel, bChannel, bgraData, pixelCount);
 #elif defined(SELFIE_SEGMENTER_CHECK_AVX2)
 	const static bool is_avx2_available = check_if_avx2_available();
 	if (is_avx2_available) {
-		copy_r8_bgra_to_float_chw_avx2(rChannel, gChannel, bChannel, bgraData, pixelCount);
+		// Check if all pointers are 32-byte aligned
+		if (check_ptr_aligned(rChannel) && check_ptr_aligned(gChannel) && check_ptr_aligned(bChannel) &&
+		    check_ptr_aligned(bgraData)) {
+			copy_r8_bgra_to_float_chw_avx2(rChannel, gChannel, bChannel, bgraData, pixelCount);
+		} else {
+			copy_r8_bgra_to_float_chw_avx2_unaligned(rChannel, gChannel, bChannel, bgraData, pixelCount);
+		}
 	} else {
 		copy_r8_bgra_to_float_chw_naive(rChannel, gChannel, bChannel, bgraData, pixelCount);
 	}
@@ -381,10 +611,34 @@ void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel
 #endif
 }
 
+/**
+ * @brief Converts a float (0.0f-1.0f) array to a uint8_t (0-255) array.
+ *
+ * This function dispatches to the best available implementation (AVX2, NEON, or naive)
+ * at runtime.
+ *
+ * @param dst Pointer to the output uint8_t buffer.
+ * @param src Pointer to the input float buffer.
+ * @param pixel_count Total number of pixels to process.
+ * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
+ */
 void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
 #if defined(SELFIE_SEGMENTER_HAVE_NEON)
+	// NEON (arm64) intrinsics used (vld1q_f32, vst1q_u8) support unaligned access.
 	copy_float32_to_r8_neon(dst, src, pixel_count);
+#elif defined(SELFIE_SEGMENTER_CHECK_AVX2)
+	const static bool is_avx2_available = check_if_avx2_available();
+	if (is_avx2_available) {
+		// Check if both pointers are 32-byte aligned
+		if (check_ptr_aligned(dst) && check_ptr_aligned(src)) {
+			convert_float_to_uint8_avx2(dst, src, pixel_count);
+		} else {
+			convert_float_to_uint8_avx2_unaligned(dst, src, pixel_count);
+		}
+	} else {
+		copy_float32_to_r8_naive(dst, src, pixel_count);
+	}
 #else
 	copy_float32_to_r8_naive(dst, src, pixel_count);
 #endif
