@@ -39,12 +39,12 @@ jobs:
           repository: "microsoft/vcpkg"
           path: "${{ env.VCPKG_ROOT }}"
 
+      - name: "Install mono for NuGet"
+        run: "brew install mono"
+
       - name: "Bootstrap vcpkg"
         working-directory: "${{ env.VCPKG_ROOT }}"
         run: "./bootstrap-vcpkg.sh"
-
-      - name: "Install mono for NuGet"
-        run: "brew install mono"
 
       - name: "Setup NuGet Credentials"
         run: |
@@ -57,6 +57,9 @@ jobs:
             -Password "${{ secrets.GITHUB_TOKEN }}"
           mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
             -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+
+      - name: "Install dependencies"
+        run: "brew install googletest"
 
       - name: "Install dependencies from vcpkg"
         run: ".github/scripts/install-vcpkg-macos.bash"
