@@ -1,4 +1,6 @@
 {
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "live-backgroundremoval-lite",
   "dependencies": [
     "backward-cpp",
     {
@@ -18,16 +20,24 @@
       "platform": "(uwp | !windows) & !mingw"
     },
     "fmt",
-    "ncnn",
-    {
-      "name": "opencv4",
-      "default-features": false,
-      "features": [
-        "jpeg",
-        "png",
-        "tiff",
-        "webp"
+    "ncnn"
+  ],
+  "features": {
+    "tests": {
+      "description": "Build with test cases",
+      "dependencies": [
+        "gtest",
+        {
+          "name": "opencv4",
+          "default-features": false,
+          "features": [
+            "jpeg",
+            "png",
+            "tiff",
+            "webp"
+          ]
+        }
       ]
     }
-  ]
+  }
 }
