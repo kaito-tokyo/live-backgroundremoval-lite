@@ -39,12 +39,12 @@ jobs:
           repository: "microsoft/vcpkg"
           path: "${{ env.VCPKG_ROOT }}"
 
+      - name: "Install mono for NuGet"
+        run: "brew install mono"
+
       - name: "Bootstrap vcpkg"
         working-directory: "${{ env.VCPKG_ROOT }}"
         run: "./bootstrap-vcpkg.sh"
-
-      - name: "Install mono for NuGet"
-        run: "brew install mono"
 
       - name: "Setup NuGet Credentials"
         run: |
@@ -55,10 +55,13 @@ jobs:
             -Name "GitHub" \
             -UserName "${{ github.repository_owner }}" \
             -Password "${{ secrets.GITHUB_TOKEN }}"
-          mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
+
+      - name: "Install dependencies"
+        run: "brew install googletest"
 
       - name: "Install dependencies from vcpkg"
+        env:
+          VCPKG_ENABLE_TESTS: "1"
         run: ".github/scripts/install-vcpkg-macos.bash"
 
       - name: "Configure"
@@ -121,7 +124,7 @@ jobs:
             -Password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "Install dependencies from vcpkg"
-        run: "$VCPKG_ROOT/vcpkg install --triplet x64-windows-static-md-obs"
+        run: "$VCPKG_ROOT/vcpkg install --triplet x64-windows-static-md-obs --x-feature=tests"
 
       - name: "Configure"
         run: "cmake --preset windows-x64"
@@ -169,7 +172,8 @@ jobs:
             jq \
             ninja-build \
             pkg-config \
-            mono-devel
+            mono-devel \
+            libgtest-dev
             
       - name: "Setup NuGet Credentials"
         run: |
@@ -182,7 +186,7 @@ jobs:
             -Password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: "Install dependencies from vcpkg"
-        run: "$VCPKG_ROOT/vcpkg install --triplet x64-linux-obs"
+        run: "$VCPKG_ROOT/vcpkg install --triplet x64-linux-obs --x-feature=tests"
 
       - name: "Configure"
         run: "cmake --preset ubuntu-x86_64"

@@ -110,9 +110,16 @@ main() {
     fi
 
     log_info "Starting vcpkg builds for required architectures..."
-    "${VCPKG_ROOT}/vcpkg" install --triplet "${TRIPLET_ARM64}" --x-install-root="${VCPKG_BUILD_OUTPUT_DIR}/${TRIPLET_ARM64}"
+
+    local VCPKG_TESTS_ARG=""
+    if [[ "${VCPKG_ENABLE_TESTS:-0}" == "1" ]]; then
+        VCPKG_TESTS_ARG="--x-feature=tests"
+        log_info "Enabling vcpkg tests feature (--x-feature=tests)"
+    fi
+
+    "${VCPKG_ROOT}/vcpkg" install --triplet "${TRIPLET_ARM64}" --x-install-root="${VCPKG_BUILD_OUTPUT_DIR}/${TRIPLET_ARM64}" ${VCPKG_TESTS_ARG}
     sleep 1
-    "${VCPKG_ROOT}/vcpkg" install --triplet "${TRIPLET_X64}" --x-install-root="${VCPKG_BUILD_OUTPUT_DIR}/${TRIPLET_X64}"
+    "${VCPKG_ROOT}/vcpkg" install --triplet "${TRIPLET_X64}" --x-install-root="${VCPKG_BUILD_OUTPUT_DIR}/${TRIPLET_X64}" ${VCPKG_TESTS_ARG}
     log_success "vcpkg builds completed."
 
     log_info "Setting up universal directory structure at ${DIR_UNIVERSAL}..."
