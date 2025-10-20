@@ -83,6 +83,8 @@ elseif(APPLE AND BUILD_WITH_HOMEBREW)
   find_package(CURL MODULE REQUIRED)
   find_package(fmt CONFIG REQUIRED)
   find_package(ncnn CONFIG REQUIRED)
+
+  add_library(ncnn::ncnn ALIAS ncnn)
 else()
   message(FATAL_ERROR "Either USE_PKGCONFIG or VCPKG_TARGET_TRIPLET must be set.")
 endif()
