@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "ShapeConverter.hpp"
 
 #include <cassert>
+#include <cstring>
 
 #if defined(_M_X64) || defined(__x86_64__)
 #define SELFIE_SEGMENTER_CHECK_AVX2
@@ -309,8 +310,8 @@ check_if_avx2_available()
 __attribute__((target("avx,avx2")))
 #endif
 inline void
-copy_r8_bgra_to_float_chw_avx2_aligned(float *rChannel, float *gChannel, float *bChannel, const std::uint8_t *bgraData,
-				       const std::size_t pixelCount)
+copy_r8_bgra_to_float_chw_avx2(float *rChannel, float *gChannel, float *bChannel, const std::uint8_t *bgraData,
+			       const std::size_t pixelCount)
 {
 	// --- 0. Pre-condition checks ---
 	// Assert that input/output pointers are 32-byte aligned
@@ -486,7 +487,7 @@ inline void convert_float_to_uint8_avx2_core(std::uint8_t *dst, const float *src
 __attribute__((target("avx,avx2")))
 #endif
 inline void
-convert_float_to_uint8_avx2_aligned(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
 	assert(reinterpret_cast<std::uintptr_t>(dst) % 32 == 0);
 	assert(reinterpret_cast<std::uintptr_t>(src) % 32 == 0);
@@ -564,7 +565,7 @@ void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel
 		// Check if all pointers are 32-byte aligned
 		if (check_ptr_aligned(rChannel) && check_ptr_aligned(gChannel) && check_ptr_aligned(bChannel) &&
 		    check_ptr_aligned(bgraData)) {
-			copy_r8_bgra_to_float_chw_avx2_aligned(rChannel, gChannel, bChannel, bgraData, pixelCount);
+			copy_r8_bgra_to_float_chw_avx2(rChannel, gChannel, bChannel, bgraData, pixelCount);
 		} else {
 			copy_r8_bgra_to_float_chw_avx2_unaligned(rChannel, gChannel, bChannel, bgraData, pixelCount);
 		}
@@ -597,7 +598,7 @@ void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_c
 	if (is_avx2_available) {
 		// Check if both pointers are 32-byte aligned
 		if (check_ptr_aligned(dst) && check_ptr_aligned(src)) {
-			convert_float_to_uint8_avx2_aligned(dst, src, pixel_count);
+			convert_float_to_uint8_avx2(dst, src, pixel_count);
 		} else {
 			convert_float_to_uint8_avx2_unaligned(dst, src, pixel_count);
 		}
