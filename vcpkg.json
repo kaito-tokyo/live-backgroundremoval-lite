@@ -18,7 +18,6 @@
       "platform": "(uwp | !windows) & !mingw"
     },
     "fmt",
-    "gtest",
     "ncnn",
     {
       "name": "opencv4",
