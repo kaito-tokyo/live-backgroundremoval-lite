@@ -87,10 +87,10 @@ inline void copy_float32_to_r8_naive(std::uint8_t *dst, const float *src, std::s
 inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, float *bChannel,
 					   const std::uint8_t *bgraData, const std::size_t pixelCount)
 {
-    assert(reinterpret_cast<std::uintptr_t>(rChannel) % 16 == 0);
-    assert(reinterpret_cast<std::uintptr_t>(gChannel) % 16 == 0);
-    assert(reinterpret_cast<std::uintptr_t>(bChannel) % 16 == 0);
-    assert(reinterpret_cast<std::uintptr_t>(bgraData) % 16 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(rChannel) % 16 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(gChannel) % 16 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(bChannel) % 16 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(bgraData) % 16 == 0);
 
 	// Process 16 pixels at a time to maximize ILP
 	constexpr std::size_t PIXELS_PER_LOOP = 16;
@@ -313,71 +313,71 @@ __attribute__((target("avx,avx2")))
 #endif
 inline void
 copy_r8_bgra_to_float_chw_avx2(float *rChannel, float *gChannel, float *bChannel, const std::uint8_t *bgraData,
-                   const std::size_t pixelCount)
+			       const std::size_t pixelCount)
 {
-    // --- 0. Pre-condition checks ---
-    // Assert that input/output pointers are 32-byte aligned
-    assert(reinterpret_cast<std::uintptr_t>(rChannel) % 32 == 0);
-    assert(reinterpret_cast<std::uintptr_t>(gChannel) % 32 == 0);
-    assert(reinterpret_cast<std::uintptr_t>(bChannel) % 32 == 0);
-    assert(reinterpret_cast<std::uintptr_t>(bgraData) % 32 == 0);
+	// --- 0. Pre-condition checks ---
+	// Assert that input/output pointers are 32-byte aligned
+	assert(reinterpret_cast<std::uintptr_t>(rChannel) % 32 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(gChannel) % 32 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(bChannel) % 32 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(bgraData) % 32 == 0);
 
-    constexpr std::size_t PIXELS_PER_LOOP = 8;
+	constexpr std::size_t PIXELS_PER_LOOP = 8;
 
-    // Calculate the boundary for the main AVX2 loop (8 pixels per iteration)
-    const std::size_t avx_limit = (pixelCount / PIXELS_PER_LOOP) * PIXELS_PER_LOOP;
+	// Calculate the boundary for the main AVX2 loop (8 pixels per iteration)
+	const std::size_t avx_limit = (pixelCount / PIXELS_PER_LOOP) * PIXELS_PER_LOOP;
 
-    // --- 1. Prepare constant registers ---
-    // Normalization factor (1.0f / 255.0f) broadcasted to 8 floats
-    constexpr float norm_factor = 1.0f / 255.0f;
-    const __m256 v_inv_255 = _mm256_set1_ps(norm_factor);
-    // Bitmask to extract the lower 8 bits of each 32-bit integer (for uint8_t -> int32_t)
-    const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF);
+	// --- 1. Prepare constant registers ---
+	// Normalization factor (1.0f / 255.0f) broadcasted to 8 floats
+	constexpr float norm_factor = 1.0f / 255.0f;
+	const __m256 v_inv_255 = _mm256_set1_ps(norm_factor);
+	// Bitmask to extract the lower 8 bits of each 32-bit integer (for uint8_t -> int32_t)
+	const __m256i mask_u8 = _mm256_set1_epi32(0x000000FF);
 
-    std::size_t i = 0;
-    // --- 2. Main loop (8 pixels per iteration) ---
-    for (; i < avx_limit; i += PIXELS_PER_LOOP) {
-        const std::size_t data_offset = i * 4;
+	std::size_t i = 0;
+	// --- 2. Main loop (8 pixels per iteration) ---
+	for (; i < avx_limit; i += PIXELS_PER_LOOP) {
+		const std::size_t data_offset = i * 4;
 
-        // Step 2a: Load 8 pixels (32 bytes) (Aligned)
-        // Loads [B0 G0 R0 A0] ... [B7 G7 R7 A7] as 8x int32_t
-        __m256i bgra_u32 = _mm256_load_si256(reinterpret_cast<const __m256i *>(bgraData + data_offset));
+		// Step 2a: Load 8 pixels (32 bytes) (Aligned)
+		// Loads [B0 G0 R0 A0] ... [B7 G7 R7 A7] as 8x int32_t
+		__m256i bgra_u32 = _mm256_load_si256(reinterpret_cast<const __m256i *>(bgraData + data_offset));
 
-        // Step 2b: Channel separation (deinterleave)
-        // AND with bitmask (0xFF) to extract B channel (lower 8 bits)
-        __m256i b_u32 = _mm256_and_si256(bgra_u32, mask_u8);
-        // Right-shift by 8 bits and mask to extract G channel
-        __m256i g_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 8), mask_u8);
-        // Right-shift by 16 bits and mask to extract R channel
-        __m256i r_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 16), mask_u8);
+		// Step 2b: Channel separation (deinterleave)
+		// AND with bitmask (0xFF) to extract B channel (lower 8 bits)
+		__m256i b_u32 = _mm256_and_si256(bgra_u32, mask_u8);
+		// Right-shift by 8 bits and mask to extract G channel
+		__m256i g_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 8), mask_u8);
+		// Right-shift by 16 bits and mask to extract R channel
+		__m256i r_u32 = _mm256_and_si256(_mm256_srli_epi32(bgra_u32, 16), mask_u8);
 
-        // Step 2c: Convert int32_t to float
-        // Convert [B0..B7] (int32) to [B0..B7] (float)
-        __m256 b_ps = _mm256_cvtepi32_ps(b_u32);
-        __m256 g_ps = _mm256_cvtepi32_ps(g_u32);
-        __m256 r_ps = _mm256_cvtepi32_ps(r_u32);
+		// Step 2c: Convert int32_t to float
+		// Convert [B0..B7] (int32) to [B0..B7] (float)
+		__m256 b_ps = _mm256_cvtepi32_ps(b_u32);
+		__m256 g_ps = _mm256_cvtepi32_ps(g_u32);
+		__m256 r_ps = _mm256_cvtepi32_ps(r_u32);
 
-        // Step 2d: Normalize (0.0 - 1.0)
-        // Multiply by the normalization factor (1.0/255.0)
-        b_ps = _mm256_mul_ps(b_ps, v_inv_255);
-        g_ps = _mm256_mul_ps(g_ps, v_inv_255);
-        r_ps = _mm256_mul_ps(r_ps, v_inv_255);
+		// Step 2d: Normalize (0.0 - 1.0)
+		// Multiply by the normalization factor (1.0/255.0)
+		b_ps = _mm256_mul_ps(b_ps, v_inv_255);
+		g_ps = _mm256_mul_ps(g_ps, v_inv_255);
+		r_ps = _mm256_mul_ps(r_ps, v_inv_255);
 
-        // Step 2e: Store results (Aligned)
-        // Write 8 float values to each channel's memory
-        _mm256_store_ps(bChannel + i, b_ps);
-        _mm256_store_ps(gChannel + i, g_ps);
-        _mm256_store_ps(rChannel + i, r_ps);
-    }
-	
+		// Step 2e: Store results (Aligned)
+		// Write 8 float values to each channel's memory
+		_mm256_store_ps(bChannel + i, b_ps);
+		_mm256_store_ps(gChannel + i, g_ps);
+		_mm256_store_ps(rChannel + i, r_ps);
+	}
+
 	// --- 3. Handle remaining pixels (1-7 pixels) ---
-    // Use naive C++ for the remainder
-    for (; i < pixelCount; ++i) {
-        const std::uint8_t *pixelPtr = bgraData + i * 4;
-        bChannel[i] = static_cast<float>(pixelPtr[0]) * norm_factor;
-        gChannel[i] = static_cast<float>(pixelPtr[1]) * norm_factor;
-        rChannel[i] = static_cast<float>(pixelPtr[2]) * norm_factor;
-    }
+	// Use naive C++ for the remainder
+	for (; i < pixelCount; ++i) {
+		const std::uint8_t *pixelPtr = bgraData + i * 4;
+		bChannel[i] = static_cast<float>(pixelPtr[0]) * norm_factor;
+		gChannel[i] = static_cast<float>(pixelPtr[1]) * norm_factor;
+		rChannel[i] = static_cast<float>(pixelPtr[2]) * norm_factor;
+	}
 }
 
 /**
@@ -391,69 +391,70 @@ copy_r8_bgra_to_float_chw_avx2(float *rChannel, float *gChannel, float *bChannel
 #if !defined(_MSC_VER)
 __attribute__((target("avx,avx2")))
 #endif
-inline void convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+inline void
+convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
-    // --- 0. Pre-condition checks (32-byte alignment) ---
-    assert(reinterpret_cast<std::uintptr_t>(dst) % 32 == 0);
-    assert(reinterpret_cast<std::uintptr_t>(src) % 32 == 0);
+	// --- 0. Pre-condition checks (32-byte alignment) ---
+	assert(reinterpret_cast<std::uintptr_t>(dst) % 32 == 0);
+	assert(reinterpret_cast<std::uintptr_t>(src) % 32 == 0);
 
-    // --- 1. Prepare constant registers ---
-    const __m256 v_255 = _mm256_set1_ps(255.0f);
+	// --- 1. Prepare constant registers ---
+	const __m256 v_255 = _mm256_set1_ps(255.0f);
 
-    // Mask to re-order data after the Pack-Pack steps.
-    // AVX2 packs shuffle data across lanes. This mask undoes that shuffle.
-    // Input order (32-bit lanes): [0, 1, 2, 3 | 4, 5, 6, 7]
-    // Desired order:              [0, 4, 1, 5, 2, 6, 3, 7]
-    const __m256i permute_mask = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
+	// Mask to re-order data after the Pack-Pack steps.
+	// AVX2 packs shuffle data across lanes. This mask undoes that shuffle.
+	// Input order (32-bit lanes): [0, 1, 2, 3 | 4, 5, 6, 7]
+	// Desired order:              [0, 4, 1, 5, 2, 6, 3, 7]
+	const __m256i permute_mask = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
 
-    std::size_t i = 0;
+	std::size_t i = 0;
 
-    // --- 2. Main loop (32 pixels per iteration) ---
-    // 32 floats (128B) -> 32 uint8s (32B)
-    const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
-    for (; i < avx_limit_32; i += 32) {
-        
-        // Step 2a: Load floats, multiply by 255, and convert to int32 (truncate)
-        __m256 v_f0 = _mm256_load_ps(src + i + 0);
-        __m256 v_f1 = _mm256_load_ps(src + i + 8);
-        __m256 v_f2 = _mm256_load_ps(src + i + 16);
-        __m256 v_f3 = _mm256_load_ps(src + i + 24);
+	// --- 2. Main loop (32 pixels per iteration) ---
+	// 32 floats (128B) -> 32 uint8s (32B)
+	const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
+	for (; i < avx_limit_32; i += 32) {
 
-        v_f0 = _mm256_mul_ps(v_f0, v_255);
-        v_f1 = _mm256_mul_ps(v_f1, v_255);
-        v_f2 = _mm256_mul_ps(v_f2, v_255);
-        v_f3 = _mm256_mul_ps(v_f3, v_255);
+		// Step 2a: Load floats, multiply by 255, and convert to int32 (truncate)
+		__m256 v_f0 = _mm256_load_ps(src + i + 0);
+		__m256 v_f1 = _mm256_load_ps(src + i + 8);
+		__m256 v_f2 = _mm256_load_ps(src + i + 16);
+		__m256 v_f3 = _mm256_load_ps(src + i + 24);
 
-        __m256i v0 = _mm256_cvttps_epi32(v_f0); // [i0..i7]
-        __m256i v1 = _mm256_cvttps_epi32(v_f1); // [i8..i15]
-        __m256i v2 = _mm256_cvttps_epi32(v_f2); // [i16..i23]
-        __m256i v3 = _mm256_cvttps_epi32(v_f3); // [i24..i31]
+		v_f0 = _mm256_mul_ps(v_f0, v_255);
+		v_f1 = _mm256_mul_ps(v_f1, v_255);
+		v_f2 = _mm256_mul_ps(v_f2, v_255);
+		v_f3 = _mm256_mul_ps(v_f3, v_255);
 
-        // Step 2b: Pack (int32 -> int16)
-        // Data gets interleaved due to AVX2 lane constraints
-        // v01_16 = [i0..3, i8..11 | i4..7, i12..15]
-        __m256i v01_16 = _mm256_packs_epi32(v0, v1);
-        // v23_16 = [i16..19, i24..27 | i20..23, i28..31]
-        __m256i v23_16 = _mm256_packs_epi32(v2, v3);
+		__m256i v0 = _mm256_cvttps_epi32(v_f0); // [i0..i7]
+		__m256i v1 = _mm256_cvttps_epi32(v_f1); // [i8..i15]
+		__m256i v2 = _mm256_cvttps_epi32(v_f2); // [i16..i23]
+		__m256i v3 = _mm256_cvttps_epi32(v_f3); // [i24..i31]
 
-        // Step 2c: Pack (int16 -> uint8)
-        // Data is further interleaved
-        // v_interleaved = [i0..3, i8..11, i16..19, i24..27 | i4..7, i12..15, i20..23, i28..31]
-        __m256i v_interleaved = _mm256_packus_epi16(v01_16, v23_16);
+		// Step 2b: Pack (int32 -> int16)
+		// Data gets interleaved due to AVX2 lane constraints
+		// v01_16 = [i0..3, i8..11 | i4..7, i12..15]
+		__m256i v01_16 = _mm256_packs_epi32(v0, v1);
+		// v23_16 = [i16..19, i24..27 | i20..23, i28..31]
+		__m256i v23_16 = _mm256_packs_epi32(v2, v3);
 
-        // Step 2d: Re-order (Permute)
-        // Re-order the 32-bit lanes to restore the correct [i0..31] sequence
-        __m256i v_result = _mm256_permutevar8x32_epi32(v_interleaved, permute_mask);
+		// Step 2c: Pack (int16 -> uint8)
+		// Data is further interleaved
+		// v_interleaved = [i0..3, i8..11, i16..19, i24..27 | i4..7, i12..15, i20..23, i28..31]
+		__m256i v_interleaved = _mm256_packus_epi16(v01_16, v23_16);
 
-        // Step 2e: Store 32 bytes (32 uint8_t)
-        _mm256_store_si256(reinterpret_cast<__m256i*>(dst + i), v_result);
-    }
+		// Step 2d: Re-order (Permute)
+		// Re-order the 32-bit lanes to restore the correct [i0..31] sequence
+		__m256i v_result = _mm256_permutevar8x32_epi32(v_interleaved, permute_mask);
 
-    // --- 3. Remainder loop (1 pixel per iteration) ---
-    // Handle remaining 0-31 pixels with naive C++
-    for (; i < pixel_count; ++i) {
-        dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
-    }
+		// Step 2e: Store 32 bytes (32 uint8_t)
+		_mm256_store_si256(reinterpret_cast<__m256i *>(dst + i), v_result);
+	}
+
+	// --- 3. Remainder loop (1 pixel per iteration) ---
+	// Handle remaining 0-31 pixels with naive C++
+	for (; i < pixel_count; ++i) {
+		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
+	}
 }
 
 #endif // SELFIE_SEGMENTER_CHECK_AVX2
