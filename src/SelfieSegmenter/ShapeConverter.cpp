@@ -438,9 +438,12 @@ copy_r8_bgra_to_float_chw_avx2_unaligned(float *rChannel, float *gChannel, float
  * @param dst Output buffer (uint8_t*).
  * @param src Input buffer (float*).
  */
-template<bool Aligned>
-inline void convert_float_to_uint8_avx2_core(std::uint8_t *dst, const float *src, const __m256 &v_255,
-					     const __m256i &permute_mask)
+template <bool Aligned>
+inline void convert_float_to_uint8_avx2_core(
+	std::uint8_t *dst, const float *src,
+	const __m256& v_255,
+    const __m256i& permute_mask
+)
 {
 	__m256 v_f0, v_f1, v_f2, v_f3;
 
