@@ -63,7 +63,6 @@ jobs:
           xcodegen generate
           ./Scripts/build.bash
 
-        run: "./Scripts/build.bash"
       - name: "Install dependencies from vcpkg"
         env:
           VCPKG_ENABLE_TESTS: "1"
