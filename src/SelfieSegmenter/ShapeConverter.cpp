@@ -433,13 +433,58 @@ copy_r8_bgra_to_float_chw_avx2_unaligned(float *rChannel, float *gChannel, float
 }
 
 /**
+ * @brief Core routine for AVX2 float->uint8 conversion (32 pixels per call).
+ * @tparam Aligned If true, use aligned load/store; else use unaligned.
+ * @param dst Output buffer (uint8_t*).
+ * @param src Input buffer (float*).
+ */
+template <bool Aligned>
+inline void convert_float_to_uint8_avx2_core(
+	std::uint8_t *dst, const float *src,
+	const __m256& v_255,
+    const __m256i& permute_mask
+)
+{
+	__m256 v_f0, v_f1, v_f2, v_f3;
+
+	if constexpr (Aligned) {
+		v_f0 = _mm256_load_ps(src + 0);
+		v_f1 = _mm256_load_ps(src + 8);
+		v_f2 = _mm256_load_ps(src + 16);
+		v_f3 = _mm256_load_ps(src + 24);
+	} else {
+		v_f0 = _mm256_loadu_ps(src + 0);
+		v_f1 = _mm256_loadu_ps(src + 8);
+		v_f2 = _mm256_loadu_ps(src + 16);
+		v_f3 = _mm256_loadu_ps(src + 24);
+	}
+
+	v_f0 = _mm256_mul_ps(v_f0, v_255);
+	v_f1 = _mm256_mul_ps(v_f1, v_255);
+	v_f2 = _mm256_mul_ps(v_f2, v_255);
+	v_f3 = _mm256_mul_ps(v_f3, v_255);
+
+	__m256i v0 = _mm256_cvttps_epi32(v_f0);
+	__m256i v1 = _mm256_cvttps_epi32(v_f1);
+	__m256i v2 = _mm256_cvttps_epi32(v_f2);
+	__m256i v3 = _mm256_cvttps_epi32(v_f3);
+
+	__m256i v01_16 = _mm256_packs_epi32(v0, v1);
+	__m256i v23_16 = _mm256_packs_epi32(v2, v3);
+
+	__m256i v_interleaved = _mm256_packus_epi16(v01_16, v23_16);
+	__m256i v_result = _mm256_permutevar8x32_epi32(v_interleaved, permute_mask);
+
+	if constexpr (Aligned) {
+		_mm256_store_si256(reinterpret_cast<__m256i *>(dst), v_result);
+	} else {
+		_mm256_storeu_si256(reinterpret_cast<__m256i *>(dst), v_result);
+	}
+}
+
+/**
  * @brief Converts an array of floats (0.0f-1.0f) to an array of uint8_t (0-255).
  * (Aligned Version)
- *
- * @param dst Output buffer (uint8_t*). Must be 32-byte aligned.
- * @param src Input buffer (float*). Must be 32-byte aligned.
- * @param pixel_count The number of pixels to process.
- * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
  */
 #if !defined(_MSC_VER)
 __attribute__((target("avx,avx2")))
@@ -447,51 +492,16 @@ __attribute__((target("avx,avx2")))
 inline void
 convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
-	// --- 0. Pre-condition checks (32-byte alignment) ---
 	assert(reinterpret_cast<std::uintptr_t>(dst) % 32 == 0);
 	assert(reinterpret_cast<std::uintptr_t>(src) % 32 == 0);
 
-	// --- 1. Prepare constant registers ---
+	std::size_t i = 0;
+	const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
 	const __m256 v_255 = _mm256_set1_ps(255.0f);
 	const __m256i permute_mask = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
-
-	std::size_t i = 0;
-
-	// --- 2. Main loop (32 pixels per iteration) ---
-	const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
 	for (; i < avx_limit_32; i += 32) {
-
-		// Step 2a: Load (Aligned), multiply, and convert
-		__m256 v_f0 = _mm256_load_ps(src + i + 0);
-		__m256 v_f1 = _mm256_load_ps(src + i + 8);
-		__m256 v_f2 = _mm256_load_ps(src + i + 16);
-		__m256 v_f3 = _mm256_load_ps(src + i + 24);
-
-		v_f0 = _mm256_mul_ps(v_f0, v_255);
-		v_f1 = _mm256_mul_ps(v_f1, v_255);
-		v_f2 = _mm256_mul_ps(v_f2, v_255);
-		v_f3 = _mm256_mul_ps(v_f3, v_255);
-
-		__m256i v0 = _mm256_cvttps_epi32(v_f0); // [i0..i7]
-		__m256i v1 = _mm256_cvttps_epi32(v_f1); // [i8..i15]
-		__m256i v2 = _mm256_cvttps_epi32(v_f2); // [i16..i23]
-		__m256i v3 = _mm256_cvttps_epi32(v_f3); // [i24..i31]
-
-		// Step 2b: Pack (int32 -> int16)
-		__m256i v01_16 = _mm256_packs_epi32(v0, v1);
-		__m256i v23_16 = _mm256_packs_epi32(v2, v3);
-
-		// Step 2c: Pack (int16 -> uint8)
-		__m256i v_interleaved = _mm256_packus_epi16(v01_16, v23_16);
-
-		// Step 2d: Re-order (Permute)
-		__m256i v_result = _mm256_permutevar8x32_epi32(v_interleaved, permute_mask);
-
-		// Step 2e: Store 32 bytes (Aligned)
-		_mm256_store_si256(reinterpret_cast<__m256i *>(dst + i), v_result);
+		convert_float_to_uint8_avx2_core<true>(dst + i, src + i, v_255, permute_mask);
 	}
-
-	// --- 3. Remainder loop (1 pixel per iteration) ---
 	for (; i < pixel_count; ++i) {
 		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
 	}
@@ -500,11 +510,6 @@ convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pix
 /**
  * @brief Converts an array of floats (0.0f-1.0f) to an array of uint8_t (0-255).
  * (Unaligned Version)
- *
- * @param dst Output buffer (uint8_t*).
- * @param src Input buffer (float*).
- * @param pixel_count The number of pixels to process.
- * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
  */
 #if !defined(_MSC_VER)
 __attribute__((target("avx,avx2")))
@@ -512,49 +517,13 @@ __attribute__((target("avx,avx2")))
 inline void
 convert_float_to_uint8_avx2_unaligned(std::uint8_t *dst, const float *src, std::size_t pixel_count)
 {
-	// --- 0. (No pre-condition checks for alignment) ---
-
-	// --- 1. Prepare constant registers ---
+	std::size_t i = 0;
+	const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
 	const __m256 v_255 = _mm256_set1_ps(255.0f);
 	const __m256i permute_mask = _mm256_setr_epi32(0, 4, 1, 5, 2, 6, 3, 7);
-
-	std::size_t i = 0;
-
-	// --- 2. Main loop (32 pixels per iteration) ---
-	const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
 	for (; i < avx_limit_32; i += 32) {
-
-		// Step 2a: Load (Unaligned), multiply, and convert
-		__m256 v_f0 = _mm256_loadu_ps(src + i + 0);
-		__m256 v_f1 = _mm256_loadu_ps(src + i + 8);
-		__m256 v_f2 = _mm256_loadu_ps(src + i + 16);
-		__m256 v_f3 = _mm256_loadu_ps(src + i + 24);
-
-		v_f0 = _mm256_mul_ps(v_f0, v_255);
-		v_f1 = _mm256_mul_ps(v_f1, v_255);
-		v_f2 = _mm256_mul_ps(v_f2, v_255);
-		v_f3 = _mm256_mul_ps(v_f3, v_255);
-
-		__m256i v0 = _mm256_cvttps_epi32(v_f0); // [i0..i7]
-		__m256i v1 = _mm256_cvttps_epi32(v_f1); // [i8..i15]
-		__m256i v2 = _mm256_cvttps_epi32(v_f2); // [i16..i23]
-		__m256i v3 = _mm256_cvttps_epi32(v_f3); // [i24..i31]
-
-		// Step 2b: Pack (int32 -> int16)
-		__m256i v01_16 = _mm256_packs_epi32(v0, v1);
-		__m256i v23_16 = _mm256_packs_epi32(v2, v3);
-
-		// Step 2c: Pack (int16 -> uint8)
-		__m256i v_interleaved = _mm256_packus_epi16(v01_16, v23_16);
-
-		// Step 2d: Re-order (Permute)
-		__m256i v_result = _mm256_permutevar8x32_epi32(v_interleaved, permute_mask);
-
-		// Step 2e: Store 32 bytes (Unaligned)
-		_mm256_storeu_si256(reinterpret_cast<__m256i *>(dst + i), v_result);
+		convert_float_to_uint8_avx2_core<false>(dst + i, src + i, v_255, permute_mask);
 	}
-
-	// --- 3. Remainder loop (1 pixel per iteration) ---
 	for (; i < pixel_count; ++i) {
 		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
 	}
