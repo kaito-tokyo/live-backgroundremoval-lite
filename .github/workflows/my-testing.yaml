@@ -56,17 +56,17 @@ jobs:
             -UserName "${{ github.repository_owner }}" \
             -Password "${{ secrets.GITHUB_TOKEN }}"
 
+      - name: "Install dependencies from vcpkg"
+        env:
+          VCPKG_ENABLE_TESTS: "1"
+        run: ".github/scripts/install-vcpkg-macos.bash"
+
       - name: "Build CoreMLSelfieSegmenter"
         working-directory: "vendor/CoreMLSelfieSegmenter"
         run: |
           brew install xcodegen
           xcodegen generate
           ./Scripts/build.bash
-
-      - name: "Install dependencies from vcpkg"
-        env:
-          VCPKG_ENABLE_TESTS: "1"
-        run: ".github/scripts/install-vcpkg-macos.bash"
 
       - name: "Configure"
         run: "cmake --preset macos"

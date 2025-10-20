@@ -188,6 +188,13 @@ jobs:
       - name: "Install dependencies from vcpkg"
         run: ".github/scripts/install-vcpkg-macos.bash"
 
+      - name: "Build CoreMLSelfieSegmenter"
+        working-directory: "vendor/CoreMLSelfieSegmenter"
+        run: |
+          brew install xcodegen
+          xcodegen generate
+          ./Scripts/build.bash
+
       - name: Build Plugin 🧱
         uses: ./.github/actions/build-plugin
         with:
@@ -319,6 +326,13 @@ jobs:
 
       - name: "Install dependencies from vcpkg"
         run: ".github/scripts/install-vcpkg-macos.bash"
+
+      - name: "Build CoreMLSelfieSegmenter"
+        working-directory: "vendor/CoreMLSelfieSegmenter"
+        run: |
+          brew install xcodegen
+          xcodegen generate
+          ./Scripts/build.bash
 
       - name: Build Plugin 🧱
         uses: ./.github/actions/build-plugin
