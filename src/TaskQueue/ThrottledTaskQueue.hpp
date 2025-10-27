@@ -63,11 +63,11 @@ public:
 	/**
      * @brief Constructor. Starts the worker thread.
      * @param logger The logger to use for internal messages.
-     * @param max_size The maximum number of tasks the queue can hold. Must be at least 1.
+     * @param maxQueueSize The maximum number of tasks the queue can hold. Must be at least 1.
      */
 	ThrottledTaskQueue(const Logger::ILogger &logger, std::size_t maxQueueSize)
 		: logger_(logger),
-		  maxQueueSize_(maxQueueSize > 0 ? maxQueueSize : throw std::invalid_argument("max_size must be greater than 0")),
+		  maxQueueSize_(maxQueueSize > 0 ? maxQueueSize : throw std::invalid_argument("maxQueueSize must be greater than 0")),
 		  worker_(&ThrottledTaskQueue::workerLoop, this)
 	{
 	}
@@ -138,6 +138,14 @@ private:
 			{
 				std::lock_guard<std::mutex> lock(mutex_);
 				currentTaskToken_ = queuedTaskOpt->second;
+			}
+
+			if (currentTaskToken_->load()) {
+				{
+					std::lock_guard<std::mutex> lock(mutex_);
+					currentTaskToken_.reset();
+				}
+				continue;
 			}
 
 			try {
