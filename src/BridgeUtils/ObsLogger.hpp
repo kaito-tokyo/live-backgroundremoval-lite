@@ -19,7 +19,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #pragma once
 
 #include <mutex>
-#include <sstream>
+#include <string>
 #include <string_view>
 
 #include <util/base.h>
@@ -31,7 +31,7 @@ namespace BridgeUtils {
 
 class ObsLogger final : public ILogger {
 public:
-	ObsLogger(const char *_prefix) : prefix(_prefix) {}
+	ObsLogger(const char *prefix) : prefix_(prefix ? prefix : "") {}
 	~ObsLogger() noexcept override = default;
 
 protected:
@@ -54,15 +54,16 @@ protected:
 			blogLevel = LOG_ERROR;
 			break;
 		default:
-			std::lock_guard<std::mutex> lock(mtx);
+			std::lock_guard<std::mutex> lock(mutex_);
 			blog(LOG_ERROR, "[LOGGER FATAL] Unknown log level: %d\n", static_cast<int>(level));
 			return;
 		}
 
-		std::lock_guard<std::mutex> lock(mtx);
+		std::lock_guard<std::mutex> lock(mutex_);
 		if (message.length() <= MAX_LOG_CHUNK_SIZE) {
 			blog(blogLevel, "%.*s", static_cast<int>(message.length()), message.data());
 		} else {
+			// Log in chunks if message is too long
 			for (size_t i = 0; i < message.length(); i += MAX_LOG_CHUNK_SIZE) {
 				const auto chunk = message.substr(i, MAX_LOG_CHUNK_SIZE);
 				blog(blogLevel, "%.*s", static_cast<int>(chunk.length()), chunk.data());
@@ -70,13 +71,13 @@ protected:
 		}
 	}
 
-protected:
-	const char *getPrefix() const noexcept override { return prefix; }
+	const char *getPrefix() const noexcept override { return prefix_.c_str(); }
 
 private:
-	const char *prefix;
-	mutable std::mutex mtx;
+	const std::string prefix_;
+	mutable std::mutex mutex_;
 };
 
 } // namespace BridgeUtils
 } // namespace KaitoTokyo
+
