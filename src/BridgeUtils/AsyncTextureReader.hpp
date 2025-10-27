@@ -184,6 +184,14 @@ public:
 	}
 
 	/**
+	 * @brief Destroys the AsyncTextureReader and releases all allocated resources.
+	 *
+	 * Automatically cleans up the GPU staging surfaces (via unique_ptr)
+	 * and the CPU-side pixel buffers (via std::vector).
+	 */
+	~AsyncTextureReader() noexcept = default;
+
+	/**
 	 * @brief Schedules a GPU texture copy. Call from the render/GPU thread.
 	 *
 	 * @param sourceTexture The source GPU texture to copy.
