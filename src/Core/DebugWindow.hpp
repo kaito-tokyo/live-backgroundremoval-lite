@@ -28,7 +28,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <QVBoxLayout>
 
 #include <AsyncTextureReader.hpp>
-#include <ILogger.hpp>
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {

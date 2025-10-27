@@ -22,8 +22,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <obs.h>
 
-#include <GsUnique.hpp>
 #include <ILogger.hpp>
+
+#include <GsUnique.hpp>
 #include <ObsUnique.hpp>
 
 namespace KaitoTokyo {
@@ -32,7 +33,7 @@ namespace LiveBackgroundRemovalLite {
 namespace main_effect_detail {
 
 inline gs_eparam_t *getEffectParam(const BridgeUtils::unique_gs_effect_t &effect, const char *name,
-				   const BridgeUtils::ILogger &logger)
+				   const Logger::ILogger &logger)
 {
 	gs_eparam_t *param = gs_effect_get_param_by_name(effect.get(), name);
 
@@ -135,7 +136,7 @@ public:
 	gs_eparam_t *const floatUpperBound = nullptr;
 	gs_eparam_t *const floatAlpha = nullptr;
 
-	MainEffect(const BridgeUtils::unique_bfree_char_t &effectPath, const BridgeUtils::ILogger &logger)
+	MainEffect(const BridgeUtils::unique_bfree_char_t &effectPath, const Logger::ILogger &logger)
 		: gsEffect(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
 		  textureImage(main_effect_detail::getEffectParam(gsEffect, "image", logger)),
 		  floatTexelWidth(main_effect_detail::getEffectParam(gsEffect, "texelWidth", logger)),

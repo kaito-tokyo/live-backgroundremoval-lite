@@ -29,6 +29,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "PluginConfig.hpp"
 
+using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 

@@ -27,7 +27,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <QDebug>
 
 #include <AsyncTextureReader.hpp>
-#include <ObsLogger.hpp>
 
 #include "MainPluginContext.h"
 #include "RenderingContext.hpp"

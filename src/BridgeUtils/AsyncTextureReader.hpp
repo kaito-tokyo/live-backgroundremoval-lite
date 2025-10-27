@@ -282,7 +282,7 @@ public:
 		return cpuBuffers_[activeCpuBufferIndex_.load(std::memory_order_acquire)];
 	}
 
-/**
+	/**
 	 * @brief Returns the width of the texture.
 	 * @return Texture width in pixels.
 	 */

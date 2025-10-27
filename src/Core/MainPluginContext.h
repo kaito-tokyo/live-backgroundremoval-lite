@@ -45,10 +45,10 @@ class RenderingContext;
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
 private:
 	obs_source_t *const source;
-	const BridgeUtils::ILogger &logger;
+	const Logger::ILogger &logger;
 	std::shared_future<std::string> latestVersionFuture;
 	const MainEffect mainEffect;
-	BridgeUtils::ThrottledTaskQueue selfieSegmenterTaskQueue;
+	TaskQueue::ThrottledTaskQueue selfieSegmenterTaskQueue;
 
 	PluginProperty pluginProperty;
 
@@ -61,7 +61,7 @@ private:
 
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source,
-			  std::shared_future<std::string> latestVersionFuture, const BridgeUtils::ILogger &logger);
+			  std::shared_future<std::string> latestVersionFuture, const Logger::ILogger &logger);
 	void startup() noexcept;
 	void shutdown() noexcept;
 	~MainPluginContext() noexcept;
@@ -82,7 +82,7 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
-	const BridgeUtils::ILogger &getLogger() const noexcept { return logger; }
+	const Logger::ILogger &getLogger() const noexcept { return logger; }
 
 	void setDebugWindowNull() { debugWindow = nullptr; }
 

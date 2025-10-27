@@ -38,14 +38,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
 
+using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
 MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source,
-				     std::shared_future<std::string> _latestVersionFuture,
-				     const BridgeUtils::ILogger &_logger)
+				     std::shared_future<std::string> _latestVersionFuture, const ILogger &_logger)
 	: source{_source},
 	  logger(_logger),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
