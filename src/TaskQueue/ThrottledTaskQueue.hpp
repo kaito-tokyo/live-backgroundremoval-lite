@@ -59,32 +59,23 @@ public:
 private:
 	using QueuedTask = std::pair<std::function<void()>, CancellationToken>;
 
-	const Logger::ILogger &logger;
-	const std::size_t maxQueueSize;
-	std::thread worker;
-	std::mutex mtx;
-	std::condition_variable cond;
-	std::queue<QueuedTask> queue;
-	bool stopped = false;
-
 public:
 	/**
      * @brief Constructor. Starts the worker thread.
-     * @param _logger The logger to use for internal messages.
+     * @param logger The logger to use for internal messages.
      * @param max_size The maximum number of tasks the queue can hold. Must be at least 1.
      */
-	ThrottledTaskQueue(const Logger::ILogger &_logger, std::size_t _maxQueueSize)
-		: logger(_logger),
-		  maxQueueSize(_maxQueueSize),
-		  worker(&ThrottledTaskQueue::workerLoop, this)
+	ThrottledTaskQueue(const Logger::ILogger &logger, std::size_t maxQueueSize)
+		: logger_(logger),
+		  maxQueueSize_(maxQueueSize > 0 ? maxQueueSize : throw std::invalid_argument("max_size must be greater than 0")),
+		  worker_(&ThrottledTaskQueue::workerLoop, this)
 	{
-		assert(_maxQueueSize > 0 && "max_size must be greater than 0");
 	}
 
 	/**
      * @brief Destructor. Stops the queue and waits for the worker thread to finish.
      */
-	~ThrottledTaskQueue() { shutdown(); }
+	~ThrottledTaskQueue() noexcept { shutdown(); }
 
 	// Forbid copy and move semantics to keep ownership simple.
 	ThrottledTaskQueue(const ThrottledTaskQueue &) = delete;
@@ -95,40 +86,40 @@ public:
 	/**
 	 * @brief Stops the queue and waits for the worker thread to finish.
 	 */
-	void shutdown()
+	void shutdown() noexcept
 	{
-		if (worker.joinable()) {
+		if (worker_.joinable()) {
 			stop();
-			worker.join();
+			worker_.join();
 		}
 	}
 
 	/**
      * @brief Pushes a cancellable task to the queue.
-     * @param user_task The task to be executed. It receives a cancellation token as an argument.
+     * @param userTask The task to be executed. It receives a cancellation token as an argument.
      * @return A token that can be used to cancel the task externally.
      * @throws std::runtime_error if the queue has already been stopped.
      */
-	CancellationToken push(CancellableTask user_task)
+	CancellationToken push(CancellableTask userTask)
 	{
 		auto token = std::make_shared<std::atomic<bool>>(false);
 
 		{
-			std::lock_guard<std::mutex> lock(mtx);
-			if (stopped) {
+			std::lock_guard<std::mutex> lock(mutex_);
+			if (stopped_) {
 				throw std::runtime_error("push on stopped ThrottledTaskQueue");
 			}
 
 			// If the queue is full, cancel and remove the oldest task.
-			while (queue.size() >= maxQueueSize) {
-				if (queue.front().second) {
-					queue.front().second->store(true); // Cancel
+			while (queue_.size() >= maxQueueSize_) {
+				if (queue_.front().second) {
+					queue_.front().second->store(true); // Cancel
 				}
-				queue.pop();
+				queue_.pop();
 			}
-			queue.push({[user_task, token] { user_task(token); }, token});
+			queue_.push({[userTask, token] { userTask(token); }, token});
 		}
-		cond.notify_one();
+		cond_.notify_one();
 		return token;
 	}
 
@@ -139,17 +130,27 @@ private:
 	void workerLoop()
 	{
 		while (true) {
-			std::optional<std::function<void()>> taskOpt = pop();
-			if (!taskOpt) {
+			std::optional<QueuedTask> queuedTaskOpt = pop();
+			if (!queuedTaskOpt) {
 				break;
 			}
 
+			{
+				std::lock_guard<std::mutex> lock(mutex_);
+				currentTaskToken_ = queuedTaskOpt->second;
+			}
+
 			try {
-				(*taskOpt)();
+				queuedTaskOpt->first();
 			} catch (const std::exception &e) {
-				logger.error("ThrottledTaskQueue: Task threw an exception: {}", e.what());
+				logger_.error("ThrottledTaskQueue: Task threw an exception: {}", e.what());
 			} catch (...) {
-				logger.error("ThrottledTaskQueue: Task threw an unknown exception.");
+				logger_.error("ThrottledTaskQueue: Task threw an unknown exception.");
+			}
+
+			{
+				std::lock_guard<std::mutex> lock(mutex_);
+				currentTaskToken_.reset();
 			}
 		}
 	}
@@ -158,19 +159,19 @@ private:
      * @brief Pops a task from the queue. Waits if the queue is empty.
      * @return The task to be executed, or std::nullopt if the queue is stopped and empty.
      */
-	std::optional<std::function<void()>> pop()
+	std::optional<QueuedTask> pop()
 	{
-		std::unique_lock<std::mutex> lock(mtx);
-		cond.wait(lock, [this] { return !queue.empty() || stopped; });
+		std::unique_lock<std::mutex> lock(mutex_);
+		cond_.wait(lock, [this] { return !queue_.empty() || stopped_; });
 
-		if (stopped && queue.empty()) {
+		if (stopped_ && queue_.empty()) {
 			return std::nullopt;
 		}
 
-		auto task_pair = std::move(queue.front());
-		queue.pop();
+		auto queuedTask = std::move(queue_.front());
+		queue_.pop();
 
-		return std::move(task_pair.first);
+		return std::move(queuedTask);
 	}
 
 	/**
@@ -180,22 +181,35 @@ private:
 	void stop()
 	{
 		{
-			std::lock_guard<std::mutex> lock(mtx);
-			if (stopped) {
+			std::lock_guard<std::mutex> lock(mutex_);
+			if (stopped_) {
 				return;
 			}
-			stopped = true;
+			stopped_ = true;
 
 			// Cancel all pending tasks in the queue before shutting down.
-			while (!queue.empty()) {
-				if (queue.front().second) {
-					queue.front().second->store(true);
+			while (!queue_.empty()) {
+				if (queue_.front().second) {
+					queue_.front().second->store(true);
 				}
-				queue.pop();
+				queue_.pop();
+			}
+
+			if (currentTaskToken_) {
+				currentTaskToken_->store(true);
 			}
 		}
-		cond.notify_all();
+		cond_.notify_all();
 	}
+
+	const Logger::ILogger &logger_;
+	const std::size_t maxQueueSize_;
+	std::mutex mutex_;
+	std::condition_variable cond_;
+	std::queue<QueuedTask> queue_;
+	bool stopped_ = false;
+	CancellationToken currentTaskToken_;
+	std::thread worker_;
 };
 
 } // namespace TaskQueue
