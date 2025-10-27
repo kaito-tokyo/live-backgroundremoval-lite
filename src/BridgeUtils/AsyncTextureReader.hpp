@@ -226,7 +226,7 @@ public:
 			// For now, we rely on the constructor check.
 			// An assert could be useful here too.
 			assert(stagesurf != nullptr && "Staging surface is null during sync");
-			return; 
+			return;
 		}
 
 		const ScopedStageSurfMap mappedSurf(stagesurf);

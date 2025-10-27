@@ -113,9 +113,8 @@ inline unique_bfree_char_t unique_obs_module_file(const char *file)
 	char *rawPath = obs_module_file(file);
 	if (!rawPath) {
 		// Provide a more informative error message
-		const std::string errorMsg =
-			file ? std::string("obs_module_file failed for file: ") + file
-			     : "obs_module_file failed (null input path)";
+		const std::string errorMsg = file ? std::string("obs_module_file failed for file: ") + file
+						  : "obs_module_file failed (null input path)";
 		throw std::runtime_error(errorMsg);
 	}
 	return unique_bfree_char_t(rawPath);
@@ -135,9 +134,8 @@ inline unique_bfree_char_t unique_obs_module_config_path(const char *file)
 {
 	char *rawPath = obs_module_config_path(file);
 	if (!rawPath) {
-		const std::string errorMsg =
-			file ? std::string("obs_module_config_path failed for file: ") + file
-			     : "obs_module_config_path failed (null input path)";
+		const std::string errorMsg = file ? std::string("obs_module_config_path failed for file: ") + file
+						  : "obs_module_config_path failed (null input path)";
 		throw std::runtime_error(errorMsg);
 	}
 	return unique_bfree_char_t(rawPath);
