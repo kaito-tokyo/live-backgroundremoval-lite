@@ -54,7 +54,7 @@ try {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 	latestVersionFutureInstance() =
 		std::async(std::launch::async, [] {
-			PluginConfig pluginConfig(PluginConfig::load());
+			PluginConfig pluginConfig(PluginConfig::load(loggerInstance()));
 			return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
 		}).share();
 	return true;

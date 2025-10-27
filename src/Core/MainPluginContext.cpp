@@ -59,7 +59,7 @@ void MainPluginContext::startup() noexcept {}
 
 void MainPluginContext::shutdown() noexcept
 {
-	if (DebugWindow *_debugWindow = debugWindow.load()) {
+	if (DebugWindow *_debugWindow = debugWindow.load(logger)) {
 		_debugWindow->close();
 	}
 

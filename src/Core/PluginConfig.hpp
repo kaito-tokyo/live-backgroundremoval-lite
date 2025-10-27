@@ -39,7 +39,7 @@ struct PluginConfig {
 		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin")
 			.get();
 
-	static PluginConfig load()
+	static PluginConfig load(const Logger::ILogger &logger)
 	{
 		using namespace KaitoTokyo::BridgeUtils;
 
@@ -47,6 +47,7 @@ struct PluginConfig {
 		try {
 			configPath = unique_obs_module_config_path("PluginConfig.json");
 		} catch (const std::exception &e) {
+			logger.warn("Failed to get config path: {}", e.what());
 			return PluginConfig();
 		}
 
