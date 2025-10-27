@@ -70,6 +70,7 @@ void main_plugin_context_module_unload()
 try {
 	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
+	curl_global_cleanup();
 } catch (const std::exception &e) {
 	loggerInstance().error("Failed to unload plugin context: %s", e.what());
 } catch (...) {
