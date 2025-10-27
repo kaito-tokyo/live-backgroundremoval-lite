@@ -19,8 +19,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #pragma once
 
 #include <mutex>
-#include <string>
 #include <string_view>
+#include <string>
 
 #include <util/base.h>
 
