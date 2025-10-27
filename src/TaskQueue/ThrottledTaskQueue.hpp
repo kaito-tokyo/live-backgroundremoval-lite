@@ -67,7 +67,8 @@ public:
      */
 	ThrottledTaskQueue(const Logger::ILogger &logger, std::size_t maxQueueSize)
 		: logger_(logger),
-		  maxQueueSize_(maxQueueSize > 0 ? maxQueueSize : throw std::invalid_argument("maxQueueSize must be greater than 0")),
+		  maxQueueSize_(maxQueueSize > 0 ? maxQueueSize
+						 : throw std::invalid_argument("maxQueueSize must be greater than 0")),
 		  worker_(&ThrottledTaskQueue::workerLoop, this)
 	{
 	}
