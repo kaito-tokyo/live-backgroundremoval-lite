@@ -27,8 +27,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <QTimer>
 #include <QVBoxLayout>
 
-#include "../BridgeUtils/AsyncTextureReader.hpp"
-#include "../BridgeUtils/ILogger.hpp"
+#include <AsyncTextureReader.hpp>
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
@@ -52,7 +51,6 @@ public:
 	static constexpr int PREVIEW_HEIGHT = 480;
 
 	DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
-	~DebugWindow() noexcept override;
 
 	void videoRender();
 

@@ -22,12 +22,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <obs-module.h>
 
-#include "../BridgeUtils/GsUnique.hpp"
-#include "../BridgeUtils/ObsLogger.hpp"
-#include "../UpdateChecker/UpdateChecker.hpp"
+#include <GsUnique.hpp>
+#include <ObsLogger.hpp>
+
+#include <UpdateChecker.hpp>
 
 #include "PluginConfig.hpp"
 
+using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 
@@ -52,7 +54,7 @@ try {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 	latestVersionFutureInstance() =
 		std::async(std::launch::async, [] {
-			PluginConfig pluginConfig(PluginConfig::load());
+			PluginConfig pluginConfig(PluginConfig::load(loggerInstance()));
 			return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
 		}).share();
 	return true;

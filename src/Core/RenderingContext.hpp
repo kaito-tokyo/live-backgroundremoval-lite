@@ -30,12 +30,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <net.h>
 #endif
 
-#include "../BridgeUtils/AsyncTextureReader.hpp"
-#include "../BridgeUtils/GsUnique.hpp"
-#include "../BridgeUtils/ILogger.hpp"
-#include "../BridgeUtils/ThrottledTaskQueue.hpp"
+#include <ILogger.hpp>
 
-#include "../SelfieSegmenter/ISelfieSegmenter.hpp"
+#include <AsyncTextureReader.hpp>
+#include <GsUnique.hpp>
+
+#include <ThrottledTaskQueue.hpp>
+
+#include <ISelfieSegmenter.hpp>
 
 #include "MainEffect.hpp"
 #include "PluginConfig.hpp"
@@ -54,9 +56,9 @@ struct RenderingContextRegion {
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 private:
 	obs_source_t *const source;
-	const BridgeUtils::ILogger &logger;
+	const Logger::ILogger &logger;
 	const MainEffect &mainEffect;
-	BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue;
+	TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue;
 	const PluginConfig pluginConfig;
 
 public:
@@ -125,7 +127,7 @@ private:
 	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 public:
-	static int getActualComputeUnit(const BridgeUtils::ILogger &logger, int computeUnit)
+	static int getActualComputeUnit(const Logger::ILogger &logger, int computeUnit)
 	{
 
 		if (computeUnit == ComputeUnit::kAuto) {
@@ -166,8 +168,8 @@ public:
 		}
 	}
 
-	RenderingContext(obs_source_t *const source, const BridgeUtils::ILogger &logger, const MainEffect &mainEffect,
-			 BridgeUtils::ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
+	RenderingContext(obs_source_t *const source, const Logger::ILogger &logger, const MainEffect &mainEffect,
+			 TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
 			 const std::uint32_t subsamplingRate, const std::uint32_t width, const std::uint32_t height,
 			 const int computeUnit, const int numThreads);
 	~RenderingContext() noexcept;

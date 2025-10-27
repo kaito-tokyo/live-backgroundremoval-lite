@@ -22,7 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <obs-module.h>
 
-#include "../BridgeUtils/ObsUnique.hpp"
+#include <ObsUnique.hpp>
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
@@ -39,11 +39,18 @@ struct PluginConfig {
 		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin")
 			.get();
 
-	static PluginConfig load()
+	static PluginConfig load(const Logger::ILogger &logger)
 	{
 		using namespace KaitoTokyo::BridgeUtils;
 
-		unique_bfree_char_t configPath(obs_module_config_path("PluginConfig.json"));
+		unique_bfree_char_t configPath;
+		try {
+			configPath = unique_obs_module_config_path("PluginConfig.json");
+		} catch (const std::exception &e) {
+			logger.warn("Failed to get config path: {}", e.what());
+			return PluginConfig();
+		}
+
 		unique_obs_data_t data(obs_data_create_from_json_file_safe(configPath.get(), ".bak"));
 
 		PluginConfig pluginConfig;

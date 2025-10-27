@@ -20,16 +20,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <array>
 
-#include "../BridgeUtils/AsyncTextureReader.hpp"
-
-#include "../SelfieSegmenter/NcnnSelfieSegmenter.hpp"
-#include "../SelfieSegmenter/NullSelfieSegmenter.hpp"
+#include <NcnnSelfieSegmenter.hpp>
+#include <NullSelfieSegmenter.hpp>
 
 #ifdef HAVE_COREML_SELFIE_SEGMENTER
-#include "../SelfieSegmenter/CoreMLSelfieSegmenter.hpp"
+#include <CoreMLSelfieSegmenter.hpp>
 #endif
 
+using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
+using namespace KaitoTokyo::TaskQueue;
 using namespace KaitoTokyo::SelfieSegmenter;
 
 namespace KaitoTokyo {
@@ -87,12 +87,10 @@ inline RenderingContextRegion getMaskRoiPosition(std::uint32_t width, std::uint3
 
 } // anonymous namespace
 
-RenderingContext::RenderingContext(obs_source_t *const _source, const BridgeUtils::ILogger &_logger,
-				   const MainEffect &_mainEffect,
-				   BridgeUtils::ThrottledTaskQueue &_selfieSegmenterTaskQueue,
-				   const PluginConfig &_pluginConfig, const std::uint32_t _subsamplingRate,
-				   const std::uint32_t width, const std::uint32_t height, const int _computeUnit,
-				   const int _numThreads)
+RenderingContext::RenderingContext(obs_source_t *const _source, const ILogger &_logger, const MainEffect &_mainEffect,
+				   ThrottledTaskQueue &_selfieSegmenterTaskQueue, const PluginConfig &_pluginConfig,
+				   const std::uint32_t _subsamplingRate, const std::uint32_t width,
+				   const std::uint32_t height, const int _computeUnit, const int _numThreads)
 	: source(_source),
 	  logger(_logger),
 	  mainEffect(_mainEffect),

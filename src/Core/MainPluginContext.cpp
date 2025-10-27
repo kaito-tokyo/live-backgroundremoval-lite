@@ -31,23 +31,21 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <gpu.h>
 #endif
 
-#include "../BridgeUtils/GsUnique.hpp"
-#include "../BridgeUtils/ObsLogger.hpp"
-#include "../BridgeUtils/ObsUnique.hpp"
+#include <GsUnique.hpp>
+#include <ObsLogger.hpp>
+#include <ObsUnique.hpp>
 
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
 
-#include "../BridgeUtils/ObsLogger.hpp"
-
+using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
 MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source,
-				     std::shared_future<std::string> _latestVersionFuture,
-				     const BridgeUtils::ILogger &_logger)
+				     std::shared_future<std::string> _latestVersionFuture, const ILogger &_logger)
 	: source{_source},
 	  logger(_logger),
 	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
@@ -366,7 +364,7 @@ try {
 std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std::uint32_t targetWidth,
 									    std::uint32_t targetHeight)
 {
-	PluginConfig pluginConfig(PluginConfig::load());
+	PluginConfig pluginConfig(PluginConfig::load(logger));
 
 	int computeUnit = RenderingContext::getActualComputeUnit(logger, pluginProperty.computeUnit);
 
