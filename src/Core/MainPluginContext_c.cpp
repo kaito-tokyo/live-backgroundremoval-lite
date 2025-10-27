@@ -68,6 +68,7 @@ try {
 
 void main_plugin_context_module_unload()
 try {
+	curl_global_cleanup();
 	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
 } catch (const std::exception &e) {
