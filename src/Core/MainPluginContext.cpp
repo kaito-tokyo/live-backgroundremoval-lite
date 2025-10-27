@@ -50,7 +50,7 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source
 				     const BridgeUtils::ILogger &_logger)
 	: source{_source},
 	  logger(_logger),
-	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
+	  mainEffect(unique_bfree_char_t(obs_module_file("effects/main.effect")), logger),
 	  latestVersionFuture(_latestVersionFuture),
 	  selfieSegmenterTaskQueue(logger, 1)
 {

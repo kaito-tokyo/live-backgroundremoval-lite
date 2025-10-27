@@ -24,30 +24,52 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 namespace KaitoTokyo {
 namespace BridgeUtils {
+
+/**
+ * @brief Contains custom deleters for managing OBS-specific resource pointers
+ * with std::unique_ptr.
+ */
 namespace ObsUnique {
 
+/**
+ * @brief Deleter for std::unique_ptr that calls bfree() on the pointer.
+ * Used for memory allocated by OBS functions like obs_module_file.
+ */
 struct BfreeDeleter {
 	void operator()(void *ptr) const { bfree(ptr); }
 };
 
+/**
+ * @brief Deleter for std::unique_ptr that calls obs_data_release()
+ * on an obs_data_t pointer.
+ */
 struct ObsDataDeleter {
 	void operator()(obs_data_t *data) const { obs_data_release(data); }
 };
 
+/**
+ * @brief Deleter for std::unique_ptr that calls obs_data_array_release()
+ * on an obs_data_array_t pointer.
+ */
 struct ObsDataArrayDeleter {
 	void operator()(obs_data_array_t *array) const { obs_data_array_release(array); }
 };
 
 } // namespace ObsUnique
 
+/**
+ * @brief A std::unique_ptr for a char pointer that will be freed using bfree().
+ */
 using unique_bfree_char_t = std::unique_ptr<char, ObsUnique::BfreeDeleter>;
 
-inline unique_bfree_char_t unique_obs_module_file(const char *file)
-{
-	return unique_bfree_char_t(obs_module_file(file));
-}
-
+/**
+ * @brief A std::unique_ptr for an obs_data_t object.
+ */
 using unique_obs_data_t = std::unique_ptr<obs_data_t, ObsUnique::ObsDataDeleter>;
+
+/**
+ * @brief A std::unique_ptr for an obs_data_array_t object.
+ */
 using unique_obs_data_array_t = std::unique_ptr<obs_data_array_t, ObsUnique::ObsDataArrayDeleter>;
 
 } // namespace BridgeUtils
