@@ -89,9 +89,9 @@ inline std::string fetchLatestVersion(const std::string &url)
 	curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 5L);      // Max 5 redirects
 
 	// --- Security Settings ---
-	// Enforce SSL/TLS certificate verification
+	// Explicitly set SSL/TLS certificate verification (default behavior for libcurl)
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-	// Enforce hostname matching in the certificate
+	// Explicitly set hostname matching in the certificate (default behavior for libcurl)
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
 	// --- End Security Settings ---
 
