@@ -21,6 +21,9 @@
     "fmt",
     "ncnn"
   ],
+  "default-features": [
+    "tests"
+  ],
   "features": {
     "tests": {
       "description": "Build with test cases",
