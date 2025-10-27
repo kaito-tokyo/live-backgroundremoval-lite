@@ -24,12 +24,12 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <util/base.h>
 
-#include "ILogger.hpp"
+#include <ILogger.hpp>
 
 namespace KaitoTokyo {
 namespace BridgeUtils {
 
-class ObsLogger final : public ILogger {
+class ObsLogger final : public Logger::ILogger {
 public:
 	ObsLogger(const char *prefix) : prefix_(prefix ? prefix : "") {}
 	~ObsLogger() noexcept override = default;

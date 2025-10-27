@@ -22,9 +22,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <obs-module.h>
 
-#include "../BridgeUtils/GsUnique.hpp"
-#include "../BridgeUtils/ObsLogger.hpp"
-#include "../UpdateChecker/UpdateChecker.hpp"
+#include <GsUnique.hpp>
+#include <ObsLogger.hpp>
+
+#include <UpdateChecker.hpp>
 
 #include "PluginConfig.hpp"
 

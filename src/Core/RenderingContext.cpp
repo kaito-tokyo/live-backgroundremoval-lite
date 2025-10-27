@@ -20,13 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <array>
 
-#include "../BridgeUtils/AsyncTextureReader.hpp"
-
-#include "../SelfieSegmenter/NcnnSelfieSegmenter.hpp"
-#include "../SelfieSegmenter/NullSelfieSegmenter.hpp"
+#include <NcnnSelfieSegmenter.hpp>
+#include <NullSelfieSegmenter.hpp>
 
 #ifdef HAVE_COREML_SELFIE_SEGMENTER
-#include "../SelfieSegmenter/CoreMLSelfieSegmenter.hpp"
+#include <CoreMLSelfieSegmenter.hpp>
 #endif
 
 using namespace KaitoTokyo::BridgeUtils;

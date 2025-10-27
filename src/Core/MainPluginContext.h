@@ -29,8 +29,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <memory>
 #include <mutex>
 
-#include "../BridgeUtils/ILogger.hpp"
-#include "../BridgeUtils/ThrottledTaskQueue.hpp"
+#include <ILogger.hpp>
+
+#include <ThrottledTaskQueue.hpp>
 
 #include "PluginProperty.hpp"
 #include "MainEffect.hpp"

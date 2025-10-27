@@ -21,6 +21,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -33,15 +34,20 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 namespace KaitoTokyo {
 namespace BridgeUtils {
 
+/**
+ * @brief Internal implementation details for AsyncTextureReader.
+ */
 namespace AsyncTextureReaderDetail {
 
 /**
  * @brief Returns the number of bytes per pixel for a given color format.
- * ( ... )
+ *
+ * @param format The color format to query.
+ * @return Number of bytes per pixel for the format.
+ * @throws std::runtime_error If the format is unsupported or compressed.
  */
 inline std::uint32_t getBytesPerPixel(const gs_color_format format)
 {
-	// ( ... 実装は変更なし ... )
 	switch (format) {
 	case GS_UNKNOWN:
 		throw std::runtime_error("GS_UNKNOWN format is not supported");
@@ -82,13 +88,20 @@ inline std::uint32_t getBytesPerPixel(const gs_color_format format)
 }
 
 /**
- * @brief RAII wrapper for mapping gs_stagesurf_t.
+ * @class ScopedStageSurfMap
+ * @brief RAII helper for mapping and unmapping a gs_stagesurf_t.
+ *
+ * Ensures that a mapped staging surface is automatically unmapped
+ * when this object goes out of scope.
  */
 class ScopedStageSurfMap final {
 public:
 	/**
 	 * @brief Maps a staging surface for reading and automatically unmaps on destruction.
-	 * ( ... )
+	 *
+	 * @param surf Pointer to the staging surface to map.
+	 * @throws std::invalid_argument If surf is null.
+	 * @throws std::runtime_error If mapping fails or returns null data.
 	 */
 	explicit ScopedStageSurfMap(gs_stagesurf_t *surf)
 		: surf_{surf},
@@ -147,7 +160,14 @@ private:
 		std::uint32_t linesize;
 	};
 
+	/**
+	 * @brief The staging surface being managed.
+	 */
 	gs_stagesurf_t *const surf_;
+
+	/**
+	 * @brief The mapped data from the surface.
+	 */
 	const MappedData mappedData_;
 };
 
@@ -156,7 +176,10 @@ private:
 /**
  * @class AsyncTextureReader
  * @brief A double-buffering pipeline for asynchronously reading GPU textures to the CPU.
- * ( ... )
+ *
+ * Efficiently copies GPU texture contents to CPU memory without blocking the render thread.
+ * Provides thread-safe data access by calling stage() from a render/GPU thread
+ * and sync()/getBuffer() from a CPU thread.
  */
 class AsyncTextureReader final {
 public:
@@ -177,7 +200,6 @@ public:
 		  stagesurfs_{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
 			      BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
 	{
-		// [IMPROVEMENT] Add check to ensure surfaces were created successfully.
 		if (!stagesurfs_[0] || !stagesurfs_[1]) {
 			throw std::runtime_error("Failed to create staging surfaces");
 		}
@@ -185,7 +207,9 @@ public:
 
 	/**
 	 * @brief Destroys the AsyncTextureReader and releases all allocated resources.
-	 * ( ... )
+	 *
+	 * Automatically cleans up the GPU staging surfaces (via unique_ptr)
+	 * and the CPU-side pixel buffers (via std::vector).
 	 */
 	~AsyncTextureReader() noexcept = default;
 
@@ -196,7 +220,6 @@ public:
 	 */
 	void stage(const unique_gs_texture_t &sourceTexture) noexcept
 	{
-		// [IMPROVEMENT] Assert ensures null textures aren't passed (in debug builds)
 		assert(sourceTexture.get() != nullptr && "Source texture must not be null");
 
 		std::lock_guard<std::mutex> lock(gpuMutex_);
@@ -206,7 +229,9 @@ public:
 
 	/**
 	 * @brief Synchronizes the latest texture data to the CPU buffer. Call from a CPU thread.
-	 * ( ... )
+	 *
+	 * This operation may be expensive due to GPU-to-CPU data transfer.
+	 * @throws std::runtime_error If mapping the staging surface fails.
 	 */
 	void sync()
 	{
@@ -219,19 +244,15 @@ public:
 		}
 		gs_stagesurf_t *const stagesurf = stagesurfs_[gpuReadIndex].get();
 
-		// [IMPROVEMENT] Check if the surface is valid before mapping.
-		// (The constructor check should prevent this, but it adds robustness)
+		assert(stagesurf != nullptr && "Staging surface is null during sync");
 		if (!stagesurf) {
-			// Or just return? Throwing might be too aggressive if recovery is possible.
-			// For now, we rely on the constructor check.
-			// An assert could be useful here too.
-			assert(stagesurf != nullptr && "Staging surface is null during sync");
 			return;
 		}
 
 		const ScopedStageSurfMap mappedSurf(stagesurf);
 
 		const std::size_t backBufferIndex = 1 - activeCpuBufferIndex_.load(std::memory_order_acquire);
+
 		auto &backBuffer = cpuBuffers_[backBufferIndex];
 
 		if (bufferLinesize_ == mappedSurf.getLinesize()) {
@@ -252,7 +273,8 @@ public:
 
 	/**
 	 * @brief Returns a reference to the CPU buffer containing the latest pixel data.
-	 * ( ... )
+	 *
+	 * This operation is lock-free for immediate data access.
 	 * @return Read-only buffer with the latest pixel data.
 	 */
 	const std::vector<std::uint8_t> &getBuffer() const noexcept
@@ -260,7 +282,7 @@ public:
 		return cpuBuffers_[activeCpuBufferIndex_.load(std::memory_order_acquire)];
 	}
 
-	/**
+/**
 	 * @brief Returns the width of the texture.
 	 * @return Texture width in pixels.
 	 */
@@ -279,8 +301,6 @@ public:
 	std::uint32_t getBufferLinesize() const noexcept { return bufferLinesize_; }
 
 private:
-	// ( ... メンバ変数は変更なし ... )
-
 	/**
 	 * @brief Texture width in pixels.
 	 */
@@ -299,7 +319,7 @@ private:
 	/**
 	 * @brief Double-buffered CPU pixel data.
 	 */
-	std::array<std::vector<std::uint8_t>, 2> cpuBuffers_;
+	const std::array<std::vector<std::uint8_t>, 2> cpuBuffers_;
 
 	/**
 	 * @brief Index of the currently active CPU buffer.
@@ -309,7 +329,7 @@ private:
 	/**
 	 * @brief Double-buffered GPU staging surfaces.
 	 */
-	std::array<BridgeUtils::unique_gs_stagesurf_t, 2> stagesurfs_;
+	const std::array<BridgeUtils::unique_gs_stagesurf_t, 2> stagesurfs_;
 
 	/**
 	 * @brief Index of the GPU write buffer.

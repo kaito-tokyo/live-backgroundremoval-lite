@@ -26,8 +26,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <QTimer>
 #include <QDebug>
 
-#include "../BridgeUtils/AsyncTextureReader.hpp"
-#include "../BridgeUtils/ObsLogger.hpp"
+#include <AsyncTextureReader.hpp>
+#include <ObsLogger.hpp>
 
 #include "MainPluginContext.h"
 #include "RenderingContext.hpp"

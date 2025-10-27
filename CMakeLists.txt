@@ -120,6 +120,37 @@ if(APPLE)
   endif()
 endif()
 
+add_library(Logger INTERFACE)
+target_include_directories(Logger INTERFACE ${CMAKE_SOURCE_DIR}/src/Logger)
+target_link_libraries(Logger INTERFACE fmt::fmt)
+target_sources(Logger PRIVATE
+  src/Logger/ILogger.hpp
+)
+
+add_library(BridgeUtils INTERFACE)
+target_include_directories(BridgeUtils INTERFACE ${CMAKE_SOURCE_DIR}/src/BridgeUtils)
+target_link_libraries(BridgeUtils INTERFACE OBS::libobs Logger)
+target_sources(BridgeUtils PRIVATE
+  src/BridgeUtils/AsyncTextureReader.hpp
+  src/BridgeUtils/GsUnique.hpp
+  src/BridgeUtils/ObsLogger.hpp
+  src/BridgeUtils/ObsUnique.hpp
+)
+
+add_library(TaskQueue INTERFACE)
+target_include_directories(TaskQueue INTERFACE ${CMAKE_SOURCE_DIR}/src/TaskQueue)
+target_link_libraries(TaskQueue INTERFACE BridgeUtils)
+target_sources(TaskQueue PRIVATE
+  src/TaskQueue/ThrottledTaskQueue.hpp
+)
+
+add_library(UpdateChecker INTERFACE)
+target_include_directories(UpdateChecker INTERFACE ${CMAKE_SOURCE_DIR}/src/UpdateChecker)
+target_link_libraries(UpdateChecker INTERFACE CURL::libcurl)
+target_sources(UpdateChecker PRIVATE
+  src/UpdateChecker/UpdateChecker.hpp
+)
+
 add_library(SelfieSegmenter STATIC)
 target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/ShapeConverter.cpp)
 if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
@@ -131,14 +162,6 @@ if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
 endif()
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
 target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn)
-
-add_library(UpdateChecker INTERFACE)
-target_include_directories(UpdateChecker INTERFACE ${CMAKE_SOURCE_DIR}/src/UpdateChecker)
-target_link_libraries(UpdateChecker INTERFACE CURL::libcurl)
-
-add_library(BridgeUtils INTERFACE)
-target_include_directories(BridgeUtils INTERFACE ${CMAKE_SOURCE_DIR}/src/BridgeUtils)
-target_link_libraries(BridgeUtils INTERFACE OBS::libobs fmt::fmt)
 
 target_compile_definitions(
   ${CMAKE_PROJECT_NAME}

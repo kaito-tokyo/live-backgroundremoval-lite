@@ -30,7 +30,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <thread>
 #include <utility>
 
-#include "ILogger.hpp"
+#include <ILogger.hpp>
 
 namespace KaitoTokyo {
 namespace BridgeUtils {

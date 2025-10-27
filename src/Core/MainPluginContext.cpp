@@ -31,14 +31,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <gpu.h>
 #endif
 
-#include "../BridgeUtils/GsUnique.hpp"
-#include "../BridgeUtils/ObsLogger.hpp"
-#include "../BridgeUtils/ObsUnique.hpp"
+#include <GsUnique.hpp>
+#include <ObsLogger.hpp>
+#include <ObsUnique.hpp>
 
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
-
-#include "../BridgeUtils/ObsLogger.hpp"
 
 using namespace KaitoTokyo::BridgeUtils;
 

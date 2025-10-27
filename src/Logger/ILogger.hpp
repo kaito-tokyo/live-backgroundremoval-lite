@@ -1,5 +1,5 @@
 /*
-Bridge Utils
+Logger
 Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
 
 This program is free software; you can redistribute it and/or modify
@@ -34,7 +34,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #endif // HAVE_BACKWARD
 
 namespace KaitoTokyo {
-namespace BridgeUtils {
+namespace Logger {
 
 /**
  * @class ILogger
@@ -221,5 +221,5 @@ private:
 	}
 };
 
-} // namespace BridgeUtils
+} // namespace Logger
 } // namespace KaitoTokyo

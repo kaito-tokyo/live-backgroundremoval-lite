@@ -22,9 +22,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <obs.h>
 
-#include "../BridgeUtils/GsUnique.hpp"
-#include "../BridgeUtils/ILogger.hpp"
-#include "../BridgeUtils/ObsUnique.hpp"
+#include <GsUnique.hpp>
+#include <ILogger.hpp>
+#include <ObsUnique.hpp>
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {

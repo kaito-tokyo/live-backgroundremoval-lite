@@ -30,12 +30,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <net.h>
 #endif
 
-#include "../BridgeUtils/AsyncTextureReader.hpp"
-#include "../BridgeUtils/GsUnique.hpp"
-#include "../BridgeUtils/ILogger.hpp"
-#include "../BridgeUtils/ThrottledTaskQueue.hpp"
+#include <AsyncTextureReader.hpp>
+#include <GsUnique.hpp>
+#include <ILogger.hpp>
 
-#include "../SelfieSegmenter/ISelfieSegmenter.hpp"
+#include <ThrottledTaskQueue.hpp>
+
+#include <ISelfieSegmenter.hpp>
 
 #include "MainEffect.hpp"
 #include "PluginConfig.hpp"
