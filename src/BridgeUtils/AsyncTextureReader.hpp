@@ -83,7 +83,7 @@ inline std::uint32_t getBytesPerPixel(const gs_color_format format)
 	}
 }
 
-class ScopedStageSurfMap {
+class ScopedStageSurfMap final {
 public:
 	/**
 	 * @brief Maps a staging surface for reading and automatically unmaps on destruction.
@@ -163,7 +163,7 @@ private:
  * Provides thread-safe data access by calling stage() from a render/GPU thread
  * and sync()/getBuffer() from a CPU thread.
  */
-class AsyncTextureReader {
+class AsyncTextureReader final {
 public:
 	/**
 	 * @brief Constructs the AsyncTextureReader and allocates all necessary resources.
