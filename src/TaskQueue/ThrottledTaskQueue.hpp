@@ -179,7 +179,7 @@ private:
 		auto queuedTask = std::move(queue_.front());
 		queue_.pop();
 
-		return std::move(queuedTask);
+		return queuedTask;
 	}
 
 	/**
