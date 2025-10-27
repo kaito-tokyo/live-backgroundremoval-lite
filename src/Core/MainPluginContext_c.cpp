@@ -33,7 +33,15 @@ using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 
 namespace {
 
-std::shared_future<std::string> latestVersionFuture;
+inline std::shared_future<std::string> &latestVersionFuture()
+{
+	static std::shared_future<std::string> instance =
+		std::async(std::launch::async, [] {
+			PluginConfig pluginConfig(PluginConfig::load());
+			return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
+		}).share();
+	return instance;
+}
 
 inline const ILogger &logger()
 {
@@ -46,11 +54,6 @@ inline const ILogger &logger()
 bool main_plugin_context_module_load()
 try {
 	curl_global_init(CURL_GLOBAL_DEFAULT);
-	latestVersionFuture =
-		std::async(std::launch::async, [] {
-			PluginConfig pluginConfig(PluginConfig::load());
-			return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
-		}).share();
 	return true;
 } catch (const std::exception &e) {
 	logger().error("Failed to load main plugin context: %s", e.what());
@@ -79,7 +82,7 @@ const char *main_plugin_context_get_name(void *type_data)
 void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
 try {
 	GraphicsContextGuard graphicsContextGuard;
-	auto self = std::make_shared<MainPluginContext>(settings, source, latestVersionFuture, logger());
+	auto self = std::make_shared<MainPluginContext>(settings, source, latestVersionFuture(), logger());
 	self->startup();
 	return new std::shared_ptr<MainPluginContext>(self);
 } catch (const std::exception &e) {
