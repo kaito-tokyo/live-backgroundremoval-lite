@@ -36,21 +36,21 @@ using namespace KaitoTokyo::BridgeUtils;
 
 namespace {
 
-constexpr char textureBgrxOriginalImage[] = "bgrxOriginalImage";
-constexpr char textureR32fOriginalGrayscale[] = "r32fOriginalGrayscale";
-constexpr char textureBgrxSegmenterInput[] = "bgrxSegmenterInput";
-constexpr char textureR8SegmentationMask[] = "r8SegmentationMask";
-constexpr char textureR8SubGFGuide[] = "r8SubGFGuide";
-constexpr char textureR8SubGFSource[] = "r8SubGFSource";
-constexpr char textureR32fSubGFMeanGuide[] = "r32fSubGFMeanGuide";
-constexpr char textureR32fSubGFMeanSource[] = "r32fSubGFMeanSource";
-constexpr char textureR16fSubGFMeanGuideSource[] = "r16fSubGFMeanGuideSource";
-constexpr char textureR32fSubGFMeanGuideSq[] = "r32fSubGFMeanGuideSq";
-constexpr char textureR32fSubGFA[] = "r32fSubGFA";
-constexpr char textureR32fSubGFB[] = "r32fSubGFB";
-constexpr char textureR8GuidedFilterResult[] = "r8GuidedFilterResult";
-constexpr char textureR8TimeAveragedMasks0[] = "r8TimeAveragedMasks[0]";
-constexpr char textureR8TimeAveragedMasks1[] = "r8TimeAveragedMasks[1]";
+constexpr char *textureBgrxOriginalImage = "bgrxOriginalImage";
+constexpr char *textureR32fOriginalGrayscale = "r32fOriginalGrayscale";
+constexpr char *textureBgrxSegmenterInput = "bgrxSegmenterInput";
+constexpr char *textureR8SegmentationMask = "r8SegmentationMask";
+constexpr char *textureR8SubGFGuide = "r8SubGFGuide";
+constexpr char *textureR8SubGFSource = "r8SubGFSource";
+constexpr char *textureR32fSubGFMeanGuide = "r32fSubGFMeanGuide";
+constexpr char *textureR32fSubGFMeanSource = "r32fSubGFMeanSource";
+constexpr char *textureR16fSubGFMeanGuideSource = "r16fSubGFMeanGuideSource";
+constexpr char *textureR32fSubGFMeanGuideSq = "r32fSubGFMeanGuideSq";
+constexpr char *textureR32fSubGFA = "r32fSubGFA";
+constexpr char *textureR32fSubGFB = "r32fSubGFB";
+constexpr char *textureR8GuidedFilterResult = "r8GuidedFilterResult";
+constexpr char *textureR8TimeAveragedMasks0 = "r8TimeAveragedMasks[0]";
+constexpr char *textureR8TimeAveragedMasks1 = "r8TimeAveragedMasks[1]";
 
 const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
 const std::vector<std::string> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0,
@@ -106,8 +106,6 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> _weakMainPluginContext
 
 	connect(this, &DebugWindow::readerReady, this, &DebugWindow::updatePreview);
 }
-
-DebugWindow::~DebugWindow() noexcept {}
 
 void DebugWindow::videoRender()
 {
@@ -193,11 +191,11 @@ void DebugWindow::updatePreview()
 
 	bool needsRecreation = !currentRenderData ||
 			       (currentRenderData->readerBgrx &&
-				(currentRenderData->readerBgrx->width != renderingContext->region.width ||
-				 currentRenderData->readerBgrx->height != renderingContext->region.height)) ||
+				(currentRenderData->readerBgrx->getWidth() != renderingContext->region.width ||
+				 currentRenderData->readerBgrx->getHeight() != renderingContext->region.height)) ||
 			       (currentRenderData->readerSubR8 &&
-				(currentRenderData->readerSubR8->width != renderingContext->subRegion.width ||
-				 currentRenderData->readerSubR8->height != renderingContext->subRegion.height));
+				(currentRenderData->readerSubR8->getWidth() != renderingContext->subRegion.width ||
+				 currentRenderData->readerSubR8->getHeight() != renderingContext->subRegion.height));
 
 	if (needsRecreation) {
 		GraphicsContextGuard graphicsContextGuard;
@@ -238,59 +236,65 @@ void DebugWindow::updatePreview()
 		if (std::find(bgrxTextures.begin(), bgrxTextures.end(), currentTextureStd) != bgrxTextures.end()) {
 			currentRenderData->readerBgrx->sync();
 			image = QImage(currentRenderData->readerBgrx->getBuffer().data(),
-				       currentRenderData->readerBgrx->width, currentRenderData->readerBgrx->height,
-				       currentRenderData->readerBgrx->bufferLinesize, QImage::Format_RGB32);
+				       currentRenderData->readerBgrx->getWidth(),
+				       currentRenderData->readerBgrx->getHeight(),
+				       currentRenderData->readerBgrx->getBufferLinesize(), QImage::Format_RGB32);
 		} else if (std::find(r8Textures.begin(), r8Textures.end(), currentTextureStd) != r8Textures.end()) {
 			currentRenderData->readerR8->sync();
 			image = QImage(currentRenderData->readerR8->getBuffer().data(),
-				       currentRenderData->readerR8->width, currentRenderData->readerR8->height,
-				       currentRenderData->readerR8->bufferLinesize, QImage::Format_Grayscale8);
+				       currentRenderData->readerR8->getWidth(),
+				       currentRenderData->readerR8->getHeight(),
+				       currentRenderData->readerR8->getBufferLinesize(), QImage::Format_Grayscale8);
 		} else if (std::find(r32fTextures.begin(), r32fTextures.end(), currentTextureStd) !=
 			   r32fTextures.end()) {
 			currentRenderData->readerR32f->sync();
 			auto r32fDataView =
 				reinterpret_cast<const float *>(currentRenderData->readerR32f->getBuffer().data());
-			bufferR8.resize(currentRenderData->readerR32f->width * currentRenderData->readerR32f->height);
+			bufferR8.resize(currentRenderData->readerR32f->getWidth() *
+					currentRenderData->readerR32f->getHeight());
 			for (std::uint32_t i = 0;
-			     i < currentRenderData->readerR32f->width * currentRenderData->readerR32f->height; ++i) {
+			     i < currentRenderData->readerR32f->getWidth() * currentRenderData->readerR32f->getHeight();
+			     ++i) {
 				bufferR8[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);
 			}
-			image = QImage(bufferR8.data(), currentRenderData->readerR32f->width,
-				       currentRenderData->readerR32f->height, QImage::Format_Grayscale8);
+			image = QImage(bufferR8.data(), currentRenderData->readerR32f->getWidth(),
+				       currentRenderData->readerR32f->getHeight(), QImage::Format_Grayscale8);
 		} else if (std::find(bgrx256Textures.begin(), bgrx256Textures.end(), currentTextureStd) !=
 			   bgrx256Textures.end()) {
 			currentRenderData->reader256Bgrx->sync();
 			image = QImage(currentRenderData->reader256Bgrx->getBuffer().data(),
-				       currentRenderData->reader256Bgrx->width,
-				       currentRenderData->reader256Bgrx->height,
-				       currentRenderData->reader256Bgrx->bufferLinesize, QImage::Format_RGB32);
+				       currentRenderData->reader256Bgrx->getWidth(),
+				       currentRenderData->reader256Bgrx->getHeight(),
+				       currentRenderData->reader256Bgrx->getBufferLinesize(), QImage::Format_RGB32);
 		} else if (std::find(r8MaskRoiTextures.begin(), r8MaskRoiTextures.end(), currentTextureStd) !=
 			   r8MaskRoiTextures.end()) {
 			currentRenderData->readerMaskRoiR8->sync();
 			image = QImage(currentRenderData->readerMaskRoiR8->getBuffer().data(),
-				       currentRenderData->readerMaskRoiR8->width,
-				       currentRenderData->readerMaskRoiR8->height,
-				       currentRenderData->readerMaskRoiR8->bufferLinesize, QImage::Format_Grayscale8);
+				       currentRenderData->readerMaskRoiR8->getWidth(),
+				       currentRenderData->readerMaskRoiR8->getHeight(),
+				       currentRenderData->readerMaskRoiR8->getBufferLinesize(),
+				       QImage::Format_Grayscale8);
 		} else if (std::find(r8SubTextures.begin(), r8SubTextures.end(), currentTextureStd) !=
 			   r8SubTextures.end()) {
 			currentRenderData->readerSubR8->sync();
 			image = QImage(currentRenderData->readerSubR8->getBuffer().data(),
-				       currentRenderData->readerSubR8->width, currentRenderData->readerSubR8->height,
-				       currentRenderData->readerSubR8->bufferLinesize, QImage::Format_Grayscale8);
+				       currentRenderData->readerSubR8->getWidth(),
+				       currentRenderData->readerSubR8->getHeight(),
+				       currentRenderData->readerSubR8->getBufferLinesize(), QImage::Format_Grayscale8);
 		} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), currentTextureStd) !=
 			   r32fSubTextures.end()) {
 			currentRenderData->readerR32fSub->sync();
 			auto r32fDataView =
 				reinterpret_cast<const float *>(currentRenderData->readerR32fSub->getBuffer().data());
-			bufferSubR8.resize(currentRenderData->readerR32fSub->width *
-					   currentRenderData->readerR32fSub->height);
-			for (std::uint32_t i = 0;
-			     i < currentRenderData->readerR32fSub->width * currentRenderData->readerR32fSub->height;
+			bufferSubR8.resize(currentRenderData->readerR32fSub->getWidth() *
+					   currentRenderData->readerR32fSub->getHeight());
+			for (std::uint32_t i = 0; i < currentRenderData->readerR32fSub->getWidth() *
+							      currentRenderData->readerR32fSub->getHeight();
 			     ++i) {
 				bufferSubR8[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);
 			}
-			image = QImage(bufferSubR8.data(), currentRenderData->readerR32fSub->width,
-				       currentRenderData->readerR32fSub->height, QImage::Format_Grayscale8);
+			image = QImage(bufferSubR8.data(), currentRenderData->readerR32fSub->getWidth(),
+				       currentRenderData->readerR32fSub->getHeight(), QImage::Format_Grayscale8);
 		}
 	} catch (const std::exception &e) {
 		mainPluginContext->getLogger().error("Failed to sync and update preview: {}", e.what());
