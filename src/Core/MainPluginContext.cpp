@@ -364,7 +364,7 @@ try {
 std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std::uint32_t targetWidth,
 									    std::uint32_t targetHeight)
 {
-	PluginConfig pluginConfig(PluginConfig::load());
+	PluginConfig pluginConfig(PluginConfig::load(logger));
 
 	int computeUnit = RenderingContext::getActualComputeUnit(logger, pluginProperty.computeUnit);
 
