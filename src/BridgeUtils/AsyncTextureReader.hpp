@@ -319,7 +319,7 @@ private:
 	/**
 	 * @brief Double-buffered CPU pixel data.
 	 */
-	const std::array<std::vector<std::uint8_t>, 2> cpuBuffers_;
+	std::array<std::vector<std::uint8_t>, 2> cpuBuffers_;
 
 	/**
 	 * @brief Index of the currently active CPU buffer.
