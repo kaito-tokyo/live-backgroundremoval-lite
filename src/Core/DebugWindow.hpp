@@ -52,7 +52,6 @@ public:
 	static constexpr int PREVIEW_HEIGHT = 480;
 
 	DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
-	~DebugWindow() noexcept override;
 
 	void videoRender();
 

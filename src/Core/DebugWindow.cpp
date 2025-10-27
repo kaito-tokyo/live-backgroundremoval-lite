@@ -36,21 +36,21 @@ using namespace KaitoTokyo::BridgeUtils;
 
 namespace {
 
-constexpr char *textureBgrxOriginalImage = "bgrxOriginalImage";
-constexpr char *textureR32fOriginalGrayscale = "r32fOriginalGrayscale";
-constexpr char *textureBgrxSegmenterInput = "bgrxSegmenterInput";
-constexpr char *textureR8SegmentationMask = "r8SegmentationMask";
-constexpr char *textureR8SubGFGuide = "r8SubGFGuide";
-constexpr char *textureR8SubGFSource = "r8SubGFSource";
-constexpr char *textureR32fSubGFMeanGuide = "r32fSubGFMeanGuide";
-constexpr char *textureR32fSubGFMeanSource = "r32fSubGFMeanSource";
-constexpr char *textureR16fSubGFMeanGuideSource = "r16fSubGFMeanGuideSource";
-constexpr char *textureR32fSubGFMeanGuideSq = "r32fSubGFMeanGuideSq";
-constexpr char *textureR32fSubGFA = "r32fSubGFA";
-constexpr char *textureR32fSubGFB = "r32fSubGFB";
-constexpr char *textureR8GuidedFilterResult = "r8GuidedFilterResult";
-constexpr char *textureR8TimeAveragedMasks0 = "r8TimeAveragedMasks[0]";
-constexpr char *textureR8TimeAveragedMasks1 = "r8TimeAveragedMasks[1]";
+constexpr char textureBgrxOriginalImage[] = "bgrxOriginalImage";
+constexpr char textureR32fOriginalGrayscale[] = "r32fOriginalGrayscale";
+constexpr char textureBgrxSegmenterInput[] = "bgrxSegmenterInput";
+constexpr char textureR8SegmentationMask[] = "r8SegmentationMask";
+constexpr char textureR8SubGFGuide[] = "r8SubGFGuide";
+constexpr char textureR8SubGFSource[] = "r8SubGFSource";
+constexpr char textureR32fSubGFMeanGuide[] = "r32fSubGFMeanGuide";
+constexpr char textureR32fSubGFMeanSource[] = "r32fSubGFMeanSource";
+constexpr char textureR16fSubGFMeanGuideSource[] = "r16fSubGFMeanGuideSource";
+constexpr char textureR32fSubGFMeanGuideSq[] = "r32fSubGFMeanGuideSq";
+constexpr char textureR32fSubGFA[] = "r32fSubGFA";
+constexpr char textureR32fSubGFB[] = "r32fSubGFB";
+constexpr char textureR8GuidedFilterResult[] = "r8GuidedFilterResult";
+constexpr char textureR8TimeAveragedMasks0[] = "r8TimeAveragedMasks[0]";
+constexpr char textureR8TimeAveragedMasks1[] = "r8TimeAveragedMasks[1]";
 
 const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
 const std::vector<std::string> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0,
