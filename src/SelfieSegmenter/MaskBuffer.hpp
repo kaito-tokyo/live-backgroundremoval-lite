@@ -25,7 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <mutex>
 #include <vector>
 
-#include "Allocator.hpp"
+#include "ForceAlignmentResource.hpp"
 
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
@@ -34,40 +34,39 @@ class MaskBuffer {
 public:
 	constexpr static std::size_t kAlignment = 32;
 
-private:
-	std::pmr::memory_resource &defaultResource;
-	ForceAlignmentResource alignedResource;
-	;
-
-	std::array<std::pmr::vector<std::uint8_t>, 2> buffers;
-	std::atomic<std::size_t> readableIndex;
-	mutable std::mutex bufferMutex;
-
-public:
 	explicit MaskBuffer(std::size_t size)
-		: defaultResource(*std::pmr::new_delete_resource()),
-		  alignedResource(kAlignment, &defaultResource),
-		  buffers{std::pmr::vector<std::uint8_t>(size, {&alignedResource}),
-			  std::pmr::vector<std::uint8_t>(size, {&alignedResource})},
-		  readableIndex(0)
+		: defaultResource_(*std::pmr::new_delete_resource()),
+		  alignedResource_(kAlignment, &defaultResource_),
+		  buffers_{std::pmr::vector<std::uint8_t>(size, {&alignedResource_}),
+			   std::pmr::vector<std::uint8_t>(size, {&alignedResource_})}
 	{
 	}
+
+	~MaskBuffer() noexcept = default;
 
 	void write(std::function<void(std::uint8_t *)> writeFunc)
 	{
-		std::lock_guard<std::mutex> lock(bufferMutex);
-		const int writeIndex = (readableIndex.load(std::memory_order_relaxed) + 1) % 2;
-		auto &buffer = buffers[writeIndex];
+		std::lock_guard<std::mutex> lock(bufferMutex_);
+		const int writeIndex = (readableIndex_.load(std::memory_order_relaxed) + 1) % 2;
+		auto &buffer = buffers_[writeIndex];
 		writeFunc(buffer.data());
-		readableIndex.store(writeIndex, std::memory_order_release);
+		readableIndex_.store(writeIndex, std::memory_order_release);
 	}
 
-	const std::uint8_t *read() const { return buffers[readableIndex.load(std::memory_order_acquire)].data(); }
+	const std::uint8_t *read() const { return buffers_[readableIndex_.load(std::memory_order_acquire)].data(); }
 
 	MaskBuffer(const MaskBuffer &) = delete;
 	MaskBuffer &operator=(const MaskBuffer &) = delete;
 	MaskBuffer(MaskBuffer &&) = delete;
 	MaskBuffer &operator=(MaskBuffer &&) = delete;
+
+private:
+	std::pmr::memory_resource &defaultResource_;
+	ForceAlignmentResource alignedResource_;
+
+	std::array<std::pmr::vector<std::uint8_t>, 2> buffers_;
+	std::atomic<std::size_t> readableIndex_ = 0;
+	mutable std::mutex bufferMutex_;
 };
 
 } // namespace SelfieSegmenter

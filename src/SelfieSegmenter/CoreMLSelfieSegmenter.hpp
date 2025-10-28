@@ -34,17 +34,10 @@ namespace SelfieSegmenter {
 
 class CoreMLSelfieSegmenterImpl;
 
-class CoreMLSelfieSegmenter : public ISelfieSegmenter {
-private:
-	constexpr static std::size_t kWidth = 256;
-	constexpr static std::size_t kHeight = 144;
-	constexpr static std::size_t kPixelCount = kWidth * kHeight;
-
-	std::unique_ptr<CoreMLSelfieSegmenterImpl> pImpl;
-
+class CoreMLSelfieSegmenter final : public ISelfieSegmenter {
 public:
 	CoreMLSelfieSegmenter();
-	~CoreMLSelfieSegmenter() override;
+	~CoreMLSelfieSegmenter() noexcept override;
 
 	std::size_t getWidth() const noexcept override { return kWidth; }
 	std::size_t getHeight() const noexcept override { return kHeight; }
@@ -53,6 +46,13 @@ public:
 	void process(const std::uint8_t *bgraData) override;
 
 	const std::uint8_t *getMask() const override;
+
+private:
+	constexpr static std::size_t kWidth = 256;
+	constexpr static std::size_t kHeight = 144;
+	constexpr static std::size_t kPixelCount = kWidth * kHeight;
+
+	std::unique_ptr<CoreMLSelfieSegmenterImpl> pImpl_;
 };
 
 } // namespace SelfieSegmenter

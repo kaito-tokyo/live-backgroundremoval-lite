@@ -7,6 +7,7 @@
 - The OBS team maintains CMake and GitHub Actions files. Do not modify these, except for workflow files starting with `my-`.
 - The default branch is `main`.
 - Ensure each file ends with a single empty newline. Builds will fail if this rule is not followed.
+- Member variables must be suffixed with an underscore (`_`).
 
 ## Building and Running Tests on macOS
 

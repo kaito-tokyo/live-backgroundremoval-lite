@@ -39,40 +39,29 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
-class NcnnSelfieSegmenter : public ISelfieSegmenter {
-private:
-	constexpr static std::size_t kWidth = 256;
-	constexpr static std::size_t kHeight = 144;
-	constexpr static std::size_t kPixelCount = kWidth * kHeight;
-
-	MaskBuffer maskBuffer;
-
-	ncnn::Net selfieSegmenterNet;
-	ncnn::Mat inputMat;
-	ncnn::Mat outputMat;
-
+class NcnnSelfieSegmenter final : public ISelfieSegmenter {
 public:
 	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int numThreads, int ncnnGpuIndex = -1)
-		: maskBuffer(kPixelCount)
+		: maskBuffer_(kPixelCount)
 	{
-		selfieSegmenterNet.opt.num_threads = numThreads;
-		selfieSegmenterNet.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
-		selfieSegmenterNet.opt.use_local_pool_allocator = true;
-		selfieSegmenterNet.opt.openmp_blocktime = 1;
+		selfieSegmenterNet_.opt.num_threads = numThreads;
+		selfieSegmenterNet_.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
+		selfieSegmenterNet_.opt.use_local_pool_allocator = true;
+		selfieSegmenterNet_.opt.openmp_blocktime = 1;
 
-		if (int ret = selfieSegmenterNet.load_param(paramPath)) {
+		if (int ret = selfieSegmenterNet_.load_param(paramPath)) {
 			throw std::runtime_error("Failed to load selfie segmenter param: " + std::to_string(ret));
 		}
 
-		if (int ret = selfieSegmenterNet.load_model(binPath)) {
+		if (int ret = selfieSegmenterNet_.load_model(binPath)) {
 			throw std::runtime_error("Failed to load selfie segmenter bin: " + std::to_string(ret));
 		}
 
-		inputMat.create(static_cast<int>(getWidth()), static_cast<int>(getHeight()), 3);
-		outputMat.create(static_cast<int>(getWidth()), static_cast<int>(getHeight()), 1);
+		inputMat_.create(static_cast<int>(getWidth()), static_cast<int>(getHeight()), 3);
+		outputMat_.create(static_cast<int>(getWidth()), static_cast<int>(getHeight()), 1);
 	}
 
-	~NcnnSelfieSegmenter() override = default;
+	~NcnnSelfieSegmenter() noexcept override = default;
 
 	std::size_t getWidth() const noexcept override { return kWidth; }
 	std::size_t getHeight() const noexcept override { return kHeight; }
@@ -86,19 +75,30 @@ public:
 				std::to_string(getPixelCount()) + ") bytes");
 		}
 
-		copy_r8_bgra_to_float_chw(inputMat.channel(0), inputMat.channel(1), inputMat.channel(2), bgraData,
+		copy_r8_bgra_to_float_chw(inputMat_.channel(0), inputMat_.channel(1), inputMat_.channel(2), bgraData,
 					  getPixelCount());
 
-		ncnn::Extractor ex = selfieSegmenterNet.create_extractor();
-		ex.input("in0", inputMat);
-		ex.extract("out0", outputMat);
+		ncnn::Extractor ex = selfieSegmenterNet_.create_extractor();
+		ex.input("in0", inputMat_);
+		ex.extract("out0", outputMat_);
 
-		maskBuffer.write([this](std::uint8_t *mask) {
-			copy_float32_to_r8(mask, outputMat.channel(0), getPixelCount());
+		maskBuffer_.write([this](std::uint8_t *mask) {
+			copy_float32_to_r8(mask, outputMat_.channel(0), getPixelCount());
 		});
 	}
 
-	const std::uint8_t *getMask() const override { return maskBuffer.read(); }
+	const std::uint8_t *getMask() const override { return maskBuffer_.read(); }
+
+private:
+	constexpr static std::size_t kWidth = 256;
+	constexpr static std::size_t kHeight = 144;
+	constexpr static std::size_t kPixelCount = kWidth * kHeight;
+
+	MaskBuffer maskBuffer_;
+
+	ncnn::Net selfieSegmenterNet_;
+	ncnn::Mat inputMat_;
+	ncnn::Mat outputMat_;
 };
 
 } // namespace SelfieSegmenter
