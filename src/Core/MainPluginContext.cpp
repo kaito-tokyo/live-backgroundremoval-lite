@@ -265,7 +265,6 @@ void MainPluginContext::update(obs_data_t *settings)
 			std::shared_ptr<RenderingContext> newRenderingContext = createRenderingContext(
 				renderingContext->region_.width, renderingContext->region_.height);
 			renderingContext = newRenderingContext;
-			renderingContext = newRenderingContext;
 			GsUnique::drain();
 		}
 	}
