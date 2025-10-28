@@ -65,12 +65,12 @@ inline void copy_r8_bgra_to_float_chw_naive(float *rChannel, float *gChannel, fl
  * @brief Naive C++ implementation for float (0.0f-1.0f) to uint8_t (0-255) conversion.
  * @param dst Pointer to the output uint8_t buffer.
  * @param src Pointer to the input float buffer.
- * @param pixel_count Total number of pixels to process.
+ * @param pixelCount Total number of pixels to process.
  * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
  */
-inline void copy_float32_to_r8_naive(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+inline void copy_float32_to_r8_naive(std::uint8_t *dst, const float *src, std::size_t pixelCount)
 {
-	for (std::size_t i = 0; i < pixel_count; i++) {
+	for (std::size_t i = 0; i < pixelCount; i++) {
 		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
 	}
 }
@@ -162,10 +162,10 @@ inline void copy_r8_bgra_to_float_chw_neon(float *rChannel, float *gChannel, flo
  * @brief NEON optimized implementation for float (0.0f-1.0f) to uint8_t (0-255) conversion.
  * @param dst Pointer to the output uint8_t buffer.
  * @param src Pointer to the input float buffer.
- * @param pixel_count Total number of pixels to process.
+ * @param pixelCount Total number of pixels to process.
  * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
  */
-inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::size_t pixelCount)
 {
 	constexpr std::size_t FLOATS_PER_LOOP = 32;
 
@@ -173,7 +173,7 @@ inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::si
 
 	std::size_t i = 0;
 
-	std::size_t neon_limit = (pixel_count / FLOATS_PER_LOOP) * FLOATS_PER_LOOP;
+	std::size_t neon_limit = (pixelCount / FLOATS_PER_LOOP) * FLOATS_PER_LOOP;
 	for (; i < neon_limit; i += FLOATS_PER_LOOP) {
 		// --- Block 1: Pixels 0-15 ---
 
@@ -252,7 +252,7 @@ inline void copy_float32_to_r8_neon(std::uint8_t *dst, const float *src, std::si
 
 	// --- Remainder Loop (Naive C++) ---
 	// Handle remaining 0-31 pixels
-	for (; i < pixel_count; ++i) {
+	for (; i < pixelCount; ++i) {
 		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
 	}
 }
@@ -438,14 +438,14 @@ copy_r8_bgra_to_float_chw_avx2_unaligned(float *rChannel, float *gChannel, float
  *
  * @param dst Output buffer (uint8_t*). Must be 32-byte aligned.
  * @param src Input buffer (float*). Must be 32-byte aligned.
- * @param pixel_count The number of pixels to process.
+ * @param pixelCount The number of pixels to process.
  * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
  */
 #if !defined(_MSC_VER)
 __attribute__((target("avx,avx2")))
 #endif
 inline void
-convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pixelCount)
 {
 	// --- 0. Pre-condition checks (32-byte alignment) ---
 	assert(reinterpret_cast<std::uintptr_t>(dst) % 32 == 0);
@@ -458,7 +458,7 @@ convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pix
 	std::size_t i = 0;
 
 	// --- 2. Main loop (32 pixels per iteration) ---
-	const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
+	const std::size_t avx_limit_32 = (pixelCount / 32) * 32;
 	for (; i < avx_limit_32; i += 32) {
 
 		// Step 2a: Load (Aligned), multiply, and convert
@@ -492,7 +492,7 @@ convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pix
 	}
 
 	// --- 3. Remainder loop (1 pixel per iteration) ---
-	for (; i < pixel_count; ++i) {
+	for (; i < pixelCount; ++i) {
 		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
 	}
 }
@@ -503,14 +503,14 @@ convert_float_to_uint8_avx2(std::uint8_t *dst, const float *src, std::size_t pix
  *
  * @param dst Output buffer (uint8_t*).
  * @param src Input buffer (float*).
- * @param pixel_count The number of pixels to process.
+ * @param pixelCount The number of pixels to process.
  * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
  */
 #if !defined(_MSC_VER)
 __attribute__((target("avx,avx2")))
 #endif
 inline void
-convert_float_to_uint8_avx2_unaligned(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+convert_float_to_uint8_avx2_unaligned(std::uint8_t *dst, const float *src, std::size_t pixelCount)
 {
 	// --- 0. (No pre-condition checks for alignment) ---
 
@@ -521,7 +521,7 @@ convert_float_to_uint8_avx2_unaligned(std::uint8_t *dst, const float *src, std::
 	std::size_t i = 0;
 
 	// --- 2. Main loop (32 pixels per iteration) ---
-	const std::size_t avx_limit_32 = (pixel_count / 32) * 32;
+	const std::size_t avx_limit_32 = (pixelCount / 32) * 32;
 	for (; i < avx_limit_32; i += 32) {
 
 		// Step 2a: Load (Unaligned), multiply, and convert
@@ -555,7 +555,7 @@ convert_float_to_uint8_avx2_unaligned(std::uint8_t *dst, const float *src, std::
 	}
 
 	// --- 3. Remainder loop (1 pixel per iteration) ---
-	for (; i < pixel_count; ++i) {
+	for (; i < pixelCount; ++i) {
 		dst[i] = static_cast<std::uint8_t>(src[i] * 255.f);
 	}
 }
@@ -591,7 +591,6 @@ void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel
 			       const std::size_t pixelCount)
 {
 #if defined(SELFIE_SEGMENTER_HAVE_NEON)
-	// NEON (arm64) intrinsics used (vld4q_u8, vst1q_f32) support unaligned access.
 	copy_r8_bgra_to_float_chw_neon(rChannel, gChannel, bChannel, bgraData, pixelCount);
 #elif defined(SELFIE_SEGMENTER_CHECK_AVX2)
 	const static bool is_avx2_available = check_if_avx2_available();
@@ -619,28 +618,28 @@ void copy_r8_bgra_to_float_chw(float *rChannel, float *gChannel, float *bChannel
  *
  * @param dst Pointer to the output uint8_t buffer.
  * @param src Pointer to the input float buffer.
- * @param pixel_count Total number of pixels to process.
+ * @param pixelCount Total number of pixels to process.
  * @note Input values must be in [0, 1]. Behavior for out-of-range values is undefined.
  */
-void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixel_count)
+void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixelCount)
 {
 #if defined(SELFIE_SEGMENTER_HAVE_NEON)
 	// NEON (arm64) intrinsics used (vld1q_f32, vst1q_u8) support unaligned access.
-	copy_float32_to_r8_neon(dst, src, pixel_count);
+	copy_float32_to_r8_neon(dst, src, pixelCount);
 #elif defined(SELFIE_SEGMENTER_CHECK_AVX2)
 	const static bool is_avx2_available = check_if_avx2_available();
 	if (is_avx2_available) {
 		// Check if both pointers are 32-byte aligned
 		if (check_ptr_aligned(dst) && check_ptr_aligned(src)) {
-			convert_float_to_uint8_avx2(dst, src, pixel_count);
+			convert_float_to_uint8_avx2(dst, src, pixelCount);
 		} else {
-			convert_float_to_uint8_avx2_unaligned(dst, src, pixel_count);
+			convert_float_to_uint8_avx2_unaligned(dst, src, pixelCount);
 		}
 	} else {
-		copy_float32_to_r8_naive(dst, src, pixel_count);
+		copy_float32_to_r8_naive(dst, src, pixelCount);
 	}
 #else
-	copy_float32_to_r8_naive(dst, src, pixel_count);
+	copy_float32_to_r8_naive(dst, src, pixelCount);
 #endif
 }
 
