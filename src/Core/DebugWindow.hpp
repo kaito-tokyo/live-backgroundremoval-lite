@@ -47,8 +47,8 @@ struct DebugRenderData {
 class DebugWindow : public QDialog {
 	Q_OBJECT
 public:
-	static constexpr int PREVIEW_WIDTH = 640;
-	static constexpr int PREVIEW_HEIGHT = 480;
+	constexpr static int kPreviewWidth = 640;
+	constexpr static int kPreviewHeight = 480;
 
 	DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
 
@@ -61,19 +61,19 @@ private slots:
 	void updatePreview();
 
 private:
-	std::weak_ptr<MainPluginContext> weakMainPluginContext;
+	std::weak_ptr<MainPluginContext> weakMainPluginContext_;
 
-	QVBoxLayout *layout;
-	QComboBox *previewTextureSelector;
-	QLabel *previewImageLabel;
-	QTimer *updateTimer;
+	QVBoxLayout *layout_;
+	QComboBox *previewTextureSelector_;
+	QLabel *previewImageLabel_;
+	QTimer *updateTimer_;
 
-	std::atomic<DebugRenderData *> atomicRenderData{nullptr};
-	std::unique_ptr<DebugRenderData> currentRenderData;
-	std::vector<std::unique_ptr<DebugRenderData>> oldRenderData;
+	std::atomic<DebugRenderData *> atomicRenderData_ = nullptr;
+	std::unique_ptr<DebugRenderData> currentRenderData_;
+	std::vector<std::unique_ptr<DebugRenderData>> oldRenderData_;
 
-	std::vector<std::uint8_t> bufferR8;
-	std::vector<std::uint8_t> bufferSubR8;
+	std::vector<std::uint8_t> bufferR8_;
+	std::vector<std::uint8_t> bufferSubR8_;
 };
 
 } // namespace LiveBackgroundRemovalLite

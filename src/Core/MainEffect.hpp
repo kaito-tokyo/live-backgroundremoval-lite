@@ -117,25 +117,8 @@ struct TextureRenderGuard {
 	}
 };
 
-class MainEffect {
+struct MainEffect {
 public:
-	const BridgeUtils::unique_gs_effect_t gsEffect = nullptr;
-
-	gs_eparam_t *const textureImage = nullptr;
-
-	gs_eparam_t *const floatTexelWidth = nullptr;
-	gs_eparam_t *const floatTexelHeight = nullptr;
-
-	gs_eparam_t *const textureImage1 = nullptr;
-	gs_eparam_t *const textureImage2 = nullptr;
-	gs_eparam_t *const textureImage3 = nullptr;
-
-	gs_eparam_t *const floatEps = nullptr;
-	gs_eparam_t *const floatGamma = nullptr;
-	gs_eparam_t *const floatLowerBound = nullptr;
-	gs_eparam_t *const floatUpperBound = nullptr;
-	gs_eparam_t *const floatAlpha = nullptr;
-
 	MainEffect(const BridgeUtils::unique_bfree_char_t &effectPath, const Logger::ILogger &logger)
 		: gsEffect(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
 		  textureImage(main_effect_detail::getEffectParam(gsEffect, "image", logger)),
@@ -397,6 +380,23 @@ public:
 			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
+
+	const BridgeUtils::unique_gs_effect_t gsEffect = nullptr;
+
+	gs_eparam_t *const textureImage = nullptr;
+
+	gs_eparam_t *const floatTexelWidth = nullptr;
+	gs_eparam_t *const floatTexelHeight = nullptr;
+
+	gs_eparam_t *const textureImage1 = nullptr;
+	gs_eparam_t *const textureImage2 = nullptr;
+	gs_eparam_t *const textureImage3 = nullptr;
+
+	gs_eparam_t *const floatEps = nullptr;
+	gs_eparam_t *const floatGamma = nullptr;
+	gs_eparam_t *const floatLowerBound = nullptr;
+	gs_eparam_t *const floatUpperBound = nullptr;
+	gs_eparam_t *const floatAlpha = nullptr;
 };
 
 } // namespace LiveBackgroundRemovalLite

@@ -44,13 +44,13 @@ using namespace KaitoTokyo::BridgeUtils;
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
-MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *_source,
-				     std::shared_future<std::string> _latestVersionFuture, const ILogger &_logger)
-	: source{_source},
-	  logger(_logger),
-	  mainEffect(unique_obs_module_file("effects/main.effect"), logger),
-	  latestVersionFuture(_latestVersionFuture),
-	  selfieSegmenterTaskQueue(logger, 1)
+MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *source,
+				     std::shared_future<std::string> latestVersionFuture, const ILogger &logger)
+	: source_{source},
+	  logger_(logger),
+	  mainEffect_(unique_obs_module_file("effects/main.effect"), logger_),
+	  latestVersionFuture_(latestVersionFuture),
+	  selfieSegmenterTaskQueue_(logger_, 1)
 {
 	update(settings);
 }
@@ -59,28 +59,28 @@ void MainPluginContext::startup() noexcept {}
 
 void MainPluginContext::shutdown() noexcept
 {
-	if (DebugWindow *_debugWindow = debugWindow.load()) {
-		_debugWindow->close();
+	if (DebugWindow *debugWindow = debugWindow_.load()) {
+		debugWindow->close();
 	}
 
 	{
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		renderingContext.reset();
+		std::lock_guard<std::mutex> lock(renderingContextMutex_);
+		renderingContext_.reset();
 	}
 
-	selfieSegmenterTaskQueue.shutdown();
+	selfieSegmenterTaskQueue_.shutdown();
 }
 
 MainPluginContext::~MainPluginContext() noexcept {}
 
 std::uint32_t MainPluginContext::getWidth() const noexcept
 {
-	return renderingContext ? renderingContext->region.width : 0;
+	return renderingContext_ ? renderingContext_->region_.width : 0;
 }
 
 std::uint32_t MainPluginContext::getHeight() const noexcept
 {
-	return renderingContext ? renderingContext->region.height : 0;
+	return renderingContext_ ? renderingContext_->region_.height : 0;
 }
 
 void MainPluginContext::getDefaults(obs_data_t *data)
@@ -113,10 +113,10 @@ obs_properties_t *MainPluginContext::getProperties()
 	// Update notifier
 	const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
 	try {
-		if (latestVersionFuture.valid()) {
-			if (latestVersionFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-				const std::string latestVersion = latestVersionFuture.get();
-				logger.info("CurrentVersion: {}, Latest version: {}", PLUGIN_VERSION, latestVersion);
+		if (latestVersionFuture_.valid()) {
+			if (latestVersionFuture_.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+				const std::string latestVersion = latestVersionFuture_.get();
+				logger_.info("CurrentVersion: {}, Latest version: {}", PLUGIN_VERSION, latestVersion);
 				if (latestVersion == PLUGIN_VERSION) {
 					updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
 				} else {
@@ -127,9 +127,9 @@ obs_properties_t *MainPluginContext::getProperties()
 			}
 		}
 	} catch (const std::exception &e) {
-		logger.error("Failed to check for updates: {}", e.what());
+		logger_.error("Failed to check for updates: {}", e.what());
 	} catch (...) {
-		logger.error("Failed to check for updates: unknown error");
+		logger_.error("Failed to check for updates: unknown error");
 	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
@@ -139,10 +139,10 @@ obs_properties_t *MainPluginContext::getProperties()
 		[](obs_properties_t *, obs_property_t *, void *data) {
 			auto self = static_cast<MainPluginContext *>(data)->shared_from_this();
 
-			if (DebugWindow *_debugWindow = self->debugWindow.load()) {
-				_debugWindow->show();
-				_debugWindow->raise();
-				_debugWindow->activateWindow();
+			if (DebugWindow *debugWindow = self->debugWindow_.load()) {
+				debugWindow->show();
+				debugWindow->raise();
+				debugWindow->activateWindow();
 			} else {
 				auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
 				DebugWindow *newDebugWindow = new DebugWindow(self->weak_from_this(), parent);
@@ -151,7 +151,7 @@ obs_properties_t *MainPluginContext::getProperties()
 				QObject::connect(newDebugWindow, &QDialog::destroyed,
 						 [self]() { self->setDebugWindowNull(); });
 
-				self->debugWindow.store(newDebugWindow);
+				self->debugWindow_ = newDebugWindow;
 
 				newDebugWindow->show();
 			}
@@ -192,10 +192,10 @@ obs_properties_t *MainPluginContext::getProperties()
 
 #if NCNN_VULKAN == 1
 	int ncnnGpuCount = ncnn::get_gpu_count();
-	ncnnGpuNames.resize(ncnnGpuCount);
+	ncnnGpuNames_.resize(ncnnGpuCount);
 	for (int i = 0; i < std::min(ncnnGpuCount, ComputeUnit::kNcnnVulkanGpuIndexMask); ++i) {
-		ncnnGpuNames[i] = fmt::format("{} ({})", obs_module_text("computeUnitVulkanGpu"), i);
-		obs_property_list_add_int(propComputeUnit, ncnnGpuNames[i].c_str(), ComputeUnit::kNcnnVulkanGpu | i);
+		ncnnGpuNames_[i] = fmt::format("{} ({})", obs_module_text("computeUnitVulkanGpu"), i);
+		obs_property_list_add_int(propComputeUnit, ncnnGpuNames_[i].c_str(), ComputeUnit::kNcnnVulkanGpu | i);
 	}
 #endif
 
@@ -239,39 +239,38 @@ void MainPluginContext::update(obs_data_t *settings)
 
 	newPluginProperty.timeAveragedFilteringAlpha = obs_data_get_double(settings, "timeAveragedFilteringAlpha");
 
-	std::shared_ptr<RenderingContext> _renderingContext;
+	std::shared_ptr<RenderingContext> renderingContext;
 	{
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
+		std::lock_guard<std::mutex> lock(renderingContextMutex_);
 
 		bool doesRenewRenderingContext = false;
 
 		int computeUnit = obs_data_get_int(settings, "computeUnit");
-		if (pluginProperty.computeUnit != computeUnit) {
+		if (pluginProperty_.computeUnit != computeUnit) {
 			doesRenewRenderingContext = true;
 		}
 		newPluginProperty.computeUnit = computeUnit;
 
 		int numThreads = obs_data_get_int(settings, "numThreads");
-		if (pluginProperty.numThreads != numThreads) {
+		if (pluginProperty_.numThreads != numThreads) {
 			doesRenewRenderingContext = true;
 		}
 		newPluginProperty.numThreads = numThreads;
 
-		pluginProperty = newPluginProperty;
-		_renderingContext = renderingContext;
+		pluginProperty_ = newPluginProperty;
+		renderingContext = renderingContext_;
 
-		if (_renderingContext && doesRenewRenderingContext) {
+		if (renderingContext && doesRenewRenderingContext) {
 			GraphicsContextGuard graphicsContextGuard;
 			std::shared_ptr<RenderingContext> newRenderingContext = createRenderingContext(
-				_renderingContext->region.width, _renderingContext->region.height);
+				renderingContext->region_.width, renderingContext->region_.height);
 			renderingContext = newRenderingContext;
-			_renderingContext = newRenderingContext;
 			GsUnique::drain();
 		}
 	}
 
-	if (_renderingContext) {
-		_renderingContext->applyPluginProperty(pluginProperty);
+	if (renderingContext) {
+		renderingContext->applyPluginProperty(pluginProperty_);
 	}
 }
 
@@ -285,13 +284,13 @@ void MainPluginContext::hide() {}
 
 void MainPluginContext::videoTick(float seconds)
 {
-	if (obs_source_t *const parent = obs_filter_get_parent(source)) {
+	if (obs_source_t *const parent = obs_filter_get_parent(source_)) {
 		if (!obs_source_active(parent)) {
 			return;
 		}
 	}
 
-	obs_source_t *target = obs_filter_get_target(source);
+	obs_source_t *target = obs_filter_get_target(source_);
 	uint32_t targetWidth = obs_source_get_width(target);
 	uint32_t targetHeight = obs_source_get_height(target);
 
@@ -301,20 +300,20 @@ void MainPluginContext::videoTick(float seconds)
 	}
 
 	if (targetWidth == 0 || targetHeight == 0) {
-		logger.debug("Target source has zero width or height, skipping video tick");
+		logger_.debug("Target source has zero width or height, skipping video tick");
 		return;
 	}
 
 	std::shared_ptr<RenderingContext> _renderingContext;
 	{
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		if (!renderingContext || renderingContext->region.width != targetWidth ||
-		    renderingContext->region.height != targetHeight) {
+		std::lock_guard<std::mutex> lock(renderingContextMutex_);
+		if (!renderingContext_ || renderingContext_->region_.width != targetWidth ||
+		    renderingContext_->region_.height != targetHeight) {
 			GraphicsContextGuard graphicsContextGuard;
-			renderingContext = createRenderingContext(targetWidth, targetHeight);
+			renderingContext_ = createRenderingContext(targetWidth, targetHeight);
 			GsUnique::drain();
 		}
-		_renderingContext = renderingContext;
+		_renderingContext = renderingContext_;
 	}
 
 	if (_renderingContext) {
@@ -324,7 +323,7 @@ void MainPluginContext::videoTick(float seconds)
 
 void MainPluginContext::videoRender()
 {
-	if (obs_source_t *const parent = obs_filter_get_parent(source)) {
+	if (obs_source_t *const parent = obs_filter_get_parent(source_)) {
 		if (!obs_source_active(parent) || !obs_source_showing(parent)) {
 			// Draw nothing to prevent unexpected background disclosure
 			return;
@@ -335,14 +334,14 @@ void MainPluginContext::videoRender()
 		_renderingContext->videoRender();
 	}
 
-	if (DebugWindow *_debugWindow = debugWindow.load()) {
-		_debugWindow->videoRender();
+	if (DebugWindow *debugWindow = debugWindow_.load()) {
+		debugWindow->videoRender();
 	}
 }
 
 obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
 try {
-	if (obs_source_t *const parent = obs_filter_get_parent(source)) {
+	if (obs_source_t *const parent = obs_filter_get_parent(source_)) {
 		if (!obs_source_active(parent) || !obs_source_showing(parent)) {
 			return frame;
 		}
@@ -354,26 +353,25 @@ try {
 		return frame;
 	}
 } catch (const std::exception &e) {
-	logger.error("Failed to create rendering context: {}", e.what());
+	logger_.error("Failed to create rendering context: {}", e.what());
 	return frame;
 } catch (...) {
-	logger.error("Failed to create rendering context: unknown error");
+	logger_.error("Failed to create rendering context: unknown error");
 	return frame;
 }
 
 std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std::uint32_t targetWidth,
 									    std::uint32_t targetHeight)
 {
-	PluginConfig pluginConfig(PluginConfig::load(logger));
+	PluginConfig pluginConfig(PluginConfig::load(logger_));
 
-	int computeUnit = RenderingContext::getActualComputeUnit(logger, pluginProperty.computeUnit);
+	int computeUnit = RenderingContext::getActualComputeUnit(logger_, pluginProperty_.computeUnit);
 
-	auto renderingContext = std::make_shared<RenderingContext>(source, logger, mainEffect, selfieSegmenterTaskQueue,
-								   pluginConfig, pluginProperty.subsamplingRate,
-								   targetWidth, targetHeight, computeUnit,
-								   pluginProperty.numThreads);
+	auto renderingContext = std::make_shared<RenderingContext>(
+		source_, logger_, mainEffect_, selfieSegmenterTaskQueue_, pluginConfig, pluginProperty_.subsamplingRate,
+		targetWidth, targetHeight, computeUnit, pluginProperty_.numThreads);
 
-	renderingContext->applyPluginProperty(pluginProperty);
+	renderingContext->applyPluginProperty(pluginProperty_);
 
 	return renderingContext;
 }

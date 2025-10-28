@@ -54,78 +54,6 @@ struct RenderingContextRegion {
 };
 
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
-private:
-	obs_source_t *const source;
-	const Logger::ILogger &logger;
-	const MainEffect &mainEffect;
-	TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue;
-	const PluginConfig pluginConfig;
-
-public:
-	const std::uint32_t subsamplingRate;
-	const int computeUnit;
-	const int numThreads;
-
-	std::unique_ptr<SelfieSegmenter::ISelfieSegmenter> selfieSegmenter;
-
-public:
-	const RenderingContextRegion region;
-	const RenderingContextRegion subRegion;
-	const RenderingContextRegion maskRoi;
-
-	const BridgeUtils::unique_gs_texture_t bgrxSource;
-	const BridgeUtils::unique_gs_texture_t r32fGrayscale;
-
-	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput;
-	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader;
-
-private:
-	std::vector<std::uint8_t> segmenterInputBuffer;
-
-public:
-	const BridgeUtils::unique_gs_texture_t r8SegmentationMask;
-
-private:
-	const BridgeUtils::unique_gs_texture_t r32fSubGFIntermediate;
-
-public:
-	const BridgeUtils::unique_gs_texture_t r8SubGFGuide;
-	const BridgeUtils::unique_gs_texture_t r8SubGFSource;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanSource;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSource;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSq;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFA;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFB;
-	const BridgeUtils::unique_gs_texture_t r8GuidedFilterResult;
-
-	const std::array<BridgeUtils::unique_gs_texture_t, 2> r8TimeAveragedMasks;
-	std::size_t currentTimeAveragedMaskIndex = 0;
-
-public:
-	std::atomic<FilterLevel> filterLevel;
-
-	std::atomic<bool> isStrictlySyncing;
-
-	std::atomic<float> selfieSegmenterInterval;
-
-	std::atomic<float> guidedFilterEps;
-
-	std::atomic<float> maskGamma;
-	std::atomic<float> maskLowerBound;
-	std::atomic<float> maskUpperBoundMargin;
-
-	std::atomic<float> timeAveragedFilteringAlpha;
-
-private:
-	float timeSinceLastSelfieSegmentation = 0.0f;
-	std::atomic<bool> doesNextVideoRenderKickSelfieSegmentation = false;
-
-	std::uint64_t lastFrameTimestamp = 0;
-	std::atomic<bool> doesNextVideoRenderReceiveNewFrame = false;
-
-	vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
-
 public:
 	static int getActualComputeUnit(const Logger::ILogger &logger, int computeUnit)
 	{
@@ -180,50 +108,122 @@ public:
 
 	void applyPluginProperty(const PluginProperty &pluginProperty)
 	{
-		isStrictlySyncing = pluginProperty.isStrictlySyncing;
-		logger.info("Strict syncing is {}", isStrictlySyncing.load() ? "enabled" : "disabled");
+		isStrictlySyncing_ = pluginProperty.isStrictlySyncing;
+		logger_.info("Strict syncing is {}", isStrictlySyncing_.load() ? "enabled" : "disabled");
 
 		if (pluginProperty.filterLevel == FilterLevel::Default) {
 			if (pluginProperty.isStrictlySyncing) {
-				filterLevel = FilterLevel::GuidedFilter;
+				filterLevel_ = FilterLevel::GuidedFilter;
 			} else {
-				filterLevel = FilterLevel::TimeAveragedFilter;
+				filterLevel_ = FilterLevel::TimeAveragedFilter;
 			}
-			logger.info("Default filter level is parsed to be {}", static_cast<int>(filterLevel.load()));
+			logger_.info("Default filter level is parsed to be {}", static_cast<int>(filterLevel_.load()));
 		} else {
-			filterLevel = pluginProperty.filterLevel;
-			logger.info("Filter level set to {}", static_cast<int>(filterLevel.load()));
+			filterLevel_ = pluginProperty.filterLevel;
+			logger_.info("Filter level set to {}", static_cast<int>(filterLevel_.load()));
 		}
 
 		if (pluginProperty.selfieSegmenterFps == 0) {
 			if (pluginProperty.isStrictlySyncing) {
-				selfieSegmenterInterval = 1.0f / 15.0f;
+				selfieSegmenterInterval_ = 1.0f / 15.0f;
 			} else {
-				selfieSegmenterInterval = 1.0f / 60.0f;
+				selfieSegmenterInterval_ = 1.0f / 60.0f;
 			}
-			logger.info("Default selfie segmenter interval is parsed to be {}",
-				    selfieSegmenterInterval.load());
+			logger_.info("Default selfie segmenter interval is parsed to be {}",
+				     selfieSegmenterInterval_.load());
 		} else {
-			selfieSegmenterInterval = 1.0f / static_cast<float>(pluginProperty.selfieSegmenterFps);
+			selfieSegmenterInterval_ = 1.0f / static_cast<float>(pluginProperty.selfieSegmenterFps);
 		}
-		logger.info("Selfie segmenter interval set to {}", selfieSegmenterInterval.load());
+		logger_.info("Selfie segmenter interval set to {}", selfieSegmenterInterval_.load());
 
-		guidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
-		logger.info("Guided filter epsilon set to {}", guidedFilterEps.load());
+		guidedFilterEps_ = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
+		logger_.info("Guided filter epsilon set to {}", guidedFilterEps_.load());
 
-		timeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
-		logger.info("Time-averaged filtering alpha set to {}", timeAveragedFilteringAlpha.load());
+		timeAveragedFilteringAlpha_ = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
+		logger_.info("Time-averaged filtering alpha set to {}", timeAveragedFilteringAlpha_.load());
 
-		maskGamma = static_cast<float>(pluginProperty.maskGamma);
-		logger.info("Mask gamma set to {}", maskGamma.load());
+		maskGamma_ = static_cast<float>(pluginProperty.maskGamma);
+		logger_.info("Mask gamma set to {}", maskGamma_.load());
 
-		maskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
-		logger.info("Mask lower bound set to {}", maskLowerBound.load());
+		maskLowerBound_ = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
+		logger_.info("Mask lower bound set to {}", maskLowerBound_.load());
 
-		maskUpperBoundMargin =
+		maskUpperBoundMargin_ =
 			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
-		logger.info("Mask upper bound margin set to {}", maskUpperBoundMargin.load());
+		logger_.info("Mask upper bound margin set to {}", maskUpperBoundMargin_.load());
 	}
+
+private:
+	obs_source_t *const source_;
+	const Logger::ILogger &logger_;
+	const MainEffect &mainEffect_;
+	TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue_;
+	const PluginConfig pluginConfig_;
+
+public:
+	const std::uint32_t subsamplingRate_;
+	const int computeUnit_;
+	const int numThreads_;
+
+	std::unique_ptr<SelfieSegmenter::ISelfieSegmenter> selfieSegmenter_;
+
+public:
+	const RenderingContextRegion region_;
+	const RenderingContextRegion subRegion_;
+	const RenderingContextRegion maskRoi_;
+
+	const BridgeUtils::unique_gs_texture_t bgrxSource_;
+	const BridgeUtils::unique_gs_texture_t r32fGrayscale_;
+
+	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
+	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
+
+private:
+	std::vector<std::uint8_t> segmenterInputBuffer_;
+
+public:
+	const BridgeUtils::unique_gs_texture_t r8SegmentationMask_;
+
+private:
+	const BridgeUtils::unique_gs_texture_t r32fSubGFIntermediate_;
+
+public:
+	const BridgeUtils::unique_gs_texture_t r8SubGFGuide_;
+	const BridgeUtils::unique_gs_texture_t r8SubGFSource_;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide_;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanSource_;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSource_;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSq_;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFA_;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFB_;
+	const BridgeUtils::unique_gs_texture_t r8GuidedFilterResult_;
+
+	const std::array<BridgeUtils::unique_gs_texture_t, 2> r8TimeAveragedMasks_;
+	std::size_t currentTimeAveragedMaskIndex_ = 0;
+
+public:
+	std::atomic<FilterLevel> filterLevel_;
+
+	std::atomic<bool> isStrictlySyncing_;
+
+	std::atomic<float> selfieSegmenterInterval_;
+
+	std::atomic<float> guidedFilterEps_;
+
+	std::atomic<float> maskGamma_;
+	std::atomic<float> maskLowerBound_;
+	std::atomic<float> maskUpperBoundMargin_;
+
+	std::atomic<float> timeAveragedFilteringAlpha_;
+
+private:
+	float timeSinceLastSelfieSegmentation_ = 0.0f;
+	std::atomic<bool> doesNextVideoRenderKickSelfieSegmentation_ = false;
+
+	std::uint64_t lastFrameTimestamp_ = 0;
+	std::atomic<bool> doesNextVideoRenderReceiveNewFrame_ = false;
+
+	vec4 blackColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
 };
 
 } // namespace LiveBackgroundRemovalLite
