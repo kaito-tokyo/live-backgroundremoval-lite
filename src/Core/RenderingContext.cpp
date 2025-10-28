@@ -87,48 +87,50 @@ inline RenderingContextRegion getMaskRoiPosition(std::uint32_t width, std::uint3
 
 } // anonymous namespace
 
-RenderingContext::RenderingContext(obs_source_t *const _source, const ILogger &_logger, const MainEffect &_mainEffect,
-				   ThrottledTaskQueue &_selfieSegmenterTaskQueue, const PluginConfig &_pluginConfig,
-				   const std::uint32_t _subsamplingRate, const std::uint32_t width,
-				   const std::uint32_t height, const int _computeUnit, const int _numThreads)
-	: source(_source),
-	  logger(_logger),
-	  mainEffect(_mainEffect),
-	  selfieSegmenterTaskQueue(_selfieSegmenterTaskQueue),
-	  pluginConfig(_pluginConfig),
-	  subsamplingRate(_subsamplingRate),
-	  computeUnit(_computeUnit),
-	  numThreads(_numThreads),
-	  selfieSegmenter(createSelfieSegmenter(logger, pluginConfig, computeUnit, numThreads)),
-	  region{0, 0, width, height},
-	  subRegion{0, 0, (region.width / subsamplingRate) & ~1u, (region.height / subsamplingRate) & ~1u},
-	  maskRoi(getMaskRoiPosition(region.width, region.height, selfieSegmenter)),
-	  bgrxSource(make_unique_gs_texture(region.width, region.height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGrayscale(make_unique_gs_texture(region.width, region.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  bgrxSegmenterInput(make_unique_gs_texture(static_cast<std::uint32_t>(selfieSegmenter->getWidth()),
-						    static_cast<std::uint32_t>(selfieSegmenter->getHeight()), GS_BGRX,
+RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &logger, const MainEffect &mainEffect,
+				   ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
+				   const std::uint32_t subsamplingRate, const std::uint32_t width,
+				   const std::uint32_t height, const int computeUnit, const int numThreads)
+	: source_(source),
+	  logger_(logger),
+	  mainEffect_(mainEffect),
+	  selfieSegmenterTaskQueue_(selfieSegmenterTaskQueue),
+	  pluginConfig_(pluginConfig),
+	  subsamplingRate_(subsamplingRate),
+	  computeUnit_(computeUnit),
+	  numThreads_(numThreads),
+	  selfieSegmenter_(createSelfieSegmenter(logger, pluginConfig, computeUnit, numThreads)),
+	  region_{0, 0, width, height},
+	  subRegion_{0, 0, (region_.width / subsamplingRate) & ~1u, (region_.height / subsamplingRate) & ~1u},
+	  maskRoi_(getMaskRoiPosition(region_.width, region_.height, selfieSegmenter_)),
+	  bgrxSource_(make_unique_gs_texture(region_.width, region_.height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
+	  r32fGrayscale_(make_unique_gs_texture(region_.width, region_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  bgrxSegmenterInput_(make_unique_gs_texture(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
+						    static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX,
 						    1, NULL, GS_RENDER_TARGET)),
-	  bgrxSegmenterInputReader(static_cast<std::uint32_t>(selfieSegmenter->getWidth()),
-				   static_cast<std::uint32_t>(selfieSegmenter->getHeight()), GS_BGRX),
-	  segmenterInputBuffer(selfieSegmenter->getPixelCount() * 4),
-	  r8SegmentationMask(make_unique_gs_texture(maskRoi.width, maskRoi.height, GS_R8, 1, NULL, GS_DYNAMIC)),
-	  r32fSubGFIntermediate(
-		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r8SubGFGuide(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
-	  r8SubGFSource(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubGFMeanGuide(
-		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubGFMeanSource(
-		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubGFMeanGuideSource(
-		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubGFMeanGuideSq(
-		  make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubGFA(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubGFB(make_unique_gs_texture(subRegion.width, subRegion.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r8GuidedFilterResult(make_unique_gs_texture(region.width, region.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
-	  r8TimeAveragedMasks{make_unique_gs_texture(region.width, region.height, GS_R8, 1, NULL, GS_RENDER_TARGET),
-			      make_unique_gs_texture(region.width, region.height, GS_R8, 1, NULL, GS_RENDER_TARGET)}
+	  bgrxSegmenterInputReader_(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
+				   static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX),
+	  segmenterInputBuffer_(selfieSegmenter_->getPixelCount() * 4),
+	  r8SegmentationMask_(make_unique_gs_texture(maskRoi_.width, maskRoi_.height, GS_R8, 1, NULL, GS_DYNAMIC)),
+	  r32fSubGFIntermediate_(
+		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r8SubGFGuide_(make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r8SubGFSource_(make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubGFMeanGuide_(
+		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubGFMeanSource_(
+		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubGFMeanGuideSource_(
+		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubGFMeanGuideSq_(
+		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubGFA_(
+		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubGFB_(
+		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r8GuidedFilterResult_(make_unique_gs_texture(region_.width, region_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r8TimeAveragedMasks_{make_unique_gs_texture(region_.width, region_.height, GS_R8, 1, NULL, GS_RENDER_TARGET),
+			      make_unique_gs_texture(region_.width, region_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)}
 {
 }
 
@@ -136,133 +138,133 @@ RenderingContext::~RenderingContext() noexcept {}
 
 void RenderingContext::videoTick(float seconds)
 {
-	FilterLevel _filterLevel = filterLevel;
+	FilterLevel filterLevel = filterLevel_;
 
-	float _selfieSegmenterInterval = selfieSegmenterInterval;
+	float selfieSegmenterInterval = selfieSegmenterInterval_;
 
-	if (_filterLevel >= FilterLevel::Segmentation) {
-		timeSinceLastSelfieSegmentation += seconds;
+	if (filterLevel >= FilterLevel::Segmentation) {
+		timeSinceLastSelfieSegmentation_ += seconds;
 
-		if (timeSinceLastSelfieSegmentation >= _selfieSegmenterInterval) {
-			timeSinceLastSelfieSegmentation -= _selfieSegmenterInterval;
-			doesNextVideoRenderKickSelfieSegmentation = true;
+		if (timeSinceLastSelfieSegmentation_ >= selfieSegmenterInterval) {
+			timeSinceLastSelfieSegmentation_ -= selfieSegmenterInterval;
+			doesNextVideoRenderKickSelfieSegmentation_ = true;
 		}
 	}
 
-	doesNextVideoRenderReceiveNewFrame = true;
+	doesNextVideoRenderReceiveNewFrame_ = true;
 }
 
 void RenderingContext::videoRender()
 {
-	FilterLevel _filterLevel = filterLevel;
+	FilterLevel filterLevel = filterLevel_;
 
-	float _guidedFilterEps = guidedFilterEps;
+	float guidedFilterEps = guidedFilterEps_;
 
-	float _maskGamma = maskGamma;
-	float _maskLowerBound = maskLowerBound;
-	float _maskUpperBoundMargin = maskUpperBoundMargin;
+	float maskGamma = maskGamma_;
+	float maskLowerBound = maskLowerBound_;
+	float maskUpperBoundMargin = maskUpperBoundMargin_;
 
-	float _timeAveragedFilteringAlpha = timeAveragedFilteringAlpha;
+	float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_;
 
-	const bool _doesNextVideoRenderReceiveNewFrame = doesNextVideoRenderReceiveNewFrame.exchange(false);
-	if (_doesNextVideoRenderReceiveNewFrame) {
-		if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing) {
+	const bool doesNextVideoRenderReceiveNewFrame = doesNextVideoRenderReceiveNewFrame_.exchange(false);
+	if (doesNextVideoRenderReceiveNewFrame) {
+		if (filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing_) {
 			try {
-				bgrxSegmenterInputReader.sync();
+				bgrxSegmenterInputReader_.sync();
 			} catch (const std::exception &e) {
-				logger.error("Failed to sync texture reader: {}", e.what());
+				logger_.error("Failed to sync texture reader: {}", e.what());
 			}
 		}
 
-		mainEffect.drawSource(bgrxSource, source);
+		mainEffect_.drawSource(bgrxSource_, source_);
 
-		if (_filterLevel >= FilterLevel::Segmentation) {
+		if (filterLevel >= FilterLevel::Segmentation) {
 			constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-			mainEffect.drawRoi(bgrxSegmenterInput, bgrxSource, &blackColor, maskRoi.width, maskRoi.height,
-					   static_cast<float>(maskRoi.x), static_cast<float>(maskRoi.y));
+			mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, maskRoi_.width, maskRoi_.height,
+					   static_cast<float>(maskRoi_.x), static_cast<float>(maskRoi_.y));
 
-			if (isStrictlySyncing) {
-				bgrxSegmenterInputReader.stage(bgrxSegmenterInput);
+			if (isStrictlySyncing_) {
+				bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
 			}
 		}
 
-		if (_filterLevel >= FilterLevel::GuidedFilter) {
-			mainEffect.convertToGrayscale(r32fGrayscale, bgrxSource);
+		if (filterLevel >= FilterLevel::GuidedFilter) {
+			mainEffect_.convertToGrayscale(r32fGrayscale_, bgrxSource_);
 		}
 
-		if (_filterLevel >= FilterLevel::Segmentation) {
-			if (isStrictlySyncing && doesNextVideoRenderKickSelfieSegmentation.exchange(false)) {
-				bgrxSegmenterInputReader.sync();
-				selfieSegmenter->process(bgrxSegmenterInputReader.getBuffer().data());
+		if (filterLevel >= FilterLevel::Segmentation) {
+			if (isStrictlySyncing_ && doesNextVideoRenderKickSelfieSegmentation_.exchange(false)) {
+				bgrxSegmenterInputReader_.sync();
+				selfieSegmenter_->process(bgrxSegmenterInputReader_.getBuffer().data());
 			}
 
 			const std::uint8_t *segmentationMaskData =
-				selfieSegmenter->getMask() + (maskRoi.y * selfieSegmenter->getWidth() + maskRoi.x);
-			gs_texture_set_image(r8SegmentationMask.get(), segmentationMaskData,
-					     static_cast<std::uint32_t>(selfieSegmenter->getWidth()), 0);
+				selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
+			gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
+					     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
 		}
 
-		if (_filterLevel >= FilterLevel::GuidedFilter) {
-			mainEffect.resampleByNearestR8(r8SubGFGuide, r32fGrayscale);
+		if (filterLevel >= FilterLevel::GuidedFilter) {
+			mainEffect_.resampleByNearestR8(r8SubGFGuide_, r32fGrayscale_);
 
-			mainEffect.resampleByNearestR8(r8SubGFSource, r8SegmentationMask);
+			mainEffect_.resampleByNearestR8(r8SubGFSource_, r8SegmentationMask_);
 
-			mainEffect.applyBoxFilterR8KS17(r32fSubGFMeanGuide, r8SubGFGuide, r32fSubGFIntermediate);
-			mainEffect.applyBoxFilterR8KS17(r32fSubGFMeanSource, r8SubGFSource, r32fSubGFIntermediate);
+			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, r8SubGFGuide_, r32fSubGFIntermediate_);
+			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanSource_, r8SubGFSource_, r32fSubGFIntermediate_);
 
-			mainEffect.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource, r8SubGFGuide, r8SubGFSource,
-							       r32fSubGFIntermediate);
-			mainEffect.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq, r8SubGFGuide,
-							      r32fSubGFIntermediate);
+			mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, r8SubGFGuide_, r8SubGFSource_,
+							       r32fSubGFIntermediate_);
+			mainEffect_.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq_, r8SubGFGuide_,
+							      r32fSubGFIntermediate_);
 
-			mainEffect.calculateGuidedFilterAAndB(r32fSubGFA, r32fSubGFB, r32fSubGFMeanGuideSq,
-							      r32fSubGFMeanGuide, r32fSubGFMeanGuideSource,
-							      r32fSubGFMeanSource, _guidedFilterEps);
+			mainEffect_.calculateGuidedFilterAAndB(r32fSubGFA_, r32fSubGFB_, r32fSubGFMeanGuideSq_,
+							      r32fSubGFMeanGuide_, r32fSubGFMeanGuideSource_,
+							      r32fSubGFMeanSource_, guidedFilterEps);
 
-			mainEffect.finalizeGuidedFilter(r8GuidedFilterResult, r32fGrayscale, r32fSubGFA, r32fSubGFB);
+			mainEffect_.finalizeGuidedFilter(r8GuidedFilterResult_, r32fGrayscale_, r32fSubGFA_, r32fSubGFB_);
 		}
 
-		if (_filterLevel >= FilterLevel::TimeAveragedFilter) {
-			std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex;
-			mainEffect.timeAveragedFiltering(r8TimeAveragedMasks[nextIndex],
-							 r8TimeAveragedMasks[currentTimeAveragedMaskIndex],
-							 r8GuidedFilterResult, _timeAveragedFilteringAlpha);
-			currentTimeAveragedMaskIndex = nextIndex;
+		if (filterLevel >= FilterLevel::TimeAveragedFilter) {
+			std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex_;
+			mainEffect_.timeAveragedFiltering(r8TimeAveragedMasks_[nextIndex],
+							 r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
+							 r8GuidedFilterResult_, timeAveragedFilteringAlpha_);
+			currentTimeAveragedMaskIndex_ = nextIndex;
 		}
 	}
 
-	if (_filterLevel == FilterLevel::Passthrough) {
-		mainEffect.directDraw(bgrxSource);
-	} else if (_filterLevel == FilterLevel::Segmentation) {
-		mainEffect.directDrawWithMask(bgrxSource, r8SegmentationMask);
-	} else if (_filterLevel == FilterLevel::GuidedFilter) {
-		mainEffect.directDrawWithRefinedMask(bgrxSource, r8GuidedFilterResult, _maskGamma, _maskLowerBound,
-						     _maskUpperBoundMargin);
-	} else if (_filterLevel == FilterLevel::TimeAveragedFilter) {
-		mainEffect.directDrawWithRefinedMask(bgrxSource, r8TimeAveragedMasks[currentTimeAveragedMaskIndex],
-						     _maskGamma, _maskLowerBound, _maskUpperBoundMargin);
+	if (filterLevel == FilterLevel::Passthrough) {
+		mainEffect_.directDraw(bgrxSource_);
+	} else if (filterLevel == FilterLevel::Segmentation) {
+		mainEffect_.directDrawWithMask(bgrxSource_, r8SegmentationMask_);
+	} else if (filterLevel == FilterLevel::GuidedFilter) {
+		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8GuidedFilterResult_, maskGamma_, maskLowerBound_,
+						     maskUpperBoundMargin_);
+	} else if (filterLevel == FilterLevel::TimeAveragedFilter) {
+		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
+						     maskGamma_, maskLowerBound_, maskUpperBoundMargin_);
 	} else {
 		// Draw nothing to prevent unexpected background disclosure
 	}
 
-	if (_filterLevel >= FilterLevel::Segmentation && _doesNextVideoRenderReceiveNewFrame && !isStrictlySyncing) {
-		bgrxSegmenterInputReader.stage(bgrxSegmenterInput);
+	if (filterLevel >= FilterLevel::Segmentation && doesNextVideoRenderReceiveNewFrame && !isStrictlySyncing_) {
+		bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
 	}
 
-	if (_filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing &&
-	    doesNextVideoRenderKickSelfieSegmentation.exchange(false)) {
+	if (filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing_ &&
+	    doesNextVideoRenderKickSelfieSegmentation_.exchange(false)) {
 
-		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader.getBuffer();
+		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
-			  segmenterInputBuffer.begin());
-		selfieSegmenterTaskQueue.push(
+			  segmenterInputBuffer_.begin());
+		selfieSegmenterTaskQueue_.push(
 			[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
 				if (auto self = weakSelf.lock()) {
 					if (token->load()) {
 						return;
 					}
-					self->selfieSegmenter->process(self->segmenterInputBuffer.data());
+					self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
 				} else {
 					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
 				}

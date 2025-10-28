@@ -43,22 +43,6 @@ class DebugWindow;
 class RenderingContext;
 
 class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
-private:
-	obs_source_t *const source;
-	const Logger::ILogger &logger;
-	std::shared_future<std::string> latestVersionFuture;
-	const MainEffect mainEffect;
-	TaskQueue::ThrottledTaskQueue selfieSegmenterTaskQueue;
-
-	PluginProperty pluginProperty;
-
-	mutable std::mutex renderingContextMutex;
-	std::shared_ptr<RenderingContext> renderingContext;
-
-	std::atomic<DebugWindow *> debugWindow = nullptr;
-
-	std::vector<std::string> ncnnGpuNames;
-
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source,
 			  std::shared_future<std::string> latestVersionFuture, const Logger::ILogger &logger);
@@ -82,19 +66,34 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
-	const Logger::ILogger &getLogger() const noexcept { return logger; }
+	const Logger::ILogger &getLogger() const noexcept { return logger_; }
 
-	void setDebugWindowNull() { debugWindow = nullptr; }
+	void setDebugWindowNull() { debugWindow_ = nullptr; }
 
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept
 	{
-		std::lock_guard<std::mutex> lock(renderingContextMutex);
-		return renderingContext;
+		std::lock_guard<std::mutex> lock(renderingContextMutex_);
+		return renderingContext_;
 	}
 
 private:
 	std::shared_ptr<RenderingContext> createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight);
 	void applyPluginProperty(const std::shared_ptr<RenderingContext> &_renderingContext);
+
+	obs_source_t *const source_;
+	const Logger::ILogger &logger_;
+	std::shared_future<std::string> latestVersionFuture_;
+	const MainEffect mainEffect_;
+	TaskQueue::ThrottledTaskQueue selfieSegmenterTaskQueue_;
+
+	PluginProperty pluginProperty_;
+
+	mutable std::mutex renderingContextMutex_;
+	std::shared_ptr<RenderingContext> renderingContext_;
+
+	std::atomic<DebugWindow *> debugWindow_ = nullptr;
+
+	std::vector<std::string> ncnnGpuNames_;
 };
 
 } // namespace LiveBackgroundRemovalLite
