@@ -122,49 +122,49 @@ void DebugWindow::videoRender()
 		auto currentTexture = previewTextureSelector_->currentText();
 		if (currentTexture == textureBgrxOriginalImage) {
 			if (renderData->readerBgrx)
-				renderData->readerBgrx->stage(renderingContext->bgrxSource);
+				renderData->readerBgrx->stage(renderingContext->bgrxSource_);
 		} else if (currentTexture == textureR32fOriginalGrayscale) {
 			if (renderData->readerR32f)
-				renderData->readerR32f->stage(renderingContext->r32fGrayscale);
+				renderData->readerR32f->stage(renderingContext->r32fGrayscale_);
 		} else if (currentTexture == textureBgrxSegmenterInput) {
 			if (renderData->reader256Bgrx)
-				renderData->reader256Bgrx->stage(renderingContext->bgrxSegmenterInput);
+				renderData->reader256Bgrx->stage(renderingContext->bgrxSegmenterInput_);
 		} else if (currentTexture == textureR8SegmentationMask) {
 			if (renderData->readerMaskRoiR8)
-				renderData->readerMaskRoiR8->stage(renderingContext->r8SegmentationMask);
+				renderData->readerMaskRoiR8->stage(renderingContext->r8SegmentationMask_);
 		} else if (currentTexture == textureR8SubGFGuide) {
 			if (renderData->readerSubR8)
-				renderData->readerSubR8->stage(renderingContext->r8SubGFGuide);
+				renderData->readerSubR8->stage(renderingContext->r8SubGFGuide_);
 		} else if (currentTexture == textureR8SubGFSource) {
 			if (renderData->readerSubR8)
-				renderData->readerSubR8->stage(renderingContext->r8SubGFSource);
+				renderData->readerSubR8->stage(renderingContext->r8SubGFSource_);
 		} else if (currentTexture == textureR32fSubGFMeanGuide) {
 			if (renderData->readerR32fSub)
-				renderData->readerR32fSub->stage(renderingContext->r32fSubGFMeanGuide);
+				renderData->readerR32fSub->stage(renderingContext->r32fSubGFMeanGuide_);
 		} else if (currentTexture == textureR32fSubGFMeanSource) {
 			if (renderData->readerR32fSub)
-				renderData->readerR32fSub->stage(renderingContext->r32fSubGFMeanSource);
+				renderData->readerR32fSub->stage(renderingContext->r32fSubGFMeanSource_);
 		} else if (currentTexture == textureR16fSubGFMeanGuideSource) {
 			if (renderData->readerR32fSub)
-				renderData->readerR32fSub->stage(renderingContext->r32fSubGFMeanGuideSource);
+				renderData->readerR32fSub->stage(renderingContext->r32fSubGFMeanGuideSource_);
 		} else if (currentTexture == textureR32fSubGFMeanGuideSq) {
 			if (renderData->readerR32fSub)
-				renderData->readerR32fSub->stage(renderingContext->r32fSubGFMeanGuideSq);
+				renderData->readerR32fSub->stage(renderingContext->r32fSubGFMeanGuideSq_);
 		} else if (currentTexture == textureR32fSubGFA) {
 			if (renderData->readerR32fSub)
-				renderData->readerR32fSub->stage(renderingContext->r32fSubGFA);
+				renderData->readerR32fSub->stage(renderingContext->r32fSubGFA_);
 		} else if (currentTexture == textureR32fSubGFB) {
 			if (renderData->readerR32fSub)
-				renderData->readerR32fSub->stage(renderingContext->r32fSubGFB);
+				renderData->readerR32fSub->stage(renderingContext->r32fSubGFB_);
 		} else if (currentTexture == textureR8GuidedFilterResult) {
 			if (renderData->readerR8)
-				renderData->readerR8->stage(renderingContext->r8GuidedFilterResult);
+				renderData->readerR8->stage(renderingContext->r8GuidedFilterResult_);
 		} else if (currentTexture == textureR8TimeAveragedMasks0) {
 			if (renderData->readerR8)
-				renderData->readerR8->stage(renderingContext->r8TimeAveragedMasks[0]);
+				renderData->readerR8->stage(renderingContext->r8TimeAveragedMasks_[0]);
 		} else if (currentTexture == textureR8TimeAveragedMasks1) {
 			if (renderData->readerR8)
-				renderData->readerR8->stage(renderingContext->r8TimeAveragedMasks[1]);
+				renderData->readerR8->stage(renderingContext->r8TimeAveragedMasks_[1]);
 		}
 	}
 }
@@ -190,28 +190,28 @@ void DebugWindow::updatePreview()
 
 	bool needsRecreation = !currentRenderData_ ||
 			       (currentRenderData_->readerBgrx &&
-				(currentRenderData_->readerBgrx->getWidth() != renderingContext->region.width ||
-				 currentRenderData_->readerBgrx->getHeight() != renderingContext->region.height)) ||
+				(currentRenderData_->readerBgrx->getWidth() != renderingContext->region_.width ||
+				 currentRenderData_->readerBgrx->getHeight() != renderingContext->region_.height)) ||
 			       (currentRenderData_->readerSubR8 &&
-				(currentRenderData_->readerSubR8->getWidth() != renderingContext->subRegion.width ||
-				 currentRenderData_->readerSubR8->getHeight() != renderingContext->subRegion.height));
+				(currentRenderData_->readerSubR8->getWidth() != renderingContext->subRegion_.width ||
+				 currentRenderData_->readerSubR8->getHeight() != renderingContext->subRegion_.height));
 
 	if (needsRecreation) {
 		GraphicsContextGuard graphicsContextGuard;
 		auto newRenderData = std::make_unique<DebugRenderData>();
 		newRenderData->readerBgrx = std::make_unique<AsyncTextureReader>(
-			renderingContext->region.width, renderingContext->region.height, GS_BGRX);
-		newRenderData->readerR8 = std::make_unique<AsyncTextureReader>(renderingContext->region.width,
-									       renderingContext->region.height, GS_R8);
+			renderingContext->region_.width, renderingContext->region_.height, GS_BGRX);
+		newRenderData->readerR8 = std::make_unique<AsyncTextureReader>(renderingContext->region_.width,
+									       renderingContext->region_.height, GS_R8);
 		newRenderData->readerR32f = std::make_unique<AsyncTextureReader>(
-			renderingContext->region.width, renderingContext->region.height, GS_R32F);
+			renderingContext->region_.width, renderingContext->region_.height, GS_R32F);
 		newRenderData->readerMaskRoiR8 = std::make_unique<AsyncTextureReader>(
-			renderingContext->maskRoi.width, renderingContext->maskRoi.height, GS_R8);
+			renderingContext->maskRoi_.width, renderingContext->maskRoi_.height, GS_R8);
 		newRenderData->reader256Bgrx = std::make_unique<AsyncTextureReader>(256, 144, GS_BGRX);
 		newRenderData->readerSubR8 = std::make_unique<AsyncTextureReader>(
-			renderingContext->subRegion.width, renderingContext->subRegion.height, GS_R8);
+			renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R8);
 		newRenderData->readerR32fSub = std::make_unique<AsyncTextureReader>(
-			renderingContext->subRegion.width, renderingContext->subRegion.height, GS_R32F);
+			renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R32F);
 
 		if (currentRenderData_) {
 			oldRenderData_.push_back(std::move(currentRenderData_));
@@ -250,9 +250,9 @@ void DebugWindow::updatePreview()
 			auto r32fDataView =
 				reinterpret_cast<const float *>(currentRenderData_->readerR32f->getBuffer().data());
 			bufferR8_.resize(currentRenderData_->readerR32f->getWidth() *
-					currentRenderData_->readerR32f->getHeight());
-			for (std::uint32_t i = 0;
-			     i < currentRenderData_->readerR32f->getWidth() * currentRenderData_->readerR32f->getHeight();
+					 currentRenderData_->readerR32f->getHeight());
+			for (std::uint32_t i = 0; i < currentRenderData_->readerR32f->getWidth() *
+							      currentRenderData_->readerR32f->getHeight();
 			     ++i) {
 				bufferR8_[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);
 			}
@@ -286,7 +286,7 @@ void DebugWindow::updatePreview()
 			auto r32fDataView =
 				reinterpret_cast<const float *>(currentRenderData_->readerR32fSub->getBuffer().data());
 			bufferSubR8_.resize(currentRenderData_->readerR32fSub->getWidth() *
-					   currentRenderData_->readerR32fSub->getHeight());
+					    currentRenderData_->readerR32fSub->getHeight());
 			for (std::uint32_t i = 0; i < currentRenderData_->readerR32fSub->getWidth() *
 							      currentRenderData_->readerR32fSub->getHeight();
 			     ++i) {

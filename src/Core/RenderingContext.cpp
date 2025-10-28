@@ -106,10 +106,10 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 	  bgrxSource_(make_unique_gs_texture(region_.width, region_.height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  r32fGrayscale_(make_unique_gs_texture(region_.width, region_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  bgrxSegmenterInput_(make_unique_gs_texture(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
-						    static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX,
-						    1, NULL, GS_RENDER_TARGET)),
+						     static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX,
+						     1, NULL, GS_RENDER_TARGET)),
 	  bgrxSegmenterInputReader_(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
-				   static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX),
+				    static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX),
 	  segmenterInputBuffer_(selfieSegmenter_->getPixelCount() * 4),
 	  r8SegmentationMask_(make_unique_gs_texture(maskRoi_.width, maskRoi_.height, GS_R8, 1, NULL, GS_DYNAMIC)),
 	  r32fSubGFIntermediate_(
@@ -124,13 +124,12 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFMeanGuideSq_(
 		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubGFA_(
-		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r32fSubGFB_(
-		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r8GuidedFilterResult_(make_unique_gs_texture(region_.width, region_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubGFA_(make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubGFB_(make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r8GuidedFilterResult_(
+		  make_unique_gs_texture(region_.width, region_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
 	  r8TimeAveragedMasks_{make_unique_gs_texture(region_.width, region_.height, GS_R8, 1, NULL, GS_RENDER_TARGET),
-			      make_unique_gs_texture(region_.width, region_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)}
+			       make_unique_gs_texture(region_.width, region_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)}
 {
 }
 
@@ -181,8 +180,9 @@ void RenderingContext::videoRender()
 		if (filterLevel >= FilterLevel::Segmentation) {
 			constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-			mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, maskRoi_.width, maskRoi_.height,
-					   static_cast<float>(maskRoi_.x), static_cast<float>(maskRoi_.y));
+			mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, maskRoi_.width,
+					    maskRoi_.height, static_cast<float>(maskRoi_.x),
+					    static_cast<float>(maskRoi_.y));
 
 			if (isStrictlySyncing_) {
 				bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
@@ -213,23 +213,24 @@ void RenderingContext::videoRender()
 			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, r8SubGFGuide_, r32fSubGFIntermediate_);
 			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanSource_, r8SubGFSource_, r32fSubGFIntermediate_);
 
-			mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, r8SubGFGuide_, r8SubGFSource_,
-							       r32fSubGFIntermediate_);
+			mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, r8SubGFGuide_,
+								r8SubGFSource_, r32fSubGFIntermediate_);
 			mainEffect_.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq_, r8SubGFGuide_,
-							      r32fSubGFIntermediate_);
+							       r32fSubGFIntermediate_);
 
 			mainEffect_.calculateGuidedFilterAAndB(r32fSubGFA_, r32fSubGFB_, r32fSubGFMeanGuideSq_,
-							      r32fSubGFMeanGuide_, r32fSubGFMeanGuideSource_,
-							      r32fSubGFMeanSource_, guidedFilterEps);
+							       r32fSubGFMeanGuide_, r32fSubGFMeanGuideSource_,
+							       r32fSubGFMeanSource_, guidedFilterEps);
 
-			mainEffect_.finalizeGuidedFilter(r8GuidedFilterResult_, r32fGrayscale_, r32fSubGFA_, r32fSubGFB_);
+			mainEffect_.finalizeGuidedFilter(r8GuidedFilterResult_, r32fGrayscale_, r32fSubGFA_,
+							 r32fSubGFB_);
 		}
 
 		if (filterLevel >= FilterLevel::TimeAveragedFilter) {
 			std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex_;
 			mainEffect_.timeAveragedFiltering(r8TimeAveragedMasks_[nextIndex],
-							 r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
-							 r8GuidedFilterResult_, timeAveragedFilteringAlpha_);
+							  r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
+							  r8GuidedFilterResult_, timeAveragedFilteringAlpha);
 			currentTimeAveragedMaskIndex_ = nextIndex;
 		}
 	}
@@ -239,11 +240,11 @@ void RenderingContext::videoRender()
 	} else if (filterLevel == FilterLevel::Segmentation) {
 		mainEffect_.directDrawWithMask(bgrxSource_, r8SegmentationMask_);
 	} else if (filterLevel == FilterLevel::GuidedFilter) {
-		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8GuidedFilterResult_, maskGamma_, maskLowerBound_,
-						     maskUpperBoundMargin_);
+		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8GuidedFilterResult_, maskGamma, maskLowerBound,
+						      maskUpperBoundMargin);
 	} else if (filterLevel == FilterLevel::TimeAveragedFilter) {
 		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
-						     maskGamma_, maskLowerBound_, maskUpperBoundMargin_);
+						      maskGamma, maskLowerBound, maskUpperBoundMargin);
 	} else {
 		// Draw nothing to prevent unexpected background disclosure
 	}

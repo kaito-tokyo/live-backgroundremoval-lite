@@ -75,12 +75,12 @@ MainPluginContext::~MainPluginContext() noexcept {}
 
 std::uint32_t MainPluginContext::getWidth() const noexcept
 {
-	return renderingContext_ ? renderingContext_->region.width : 0;
+	return renderingContext_ ? renderingContext_->region_.width : 0;
 }
 
 std::uint32_t MainPluginContext::getHeight() const noexcept
 {
-	return renderingContext_ ? renderingContext_->region.height : 0;
+	return renderingContext_ ? renderingContext_->region_.height : 0;
 }
 
 void MainPluginContext::getDefaults(obs_data_t *data)
@@ -263,7 +263,7 @@ void MainPluginContext::update(obs_data_t *settings)
 		if (renderingContext && doesRenewRenderingContext) {
 			GraphicsContextGuard graphicsContextGuard;
 			std::shared_ptr<RenderingContext> newRenderingContext = createRenderingContext(
-				renderingContext->region.width, renderingContext->region.height);
+				renderingContext->region_.width, renderingContext->region_.height);
 			renderingContext = newRenderingContext;
 			renderingContext = newRenderingContext;
 			GsUnique::drain();
@@ -308,8 +308,8 @@ void MainPluginContext::videoTick(float seconds)
 	std::shared_ptr<RenderingContext> _renderingContext;
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
-		if (!renderingContext_ || renderingContext_->region.width != targetWidth ||
-		    renderingContext_->region.height != targetHeight) {
+		if (!renderingContext_ || renderingContext_->region_.width != targetWidth ||
+		    renderingContext_->region_.height != targetHeight) {
 			GraphicsContextGuard graphicsContextGuard;
 			renderingContext_ = createRenderingContext(targetWidth, targetHeight);
 			GsUnique::drain();
@@ -368,10 +368,9 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 
 	int computeUnit = RenderingContext::getActualComputeUnit(logger_, pluginProperty_.computeUnit);
 
-	auto renderingContext = std::make_shared<RenderingContext>(source_, logger_, mainEffect_, selfieSegmenterTaskQueue_,
-								   pluginConfig, pluginProperty_.subsamplingRate,
-								   targetWidth, targetHeight, computeUnit,
-								   pluginProperty_.numThreads);
+	auto renderingContext = std::make_shared<RenderingContext>(
+		source_, logger_, mainEffect_, selfieSegmenterTaskQueue_, pluginConfig, pluginProperty_.subsamplingRate,
+		targetWidth, targetHeight, computeUnit, pluginProperty_.numThreads);
 
 	renderingContext->applyPluginProperty(pluginProperty_);
 
