@@ -24,16 +24,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
-class NullSelfieSegmenter : public ISelfieSegmenter {
-private:
-	constexpr static std::size_t kWidth = 256;
-	constexpr static std::size_t kHeight = 144;
-	constexpr static std::size_t kPixelCount = kWidth * kHeight;
-
-	MaskBuffer maskBuffer;
-
+class NullSelfieSegmenter final : public ISelfieSegmenter {
 public:
-	NullSelfieSegmenter() : maskBuffer(kPixelCount) {}
+	NullSelfieSegmenter() : maskBuffer_(kPixelCount) {}
 
 	~NullSelfieSegmenter() override = default;
 
@@ -43,12 +36,19 @@ public:
 
 	void process(const std::uint8_t *) override {}
 
-	const std::uint8_t *getMask() const override { return maskBuffer.read(); }
+	const std::uint8_t *getMask() const override { return maskBuffer_.read(); }
 
 	NullSelfieSegmenter(const NullSelfieSegmenter &) = delete;
 	NullSelfieSegmenter &operator=(const NullSelfieSegmenter &) = delete;
 	NullSelfieSegmenter(NullSelfieSegmenter &&) = delete;
 	NullSelfieSegmenter &operator=(NullSelfieSegmenter &&) = delete;
+
+private:
+	constexpr static std::size_t kWidth = 256;
+	constexpr static std::size_t kHeight = 144;
+	constexpr static std::size_t kPixelCount = kWidth * kHeight;
+
+	MaskBuffer maskBuffer_;
 };
 
 } // namespace SelfieSegmenter
