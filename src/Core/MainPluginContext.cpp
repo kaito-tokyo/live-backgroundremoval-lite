@@ -139,7 +139,7 @@ obs_properties_t *MainPluginContext::getProperties()
 		[](obs_properties_t *, obs_property_t *, void *data) {
 			auto self = static_cast<MainPluginContext *>(data)->shared_from_this();
 
-			if (DebugWindow *debugWindow = self->debugWindow_) {
+			if (DebugWindow *debugWindow = self->debugWindow_.load()) {
 				debugWindow->show();
 				debugWindow->raise();
 				debugWindow->activateWindow();
