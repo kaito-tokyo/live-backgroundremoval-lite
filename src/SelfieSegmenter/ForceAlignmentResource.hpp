@@ -21,7 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <cstddef>
 #include <limits>
 #include <memory>
-#include <new>
 
 #include <memory_resource>
 
@@ -30,25 +29,24 @@ namespace SelfieSegmenter {
 
 class ForceAlignmentResource : public std::pmr::memory_resource {
 private:
-	std::pmr::memory_resource *upstream;
-	std::size_t required_alignment;
+	std::size_t alignment_;
+	std::pmr::memory_resource *upstream_;
 
 public:
-	explicit ForceAlignmentResource(std::size_t _alignment, std::pmr::memory_resource *_upstream)
-		: upstream(_upstream),
-		  required_alignment(_alignment)
+	explicit ForceAlignmentResource(std::size_t alignment, std::pmr::memory_resource *upstream)
+		: alignment_(alignment), upstream_(upstream)
 	{
 	}
 
 protected:
 	void *do_allocate(std::size_t bytes, std::size_t) override
 	{
-		return upstream->allocate(bytes, required_alignment);
+		return upstream_->allocate(bytes, alignment_);
 	}
 
 	void do_deallocate(void *p, std::size_t bytes, std::size_t) override
 	{
-		upstream->deallocate(p, bytes, required_alignment);
+		upstream_->deallocate(p, bytes, alignment_);
 	}
 
 	bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override { return this == &other; }
