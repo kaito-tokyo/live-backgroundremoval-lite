@@ -39,7 +39,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
-class NcnnSelfieSegmenter : public ISelfieSegmenter {
+class NcnnSelfieSegmenter final : public ISelfieSegmenter {
 public:
 	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int numThreads, int ncnnGpuIndex = -1)
 		: maskBuffer_(kPixelCount)
@@ -61,7 +61,7 @@ public:
 		outputMat_.create(static_cast<int>(getWidth()), static_cast<int>(getHeight()), 1);
 	}
 
-	~NcnnSelfieSegmenter() override = default;
+	~NcnnSelfieSegmenter() noexcept override = default;
 
 	std::size_t getWidth() const noexcept override { return kWidth; }
 	std::size_t getHeight() const noexcept override { return kHeight; }

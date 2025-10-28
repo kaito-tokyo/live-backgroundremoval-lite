@@ -28,7 +28,7 @@ class NullSelfieSegmenter final : public ISelfieSegmenter {
 public:
 	NullSelfieSegmenter() : maskBuffer_(kPixelCount) {}
 
-	~NullSelfieSegmenter() override = default;
+	~NullSelfieSegmenter() noexcept override = default;
 
 	std::size_t getWidth() const noexcept override { return kWidth; }
 	std::size_t getHeight() const noexcept override { return kHeight; }

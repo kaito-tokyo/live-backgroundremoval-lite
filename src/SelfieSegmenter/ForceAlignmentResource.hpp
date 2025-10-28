@@ -28,10 +28,6 @@ namespace KaitoTokyo {
 namespace SelfieSegmenter {
 
 class ForceAlignmentResource : public std::pmr::memory_resource {
-private:
-	std::size_t alignment_;
-	std::pmr::memory_resource *upstream_;
-
 public:
 	explicit ForceAlignmentResource(std::size_t alignment, std::pmr::memory_resource *upstream)
 		: alignment_(alignment), upstream_(upstream)
@@ -50,6 +46,10 @@ protected:
 	}
 
 	bool do_is_equal(const std::pmr::memory_resource &other) const noexcept override { return this == &other; }
+
+private:
+	std::size_t alignment_;
+	std::pmr::memory_resource *upstream_;
 };
 
 } // namespace SelfieSegmenter

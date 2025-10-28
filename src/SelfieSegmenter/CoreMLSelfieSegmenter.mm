@@ -63,11 +63,6 @@ namespace KaitoTokyo {
 
         class CoreMLSelfieSegmenterImpl
         {
-              private:
-            const std::unique_ptr<SelfieSegmenterLandscapeWrapper, WrapperDeleter> wrapper;
-            MaskBuffer maskBuffer;
-            mutable std::mutex processMutex;
-
               public:
             CoreMLSelfieSegmenterImpl(std::size_t pixelCount) : wrapper(make_unique_wrapper()), maskBuffer(pixelCount)
             {}
@@ -78,11 +73,11 @@ namespace KaitoTokyo {
                 NSError *error = nil;
                 MLMultiArray *maskArray = nullptr;
                 {
-                    std::lock_guard<std::mutex> lock(processMutex);
+                    std::lock_guard<std::mutex> lock(processMutex_);
                     maskArray = [wrapper.get() performWithBGRAData:bgraData error:&error];
                 }
                 if (maskArray) {
-                    maskBuffer.write([&](std::uint8_t *dst) {
+                    maskBuffer_.write([&](std::uint8_t *dst) {
                         float *maskPtr = (float *) maskArray.dataPointer;
                         copy_float32_to_r8(dst, maskPtr, pixelCount);
                     });
@@ -95,8 +90,13 @@ namespace KaitoTokyo {
 
             const std::uint8_t *getMask() const
             {
-                return maskBuffer.read();
+                return maskBuffer_.read();
             }
+
+              private:
+            const std::unique_ptr<SelfieSegmenterLandscapeWrapper, WrapperDeleter> wrapper_;
+            MaskBuffer maskBuffer_;
+            mutable std::mutex processMutex_;
         };
 
         CoreMLSelfieSegmenter::CoreMLSelfieSegmenter() : pImpl(std::make_unique<CoreMLSelfieSegmenterImpl>(kPixelCount))
@@ -111,7 +111,7 @@ namespace KaitoTokyo {
 
         const std::uint8_t *SelfieSegmenter::CoreMLSelfieSegmenter::getMask() const
         {
-            return pImpl->getMask();
+            return pImpl_->getMask();
         }
 
     }  // namespace SelfieSegmenter

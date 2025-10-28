@@ -42,6 +42,8 @@ public:
 	{
 	}
 
+	~MaskBuffer() noexcept = default;
+
 	void write(std::function<void(std::uint8_t *)> writeFunc)
 	{
 		std::lock_guard<std::mutex> lock(bufferMutex_);
