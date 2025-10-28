@@ -30,15 +30,13 @@ namespace SelfieSegmenter {
 class ForceAlignmentResource : public std::pmr::memory_resource {
 public:
 	explicit ForceAlignmentResource(std::size_t alignment, std::pmr::memory_resource *upstream)
-		: alignment_(alignment), upstream_(upstream)
+		: alignment_(alignment),
+		  upstream_(upstream)
 	{
 	}
 
 protected:
-	void *do_allocate(std::size_t bytes, std::size_t) override
-	{
-		return upstream_->allocate(bytes, alignment_);
-	}
+	void *do_allocate(std::size_t bytes, std::size_t) override { return upstream_->allocate(bytes, alignment_); }
 
 	void do_deallocate(void *p, std::size_t bytes, std::size_t) override
 	{

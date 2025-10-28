@@ -38,7 +38,7 @@ public:
 		: defaultResource_(*std::pmr::new_delete_resource()),
 		  alignedResource_(kAlignment, &defaultResource_),
 		  buffers_{std::pmr::vector<std::uint8_t>(size, {&alignedResource_}),
-			  std::pmr::vector<std::uint8_t>(size, {&alignedResource_})}
+			   std::pmr::vector<std::uint8_t>(size, {&alignedResource_})}
 	{
 	}
 

@@ -64,9 +64,9 @@ namespace KaitoTokyo {
         class CoreMLSelfieSegmenterImpl
         {
               public:
-            CoreMLSelfieSegmenterImpl(std::size_t pixelCount) : wrapper(make_unique_wrapper()), maskBuffer(pixelCount)
+            CoreMLSelfieSegmenterImpl(std::size_t pixelCount) : wrapper_(make_unique_wrapper()), maskBuffer_(pixelCount)
             {}
-            ~CoreMLSelfieSegmenterImpl() = default;
+            ~CoreMLSelfieSegmenterImpl() noexcept = default;
 
             void process(const std::uint8_t *bgraData, const std::size_t pixelCount)
             {
@@ -74,7 +74,7 @@ namespace KaitoTokyo {
                 MLMultiArray *maskArray = nullptr;
                 {
                     std::lock_guard<std::mutex> lock(processMutex_);
-                    maskArray = [wrapper.get() performWithBGRAData:bgraData error:&error];
+                    maskArray = [wrapper_.get() performWithBGRAData:bgraData error:&error];
                 }
                 if (maskArray) {
                     maskBuffer_.write([&](std::uint8_t *dst) {
@@ -99,14 +99,15 @@ namespace KaitoTokyo {
             mutable std::mutex processMutex_;
         };
 
-        CoreMLSelfieSegmenter::CoreMLSelfieSegmenter() : pImpl(std::make_unique<CoreMLSelfieSegmenterImpl>(kPixelCount))
+        CoreMLSelfieSegmenter::CoreMLSelfieSegmenter() :
+            pImpl_(std::make_unique<CoreMLSelfieSegmenterImpl>(kPixelCount))
         {}
 
-        CoreMLSelfieSegmenter::~CoreMLSelfieSegmenter() = default;
+        CoreMLSelfieSegmenter::~CoreMLSelfieSegmenter() noexcept = default;
 
         void SelfieSegmenter::CoreMLSelfieSegmenter::process(const std::uint8_t *bgraData)
         {
-            pImpl->process(bgraData, getPixelCount());
+            pImpl_->process(bgraData, getPixelCount());
         }
 
         const std::uint8_t *SelfieSegmenter::CoreMLSelfieSegmenter::getMask() const
