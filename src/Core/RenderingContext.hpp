@@ -55,51 +55,10 @@ struct RenderingContextRegion {
 
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 public:
-	static int getActualComputeUnit(const Logger::ILogger &logger, int computeUnit)
-	{
-
-		if (computeUnit == ComputeUnit::kAuto) {
-			logger.info("Automatically selecting compute unit...");
-			logger.info("Selecting ncnn CPU backend because it is the most efficient.");
-			return ComputeUnit::kCpuOnly;
-		} else if ((computeUnit & ComputeUnit::kNcnnVulkanGpu) != 0) {
-#ifdef NCNN_VULKAN
-#if NCNN_VULKAN == 1
-			int ncnnGpuCount = ncnn::get_gpu_count();
-			if (ncnnGpuCount == 0) {
-				logger.error(
-					"ncnn Vulkan GPU backend selected, but no Vulkan-compatible GPU detected. Using null.");
-				return ComputeUnit::kNull;
-			}
-
-			int ncnnGpuIndex = computeUnit & ComputeUnit::kNcnnVulkanGpuIndexMask;
-			if (ncnnGpuIndex >= ncnnGpuCount) {
-				logger.error(
-					"ncnn Vulkan GPU backend selected with invalid GPU index {} (available GPUs: {}). Using null.",
-					ncnnGpuIndex, ncnnGpuCount);
-				return ComputeUnit::kNull;
-			}
-
-			return computeUnit;
-#else
-			logger.error(
-				"ncnn Vulkan GPU backend selected, but ncnn is built without Vulkan support. Using null segmenter.");
-			return ComputeUnit::kNull;
-#endif
-#else
-			logger.error(
-				"ncnn Vulkan GPU backend selected, but ncnn is built without Vulkan support. Using null.");
-			return ComputeUnit::kNull;
-#endif
-		} else {
-			return computeUnit;
-		}
-	}
-
 	RenderingContext(obs_source_t *const source, const Logger::ILogger &logger, const MainEffect &mainEffect,
 			 TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
 			 const std::uint32_t subsamplingRate, const std::uint32_t width, const std::uint32_t height,
-			 const int computeUnit, const int numThreads);
+			 const int numThreads);
 	~RenderingContext() noexcept;
 
 	void videoTick(float seconds);
@@ -162,7 +121,6 @@ private:
 
 public:
 	const std::uint32_t subsamplingRate_;
-	const int computeUnit_;
 	const int numThreads_;
 
 	std::unique_ptr<SelfieSegmenter::ISelfieSegmenter> selfieSegmenter_;
