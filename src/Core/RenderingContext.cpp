@@ -147,28 +147,21 @@ void RenderingContext::videoRender()
 
 		mainEffect_.drawSource(bgrxSource_, source_);
 
+		if (filterLevel >= FilterLevel::MotionIntensityThresholding) {
+			mainEffect_.convertToGrayscale(r32fGrayscale_, bgrxSource_);
+
+			mainEffect_.resampleByNearestR8(r8SubGFGuide_, r32fGrayscale_);
+		}
+
 		if (filterLevel >= FilterLevel::Segmentation) {
 			constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 			mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, maskRoi_.width,
 					    maskRoi_.height, static_cast<float>(maskRoi_.x),
 					    static_cast<float>(maskRoi_.y));
-
-			if (isStrictlySyncing_) {
-				bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
-			}
-		}
-
-		if (filterLevel >= FilterLevel::GuidedFilter) {
-			mainEffect_.convertToGrayscale(r32fGrayscale_, bgrxSource_);
 		}
 
 		if (filterLevel >= FilterLevel::Segmentation) {
-			if (isStrictlySyncing_ && doesNextVideoRenderKickSelfieSegmentation_.exchange(false)) {
-				bgrxSegmenterInputReader_.sync();
-				selfieSegmenter_->process(bgrxSegmenterInputReader_.getBuffer().data());
-			}
-
 			const std::uint8_t *segmentationMaskData =
 				selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
 			gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
@@ -176,8 +169,6 @@ void RenderingContext::videoRender()
 		}
 
 		if (filterLevel >= FilterLevel::GuidedFilter) {
-			mainEffect_.resampleByNearestR8(r8SubGFGuide_, r32fGrayscale_);
-
 			mainEffect_.resampleByNearestR8(r8SubGFSource_, r8SegmentationMask_);
 
 			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, r8SubGFGuide_, r32fSubGFIntermediate_);
@@ -219,11 +210,11 @@ void RenderingContext::videoRender()
 		// Draw nothing to prevent unexpected background disclosure
 	}
 
-	if (filterLevel >= FilterLevel::Segmentation && doesNextVideoRenderReceiveNewFrame && !isStrictlySyncing_) {
+	if (filterLevel >= FilterLevel::Segmentation && doesNextVideoRenderReceiveNewFrame) {
 		bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
 	}
 
-	if (filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing_ &&
+	if (filterLevel >= FilterLevel::Segmentation &&
 	    doesNextVideoRenderKickSelfieSegmentation_.exchange(false)) {
 
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();

@@ -67,9 +67,6 @@ public:
 
 	void applyPluginProperty(const PluginProperty &pluginProperty)
 	{
-		isStrictlySyncing_ = pluginProperty.isStrictlySyncing;
-		logger_.info("Strict syncing is {}", isStrictlySyncing_.load() ? "enabled" : "disabled");
-
 		if (pluginProperty.filterLevel == FilterLevel::Default) {
 			if (pluginProperty.isStrictlySyncing) {
 				filterLevel_ = FilterLevel::GuidedFilter;
@@ -161,8 +158,6 @@ public:
 
 public:
 	std::atomic<FilterLevel> filterLevel_;
-
-	std::atomic<bool> isStrictlySyncing_;
 
 	std::atomic<float> selfieSegmenterInterval_;
 
