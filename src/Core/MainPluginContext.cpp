@@ -199,10 +199,6 @@ obs_properties_t *MainPluginContext::getProperties()
 	}
 #endif
 
-#if HAVE_COREML_SELFIE_SEGMENTER
-	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCoreML"), ComputeUnit::kCoreML);
-#endif
-
 	// Guided filter
 	obs_properties_add_float_slider(props, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
 					-20.0, 0.1);

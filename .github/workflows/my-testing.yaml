@@ -61,13 +61,6 @@ jobs:
           VCPKG_ENABLE_TESTS: "1"
         run: ".github/scripts/install-vcpkg-macos.bash"
 
-      - name: "Build CoreMLSelfieSegmenter"
-        working-directory: "vendor/CoreMLSelfieSegmenter"
-        run: |
-          brew install xcodegen
-          xcodegen generate
-          ./Scripts/build.bash
-
       - name: "Configure"
         run: "cmake --preset macos"
         
@@ -76,25 +69,6 @@ jobs:
         
       - name: "Run tests"
         run: "ctest --preset macos --verbose"
-
-  TestCoreMLSelfieSegmenterOnMacOS:
-    runs-on: "macos-15"
-    timeout-minutes: 30
-
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Install xcodegen"
-        run: "brew install xcodegen"
-
-      - name: "Generate Xcodeproj"
-        working-directory: "vendor/CoreMLSelfieSegmenter"
-        run: "xcodegen generate"
-
-      - name: "Test CoreMLSelfieSegmenter"
-        working-directory: "vendor/CoreMLSelfieSegmenter"
-        run: "./Scripts/test.bash"
 
   TestOnWindows:
     runs-on: "windows-2022"

@@ -193,17 +193,9 @@ If you encounter any issues, please feel free to report them by opening an issue
 
 ## How to test on Mac
 
-1. Run:
-   ```
-   (
-     cd vendor/CoreMLSelfieSegmenter && \
-     xcodegen generate && \
-     ./Scripts/build.bash
-   )
-   ```
-2. Run `.github/scripts/install-vcpkg-macos.bash`
-3. Run `cmake --preset macos`
-4. Run:
+1. Run `.github/scripts/install-vcpkg-macos.bash`
+2. Run `cmake --preset macos`
+3. Run:
    ```
    cmake --build --preset macos && \
    rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin && \
