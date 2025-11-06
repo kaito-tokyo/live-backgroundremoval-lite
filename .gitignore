@@ -24,11 +24,6 @@
 !/vendor
 /vendor/ConvertNcnn/*
 !/vendor/ConvertNcnn/convert.bash
-/vendor/CoreMLSelfieSegmenter/*
-!/vendor/CoreMLSelfieSegmenter/Sources/
-!/vendor/CoreMLSelfieSegmenter/Scripts/
-!/vendor/CoreMLSelfieSegmenter/Tests/
-!/vendor/CoreMLSelfieSegmenter/project.yml
 !.aiexclude
 !.clang-format
 !.gersemirc
