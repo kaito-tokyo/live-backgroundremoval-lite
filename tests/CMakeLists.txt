@@ -14,16 +14,6 @@ add_executable(UpdateChecker_test UpdateChecker/UpdateChecker_test.cpp)
 target_link_libraries(UpdateChecker_test PRIVATE GTest::gtest_main UpdateChecker)
 list(APPEND TEST_LIST UpdateChecker_test)
 
-if(TARGET KaitoTokyo::CoreMLSelfieSegmenter)
-  # CoreMLSelfieSegmenter_test
-  add_executable(CoreMLSelfieSegmenter_test SelfieSegmenter/CoreMLSelfieSegmenter_test.cpp)
-  target_link_libraries(
-    CoreMLSelfieSegmenter_test
-    PRIVATE GTest::gtest_main SelfieSegmenter OpenCV::opencv_core OpenCV::opencv_imgproc OpenCV::opencv_imgcodecs
-  )
-  list(APPEND TEST_LIST CoreMLSelfieSegmenter_test)
-endif()
-
 foreach(TEST_NAME IN LISTS TEST_LIST)
   set_target_properties(
     ${TEST_NAME}

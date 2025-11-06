@@ -89,37 +89,6 @@ else()
   message(FATAL_ERROR "Either USE_PKGCONFIG or VCPKG_TARGET_TRIPLET must be set.")
 endif()
 
-if(APPLE)
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(_default_derived_data_path "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Debug")
-  else()
-    set(_default_derived_data_path "${CMAKE_SOURCE_DIR}/DerivedData/Build/Products/Release")
-  endif()
-  set(DERIVED_DATA_PATH "${_default_derived_data_path}" CACHE PATH "Path to Xcode DerivedData build products")
-
-  find_library(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH NAMES CoreMLSelfieSegmenter HINTS ${DERIVED_DATA_PATH})
-
-  if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
-    add_library(KaitoTokyo::CoreMLSelfieSegmenter UNKNOWN IMPORTED)
-    set_target_properties(
-      KaitoTokyo::CoreMLSelfieSegmenter
-      PROPERTIES IMPORTED_LOCATION "${COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH}"
-    )
-    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE HAVE_COREML_SELFIE_SEGMENTER)
-
-    set(PLUGIN_BUNDLE_DIR "$<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>/../..")
-    set(FRAMEWORKS_DIR "${PLUGIN_BUNDLE_DIR}/Contents/Frameworks")
-    add_custom_command(
-      TARGET ${CMAKE_PROJECT_NAME}
-      POST_BUILD
-      COMMAND mkdir -p "${FRAMEWORKS_DIR}"
-      COMMAND rm -rf "${FRAMEWORKS_DIR}/CoreMLSelfieSegmenter.framework"
-      COMMAND cp -R "${COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH}" "${FRAMEWORKS_DIR}/CoreMLSelfieSegmenter.framework"
-      COMMENT "Copying CoreMLSelfieSegmenter.framework to plugin bundle Frameworks directory (preserving symlinks)"
-    )
-  endif()
-endif()
-
 add_library(Logger INTERFACE)
 target_include_directories(Logger INTERFACE ${CMAKE_SOURCE_DIR}/src/Logger)
 target_link_libraries(Logger INTERFACE fmt::fmt)
@@ -149,13 +118,6 @@ target_sources(UpdateChecker PRIVATE src/UpdateChecker/UpdateChecker.hpp)
 
 add_library(SelfieSegmenter STATIC)
 target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/ShapeConverter.cpp)
-if(COREML_SELFIE_SEGMENTER_FRAMEWORK_PATH)
-  target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/CoreMLSelfieSegmenter.mm)
-  target_link_libraries(
-    SelfieSegmenter
-    PUBLIC "-framework Foundation" "-framework CoreML" "-framework Vision" KaitoTokyo::CoreMLSelfieSegmenter
-  )
-endif()
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
 target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn)
 
@@ -184,11 +146,6 @@ endif()
 target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
-
-set_target_properties(
-  ${CMAKE_PROJECT_NAME}
-  PROPERTIES XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@loader_path/../Frameworks"
-)
 
 if(BUILD_TESTING)
   if(VCPKG_TARGET_TRIPLET)
