@@ -23,10 +23,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <NcnnSelfieSegmenter.hpp>
 #include <NullSelfieSegmenter.hpp>
 
-#ifdef HAVE_COREML_SELFIE_SEGMENTER
-#include <CoreMLSelfieSegmenter.hpp>
-#endif
-
 using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::TaskQueue;
@@ -36,33 +32,6 @@ namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
 namespace {
-
-inline std::unique_ptr<ISelfieSegmenter> createSelfieSegmenter(const ILogger &logger, const PluginConfig &pluginConfig,
-							       int computeUnit, int numThreads)
-{
-	if (computeUnit == ComputeUnit::kNull) {
-		logger.info("Using null backend for selfie segmenter.");
-		return std::make_unique<NullSelfieSegmenter>();
-	} else if ((computeUnit & ComputeUnit::kCpuOnly) != 0) {
-		logger.info("Using ncnn CPU backend for selfie segmenter.");
-		return std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
-							     pluginConfig.selfieSegmenterBinPath.c_str(), numThreads);
-	} else if ((computeUnit & ComputeUnit::kNcnnVulkanGpu) != 0) {
-		int ncnnGpuIndex = computeUnit & ComputeUnit::kNcnnVulkanGpuIndexMask;
-		logger.info("Using ncnn Vulkan GPU backend (GPU index: {}) for selfie segmenter.", ncnnGpuIndex);
-		return std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
-							     pluginConfig.selfieSegmenterBinPath.c_str(), numThreads,
-							     ncnnGpuIndex);
-#ifdef HAVE_COREML_SELFIE_SEGMENTER
-	} else if ((computeUnit & ComputeUnit::kCoreML) != 0) {
-		logger.info("Using CoreML backend for selfie segmenter.");
-		return std::make_unique<CoreMLSelfieSegmenter>();
-#endif
-	} else {
-		throw std::runtime_error("Unsupported compute unit for selfie segmenter: " +
-					 std::to_string(computeUnit));
-	}
-}
 
 inline RenderingContextRegion getMaskRoiPosition(std::uint32_t width, std::uint32_t height,
 						 const std::unique_ptr<ISelfieSegmenter> &selfieSegmenter)
@@ -90,16 +59,17 @@ inline RenderingContextRegion getMaskRoiPosition(std::uint32_t width, std::uint3
 RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &logger, const MainEffect &mainEffect,
 				   ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
 				   const std::uint32_t subsamplingRate, const std::uint32_t width,
-				   const std::uint32_t height, const int computeUnit, const int numThreads)
+				   const std::uint32_t height, const int numThreads)
 	: source_(source),
 	  logger_(logger),
 	  mainEffect_(mainEffect),
 	  selfieSegmenterTaskQueue_(selfieSegmenterTaskQueue),
 	  pluginConfig_(pluginConfig),
 	  subsamplingRate_(subsamplingRate),
-	  computeUnit_(computeUnit),
 	  numThreads_(numThreads),
-	  selfieSegmenter_(createSelfieSegmenter(logger, pluginConfig, computeUnit, numThreads)),
+	  selfieSegmenter_(std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
+								 pluginConfig.selfieSegmenterBinPath.c_str(),
+								 numThreads)),
 	  region_{0, 0, width, height},
 	  subRegion_{0, 0, (region_.width / subsamplingRate) & ~1u, (region_.height / subsamplingRate) & ~1u},
 	  maskRoi_(getMaskRoiPosition(region_.width, region_.height, selfieSegmenter_)),

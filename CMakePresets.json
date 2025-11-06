@@ -50,18 +50,6 @@
       }
     },
     {
-      "name": "macos-homebrew",
-      "inherits": ["template"],
-      "binaryDir": "${sourceDir}/build_homebrew",
-      "displayName": "macOS Universal Homebrew build",
-      "description": "Build for macOS with Homebrew",
-      "generator": "Xcode",
-      "cacheVariables": {
-        "BUILD_TESTING": true,
-        "BUILD_WITH_HOMEBREW": true
-      }
-    },
-    {
       "name": "windows-x64",
       "displayName": "Windows x64",
       "description": "Build for Windows x64",
@@ -159,13 +147,6 @@
       "configuration": "RelWithDebInfo"
     },
     {
-      "name": "macos-homebrew",
-      "configurePreset": "macos-homebrew",
-      "displayName": "macOS Universal Homebrew",
-      "description": "macOS Homebrew build",
-      "configuration": "RelWithDebInfo"
-    },
-    {
       "name": "windows-x64",
       "configurePreset": "windows-x64",
       "displayName": "Windows x64",
@@ -205,11 +186,6 @@
     {
       "name": "macos",
       "configurePreset": "macos",
-      "configuration": "RelWithDebInfo"
-    },
-    {
-      "name": "macos-homebrew",
-      "configurePreset": "macos-homebrew",
       "configuration": "RelWithDebInfo"
     },
     {

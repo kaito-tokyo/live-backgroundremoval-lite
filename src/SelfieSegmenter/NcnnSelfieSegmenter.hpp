@@ -41,11 +41,9 @@ namespace SelfieSegmenter {
 
 class NcnnSelfieSegmenter final : public ISelfieSegmenter {
 public:
-	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int numThreads, int ncnnGpuIndex = -1)
-		: maskBuffer_(kPixelCount)
+	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int numThreads) : maskBuffer_(kPixelCount)
 	{
 		selfieSegmenterNet_.opt.num_threads = numThreads;
-		selfieSegmenterNet_.opt.use_vulkan_compute = ncnnGpuIndex >= 0;
 		selfieSegmenterNet_.opt.use_local_pool_allocator = true;
 		selfieSegmenterNet_.opt.openmp_blocktime = 1;
 

@@ -92,8 +92,6 @@ private:
 	std::shared_ptr<RenderingContext> renderingContext_;
 
 	std::atomic<DebugWindow *> debugWindow_ = nullptr;
-
-	std::vector<std::string> ncnnGpuNames_;
 };
 
 } // namespace LiveBackgroundRemovalLite

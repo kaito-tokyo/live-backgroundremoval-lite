@@ -25,7 +25,6 @@ An OBS plugin that allows you to remove the background from your video source in
 * **No Green Screen Required:** Removes the background from your webcam feed without needing a physical green screen.
 * **Simple & Easy to Use:** Just add it as a filter to your source, and you're ready to go. No complex configuration is needed.
 * **Lightweight Performance:** Designed to be light on system resources, ensuring smooth streaming and recording.
-* **GPU Acceleration:** See how this project utilizes GPU acceleration in the [GPU Acceleration Documentation](https://kaito-tokyo.github.io/live-backgroundremoval-lite/gpu/).
 
 ## 💻 Installation
 

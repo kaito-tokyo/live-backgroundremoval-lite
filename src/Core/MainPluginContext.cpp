@@ -25,12 +25,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
-#ifdef PREFIXED_NCNN_HEADERS
-#include <ncnn/gpu.h>
-#else
-#include <gpu.h>
-#endif
-
 #include <GsUnique.hpp>
 #include <ObsLogger.hpp>
 #include <ObsUnique.hpp>
@@ -92,8 +86,6 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
 	obs_data_set_default_int(data, "selfieSegmenterFps", defaultProperty.selfieSegmenterFps);
-
-	obs_data_set_default_int(data, "computeUnit", defaultProperty.computeUnit);
 
 	obs_data_set_default_int(data, "numThreads", defaultProperty.numThreads);
 
@@ -183,22 +175,6 @@ obs_properties_t *MainPluginContext::getProperties()
 	// Selfie segmenter FPS
 	obs_properties_add_int_slider(props, "selfieSegmenterFps", obs_module_text("selfieSegmenterFps"), 1, 60, 1);
 
-	// Compute unit
-	obs_property_t *propComputeUnit = obs_properties_add_list(props, "computeUnit", obs_module_text("computeUnit"),
-								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-
-	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitAuto"), ComputeUnit::kAuto);
-	obs_property_list_add_int(propComputeUnit, obs_module_text("computeUnitCpuOnly"), ComputeUnit::kCpuOnly);
-
-#if NCNN_VULKAN == 1
-	int ncnnGpuCount = ncnn::get_gpu_count();
-	ncnnGpuNames_.resize(ncnnGpuCount);
-	for (int i = 0; i < std::min(ncnnGpuCount, ComputeUnit::kNcnnVulkanGpuIndexMask); ++i) {
-		ncnnGpuNames_[i] = fmt::format("{} ({})", obs_module_text("computeUnitVulkanGpu"), i);
-		obs_property_list_add_int(propComputeUnit, ncnnGpuNames_[i].c_str(), ComputeUnit::kNcnnVulkanGpu | i);
-	}
-#endif
-
 	// Guided filter
 	obs_properties_add_float_slider(props, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
 					-20.0, 0.1);
@@ -240,12 +216,6 @@ void MainPluginContext::update(obs_data_t *settings)
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
 
 		bool doesRenewRenderingContext = false;
-
-		int computeUnit = obs_data_get_int(settings, "computeUnit");
-		if (pluginProperty_.computeUnit != computeUnit) {
-			doesRenewRenderingContext = true;
-		}
-		newPluginProperty.computeUnit = computeUnit;
 
 		int numThreads = obs_data_get_int(settings, "numThreads");
 		if (pluginProperty_.numThreads != numThreads) {
@@ -361,11 +331,10 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 {
 	PluginConfig pluginConfig(PluginConfig::load(logger_));
 
-	int computeUnit = RenderingContext::getActualComputeUnit(logger_, pluginProperty_.computeUnit);
-
-	auto renderingContext = std::make_shared<RenderingContext>(
-		source_, logger_, mainEffect_, selfieSegmenterTaskQueue_, pluginConfig, pluginProperty_.subsamplingRate,
-		targetWidth, targetHeight, computeUnit, pluginProperty_.numThreads);
+	auto renderingContext = std::make_shared<RenderingContext>(source_, logger_, mainEffect_,
+								   selfieSegmenterTaskQueue_, pluginConfig,
+								   pluginProperty_.subsamplingRate, targetWidth,
+								   targetHeight, pluginProperty_.numThreads);
 
 	renderingContext->applyPluginProperty(pluginProperty_);
 
