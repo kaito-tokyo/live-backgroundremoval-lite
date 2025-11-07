@@ -77,11 +77,13 @@ public:
 		}
 		filterLevel_.store(newFilterLevel, std::memory_order_release);
 
-		float newMotionIntensityThreshold = static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
+		float newMotionIntensityThreshold =
+			static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
 		motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_release);
 		logger_.info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
 
-		float newGuidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
+		float newGuidedFilterEps =
+			static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
 		guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_release);
 		logger_.info("Guided filter epsilon set to {}", newGuidedFilterEps);
 
@@ -97,7 +99,8 @@ public:
 		maskLowerBound_.store(newMaskLowerBound, std::memory_order_release);
 		logger_.info("Mask lower bound set to {}", newMaskLowerBound);
 
-		float newMaskUpperBoundMargin = static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
+		float newMaskUpperBoundMargin =
+			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
 		maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_release);
 		logger_.info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
 	}

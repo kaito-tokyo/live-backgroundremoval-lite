@@ -214,16 +214,15 @@ void RenderingContext::videoRender()
 	if (processingFrame && filterLevel >= FilterLevel::Segmentation && isCurrentMotionIntense) {
 		constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-		mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, maskRoi_.width,
-					maskRoi_.height, static_cast<float>(maskRoi_.x),
-					static_cast<float>(maskRoi_.y));
+		mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, maskRoi_.width, maskRoi_.height,
+				    static_cast<float>(maskRoi_.x), static_cast<float>(maskRoi_.y));
 	}
 
 	if (processingFrame && hasNewSegmentationMask_.exchange(false) && filterLevel >= FilterLevel::Segmentation) {
 		const std::uint8_t *segmentationMaskData =
 			selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
 		gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
-						static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
+				     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
 	}
 
 	if (processingFrame && filterLevel >= FilterLevel::GuidedFilter) {
@@ -231,17 +230,15 @@ void RenderingContext::videoRender()
 		mainEffect_.resampleByNearestR8(r32fSubGFSource_, r8SegmentationMask_);
 
 		mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, currentSubLuma, r32fSubGFIntermediate_);
-		mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanSource_, r32fSubGFSource_,
-							r32fSubGFIntermediate_);
+		mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanSource_, r32fSubGFSource_, r32fSubGFIntermediate_);
 
-		mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, currentSubLuma,
-							r32fSubGFSource_, r32fSubGFIntermediate_);
-		mainEffect_.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq_, currentSubLuma,
-								r32fSubGFIntermediate_);
+		mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, currentSubLuma, r32fSubGFSource_,
+							r32fSubGFIntermediate_);
+		mainEffect_.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq_, currentSubLuma, r32fSubGFIntermediate_);
 
 		mainEffect_.calculateGuidedFilterAAndB(r32fSubGFA_, r32fSubGFB_, r32fSubGFMeanGuideSq_,
-								r32fSubGFMeanGuide_, r32fSubGFMeanGuideSource_,
-								r32fSubGFMeanSource_, guidedFilterEps);
+						       r32fSubGFMeanGuide_, r32fSubGFMeanGuideSource_,
+						       r32fSubGFMeanSource_, guidedFilterEps);
 
 		mainEffect_.finalizeGuidedFilter(r8GuidedFilterResult_, r32fLuma_, r32fSubGFA_, r32fSubGFB_);
 	}
@@ -249,8 +246,8 @@ void RenderingContext::videoRender()
 	if (processingFrame && filterLevel >= FilterLevel::TimeAveragedFilter) {
 		std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex_;
 		mainEffect_.timeAveragedFiltering(r8TimeAveragedMasks_[nextIndex],
-							r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
-							r8GuidedFilterResult_, timeAveragedFilteringAlpha);
+						  r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
+						  r8GuidedFilterResult_, timeAveragedFilteringAlpha);
 		currentTimeAveragedMaskIndex_ = nextIndex;
 	}
 
@@ -275,19 +272,19 @@ void RenderingContext::videoRender()
 
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
-				segmenterInputBuffer_.begin());
-		selfieSegmenterTaskQueue_.push([weakSelf = weak_from_this()](
-								const ThrottledTaskQueue::CancellationToken &token) {
-			if (auto self = weakSelf.lock()) {
-				if (token->load()) {
-					return;
+			  segmenterInputBuffer_.begin());
+		selfieSegmenterTaskQueue_.push(
+			[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
+				if (auto self = weakSelf.lock()) {
+					if (token->load()) {
+						return;
+					}
+					self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
+					self->hasNewSegmentationMask_.store(true, std::memory_order_release);
+				} else {
+					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
 				}
-				self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
-				self->hasNewSegmentationMask_.store(true, std::memory_order_release);
-			} else {
-				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
-			}
-		});
+			});
 	}
 }
 
