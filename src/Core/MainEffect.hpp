@@ -169,8 +169,8 @@ public:
 		}
 	}
 
-	void convertToGrayscale(const BridgeUtils::unique_gs_texture_t &targetTexture,
-				const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
+	void convertToLuma(const BridgeUtils::unique_gs_texture_t &targetTexture,
+			   const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
@@ -188,6 +188,41 @@ public:
 		while (gs_effect_loop(gsEffect.get(), "ResampleByNearestR8")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
 			gs_draw_sprite(targetTexture.get(), 0, 0u, 0u);
+		}
+	}
+
+	void calculateSquaredMotion(const BridgeUtils::unique_gs_texture_t &targetTexture,
+				    const BridgeUtils::unique_gs_texture_t &currentLumaTexture,
+				    const BridgeUtils::unique_gs_texture_t &lastLumaTexture) const noexcept
+	{
+		TextureRenderGuard renderTargetGuard(targetTexture);
+
+		while (gs_effect_loop(gsEffect.get(), "CalculateSquaredMotion")) {
+			gs_effect_set_texture(textureImage, currentLumaTexture.get());
+			gs_effect_set_texture(textureImage1, lastLumaTexture.get());
+			gs_draw_sprite(currentLumaTexture.get(), 0, 0, 0);
+		}
+	}
+
+	void reduce(const std::vector<BridgeUtils::unique_gs_texture_t> &reductionPyramidTextures,
+		    const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
+	{
+		using BridgeUtils::unique_gs_texture_t;
+
+		gs_texture_t *currentSourceTexture = sourceTexture.get();
+
+		for (const unique_gs_texture_t &currentTargetTexture : reductionPyramidTextures) {
+			TextureRenderGuard renderTargetGuard(currentTargetTexture);
+
+			const std::uint32_t targetWidth = gs_texture_get_width(currentTargetTexture.get());
+			const std::uint32_t targetHeight = gs_texture_get_height(currentTargetTexture.get());
+
+			while (gs_effect_loop(gsEffect.get(), "Reduce")) {
+				gs_effect_set_texture(textureImage, currentSourceTexture);
+				gs_draw_sprite(nullptr, 0, targetWidth, targetHeight);
+			}
+
+			currentSourceTexture = currentTargetTexture.get();
 		}
 	}
 

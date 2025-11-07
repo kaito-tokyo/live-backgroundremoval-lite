@@ -35,32 +35,43 @@ using namespace KaitoTokyo::BridgeUtils;
 
 namespace {
 
-constexpr char textureBgrxOriginalImage[] = "bgrxOriginalImage";
-constexpr char textureR32fOriginalGrayscale[] = "r32fOriginalGrayscale";
-constexpr char textureBgrxSegmenterInput[] = "bgrxSegmenterInput";
-constexpr char textureR8SegmentationMask[] = "r8SegmentationMask";
-constexpr char textureR8SubGFGuide[] = "r8SubGFGuide";
-constexpr char textureR8SubGFSource[] = "r8SubGFSource";
-constexpr char textureR32fSubGFMeanGuide[] = "r32fSubGFMeanGuide";
-constexpr char textureR32fSubGFMeanSource[] = "r32fSubGFMeanSource";
-constexpr char textureR16fSubGFMeanGuideSource[] = "r16fSubGFMeanGuideSource";
-constexpr char textureR32fSubGFMeanGuideSq[] = "r32fSubGFMeanGuideSq";
-constexpr char textureR32fSubGFA[] = "r32fSubGFA";
-constexpr char textureR32fSubGFB[] = "r32fSubGFB";
-constexpr char textureR8GuidedFilterResult[] = "r8GuidedFilterResult";
-constexpr char textureR8TimeAveragedMasks0[] = "r8TimeAveragedMasks[0]";
-constexpr char textureR8TimeAveragedMasks1[] = "r8TimeAveragedMasks[1]";
+const char *textureBgrxSource = "bgrxSource";
+const char *textureR32fLuma = "r32fLuma";
+const char *textureR32fSubLumas0 = "r32fSubLumas[0]";
+const char *textureR32fSubLumas1 = "r32fSubLumas[1]";
+const char *textureR32fSubPaddedSquaredMotion = "r32fSubPaddedSquaredMotion";
+const char *textureBgrxSegmenterInput = "bgrxSegmenterInput";
+const char *textureR8SegmentationMask = "r8SegmentationMask";
+const char *textureR32fSubGFSource = "r32fSubGFSource";
+const char *textureR32fSubGFMeanGuide = "r32fSubGFMeanGuide";
+const char *textureR32fSubGFMeanSource = "r32fSubGFMeanSource";
+const char *textureR16fSubGFMeanGuideSource = "r16fSubGFMeanGuideSource";
+const char *textureR32fSubGFMeanGuideSq = "r32fSubGFMeanGuideSq";
+const char *textureR32fSubGFA = "r32fSubGFA";
+const char *textureR32fSubGFB = "r32fSubGFB";
+const char *textureR8GuidedFilterResult = "r8GuidedFilterResult";
+const char *textureR8TimeAveragedMasks0 = "r8TimeAveragedMasks[0]";
+const char *textureR8TimeAveragedMasks1 = "r8TimeAveragedMasks[1]";
 
-const std::vector<std::string> bgrxTextures = {textureBgrxOriginalImage};
+const std::vector<std::string> bgrxTextures = {textureBgrxSource};
 const std::vector<std::string> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0,
 					     textureR8TimeAveragedMasks1};
-const std::vector<std::string> r32fTextures = {textureR32fOriginalGrayscale};
+const std::vector<std::string> r32fTextures = {textureR32fLuma};
 const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
 const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
-const std::vector<std::string> r8SubTextures = {textureR8SubGFGuide, textureR8SubGFSource};
+const std::vector<std::string> r32fSubPaddedTextures = {
+	textureR32fSubPaddedSquaredMotion
+};
 const std::vector<std::string> r32fSubTextures = {
-	textureR32fSubGFMeanGuide,   textureR32fSubGFMeanSource, textureR16fSubGFMeanGuideSource,
-	textureR32fSubGFMeanGuideSq, textureR32fSubGFA,          textureR32fSubGFB};
+						  textureR32fSubLumas0,
+						  textureR32fSubLumas1,
+						  textureR32fSubGFSource,
+						  textureR32fSubGFMeanGuide,
+						  textureR32fSubGFMeanSource,
+						  textureR16fSubGFMeanGuideSource,
+						  textureR32fSubGFMeanGuideSq,
+						  textureR32fSubGFA,
+						  textureR32fSubGFB};
 
 } // namespace
 
@@ -75,12 +86,14 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext,
 	  previewImageLabel_(new QLabel(this)),
 	  updateTimer_(new QTimer(this))
 {
-	previewTextureSelector_->addItem(textureBgrxOriginalImage);
-	previewTextureSelector_->addItem(textureR32fOriginalGrayscale);
+	previewTextureSelector_->addItem(textureBgrxSource);
+	previewTextureSelector_->addItem(textureR32fLuma);
+	previewTextureSelector_->addItem(textureR32fSubLumas0);
+	previewTextureSelector_->addItem(textureR32fSubLumas1);
+	previewTextureSelector_->addItem(textureR32fSubPaddedSquaredMotion);
 	previewTextureSelector_->addItem(textureBgrxSegmenterInput);
 	previewTextureSelector_->addItem(textureR8SegmentationMask);
-	previewTextureSelector_->addItem(textureR8SubGFGuide);
-	previewTextureSelector_->addItem(textureR8SubGFSource);
+	previewTextureSelector_->addItem(textureR32fSubGFSource);
 	previewTextureSelector_->addItem(textureR32fSubGFMeanGuide);
 	previewTextureSelector_->addItem(textureR32fSubGFMeanSource);
 	previewTextureSelector_->addItem(textureR16fSubGFMeanGuideSource);
@@ -120,24 +133,30 @@ void DebugWindow::videoRender()
 		}
 
 		auto currentTexture = previewTextureSelector_->currentText();
-		if (currentTexture == textureBgrxOriginalImage) {
+		if (currentTexture == textureBgrxSource) {
 			if (renderData->readerBgrx)
 				renderData->readerBgrx->stage(renderingContext->bgrxSource_);
-		} else if (currentTexture == textureR32fOriginalGrayscale) {
+		} else if (currentTexture == textureR32fLuma) {
 			if (renderData->readerR32f)
-				renderData->readerR32f->stage(renderingContext->r32fGrayscale_);
+				renderData->readerR32f->stage(renderingContext->r32fLuma_);
+		} else if (currentTexture == textureR32fSubLumas0) {
+			if (renderData->readerR32fSub)
+				renderData->readerR32fSub->stage(renderingContext->r32fSubLumas_[0]);
+		} else if (currentTexture == textureR32fSubLumas1) {
+			if (renderData->readerR32fSub)
+				renderData->readerR32fSub->stage(renderingContext->r32fSubLumas_[1]);
+		} else if (currentTexture == textureR32fSubPaddedSquaredMotion) {
+			if (renderData->readerR32fSubPadded)
+				renderData->readerR32fSubPadded->stage(renderingContext->r32fSubPaddedSquaredMotion_);
 		} else if (currentTexture == textureBgrxSegmenterInput) {
 			if (renderData->reader256Bgrx)
 				renderData->reader256Bgrx->stage(renderingContext->bgrxSegmenterInput_);
 		} else if (currentTexture == textureR8SegmentationMask) {
 			if (renderData->readerMaskRoiR8)
 				renderData->readerMaskRoiR8->stage(renderingContext->r8SegmentationMask_);
-		} else if (currentTexture == textureR8SubGFGuide) {
-			if (renderData->readerSubR8)
-				renderData->readerSubR8->stage(renderingContext->r8SubGFGuide_);
-		} else if (currentTexture == textureR8SubGFSource) {
-			if (renderData->readerSubR8)
-				renderData->readerSubR8->stage(renderingContext->r8SubGFSource_);
+		} else if (currentTexture == textureR32fSubGFSource) {
+			if (renderData->readerR32fSub)
+				renderData->readerR32fSub->stage(renderingContext->r32fSubGFSource_);
 		} else if (currentTexture == textureR32fSubGFMeanGuide) {
 			if (renderData->readerR32fSub)
 				renderData->readerR32fSub->stage(renderingContext->r32fSubGFMeanGuide_);
@@ -194,7 +213,10 @@ void DebugWindow::updatePreview()
 				 currentRenderData_->readerBgrx->getHeight() != renderingContext->region_.height)) ||
 			       (currentRenderData_->readerSubR8 &&
 				(currentRenderData_->readerSubR8->getWidth() != renderingContext->subRegion_.width ||
-				 currentRenderData_->readerSubR8->getHeight() != renderingContext->subRegion_.height));
+				 currentRenderData_->readerSubR8->getHeight() != renderingContext->subRegion_.height)) ||
+				 	(currentRenderData_->readerR32fSubPadded &&
+				(currentRenderData_->readerR32fSubPadded->getWidth() != renderingContext->subPaddedRegion_.width ||
+				 currentRenderData_->readerR32fSubPadded->getHeight() != renderingContext->subPaddedRegion_.height));
 
 	if (needsRecreation) {
 		GraphicsContextGuard graphicsContextGuard;
@@ -212,6 +234,8 @@ void DebugWindow::updatePreview()
 			renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R8);
 		newRenderData->readerR32fSub = std::make_unique<AsyncTextureReader>(
 			renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R32F);
+		newRenderData->readerR32fSubPadded = std::make_unique<AsyncTextureReader>(
+			renderingContext->subPaddedRegion_.width, renderingContext->subPaddedRegion_.height, GS_R32F);
 
 		if (currentRenderData_) {
 			oldRenderData_.push_back(std::move(currentRenderData_));
@@ -273,13 +297,6 @@ void DebugWindow::updatePreview()
 				       currentRenderData_->readerMaskRoiR8->getHeight(),
 				       currentRenderData_->readerMaskRoiR8->getBufferLinesize(),
 				       QImage::Format_Grayscale8);
-		} else if (std::find(r8SubTextures.begin(), r8SubTextures.end(), currentTextureStd) !=
-			   r8SubTextures.end()) {
-			currentRenderData_->readerSubR8->sync();
-			image = QImage(currentRenderData_->readerSubR8->getBuffer().data(),
-				       currentRenderData_->readerSubR8->getWidth(),
-				       currentRenderData_->readerSubR8->getHeight(),
-				       currentRenderData_->readerSubR8->getBufferLinesize(), QImage::Format_Grayscale8);
 		} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), currentTextureStd) !=
 			   r32fSubTextures.end()) {
 			currentRenderData_->readerR32fSub->sync();
@@ -294,6 +311,20 @@ void DebugWindow::updatePreview()
 			}
 			image = QImage(bufferSubR8_.data(), currentRenderData_->readerR32fSub->getWidth(),
 				       currentRenderData_->readerR32fSub->getHeight(), QImage::Format_Grayscale8);
+		} else if (std::find(r32fSubPaddedTextures.begin(), r32fSubPaddedTextures.end(), currentTextureStd) !=
+			   r32fSubPaddedTextures.end()) {
+			currentRenderData_->readerR32fSubPadded->sync();
+			auto r32fDataView =
+				reinterpret_cast<const float *>(currentRenderData_->readerR32fSubPadded->getBuffer().data());
+			bufferSubPaddedR8_.resize(currentRenderData_->readerR32fSubPadded->getWidth() *
+					    currentRenderData_->readerR32fSubPadded->getHeight());
+			for (std::uint32_t i = 0; i < currentRenderData_->readerR32fSubPadded->getWidth() *
+							      currentRenderData_->readerR32fSubPadded->getHeight();
+			     ++i) {
+				bufferSubPaddedR8_[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);
+			}
+			image = QImage(bufferSubPaddedR8_.data(), currentRenderData_->readerR32fSubPadded->getWidth(),
+				       currentRenderData_->readerR32fSubPadded->getHeight(), QImage::Format_Grayscale8);
 		}
 	} catch (const std::exception &e) {
 		mainPluginContext->getLogger().error("Failed to sync and update preview: {}", e.what());

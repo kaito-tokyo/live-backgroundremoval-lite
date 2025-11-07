@@ -54,6 +54,40 @@ inline RenderingContextRegion getMaskRoiPosition(std::uint32_t width, std::uint3
 	return {offsetX, offsetY, scaledWidth, scaledHeight};
 }
 
+inline std::vector<unique_gs_texture_t> createReductionPyramid(std::uint32_t width, std::uint32_t height)
+{
+	std::vector<unique_gs_texture_t> pyramid;
+
+	std::uint32_t currentWidth = width;
+	std::uint32_t currentHeight = height;
+
+	while (currentWidth > 1 || currentHeight > 1) {
+		currentWidth = std::max(1u, (currentWidth + 1) / 2);
+		currentHeight = std::max(1u, (currentHeight + 1) / 2);
+
+		blog(LOG_INFO, "Creating reduction pyramid level: %ux%u", currentWidth, currentHeight);
+
+		pyramid.push_back(
+			make_unique_gs_texture(currentWidth, currentHeight, GS_R32F, 1, NULL, GS_RENDER_TARGET));
+	}
+
+	return pyramid;
+}
+
+inline std::uint32_t bit_ceil(std::uint32_t x)
+{
+	if (x == 0) {
+		return 1;
+	}
+	x--;
+	x |= x >> 1;
+	x |= x >> 2;
+	x |= x >> 4;
+	x |= x >> 8;
+	x |= x >> 16;
+	return x + 1;
+}
+
 } // anonymous namespace
 
 RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &logger, const MainEffect &mainEffect,
@@ -72,9 +106,18 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 								 numThreads)),
 	  region_{0, 0, width, height},
 	  subRegion_{0, 0, (region_.width / subsamplingRate) & ~1u, (region_.height / subsamplingRate) & ~1u},
+	  subPaddedRegion_{0, 0, bit_ceil(subRegion_.width), bit_ceil(subRegion_.height)},
 	  maskRoi_(getMaskRoiPosition(region_.width, region_.height, selfieSegmenter_)),
 	  bgrxSource_(make_unique_gs_texture(region_.width, region_.height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
-	  r32fGrayscale_(make_unique_gs_texture(region_.width, region_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fLuma_(make_unique_gs_texture(region_.width, region_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubLumas_{make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET),
+			make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL,
+					       GS_RENDER_TARGET)},
+	  r32fSubPaddedSquaredMotion_(
+		  make_unique_gs_texture(subPaddedRegion_.width, subPaddedRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fMeanSquaredMotionReductionPyramid_(
+			  createReductionPyramid(subPaddedRegion_.width, subPaddedRegion_.height)),
+	  r32fReducedMeanSquaredMotionReader_(1, 1, GS_R32F),
 	  bgrxSegmenterInput_(make_unique_gs_texture(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
 						     static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX,
 						     1, NULL, GS_RENDER_TARGET)),
@@ -84,8 +127,8 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 	  r8SegmentationMask_(make_unique_gs_texture(maskRoi_.width, maskRoi_.height, GS_R8, 1, NULL, GS_DYNAMIC)),
 	  r32fSubGFIntermediate_(
 		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
-	  r8SubGFGuide_(make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
-	  r8SubGFSource_(make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R8, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubGFSource_(
+		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFMeanGuide_(
 		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubGFMeanSource_(
@@ -120,7 +163,11 @@ void RenderingContext::videoTick(float seconds)
 		}
 	}
 
-	doesNextVideoRenderReceiveNewFrame_ = true;
+	timeSinceLastProcessFrame_ += seconds;
+	if (timeSinceLastProcessFrame_ >= kMaximumIntervalSecondsBetweenProcessFrames_) {
+		timeSinceLastProcessFrame_ -= kMaximumIntervalSecondsBetweenProcessFrames_;
+		shouldNextVideoRenderProcessFrame_.store(true, std::memory_order_release);
+	}
 }
 
 void RenderingContext::videoRender()
@@ -135,9 +182,9 @@ void RenderingContext::videoRender()
 
 	float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_;
 
-	const bool doesNextVideoRenderReceiveNewFrame = doesNextVideoRenderReceiveNewFrame_.exchange(false);
-	if (doesNextVideoRenderReceiveNewFrame) {
-		if (filterLevel >= FilterLevel::Segmentation && !isStrictlySyncing_) {
+	const bool shouldNextVideoRenderProcessFrame = shouldNextVideoRenderProcessFrame_.exchange(false);
+	if (shouldNextVideoRenderProcessFrame) {
+		if (filterLevel >= FilterLevel::Segmentation) {
 			try {
 				bgrxSegmenterInputReader_.sync();
 			} catch (const std::exception &e) {
@@ -148,9 +195,26 @@ void RenderingContext::videoRender()
 		mainEffect_.drawSource(bgrxSource_, source_);
 
 		if (filterLevel >= FilterLevel::MotionIntensityThresholding) {
-			mainEffect_.convertToGrayscale(r32fGrayscale_, bgrxSource_);
+			mainEffect_.convertToLuma(r32fLuma_, bgrxSource_);
 
-			mainEffect_.resampleByNearestR8(r8SubGFGuide_, r32fGrayscale_);
+			const auto &lastSubLuma = r32fSubLumas_[currentSubLumaIndex_];
+			const auto &currentSubLuma = r32fSubLumas_[1 - currentSubLumaIndex_];
+			mainEffect_.resampleByNearestR8(currentSubLuma, r32fLuma_);
+
+
+			mainEffect_.calculateSquaredMotion(r32fSubPaddedSquaredMotion_, currentSubLuma,
+							   lastSubLuma);
+
+			currentSubLumaIndex_ = 1 - currentSubLumaIndex_;
+
+			mainEffect_.reduce(r32fMeanSquaredMotionReductionPyramid_, r32fSubPaddedSquaredMotion_);
+
+			r32fReducedMeanSquaredMotionReader_.stage(r32fMeanSquaredMotionReductionPyramid_.back());
+			r32fReducedMeanSquaredMotionReader_.sync();
+
+			const float *meanSquaredMotionPtr =
+				reinterpret_cast<const float *>(r32fReducedMeanSquaredMotionReader_.getBuffer().data());
+			meanSquaredMotion_ = *meanSquaredMotionPtr / (subRegion_.width * subRegion_.height);
 		}
 
 		if (filterLevel >= FilterLevel::Segmentation) {
@@ -169,22 +233,23 @@ void RenderingContext::videoRender()
 		}
 
 		if (filterLevel >= FilterLevel::GuidedFilter) {
-			mainEffect_.resampleByNearestR8(r8SubGFSource_, r8SegmentationMask_);
+			const unique_gs_texture_t &currentSubLuma = r32fSubLumas_[currentSubLumaIndex_];
+			mainEffect_.resampleByNearestR8(r32fSubGFSource_, r8SegmentationMask_);
 
-			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, r8SubGFGuide_, r32fSubGFIntermediate_);
-			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanSource_, r8SubGFSource_, r32fSubGFIntermediate_);
+			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, currentSubLuma, r32fSubGFIntermediate_);
+			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanSource_, r32fSubGFSource_,
+							 r32fSubGFIntermediate_);
 
-			mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, r8SubGFGuide_,
-								r8SubGFSource_, r32fSubGFIntermediate_);
-			mainEffect_.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq_, r8SubGFGuide_,
+			mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, currentSubLuma,
+								r32fSubGFSource_, r32fSubGFIntermediate_);
+			mainEffect_.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq_, currentSubLuma,
 							       r32fSubGFIntermediate_);
 
 			mainEffect_.calculateGuidedFilterAAndB(r32fSubGFA_, r32fSubGFB_, r32fSubGFMeanGuideSq_,
 							       r32fSubGFMeanGuide_, r32fSubGFMeanGuideSource_,
 							       r32fSubGFMeanSource_, guidedFilterEps);
 
-			mainEffect_.finalizeGuidedFilter(r8GuidedFilterResult_, r32fGrayscale_, r32fSubGFA_,
-							 r32fSubGFB_);
+			mainEffect_.finalizeGuidedFilter(r8GuidedFilterResult_, r32fLuma_, r32fSubGFA_, r32fSubGFB_);
 		}
 
 		if (filterLevel >= FilterLevel::TimeAveragedFilter) {
@@ -198,7 +263,7 @@ void RenderingContext::videoRender()
 
 	if (filterLevel == FilterLevel::Passthrough) {
 		mainEffect_.directDraw(bgrxSource_);
-	} else if (filterLevel == FilterLevel::Segmentation) {
+	} else if (filterLevel == FilterLevel::Segmentation || filterLevel == FilterLevel::MotionIntensityThresholding) {
 		mainEffect_.directDrawWithMask(bgrxSource_, r8SegmentationMask_);
 	} else if (filterLevel == FilterLevel::GuidedFilter) {
 		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8GuidedFilterResult_, maskGamma, maskLowerBound,
@@ -210,12 +275,11 @@ void RenderingContext::videoRender()
 		// Draw nothing to prevent unexpected background disclosure
 	}
 
-	if (filterLevel >= FilterLevel::Segmentation && doesNextVideoRenderReceiveNewFrame) {
+	if (filterLevel >= FilterLevel::Segmentation && shouldNextVideoRenderProcessFrame) {
 		bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
 	}
 
-	if (filterLevel >= FilterLevel::Segmentation &&
-	    doesNextVideoRenderKickSelfieSegmentation_.exchange(false)) {
+	if (filterLevel >= FilterLevel::Segmentation && doesNextVideoRenderKickSelfieSegmentation_.exchange(false)) {
 
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
@@ -236,6 +300,10 @@ void RenderingContext::videoRender()
 
 obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
+	if (lastFrameTimestamp_ != frame->timestamp) {
+		lastFrameTimestamp_ = frame->timestamp;
+		shouldNextVideoRenderProcessFrame_.store(true, std::memory_order_release);
+	}
 	return frame;
 }
 

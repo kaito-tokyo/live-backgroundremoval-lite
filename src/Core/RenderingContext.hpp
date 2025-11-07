@@ -125,10 +125,19 @@ public:
 public:
 	const RenderingContextRegion region_;
 	const RenderingContextRegion subRegion_;
+	const RenderingContextRegion subPaddedRegion_;
 	const RenderingContextRegion maskRoi_;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSource_;
-	const BridgeUtils::unique_gs_texture_t r32fGrayscale_;
+	const BridgeUtils::unique_gs_texture_t r32fLuma_;
+
+	const std::array<BridgeUtils::unique_gs_texture_t, 2> r32fSubLumas_;
+	std::size_t currentSubLumaIndex_ = 0;
+
+	const BridgeUtils::unique_gs_texture_t r32fSubPaddedSquaredMotion_;
+	const std::vector<BridgeUtils::unique_gs_texture_t> r32fMeanSquaredMotionReductionPyramid_;
+	BridgeUtils::AsyncTextureReader r32fReducedMeanSquaredMotionReader_;
+	float meanSquaredMotion_ = 0.0f;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
@@ -143,8 +152,7 @@ private:
 	const BridgeUtils::unique_gs_texture_t r32fSubGFIntermediate_;
 
 public:
-	const BridgeUtils::unique_gs_texture_t r8SubGFGuide_;
-	const BridgeUtils::unique_gs_texture_t r8SubGFSource_;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFSource_;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide_;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanSource_;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSource_;
@@ -174,7 +182,9 @@ private:
 	std::atomic<bool> doesNextVideoRenderKickSelfieSegmentation_ = false;
 
 	std::uint64_t lastFrameTimestamp_ = 0;
-	std::atomic<bool> doesNextVideoRenderReceiveNewFrame_ = false;
+	float timeSinceLastProcessFrame_ = 0.0f;
+	constexpr static float kMaximumIntervalSecondsBetweenProcessFrames_ = 1.0f;
+	std::atomic<bool> shouldNextVideoRenderProcessFrame_ = true;
 
 	vec4 blackColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
 };
