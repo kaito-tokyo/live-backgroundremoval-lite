@@ -67,29 +67,39 @@ public:
 
 	void applyPluginProperty(const PluginProperty &pluginProperty)
 	{
+		FilterLevel newFilterLevel;
 		if (pluginProperty.filterLevel == FilterLevel::Default) {
-			filterLevel_ = FilterLevel::TimeAveragedFilter;
-			logger_.info("Default filter level is parsed to be {}", static_cast<int>(filterLevel_.load()));
+			newFilterLevel = FilterLevel::TimeAveragedFilter;
+			logger_.info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
 		} else {
-			filterLevel_ = pluginProperty.filterLevel;
-			logger_.info("Filter level set to {}", static_cast<int>(filterLevel_.load()));
+			newFilterLevel = pluginProperty.filterLevel;
+			logger_.info("Filter level set to {}", static_cast<int>(newFilterLevel));
 		}
+		filterLevel_.store(newFilterLevel, std::memory_order_release);
 
-		guidedFilterEps_ = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
-		logger_.info("Guided filter epsilon set to {}", guidedFilterEps_.load());
+		float newMotionIntensityThreshold = static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
+		motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_release);
+		logger_.info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
 
-		timeAveragedFilteringAlpha_ = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
-		logger_.info("Time-averaged filtering alpha set to {}", timeAveragedFilteringAlpha_.load());
+		float newGuidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
+		guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_release);
+		logger_.info("Guided filter epsilon set to {}", newGuidedFilterEps);
 
-		maskGamma_ = static_cast<float>(pluginProperty.maskGamma);
-		logger_.info("Mask gamma set to {}", maskGamma_.load());
+		float newTimeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
+		timeAveragedFilteringAlpha_.store(newTimeAveragedFilteringAlpha, std::memory_order_release);
+		logger_.info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
 
-		maskLowerBound_ = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
-		logger_.info("Mask lower bound set to {}", maskLowerBound_.load());
+		float newMaskGamma = static_cast<float>(pluginProperty.maskGamma);
+		maskGamma_.store(newMaskGamma, std::memory_order_release);
+		logger_.info("Mask gamma set to {}", newMaskGamma);
 
-		maskUpperBoundMargin_ =
-			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
-		logger_.info("Mask upper bound margin set to {}", maskUpperBoundMargin_.load());
+		float newMaskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
+		maskLowerBound_.store(newMaskLowerBound, std::memory_order_release);
+		logger_.info("Mask lower bound set to {}", newMaskLowerBound);
+
+		float newMaskUpperBoundMargin = static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
+		maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_release);
+		logger_.info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
 	}
 
 private:
@@ -104,6 +114,8 @@ public:
 	const int numThreads_;
 
 	std::unique_ptr<SelfieSegmenter::ISelfieSegmenter> selfieSegmenter_;
+	bool hasNewSegmenterInput_ = false;
+	std::atomic<bool> hasNewSegmentationMask_ = false;
 
 public:
 	const RenderingContextRegion region_;
@@ -120,7 +132,6 @@ public:
 	const BridgeUtils::unique_gs_texture_t r32fSubPaddedSquaredMotion_;
 	const std::vector<BridgeUtils::unique_gs_texture_t> r32fMeanSquaredMotionReductionPyramid_;
 	BridgeUtils::AsyncTextureReader r32fReducedMeanSquaredMotionReader_;
-	float motionIntensity_ = 0.0f;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
@@ -149,6 +160,8 @@ public:
 
 public:
 	std::atomic<FilterLevel> filterLevel_;
+
+	std::atomic<float> motionIntensityThreshold_;
 
 	std::atomic<float> guidedFilterEps_;
 

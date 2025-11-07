@@ -85,9 +85,12 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_int(data, "numThreads", defaultProperty.numThreads);
 
+	obs_data_set_default_double(data, "motionIntensityThresholdPowDb",
+				    defaultProperty.motionIntensityThresholdPowDb);
+
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
 
-	obs_data_set_default_double(data, "timeAveragedFilteringAlpha", 0.1);
+	obs_data_set_default_double(data, "timeAveragedFilteringAlpha", defaultProperty.timeAveragedFilteringAlpha);
 
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
 	obs_data_set_default_double(data, "maskLowerBoundAmpDb", defaultProperty.maskLowerBoundAmpDb);
@@ -172,6 +175,10 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_int_slider(propsAdvancedSettings, "numThreads", obs_module_text("numThreads"), 0,
 				      std::thread::hardware_concurrency(), 1);
 
+	// Motion intensity threshold
+	obs_properties_add_float_slider(propsAdvancedSettings, "motionIntensityThresholdPowDb",
+					obs_module_text("motionIntensityThresholdPowDb"), -100.0, 0.0, 0.1);
+
 	// Guided filter
 	obs_properties_add_float_slider(propsAdvancedSettings, "guidedFilterEpsPowDb",
 					obs_module_text("guidedFilterEpsPowDb"), -60.0, -20.0, 0.1);
@@ -200,6 +207,9 @@ void MainPluginContext::update(obs_data_t *settings)
 	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
 
 	if (advancedSettingsEnabled) {
+		newPluginProperty.motionIntensityThresholdPowDb =
+			obs_data_get_double(settings, "motionIntensityThresholdPowDb");
+
 		newPluginProperty.guidedFilterEpsPowDb = obs_data_get_double(settings, "guidedFilterEpsPowDb");
 
 		newPluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");

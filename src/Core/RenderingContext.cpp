@@ -159,91 +159,99 @@ void RenderingContext::videoTick(float seconds)
 
 void RenderingContext::videoRender()
 {
-	FilterLevel filterLevel = filterLevel_;
+	const FilterLevel filterLevel = filterLevel_;
 
-	float guidedFilterEps = guidedFilterEps_;
+	const float motionIntensityThreshold = motionIntensityThreshold_.load(std::memory_order_acquire);
 
-	float maskGamma = maskGamma_;
-	float maskLowerBound = maskLowerBound_;
-	float maskUpperBoundMargin = maskUpperBoundMargin_;
+	const float guidedFilterEps = guidedFilterEps_.load(std::memory_order_acquire);
 
-	float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_;
+	const float maskGamma = maskGamma_.load(std::memory_order_acquire);
+	const float maskLowerBound = maskLowerBound_.load(std::memory_order_acquire);
+	const float maskUpperBoundMargin = maskUpperBoundMargin_.load(std::memory_order_acquire);
 
-	const bool shouldNextVideoRenderProcessFrame = shouldNextVideoRenderProcessFrame_.exchange(false);
-	if (shouldNextVideoRenderProcessFrame) {
-		if (filterLevel >= FilterLevel::Segmentation) {
-			try {
-				bgrxSegmenterInputReader_.sync();
-			} catch (const std::exception &e) {
-				logger_.error("Failed to sync texture reader: {}", e.what());
-			}
-		}
+	const float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_.load(std::memory_order_acquire);
 
+	const bool processingFrame = shouldNextVideoRenderProcessFrame_.exchange(false);
+
+	if (processingFrame && filterLevel >= FilterLevel::Passthrough) {
 		mainEffect_.drawSource(bgrxSource_, source_);
+	}
 
-		if (filterLevel >= FilterLevel::MotionIntensityThresholding) {
-			mainEffect_.convertToLuma(r32fLuma_, bgrxSource_);
+	float motionIntensity = processingFrame ? 1.0f : 0.0f;
 
-			const auto &lastSubLuma = r32fSubLumas_[currentSubLumaIndex_];
-			const auto &currentSubLuma = r32fSubLumas_[1 - currentSubLumaIndex_];
-			mainEffect_.resampleByNearestR8(currentSubLuma, r32fLuma_);
+	if (processingFrame && filterLevel >= FilterLevel::MotionIntensityThresholding) {
+		mainEffect_.convertToLuma(r32fLuma_, bgrxSource_);
 
-			mainEffect_.calculateSquaredMotion(r32fSubPaddedSquaredMotion_, currentSubLuma, lastSubLuma);
+		const auto &lastSubLuma = r32fSubLumas_[currentSubLumaIndex_];
+		const auto &currentSubLuma = r32fSubLumas_[1 - currentSubLumaIndex_];
+		mainEffect_.resampleByNearestR8(currentSubLuma, r32fLuma_);
 
-			currentSubLumaIndex_ = 1 - currentSubLumaIndex_;
+		mainEffect_.calculateSquaredMotion(r32fSubPaddedSquaredMotion_, currentSubLuma, lastSubLuma);
 
-			mainEffect_.reduce(r32fMeanSquaredMotionReductionPyramid_, r32fSubPaddedSquaredMotion_);
+		currentSubLumaIndex_ = 1 - currentSubLumaIndex_;
 
-			r32fReducedMeanSquaredMotionReader_.stage(r32fMeanSquaredMotionReductionPyramid_.back());
-			r32fReducedMeanSquaredMotionReader_.sync();
+		mainEffect_.reduce(r32fMeanSquaredMotionReductionPyramid_, r32fSubPaddedSquaredMotion_);
 
-			const float *meanSquaredMotionPtr =
-				reinterpret_cast<const float *>(r32fReducedMeanSquaredMotionReader_.getBuffer().data());
-			motionIntensity_ = *meanSquaredMotionPtr / (subRegion_.width * subRegion_.height);
+		r32fReducedMeanSquaredMotionReader_.stage(r32fMeanSquaredMotionReductionPyramid_.back());
+		r32fReducedMeanSquaredMotionReader_.sync();
+
+		const float *meanSquaredMotionPtr =
+			reinterpret_cast<const float *>(r32fReducedMeanSquaredMotionReader_.getBuffer().data());
+		motionIntensity = *meanSquaredMotionPtr / (subRegion_.width * subRegion_.height);
+	}
+
+	const bool isCurrentMotionIntense = (motionIntensity >= motionIntensityThreshold);
+
+	if (processingFrame && filterLevel >= FilterLevel::Segmentation && hasNewSegmenterInput_) {
+		hasNewSegmenterInput_ = false;
+		try {
+			bgrxSegmenterInputReader_.sync();
+		} catch (const std::exception &e) {
+			logger_.error("Failed to sync texture reader: {}", e.what());
 		}
+	}
 
-		if (filterLevel >= FilterLevel::Segmentation) {
-			constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
+	if (processingFrame && filterLevel >= FilterLevel::Segmentation && isCurrentMotionIntense) {
+		constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-			mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, maskRoi_.width,
-					    maskRoi_.height, static_cast<float>(maskRoi_.x),
-					    static_cast<float>(maskRoi_.y));
-		}
+		mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, maskRoi_.width,
+					maskRoi_.height, static_cast<float>(maskRoi_.x),
+					static_cast<float>(maskRoi_.y));
+	}
 
-		if (filterLevel >= FilterLevel::Segmentation) {
-			const std::uint8_t *segmentationMaskData =
-				selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
-			gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
-					     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
-		}
+	if (processingFrame && hasNewSegmentationMask_.exchange(false) && filterLevel >= FilterLevel::Segmentation) {
+		const std::uint8_t *segmentationMaskData =
+			selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
+		gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
+						static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
+	}
 
-		if (filterLevel >= FilterLevel::GuidedFilter) {
-			const unique_gs_texture_t &currentSubLuma = r32fSubLumas_[currentSubLumaIndex_];
-			mainEffect_.resampleByNearestR8(r32fSubGFSource_, r8SegmentationMask_);
+	if (processingFrame && filterLevel >= FilterLevel::GuidedFilter) {
+		const unique_gs_texture_t &currentSubLuma = r32fSubLumas_[currentSubLumaIndex_];
+		mainEffect_.resampleByNearestR8(r32fSubGFSource_, r8SegmentationMask_);
 
-			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, currentSubLuma, r32fSubGFIntermediate_);
-			mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanSource_, r32fSubGFSource_,
-							 r32fSubGFIntermediate_);
+		mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, currentSubLuma, r32fSubGFIntermediate_);
+		mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanSource_, r32fSubGFSource_,
+							r32fSubGFIntermediate_);
 
-			mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, currentSubLuma,
-								r32fSubGFSource_, r32fSubGFIntermediate_);
-			mainEffect_.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq_, currentSubLuma,
-							       r32fSubGFIntermediate_);
+		mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, currentSubLuma,
+							r32fSubGFSource_, r32fSubGFIntermediate_);
+		mainEffect_.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq_, currentSubLuma,
+								r32fSubGFIntermediate_);
 
-			mainEffect_.calculateGuidedFilterAAndB(r32fSubGFA_, r32fSubGFB_, r32fSubGFMeanGuideSq_,
-							       r32fSubGFMeanGuide_, r32fSubGFMeanGuideSource_,
-							       r32fSubGFMeanSource_, guidedFilterEps);
+		mainEffect_.calculateGuidedFilterAAndB(r32fSubGFA_, r32fSubGFB_, r32fSubGFMeanGuideSq_,
+								r32fSubGFMeanGuide_, r32fSubGFMeanGuideSource_,
+								r32fSubGFMeanSource_, guidedFilterEps);
 
-			mainEffect_.finalizeGuidedFilter(r8GuidedFilterResult_, r32fLuma_, r32fSubGFA_, r32fSubGFB_);
-		}
+		mainEffect_.finalizeGuidedFilter(r8GuidedFilterResult_, r32fLuma_, r32fSubGFA_, r32fSubGFB_);
+	}
 
-		if (filterLevel >= FilterLevel::TimeAveragedFilter) {
-			std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex_;
-			mainEffect_.timeAveragedFiltering(r8TimeAveragedMasks_[nextIndex],
-							  r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
-							  r8GuidedFilterResult_, timeAveragedFilteringAlpha);
-			currentTimeAveragedMaskIndex_ = nextIndex;
-		}
+	if (processingFrame && filterLevel >= FilterLevel::TimeAveragedFilter) {
+		std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex_;
+		mainEffect_.timeAveragedFiltering(r8TimeAveragedMasks_[nextIndex],
+							r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
+							r8GuidedFilterResult_, timeAveragedFilteringAlpha);
+		currentTimeAveragedMaskIndex_ = nextIndex;
 	}
 
 	if (filterLevel == FilterLevel::Passthrough) {
@@ -261,27 +269,25 @@ void RenderingContext::videoRender()
 		// Draw nothing to prevent unexpected background disclosure
 	}
 
-	if (motionIntensity_ > 0.0001) {
-		if (filterLevel >= FilterLevel::Segmentation && shouldNextVideoRenderProcessFrame) {
-			bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
-		}
+	if (processingFrame && filterLevel >= FilterLevel::Segmentation && isCurrentMotionIntense) {
+		bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
+		hasNewSegmenterInput_ = true;
 
-		if (filterLevel >= FilterLevel::Segmentation) {
-			auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
-			std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
-				  segmenterInputBuffer_.begin());
-			selfieSegmenterTaskQueue_.push([weakSelf = weak_from_this()](
-							       const ThrottledTaskQueue::CancellationToken &token) {
-				if (auto self = weakSelf.lock()) {
-					if (token->load()) {
-						return;
-					}
-					self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
-				} else {
-					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
+		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
+		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
+				segmenterInputBuffer_.begin());
+		selfieSegmenterTaskQueue_.push([weakSelf = weak_from_this()](
+								const ThrottledTaskQueue::CancellationToken &token) {
+			if (auto self = weakSelf.lock()) {
+				if (token->load()) {
+					return;
 				}
-			});
-		}
+				self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
+				self->hasNewSegmentationMask_.store(true, std::memory_order_release);
+			} else {
+				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
+			}
+		});
 	}
 }
 
