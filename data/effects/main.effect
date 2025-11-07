@@ -164,7 +164,7 @@ float4 PSConvertToGrayscale(VertInOut vert_in) : TARGET
 }
 
 /**
- * @brief Calculates the squared error between two luma images, for the first pass of a reduction.
+ * @brief Calculates the squared error between two luma images.
  * @details This shader computes the squared luma error between the current and last frames.
  * @param image  Input texture (current downsampled grayscale image).
  * @param image1 Input texture (last downsampled grayscale image).
