@@ -68,29 +68,12 @@ public:
 	void applyPluginProperty(const PluginProperty &pluginProperty)
 	{
 		if (pluginProperty.filterLevel == FilterLevel::Default) {
-			if (pluginProperty.isStrictlySyncing) {
-				filterLevel_ = FilterLevel::GuidedFilter;
-			} else {
-				filterLevel_ = FilterLevel::TimeAveragedFilter;
-			}
+			filterLevel_ = FilterLevel::TimeAveragedFilter;
 			logger_.info("Default filter level is parsed to be {}", static_cast<int>(filterLevel_.load()));
 		} else {
 			filterLevel_ = pluginProperty.filterLevel;
 			logger_.info("Filter level set to {}", static_cast<int>(filterLevel_.load()));
 		}
-
-		if (pluginProperty.selfieSegmenterFps == 0) {
-			if (pluginProperty.isStrictlySyncing) {
-				selfieSegmenterInterval_ = 1.0f / 15.0f;
-			} else {
-				selfieSegmenterInterval_ = 1.0f / 60.0f;
-			}
-			logger_.info("Default selfie segmenter interval is parsed to be {}",
-				     selfieSegmenterInterval_.load());
-		} else {
-			selfieSegmenterInterval_ = 1.0f / static_cast<float>(pluginProperty.selfieSegmenterFps);
-		}
-		logger_.info("Selfie segmenter interval set to {}", selfieSegmenterInterval_.load());
 
 		guidedFilterEps_ = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
 		logger_.info("Guided filter epsilon set to {}", guidedFilterEps_.load());
@@ -167,8 +150,6 @@ public:
 public:
 	std::atomic<FilterLevel> filterLevel_;
 
-	std::atomic<float> selfieSegmenterInterval_;
-
 	std::atomic<float> guidedFilterEps_;
 
 	std::atomic<float> maskGamma_;
@@ -178,9 +159,6 @@ public:
 	std::atomic<float> timeAveragedFilteringAlpha_;
 
 private:
-	float timeSinceLastSelfieSegmentation_ = 0.0f;
-	std::atomic<bool> doesNextVideoRenderKickSelfieSegmentation_ = false;
-
 	std::uint64_t lastFrameTimestamp_ = 0;
 	float timeSinceLastProcessFrame_ = 0.0f;
 	constexpr static float kMaximumIntervalSecondsBetweenProcessFrames_ = 1.0f;

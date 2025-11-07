@@ -150,19 +150,6 @@ RenderingContext::~RenderingContext() noexcept {}
 
 void RenderingContext::videoTick(float seconds)
 {
-	FilterLevel filterLevel = filterLevel_;
-
-	float selfieSegmenterInterval = selfieSegmenterInterval_;
-
-	if (filterLevel >= FilterLevel::Segmentation) {
-		timeSinceLastSelfieSegmentation_ += seconds;
-
-		if (timeSinceLastSelfieSegmentation_ >= selfieSegmenterInterval) {
-			timeSinceLastSelfieSegmentation_ -= selfieSegmenterInterval;
-			doesNextVideoRenderKickSelfieSegmentation_ = true;
-		}
-	}
-
 	timeSinceLastProcessFrame_ += seconds;
 	if (timeSinceLastProcessFrame_ >= kMaximumIntervalSecondsBetweenProcessFrames_) {
 		timeSinceLastProcessFrame_ -= kMaximumIntervalSecondsBetweenProcessFrames_;
@@ -280,7 +267,7 @@ void RenderingContext::videoRender()
 			bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
 		}
 
-		if (filterLevel >= FilterLevel::Segmentation && doesNextVideoRenderKickSelfieSegmentation_.exchange(false)) {
+		if (filterLevel >= FilterLevel::Segmentation) {
 			auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 			std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
 				segmenterInputBuffer_.begin());
