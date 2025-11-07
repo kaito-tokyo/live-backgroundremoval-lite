@@ -164,30 +164,24 @@ float4 PSConvertToGrayscale(VertInOut vert_in) : TARGET
 }
 
 /**
- * @brief Calculates the difference between two grayscale images, considering a mask, for the first pass of a reduction.
- * @details This shader computes the absolute luminance difference between the current and last frames,
- * but only for regions where the mask value is greater than 0.1 (likely the subject).
- * This isolates changes related to the subject's movement and ignores background noise.
+ * @brief Calculates the squared error between two luma images.
+ * @details This shader computes the squared luma error between the current and last frames.
  * @param image  Input texture (current downsampled grayscale image).
  * @param image1 Input texture (last downsampled grayscale image).
- * @param image2 Input texture (segmentation mask).
- * @return Returns the luminance difference for pixels within the masked area; otherwise, returns black (0).
+ * @return Returns the luma error for pixels.
  */
-float4 PSCalculateMaskedDifferenceR(VertInOut vert_in) : TARGET
+float4 PSCalculateSquaredMotion(VertInOut vert_in) : TARGET
 {
 	float2 uv = vert_in.uv;
 
 	float current_luma = image.Sample(point_sampler, uv).r;
 	float last_luma    = image1.Sample(point_sampler, uv).r;
-	float mask         = image2.Sample(point_sampler, uv).r;
 
-	float weight = step(0.1, mask);
+	float diff = current_luma - last_luma;
 
-	float diff = abs(current_luma - last_luma);
+	float squared_error = diff * diff;
 
-	float final_diff = diff * weight;
-
-	return float4(final_diff, final_diff, final_diff, 1.0f);
+	return float4(squared_error, squared_error, squared_error, 1.0f);
 }
 
 /**
@@ -433,12 +427,12 @@ technique ConvertToGrayscale
 	}
 }
 
-technique CalculateDifferenceWithMask
+technique CalculateSquaredMotion
 {
 	pass
 	{
 		vertex_shader = VSDefault(vert_in);
-		pixel_shader = PSCalculateMaskedDifferenceR(vert_in);
+		pixel_shader = PSCalculateSquaredMotion(vert_in);
 	}
 }
 

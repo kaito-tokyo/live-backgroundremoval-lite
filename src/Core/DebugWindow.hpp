@@ -42,6 +42,7 @@ struct DebugRenderData {
 	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerMaskRoiR8;
 	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerSubR8;
 	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32fSub;
+	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32fSubPadded;
 };
 
 class DebugWindow : public QDialog {
@@ -74,6 +75,7 @@ private:
 
 	std::vector<std::uint8_t> bufferR8_;
 	std::vector<std::uint8_t> bufferSubR8_;
+	std::vector<std::uint8_t> bufferSubPaddedR8_;
 };
 
 } // namespace LiveBackgroundRemovalLite

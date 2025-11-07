@@ -67,33 +67,13 @@ public:
 
 	void applyPluginProperty(const PluginProperty &pluginProperty)
 	{
-		isStrictlySyncing_ = pluginProperty.isStrictlySyncing;
-		logger_.info("Strict syncing is {}", isStrictlySyncing_.load() ? "enabled" : "disabled");
-
 		if (pluginProperty.filterLevel == FilterLevel::Default) {
-			if (pluginProperty.isStrictlySyncing) {
-				filterLevel_ = FilterLevel::GuidedFilter;
-			} else {
-				filterLevel_ = FilterLevel::TimeAveragedFilter;
-			}
+			filterLevel_ = FilterLevel::TimeAveragedFilter;
 			logger_.info("Default filter level is parsed to be {}", static_cast<int>(filterLevel_.load()));
 		} else {
 			filterLevel_ = pluginProperty.filterLevel;
 			logger_.info("Filter level set to {}", static_cast<int>(filterLevel_.load()));
 		}
-
-		if (pluginProperty.selfieSegmenterFps == 0) {
-			if (pluginProperty.isStrictlySyncing) {
-				selfieSegmenterInterval_ = 1.0f / 15.0f;
-			} else {
-				selfieSegmenterInterval_ = 1.0f / 60.0f;
-			}
-			logger_.info("Default selfie segmenter interval is parsed to be {}",
-				     selfieSegmenterInterval_.load());
-		} else {
-			selfieSegmenterInterval_ = 1.0f / static_cast<float>(pluginProperty.selfieSegmenterFps);
-		}
-		logger_.info("Selfie segmenter interval set to {}", selfieSegmenterInterval_.load());
 
 		guidedFilterEps_ = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
 		logger_.info("Guided filter epsilon set to {}", guidedFilterEps_.load());
@@ -128,10 +108,19 @@ public:
 public:
 	const RenderingContextRegion region_;
 	const RenderingContextRegion subRegion_;
+	const RenderingContextRegion subPaddedRegion_;
 	const RenderingContextRegion maskRoi_;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSource_;
-	const BridgeUtils::unique_gs_texture_t r32fGrayscale_;
+	const BridgeUtils::unique_gs_texture_t r32fLuma_;
+
+	const std::array<BridgeUtils::unique_gs_texture_t, 2> r32fSubLumas_;
+	std::size_t currentSubLumaIndex_ = 0;
+
+	const BridgeUtils::unique_gs_texture_t r32fSubPaddedSquaredMotion_;
+	const std::vector<BridgeUtils::unique_gs_texture_t> r32fMeanSquaredMotionReductionPyramid_;
+	BridgeUtils::AsyncTextureReader r32fReducedMeanSquaredMotionReader_;
+	float motionIntensity_ = 0.0f;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
@@ -146,8 +135,7 @@ private:
 	const BridgeUtils::unique_gs_texture_t r32fSubGFIntermediate_;
 
 public:
-	const BridgeUtils::unique_gs_texture_t r8SubGFGuide_;
-	const BridgeUtils::unique_gs_texture_t r8SubGFSource_;
+	const BridgeUtils::unique_gs_texture_t r32fSubGFSource_;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide_;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanSource_;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSource_;
@@ -162,10 +150,6 @@ public:
 public:
 	std::atomic<FilterLevel> filterLevel_;
 
-	std::atomic<bool> isStrictlySyncing_;
-
-	std::atomic<float> selfieSegmenterInterval_;
-
 	std::atomic<float> guidedFilterEps_;
 
 	std::atomic<float> maskGamma_;
@@ -175,11 +159,10 @@ public:
 	std::atomic<float> timeAveragedFilteringAlpha_;
 
 private:
-	float timeSinceLastSelfieSegmentation_ = 0.0f;
-	std::atomic<bool> doesNextVideoRenderKickSelfieSegmentation_ = false;
-
 	std::uint64_t lastFrameTimestamp_ = 0;
-	std::atomic<bool> doesNextVideoRenderReceiveNewFrame_ = false;
+	float timeSinceLastProcessFrame_ = 0.0f;
+	constexpr static float kMaximumIntervalSecondsBetweenProcessFrames_ = 1.0f;
+	std::atomic<bool> shouldNextVideoRenderProcessFrame_ = true;
 
 	vec4 blackColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
 };

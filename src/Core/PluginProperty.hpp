@@ -25,16 +25,15 @@ enum class FilterLevel : int {
 	Default = 0,
 	Passthrough = 100,
 	Segmentation = 200,
-	GuidedFilter = 300,
-	TimeAveragedFilter = 400,
+	MotionIntensityThresholding = 300,
+	GuidedFilter = 400,
+	TimeAveragedFilter = 500,
 };
 
 struct PluginProperty {
 	int numThreads = 2;
 
 	FilterLevel filterLevel = FilterLevel::Default;
-
-	bool isStrictlySyncing = false;
 
 	int selfieSegmenterFps = 0;
 
