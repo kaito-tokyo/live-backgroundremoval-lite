@@ -108,7 +108,7 @@ float4 PSDrawWithMask(VertInOut vert_in) : TARGET
 	float4 final_color;
 
 	final_color.rgb = image.Sample(point_sampler, uv).rgb;
-	final_color.a = image1.Sample(point_sampler, uv).r;
+	final_color.a = image1.Sample(linear_sampler, uv).r;
 
 	return final_color;
 }

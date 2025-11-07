@@ -83,11 +83,16 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
+	obs_data_set_default_double(data, "motionIntensityThresholdPowDb",
+				    defaultProperty.motionIntensityThresholdPowDb);
+
+	obs_data_set_default_double(data, "timeAveragedFilteringAlpha", defaultProperty.timeAveragedFilteringAlpha);
+
+	obs_data_set_default_bool(data, "advancedSettings", false);
+
 	obs_data_set_default_int(data, "numThreads", defaultProperty.numThreads);
 
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
-
-	obs_data_set_default_double(data, "timeAveragedFilteringAlpha", 0.1);
 
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
 	obs_data_set_default_double(data, "maskLowerBoundAmpDb", defaultProperty.maskLowerBoundAmpDb);
@@ -121,22 +126,6 @@ obs_properties_t *MainPluginContext::getProperties()
 	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
-	// Filter level
-	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
-								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
-				  static_cast<int>(FilterLevel::Default));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelPassthrough"),
-				  static_cast<int>(FilterLevel::Passthrough));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
-				  static_cast<int>(FilterLevel::Segmentation));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelMotionIntensityThresholding"),
-				  static_cast<int>(FilterLevel::MotionIntensityThresholding));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
-				  static_cast<int>(FilterLevel::GuidedFilter));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
-				  static_cast<int>(FilterLevel::TimeAveragedFilter));
-
 	// Debug button
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
@@ -164,21 +153,41 @@ obs_properties_t *MainPluginContext::getProperties()
 		},
 		this);
 
+	// Filter level
+	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
+								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
+				  static_cast<int>(FilterLevel::Default));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelPassthrough"),
+				  static_cast<int>(FilterLevel::Passthrough));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
+				  static_cast<int>(FilterLevel::Segmentation));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelMotionIntensityThresholding"),
+				  static_cast<int>(FilterLevel::MotionIntensityThresholding));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
+				  static_cast<int>(FilterLevel::GuidedFilter));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
+				  static_cast<int>(FilterLevel::TimeAveragedFilter));
+
+	// Motion intensity threshold
+	obs_properties_add_float_slider(props, "motionIntensityThresholdPowDb",
+					obs_module_text("motionIntensityThresholdPowDb"), -100.0, 0.0, 0.1);
+
+	// Time-averaged filtering
+	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha",
+					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
+
+	// Advanced settings group
 	obs_properties_t *propsAdvancedSettings = obs_properties_create();
 	obs_properties_add_group(props, "advancedSettings", obs_module_text("advancedSettings"), OBS_GROUP_CHECKABLE,
 				 propsAdvancedSettings);
 
 	// Number of threads
-	obs_properties_add_int_slider(propsAdvancedSettings, "numThreads", obs_module_text("numThreads"), 0,
-				      std::thread::hardware_concurrency(), 1);
+	obs_properties_add_int_slider(propsAdvancedSettings, "numThreads", obs_module_text("numThreads"), 0, 16, 2);
 
 	// Guided filter
 	obs_properties_add_float_slider(propsAdvancedSettings, "guidedFilterEpsPowDb",
 					obs_module_text("guidedFilterEpsPowDb"), -60.0, -20.0, 0.1);
-
-	// Time-averaged filtering
-	obs_properties_add_float_slider(propsAdvancedSettings, "timeAveragedFilteringAlpha",
-					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
 
 	// Mask application
 	obs_properties_add_float_slider(propsAdvancedSettings, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0,
@@ -199,6 +208,11 @@ void MainPluginContext::update(obs_data_t *settings)
 
 	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
 
+	newPluginProperty.motionIntensityThresholdPowDb =
+		obs_data_get_double(settings, "motionIntensityThresholdPowDb");
+
+	newPluginProperty.timeAveragedFilteringAlpha = obs_data_get_double(settings, "timeAveragedFilteringAlpha");
+
 	if (advancedSettingsEnabled) {
 		newPluginProperty.guidedFilterEpsPowDb = obs_data_get_double(settings, "guidedFilterEpsPowDb");
 
@@ -206,9 +220,6 @@ void MainPluginContext::update(obs_data_t *settings)
 		newPluginProperty.maskLowerBoundAmpDb = obs_data_get_double(settings, "maskLowerBoundAmpDb");
 		newPluginProperty.maskUpperBoundMarginAmpDb =
 			obs_data_get_double(settings, "maskUpperBoundMarginAmpDb");
-
-		newPluginProperty.timeAveragedFilteringAlpha =
-			obs_data_get_double(settings, "timeAveragedFilteringAlpha");
 	}
 
 	std::shared_ptr<RenderingContext> renderingContext;
