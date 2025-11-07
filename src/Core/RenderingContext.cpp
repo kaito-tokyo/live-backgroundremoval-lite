@@ -113,10 +113,10 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 	  r32fSubLumas_{make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET),
 			make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL,
 					       GS_RENDER_TARGET)},
-	  r32fSubPaddedSquaredMotion_(
-		  make_unique_gs_texture(subPaddedRegion_.width, subPaddedRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
+	  r32fSubPaddedSquaredMotion_(make_unique_gs_texture(subPaddedRegion_.width, subPaddedRegion_.height, GS_R32F,
+							     1, NULL, GS_RENDER_TARGET)),
 	  r32fMeanSquaredMotionReductionPyramid_(
-			  createReductionPyramid(subPaddedRegion_.width, subPaddedRegion_.height)),
+		  createReductionPyramid(subPaddedRegion_.width, subPaddedRegion_.height)),
 	  r32fReducedMeanSquaredMotionReader_(1, 1, GS_R32F),
 	  bgrxSegmenterInput_(make_unique_gs_texture(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
 						     static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX,
@@ -188,9 +188,7 @@ void RenderingContext::videoRender()
 			const auto &currentSubLuma = r32fSubLumas_[1 - currentSubLumaIndex_];
 			mainEffect_.resampleByNearestR8(currentSubLuma, r32fLuma_);
 
-
-			mainEffect_.calculateSquaredMotion(r32fSubPaddedSquaredMotion_, currentSubLuma,
-							   lastSubLuma);
+			mainEffect_.calculateSquaredMotion(r32fSubPaddedSquaredMotion_, currentSubLuma, lastSubLuma);
 
 			currentSubLumaIndex_ = 1 - currentSubLumaIndex_;
 
@@ -250,7 +248,8 @@ void RenderingContext::videoRender()
 
 	if (filterLevel == FilterLevel::Passthrough) {
 		mainEffect_.directDraw(bgrxSource_);
-	} else if (filterLevel == FilterLevel::Segmentation || filterLevel == FilterLevel::MotionIntensityThresholding) {
+	} else if (filterLevel == FilterLevel::Segmentation ||
+		   filterLevel == FilterLevel::MotionIntensityThresholding) {
 		mainEffect_.directDrawWithMask(bgrxSource_, r8SegmentationMask_);
 	} else if (filterLevel == FilterLevel::GuidedFilter) {
 		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8GuidedFilterResult_, maskGamma, maskLowerBound,
@@ -270,18 +269,18 @@ void RenderingContext::videoRender()
 		if (filterLevel >= FilterLevel::Segmentation) {
 			auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 			std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
-				segmenterInputBuffer_.begin());
-			selfieSegmenterTaskQueue_.push(
-				[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
-					if (auto self = weakSelf.lock()) {
-						if (token->load()) {
-							return;
-						}
-						self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
-					} else {
-						blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
+				  segmenterInputBuffer_.begin());
+			selfieSegmenterTaskQueue_.push([weakSelf = weak_from_this()](
+							       const ThrottledTaskQueue::CancellationToken &token) {
+				if (auto self = weakSelf.lock()) {
+					if (token->load()) {
+						return;
 					}
-				});
+					self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
+				} else {
+					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
+				}
+			});
 		}
 	}
 }

@@ -59,19 +59,11 @@ const std::vector<std::string> r8Textures = {textureR8GuidedFilterResult, textur
 const std::vector<std::string> r32fTextures = {textureR32fLuma};
 const std::vector<std::string> bgrx256Textures = {textureBgrxSegmenterInput};
 const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
-const std::vector<std::string> r32fSubPaddedTextures = {
-	textureR32fSubPaddedSquaredMotion
-};
+const std::vector<std::string> r32fSubPaddedTextures = {textureR32fSubPaddedSquaredMotion};
 const std::vector<std::string> r32fSubTextures = {
-						  textureR32fSubLumas0,
-						  textureR32fSubLumas1,
-						  textureR32fSubGFSource,
-						  textureR32fSubGFMeanGuide,
-						  textureR32fSubGFMeanSource,
-						  textureR16fSubGFMeanGuideSource,
-						  textureR32fSubGFMeanGuideSq,
-						  textureR32fSubGFA,
-						  textureR32fSubGFB};
+	textureR32fSubLumas0,        textureR32fSubLumas1,       textureR32fSubGFSource,
+	textureR32fSubGFMeanGuide,   textureR32fSubGFMeanSource, textureR16fSubGFMeanGuideSource,
+	textureR32fSubGFMeanGuideSq, textureR32fSubGFA,          textureR32fSubGFB};
 
 } // namespace
 
@@ -207,16 +199,17 @@ void DebugWindow::updatePreview()
 		return;
 	}
 
-	bool needsRecreation = !currentRenderData_ ||
-			       (currentRenderData_->readerBgrx &&
-				(currentRenderData_->readerBgrx->getWidth() != renderingContext->region_.width ||
-				 currentRenderData_->readerBgrx->getHeight() != renderingContext->region_.height)) ||
-			       (currentRenderData_->readerSubR8 &&
-				(currentRenderData_->readerSubR8->getWidth() != renderingContext->subRegion_.width ||
-				 currentRenderData_->readerSubR8->getHeight() != renderingContext->subRegion_.height)) ||
-				 	(currentRenderData_->readerR32fSubPadded &&
-				(currentRenderData_->readerR32fSubPadded->getWidth() != renderingContext->subPaddedRegion_.width ||
-				 currentRenderData_->readerR32fSubPadded->getHeight() != renderingContext->subPaddedRegion_.height));
+	bool needsRecreation =
+		!currentRenderData_ ||
+		(currentRenderData_->readerBgrx &&
+		 (currentRenderData_->readerBgrx->getWidth() != renderingContext->region_.width ||
+		  currentRenderData_->readerBgrx->getHeight() != renderingContext->region_.height)) ||
+		(currentRenderData_->readerSubR8 &&
+		 (currentRenderData_->readerSubR8->getWidth() != renderingContext->subRegion_.width ||
+		  currentRenderData_->readerSubR8->getHeight() != renderingContext->subRegion_.height)) ||
+		(currentRenderData_->readerR32fSubPadded &&
+		 (currentRenderData_->readerR32fSubPadded->getWidth() != renderingContext->subPaddedRegion_.width ||
+		  currentRenderData_->readerR32fSubPadded->getHeight() != renderingContext->subPaddedRegion_.height));
 
 	if (needsRecreation) {
 		GraphicsContextGuard graphicsContextGuard;
@@ -314,10 +307,10 @@ void DebugWindow::updatePreview()
 		} else if (std::find(r32fSubPaddedTextures.begin(), r32fSubPaddedTextures.end(), currentTextureStd) !=
 			   r32fSubPaddedTextures.end()) {
 			currentRenderData_->readerR32fSubPadded->sync();
-			auto r32fDataView =
-				reinterpret_cast<const float *>(currentRenderData_->readerR32fSubPadded->getBuffer().data());
+			auto r32fDataView = reinterpret_cast<const float *>(
+				currentRenderData_->readerR32fSubPadded->getBuffer().data());
 			bufferSubPaddedR8_.resize(currentRenderData_->readerR32fSubPadded->getWidth() *
-					    currentRenderData_->readerR32fSubPadded->getHeight());
+						  currentRenderData_->readerR32fSubPadded->getHeight());
 			for (std::uint32_t i = 0; i < currentRenderData_->readerR32fSubPadded->getWidth() *
 							      currentRenderData_->readerR32fSubPadded->getHeight();
 			     ++i) {
