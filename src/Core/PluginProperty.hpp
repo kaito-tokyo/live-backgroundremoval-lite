@@ -32,20 +32,19 @@ enum class FilterLevel : int {
 
 struct PluginProperty {
 	int numThreads = 2;
+	int subsamplingRate = 4;
 
 	FilterLevel filterLevel = FilterLevel::Default;
-
-	int subsamplingRate = 4;
 
 	double motionIntensityThresholdPowDb = -40.0;
 
 	double guidedFilterEpsPowDb = -40.0;
 
+	double timeAveragedFilteringAlpha = 0.1;
+
 	double maskGamma = 2.5;
 	double maskLowerBoundAmpDb = -25.0;
 	double maskUpperBoundMarginAmpDb = -25.0;
-
-	double timeAveragedFilteringAlpha = 0.1;
 };
 
 } // namespace LiveBackgroundRemovalLite
