@@ -35,8 +35,6 @@ struct PluginProperty {
 
 	FilterLevel filterLevel = FilterLevel::Default;
 
-	int selfieSegmenterFps = 0;
-
 	int subsamplingRate = 4;
 
 	double guidedFilterEpsPowDb = -40.0;

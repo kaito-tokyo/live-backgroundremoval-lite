@@ -83,8 +83,6 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
-	obs_data_set_default_int(data, "selfieSegmenterFps", defaultProperty.selfieSegmenterFps);
-
 	obs_data_set_default_int(data, "numThreads", defaultProperty.numThreads);
 
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
@@ -169,9 +167,6 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
 				  static_cast<int>(FilterLevel::TimeAveragedFilter));
 
-	// Selfie segmenter FPS
-	obs_properties_add_int_slider(props, "selfieSegmenterFps", obs_module_text("selfieSegmenterFps"), 1, 60, 1);
-
 	// Guided filter
 	obs_properties_add_float_slider(props, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
 					-20.0, 0.1);
@@ -195,8 +190,6 @@ void MainPluginContext::update(obs_data_t *settings)
 	PluginProperty newPluginProperty;
 
 	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
-
-	newPluginProperty.selfieSegmenterFps = obs_data_get_int(settings, "selfieSegmenterFps");
 
 	newPluginProperty.guidedFilterEpsPowDb = obs_data_get_double(settings, "guidedFilterEpsPowDb");
 
