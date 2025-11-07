@@ -215,9 +215,9 @@ void MainPluginContext::update(obs_data_t *settings)
 
 		int numThreads;
 		if (advancedSettingsEnabled) {
-			numThreads = newPluginProperty.numThreads;
-		} else {
 			numThreads = obs_data_get_int(settings, "numThreads");
+		} else {
+			numThreads = newPluginProperty.numThreads;
 		}
 
 		if (pluginProperty_.numThreads != numThreads) {
