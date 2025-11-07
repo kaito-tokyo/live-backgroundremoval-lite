@@ -193,14 +193,7 @@ void RenderingContext::videoRender()
 		mainEffect_.reduce(r32fMeanSquaredMotionReductionPyramid_, r32fSubPaddedSquaredMotion_);
 
 		r32fReducedMeanSquaredMotionReader_.stage(r32fMeanSquaredMotionReductionPyramid_.back());
-		r32fReducedMeanSquaredMotionReader_.sync();
-
-		const float *meanSquaredMotionPtr =
-			reinterpret_cast<const float *>(r32fReducedMeanSquaredMotionReader_.getBuffer().data());
-		motionIntensity = *meanSquaredMotionPtr / (subRegion_.width * subRegion_.height);
 	}
-
-	const bool isCurrentMotionIntense = (motionIntensity >= motionIntensityThreshold);
 
 	if (processingFrame && filterLevel >= FilterLevel::Segmentation && hasNewSegmenterInput_) {
 		hasNewSegmenterInput_ = false;
@@ -210,6 +203,16 @@ void RenderingContext::videoRender()
 			logger_.error("Failed to sync texture reader: {}", e.what());
 		}
 	}
+
+	if (processingFrame && filterLevel >= FilterLevel::MotionIntensityThresholding) {
+		r32fReducedMeanSquaredMotionReader_.sync();
+
+		const float *meanSquaredMotionPtr =
+			reinterpret_cast<const float *>(r32fReducedMeanSquaredMotionReader_.getBuffer().data());
+		motionIntensity = *meanSquaredMotionPtr / (subRegion_.width * subRegion_.height);
+	}
+
+	const bool isCurrentMotionIntense = (motionIntensity >= motionIntensityThreshold);
 
 	if (processingFrame && filterLevel >= FilterLevel::Segmentation && isCurrentMotionIntense) {
 		constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
