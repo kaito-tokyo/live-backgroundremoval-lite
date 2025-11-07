@@ -165,24 +165,26 @@ obs_properties_t *MainPluginContext::getProperties()
 		this);
 
 	obs_properties_t *propsAdvancedSettings = obs_properties_create();
-	obs_properties_add_group(props, "advancedSettings", obs_module_text("advancedSettings"), OBS_GROUP_CHECKABLE, propsAdvancedSettings);
+	obs_properties_add_group(props, "advancedSettings", obs_module_text("advancedSettings"), OBS_GROUP_CHECKABLE,
+				 propsAdvancedSettings);
 
 	// Number of threads
 	obs_properties_add_int_slider(propsAdvancedSettings, "numThreads", obs_module_text("numThreads"), 0,
 				      std::thread::hardware_concurrency(), 1);
 
 	// Guided filter
-	obs_properties_add_float_slider(propsAdvancedSettings, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
-					-20.0, 0.1);
+	obs_properties_add_float_slider(propsAdvancedSettings, "guidedFilterEpsPowDb",
+					obs_module_text("guidedFilterEpsPowDb"), -60.0, -20.0, 0.1);
 
 	// Time-averaged filtering
 	obs_properties_add_float_slider(propsAdvancedSettings, "timeAveragedFilteringAlpha",
 					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
 
 	// Mask application
-	obs_properties_add_float_slider(propsAdvancedSettings, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0, 0.01);
-	obs_properties_add_float_slider(propsAdvancedSettings, "maskLowerBoundAmpDb", obs_module_text("maskLowerBoundAmpDb"), -80.0,
-					-10.0, 0.1);
+	obs_properties_add_float_slider(propsAdvancedSettings, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0,
+					0.01);
+	obs_properties_add_float_slider(propsAdvancedSettings, "maskLowerBoundAmpDb",
+					obs_module_text("maskLowerBoundAmpDb"), -80.0, -10.0, 0.1);
 	obs_properties_add_float_slider(propsAdvancedSettings, "maskUpperBoundMarginAmpDb",
 					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
 
@@ -202,9 +204,11 @@ void MainPluginContext::update(obs_data_t *settings)
 
 		newPluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
 		newPluginProperty.maskLowerBoundAmpDb = obs_data_get_double(settings, "maskLowerBoundAmpDb");
-		newPluginProperty.maskUpperBoundMarginAmpDb = obs_data_get_double(settings, "maskUpperBoundMarginAmpDb");
+		newPluginProperty.maskUpperBoundMarginAmpDb =
+			obs_data_get_double(settings, "maskUpperBoundMarginAmpDb");
 
-		newPluginProperty.timeAveragedFilteringAlpha = obs_data_get_double(settings, "timeAveragedFilteringAlpha");
+		newPluginProperty.timeAveragedFilteringAlpha =
+			obs_data_get_double(settings, "timeAveragedFilteringAlpha");
 	}
 
 	std::shared_ptr<RenderingContext> renderingContext;
