@@ -40,7 +40,7 @@ struct PluginProperty {
 
 	double guidedFilterEpsPowDb = -40.0;
 
-	double timeAveragedFilteringAlpha = 0.1;
+	double timeAveragedFilteringAlpha = 0.25;
 
 	double maskGamma = 2.5;
 	double maskLowerBoundAmpDb = -25.0;
