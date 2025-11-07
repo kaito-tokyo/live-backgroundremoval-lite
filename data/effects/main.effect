@@ -42,8 +42,6 @@ uniform texture2d image1; ///< Secondary input texture.
 uniform texture2d image2; ///< Tertiary input texture.
 uniform texture2d image3; ///< Quaternary input texture.
 
-uniform float reductionFactor;
-
 uniform float gamma;
 uniform float lowerBound;
 uniform float upperBound;
