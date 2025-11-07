@@ -121,6 +121,22 @@ obs_properties_t *MainPluginContext::getProperties()
 	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
+	// Filter level
+	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
+								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
+				  static_cast<int>(FilterLevel::Default));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelPassthrough"),
+				  static_cast<int>(FilterLevel::Passthrough));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
+				  static_cast<int>(FilterLevel::Segmentation));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelMotionIntensityThresholding"),
+				  static_cast<int>(FilterLevel::MotionIntensityThresholding));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
+				  static_cast<int>(FilterLevel::GuidedFilter));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
+				  static_cast<int>(FilterLevel::TimeAveragedFilter));
+
 	// Debug button
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
@@ -148,38 +164,28 @@ obs_properties_t *MainPluginContext::getProperties()
 		},
 		this);
 
-	// Filter level
-	obs_properties_add_int_slider(props, "numThreads", obs_module_text("numThreads"), 0,
+	obs_properties_t *propsAdvancedSettings = obs_properties_create();
+	obs_properties_add_group(props, "advancedSettings", obs_module_text("advancedSettings"), OBS_GROUP_CHECKABLE,
+				 propsAdvancedSettings);
+
+	// Number of threads
+	obs_properties_add_int_slider(propsAdvancedSettings, "numThreads", obs_module_text("numThreads"), 0,
 				      std::thread::hardware_concurrency(), 1);
 
-	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
-								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
-				  static_cast<int>(FilterLevel::Default));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelPassthrough"),
-				  static_cast<int>(FilterLevel::Passthrough));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
-				  static_cast<int>(FilterLevel::Segmentation));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelMotionIntensityThresholding"),
-				  static_cast<int>(FilterLevel::MotionIntensityThresholding));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
-				  static_cast<int>(FilterLevel::GuidedFilter));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
-				  static_cast<int>(FilterLevel::TimeAveragedFilter));
-
 	// Guided filter
-	obs_properties_add_float_slider(props, "guidedFilterEpsPowDb", obs_module_text("guidedFilterEpsPowDb"), -60.0,
-					-20.0, 0.1);
+	obs_properties_add_float_slider(propsAdvancedSettings, "guidedFilterEpsPowDb",
+					obs_module_text("guidedFilterEpsPowDb"), -60.0, -20.0, 0.1);
 
 	// Time-averaged filtering
-	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha",
+	obs_properties_add_float_slider(propsAdvancedSettings, "timeAveragedFilteringAlpha",
 					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
 
 	// Mask application
-	obs_properties_add_float_slider(props, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0, 0.01);
-	obs_properties_add_float_slider(props, "maskLowerBoundAmpDb", obs_module_text("maskLowerBoundAmpDb"), -80.0,
-					-10.0, 0.1);
-	obs_properties_add_float_slider(props, "maskUpperBoundMarginAmpDb",
+	obs_properties_add_float_slider(propsAdvancedSettings, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0,
+					0.01);
+	obs_properties_add_float_slider(propsAdvancedSettings, "maskLowerBoundAmpDb",
+					obs_module_text("maskLowerBoundAmpDb"), -80.0, -10.0, 0.1);
+	obs_properties_add_float_slider(propsAdvancedSettings, "maskUpperBoundMarginAmpDb",
 					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
 
 	return props;
@@ -187,17 +193,23 @@ obs_properties_t *MainPluginContext::getProperties()
 
 void MainPluginContext::update(obs_data_t *settings)
 {
+	bool advancedSettingsEnabled = obs_data_get_bool(settings, "advancedSettings");
+
 	PluginProperty newPluginProperty;
 
 	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
 
-	newPluginProperty.guidedFilterEpsPowDb = obs_data_get_double(settings, "guidedFilterEpsPowDb");
+	if (advancedSettingsEnabled) {
+		newPluginProperty.guidedFilterEpsPowDb = obs_data_get_double(settings, "guidedFilterEpsPowDb");
 
-	newPluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
-	newPluginProperty.maskLowerBoundAmpDb = obs_data_get_double(settings, "maskLowerBoundAmpDb");
-	newPluginProperty.maskUpperBoundMarginAmpDb = obs_data_get_double(settings, "maskUpperBoundMarginAmpDb");
+		newPluginProperty.maskGamma = obs_data_get_double(settings, "maskGamma");
+		newPluginProperty.maskLowerBoundAmpDb = obs_data_get_double(settings, "maskLowerBoundAmpDb");
+		newPluginProperty.maskUpperBoundMarginAmpDb =
+			obs_data_get_double(settings, "maskUpperBoundMarginAmpDb");
 
-	newPluginProperty.timeAveragedFilteringAlpha = obs_data_get_double(settings, "timeAveragedFilteringAlpha");
+		newPluginProperty.timeAveragedFilteringAlpha =
+			obs_data_get_double(settings, "timeAveragedFilteringAlpha");
+	}
 
 	std::shared_ptr<RenderingContext> renderingContext;
 	{
@@ -205,7 +217,13 @@ void MainPluginContext::update(obs_data_t *settings)
 
 		bool doesRenewRenderingContext = false;
 
-		int numThreads = obs_data_get_int(settings, "numThreads");
+		int numThreads;
+		if (advancedSettingsEnabled) {
+			numThreads = obs_data_get_int(settings, "numThreads");
+		} else {
+			numThreads = newPluginProperty.numThreads;
+		}
+
 		if (pluginProperty_.numThreads != numThreads) {
 			doesRenewRenderingContext = true;
 		}
