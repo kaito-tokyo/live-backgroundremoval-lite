@@ -276,24 +276,19 @@ void RenderingContext::videoRender()
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
 			  segmenterInputBuffer_.begin());
-		selfieSegmenterTaskQueue_.push([weakSelf = weak_from_this()](
-						       const ThrottledTaskQueue::CancellationToken &token) {
-			if (auto self = weakSelf.lock()) {
-				if (token->load()) {
-					return;
+		selfieSegmenterTaskQueue_.push(
+			[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
+				if (auto self = weakSelf.lock()) {
+					if (token->load()) {
+						return;
+					}
+
+					self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
+					self->hasNewSegmentationMask_.store(true, std::memory_order_release);
+				} else {
+					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
 				}
-
-				auto start = std::chrono::steady_clock::now();
-				self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
-				auto end = std::chrono::steady_clock::now();
-				auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
-				self->logger_.info("selfieSegmenter_->process took {} ns", ns);
-
-				self->hasNewSegmentationMask_.store(true, std::memory_order_release);
-			} else {
-				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
-			}
-		});
+			});
 	}
 }
 

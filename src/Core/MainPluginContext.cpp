@@ -94,7 +94,6 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
 
-
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
 	obs_data_set_default_double(data, "maskLowerBoundAmpDb", defaultProperty.maskLowerBoundAmpDb);
 	obs_data_set_default_double(data, "maskUpperBoundMarginAmpDb", defaultProperty.maskUpperBoundMarginAmpDb);
@@ -212,8 +211,7 @@ void MainPluginContext::update(obs_data_t *settings)
 	newPluginProperty.motionIntensityThresholdPowDb =
 		obs_data_get_double(settings, "motionIntensityThresholdPowDb");
 
-	newPluginProperty.timeAveragedFilteringAlpha =
-		obs_data_get_double(settings, "timeAveragedFilteringAlpha");
+	newPluginProperty.timeAveragedFilteringAlpha = obs_data_get_double(settings, "timeAveragedFilteringAlpha");
 
 	if (advancedSettingsEnabled) {
 		newPluginProperty.guidedFilterEpsPowDb = obs_data_get_double(settings, "guidedFilterEpsPowDb");
