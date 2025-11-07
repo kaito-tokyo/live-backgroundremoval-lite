@@ -177,7 +177,7 @@ void RenderingContext::videoRender()
 		mainEffect_.drawSource(bgrxSource_, source_);
 	}
 
-	float motionIntensity = processingFrame ? 1.0f : 0.0f;
+	float motionIntensity = (filterLevel < FilterLevel::MotionIntensityThresholding) ? 1.0f : 0.0f;
 
 	if (processingFrame && filterLevel >= FilterLevel::MotionIntensityThresholding) {
 		mainEffect_.convertToLuma(r32fLuma_, bgrxSource_);
