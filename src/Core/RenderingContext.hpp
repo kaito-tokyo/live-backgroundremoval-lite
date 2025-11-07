@@ -137,7 +137,7 @@ public:
 	const BridgeUtils::unique_gs_texture_t r32fSubPaddedSquaredMotion_;
 	const std::vector<BridgeUtils::unique_gs_texture_t> r32fMeanSquaredMotionReductionPyramid_;
 	BridgeUtils::AsyncTextureReader r32fReducedMeanSquaredMotionReader_;
-	float meanSquaredMotion_ = 0.0f;
+	float motionIntensity_ = 0.0f;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;

@@ -214,7 +214,7 @@ void RenderingContext::videoRender()
 
 			const float *meanSquaredMotionPtr =
 				reinterpret_cast<const float *>(r32fReducedMeanSquaredMotionReader_.getBuffer().data());
-			meanSquaredMotion_ = *meanSquaredMotionPtr / (subRegion_.width * subRegion_.height);
+			motionIntensity_ = *meanSquaredMotionPtr / (subRegion_.width * subRegion_.height);
 		}
 
 		if (filterLevel >= FilterLevel::Segmentation) {
@@ -275,26 +275,27 @@ void RenderingContext::videoRender()
 		// Draw nothing to prevent unexpected background disclosure
 	}
 
-	if (filterLevel >= FilterLevel::Segmentation && shouldNextVideoRenderProcessFrame) {
-		bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
-	}
+	if (motionIntensity_ > 0.0001) {
+		if (filterLevel >= FilterLevel::Segmentation && shouldNextVideoRenderProcessFrame) {
+			bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
+		}
 
-	if (filterLevel >= FilterLevel::Segmentation && doesNextVideoRenderKickSelfieSegmentation_.exchange(false)) {
-
-		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
-		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
-			  segmenterInputBuffer_.begin());
-		selfieSegmenterTaskQueue_.push(
-			[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
-				if (auto self = weakSelf.lock()) {
-					if (token->load()) {
-						return;
+		if (filterLevel >= FilterLevel::Segmentation && doesNextVideoRenderKickSelfieSegmentation_.exchange(false)) {
+			auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
+			std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
+				segmenterInputBuffer_.begin());
+			selfieSegmenterTaskQueue_.push(
+				[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
+					if (auto self = weakSelf.lock()) {
+						if (token->load()) {
+							return;
+						}
+						self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
+					} else {
+						blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
 					}
-					self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
-				} else {
-					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
-				}
-			});
+				});
+		}
 	}
 }
 
