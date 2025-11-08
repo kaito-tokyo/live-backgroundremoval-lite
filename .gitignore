@@ -23,7 +23,7 @@
 !/vcpkg-triplets
 !/vendor
 /vendor/ConvertNcnn/*
-!/vendor/ConvertNcnn/convert.bash
+!/vendor/ConvertNcnn/*.bash
 !.aiexclude
 !.clang-format
 !.gersemirc

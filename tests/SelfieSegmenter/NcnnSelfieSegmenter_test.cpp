@@ -39,12 +39,12 @@ const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscap
 const char kTestImage[] = TESTS_DIR "/SelfieSegmenter/selfie001.jpg";
 const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_ncnn.png";
 
-TEST(NcnnSelfieSegmenterTest, Construction)
+TEST(MediapipeLandscapeNcnnSelfieSegmenterTest, Construction)
 {
-	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
+	MediapipeLandscapeNcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
 }
 
-TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
+TEST(MediapipeLandscapeNcnnSelfieSegmenterTest, ProcessRealImage)
 {
 	// Set up
 	int width = 256;
@@ -64,7 +64,7 @@ TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 	ASSERT_EQ(refImage.channels(), 1);
 
 	// Test
-	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
+	MediapipeLandscapeNcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
 	ASSERT_EQ(selfieSegmenter.getWidth(), static_cast<std::size_t>(width));
 	ASSERT_EQ(selfieSegmenter.getHeight(), static_cast<std::size_t>(height));
 	ASSERT_EQ(selfieSegmenter.getPixelCount(), static_cast<std::size_t>(width * height));

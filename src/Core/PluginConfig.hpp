@@ -31,12 +31,20 @@ struct PluginConfig {
 	std::string latestVersionURL =
 		"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
 
-	std::string selfieSegmenterParamPath =
+	std::string mediapipeLandscapeSelfieSegmenterParamPath =
 		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param")
 			.get();
 
-	std::string selfieSegmenterBinPath =
+	std::string mediapipeLandscapeSelfieSegmenterBinPath =
 		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin")
+			.get();
+
+	std::string ppHumansegv2LiteSelfieSegmenterParamPath =
+		BridgeUtils::unique_obs_module_file("models/portrait_pp_humansegv2_lite_int8.ncnn.param")
+			.get();
+
+	std::string ppHumansegv2LiteSelfieSegmenterBinPath =
+		BridgeUtils::unique_obs_module_file("models/portrait_pp_humansegv2_lite_int8.ncnn.bin")
 			.get();
 
 	static PluginConfig load(const Logger::ILogger &logger)
@@ -63,12 +71,20 @@ struct PluginConfig {
 			pluginConfig.latestVersionURL = str;
 		}
 
-		if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterParamPath")) {
-			pluginConfig.selfieSegmenterParamPath = str;
+		if (const char *str = obs_data_get_string(data.get(), "mediapipeLandscapeSelfieSegmenterBinPath")) {
+			pluginConfig.mediapipeLandscapeSelfieSegmenterBinPath = str;
 		}
 
-		if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterBinPath")) {
-			pluginConfig.selfieSegmenterBinPath = str;
+		if (const char *str = obs_data_get_string(data.get(), "mediapipeLandscapeSelfieSegmenterParamPath")) {
+			pluginConfig.mediapipeLandscapeSelfieSegmenterParamPath = str;
+		}
+
+		if (const char *str = obs_data_get_string(data.get(), "ppHumansegv2LiteSelfieSegmenterBinPath")) {
+			pluginConfig.ppHumansegv2LiteSelfieSegmenterBinPath = str;
+		}
+
+		if (const char *str = obs_data_get_string(data.get(), "ppHumansegv2LiteSelfieSegmenterParamPath")) {
+			pluginConfig.ppHumansegv2LiteSelfieSegmenterParamPath = str;
 		}
 
 		return pluginConfig;
