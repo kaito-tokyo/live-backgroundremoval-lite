@@ -14,6 +14,9 @@ body:
         - For crashes, attach a crash log if available.
         - Check existing issues before submitting a new one.
 
+        **Note:** Developers are human too—please be polite and respectful in your communication.
+        Also, please understand that development time and resources are limited.
+
   - type: dropdown
     id: os_info
     attributes:

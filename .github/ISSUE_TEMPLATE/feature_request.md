@@ -13,6 +13,9 @@ body:
         - Check existing issues before submitting a new one.
         - Provide as much detail as possible.
 
+        **Note:** Developers are human too—please be polite and respectful in your communication.
+        Also, please understand that development time and resources are limited.
+
   - type: textarea
     id: problem
     attributes:
