@@ -25,6 +25,7 @@ body:
       options:
         - Windows 11
         - Windows 10
+        - macOS 26
         - macOS 15
         - macOS 14
         - macOS 13
