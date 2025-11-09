@@ -54,27 +54,14 @@ body:
     validations:
       required: true
 
-  - type: dropdown
+  - type: input
     id: obs_version
     attributes:
       label: OBS Studio Version
-      description: Which version of OBS Studio are you using?
-      options:
-        - 32.0.2
-        - 31.1.2
-        - Git (please specify below)
-        - Other (please specify below)
+      description: Which version of OBS Studio are you using? (e.g., 32.0.2, 33.0.0-beta1, git-abcdef)
+      placeholder: "e.g., 32.0.2, 33.0.0-beta1, git-abcdef"
     validations:
       required: true
-
-  - type: input
-    id: obs_version_other
-    attributes:
-      label: OBS Studio Version (if "Git" or "Other")
-      description: Specify your OBS Studio version if you selected "Git" or "Other".
-      placeholder: "e.g., 33.0.0-beta1, git-abcdef"
-    validations:
-      required: false
 
   - type: input
     id: obs_log_url
