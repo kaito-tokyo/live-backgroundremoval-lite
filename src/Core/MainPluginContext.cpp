@@ -276,6 +276,11 @@ void MainPluginContext::videoTick(float seconds)
 	}
 
 	obs_source_t *target = obs_filter_get_target(source_);
+	if (!target) {
+		logger_.debug("Filter target is null, skipping video tick");
+		return;
+	}
+
 	uint32_t targetWidth = obs_source_get_base_width(target);
 	uint32_t targetHeight = obs_source_get_base_height(target);
 
