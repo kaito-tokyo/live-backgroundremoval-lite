@@ -124,8 +124,8 @@ public:
 		{
 			std::lock_guard<std::mutex> lock(poolMutex_);
 			if (pool_.empty()) {
-				block = std::unique_ptr<std::uint8_t[]>(
-					new (std::align_val_t(alignment_)) std::uint8_t[blockSize_]);
+				block = std::unique_ptr<std::uint8_t[]>(new (std::align_val_t(alignment_))
+										std::uint8_t[blockSize_]);
 				logger_.debug("Allocated new memory block of size {} bytes with alignment {} bytes",
 					      blockSize_, alignment_);
 			} else {
