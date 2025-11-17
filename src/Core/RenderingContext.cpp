@@ -273,7 +273,8 @@ void RenderingContext::videoRender()
 		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
 			  segmenterInputBuffer.get());
 		selfieSegmenterTaskQueue_.push(
-			[weakSelf = weak_from_this(), segmenterInputBuffer = std::move(segmenterInputBuffer)](const ThrottledTaskQueue::CancellationToken &token) {
+			[weakSelf = weak_from_this(), segmenterInputBuffer = std::move(segmenterInputBuffer)](
+				const ThrottledTaskQueue::CancellationToken &token) {
 				if (auto self = weakSelf.lock()) {
 					if (token->load()) {
 						return;

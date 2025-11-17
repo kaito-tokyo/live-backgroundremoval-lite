@@ -124,7 +124,6 @@ public:
 				block = std::unique_ptr<std::uint8_t[], AlignedDeleter>(
 					new (std::align_val_t(alignment_)) std::uint8_t[blockSize_],
 					AlignedDeleter{alignment_});
-				fprintf(stderr, "allocated new block %p\n", block.get());
 			} else {
 				block = std::move(pool_.back());
 				pool_.pop_back();
