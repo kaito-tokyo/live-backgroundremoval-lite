@@ -45,7 +45,7 @@ const char *textureR8SegmentationMask = "r8SegmentationMask";
 const char *textureR32fSubGFSource = "r32fSubGFSource";
 const char *textureR32fSubGFMeanGuide = "r32fSubGFMeanGuide";
 const char *textureR32fSubGFMeanSource = "r32fSubGFMeanSource";
-const char *textureR16fSubGFMeanGuideSource = "r16fSubGFMeanGuideSource";
+const char *textureR32fSubGFMeanGuideSource = "r16fSubGFMeanGuideSource";
 const char *textureR32fSubGFMeanGuideSq = "r32fSubGFMeanGuideSq";
 const char *textureR32fSubGFA = "r32fSubGFA";
 const char *textureR32fSubGFB = "r32fSubGFB";
@@ -62,7 +62,7 @@ const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
 const std::vector<std::string> r32fSubPaddedTextures = {textureR32fSubPaddedSquaredMotion};
 const std::vector<std::string> r32fSubTextures = {
 	textureR32fSubLumas0,        textureR32fSubLumas1,       textureR32fSubGFSource,
-	textureR32fSubGFMeanGuide,   textureR32fSubGFMeanSource, textureR16fSubGFMeanGuideSource,
+	textureR32fSubGFMeanGuide,   textureR32fSubGFMeanSource, textureR32fSubGFMeanGuideSource,
 	textureR32fSubGFMeanGuideSq, textureR32fSubGFA,          textureR32fSubGFB};
 
 } // namespace
@@ -88,7 +88,7 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext,
 	previewTextureSelector_->addItem(textureR32fSubGFSource);
 	previewTextureSelector_->addItem(textureR32fSubGFMeanGuide);
 	previewTextureSelector_->addItem(textureR32fSubGFMeanSource);
-	previewTextureSelector_->addItem(textureR16fSubGFMeanGuideSource);
+	previewTextureSelector_->addItem(textureR32fSubGFMeanGuideSource);
 	previewTextureSelector_->addItem(textureR32fSubGFMeanGuideSq);
 	previewTextureSelector_->addItem(textureR32fSubGFA);
 	previewTextureSelector_->addItem(textureR32fSubGFB);
@@ -125,45 +125,70 @@ void DebugWindow::videoRender()
 		return;
 	}
 
-	auto selectedTexture = previewTextureSelector_->currentText();
+	auto currentTextureName = previewTextureSelector_->currentText();
+	std::shared_ptr<AsyncTextureReader> currentReader;
+	gs_texture_t *currentTexture;
+	{
+		std::lock_guard<std::mutex> lock(readerMutex_);
+		if (currentTextureName == textureBgrxSource) {
+			currentReader = bgrxReader_;
+			currentTexture = renderingContext->bgrxSource_.get();
+		} else if (currentTextureName == textureR32fLuma) {
+			currentReader = r32fReader_;
+			currentTexture = renderingContext->r32fLuma_.get();
+		} else if (currentTextureName == textureR32fSubLumas0) {
+			currentReader = r32fSubReader_;
+			currentTexture = renderingContext->r32fSubLumas_[0].get();
+		} else if (currentTextureName == textureR32fSubLumas1) {
+			currentReader = r32fSubReader_;
+			currentTexture = renderingContext->r32fSubLumas_[1].get();
+		} else if (currentTextureName == textureR32fSubPaddedSquaredMotion) {
+			currentReader = r32fSubPaddedReader_;
+			currentTexture = renderingContext->r32fSubPaddedSquaredMotion_.get();
+		} else if (currentTextureName == textureBgrxSegmenterInput) {
+			currentReader = bgrxSegmenterInputReader_;
+			currentTexture = renderingContext->bgrxSegmenterInput_.get();
+		} else if (currentTextureName == textureR8SegmentationMask) {
+			currentReader = r8MaskRoiReader_;
+			currentTexture = renderingContext->r8SegmentationMask_.get();
+		} else if (currentTextureName == textureR32fSubGFSource) {
+			currentReader = r32fSubReader_;
+			currentTexture = renderingContext->r32fSubGFSource_.get();
+		} else if (currentTextureName == textureR32fSubGFMeanGuide) {
+			currentReader = r32fSubReader_;
+			currentTexture = renderingContext->r32fSubGFMeanGuide_.get();
+		} else if (currentTextureName == textureR32fSubGFMeanSource) {
+			currentReader = r32fSubReader_;
+			currentTexture = renderingContext->r32fSubGFMeanSource_.get();
+		} else if (currentTextureName == textureR32fSubGFMeanGuideSource) {
+			currentReader = r32fSubReader_;
+			currentTexture = renderingContext->r32fSubGFMeanGuideSource_.get();
+		} else if (currentTextureName == textureR32fSubGFMeanGuideSq) {
+			currentReader = r32fSubReader_;
+			currentTexture = renderingContext->r32fSubGFMeanGuideSq_.get();
+		} else if (currentTextureName == textureR32fSubGFA) {
+			currentReader = r32fSubReader_;
+			currentTexture = renderingContext->r32fSubGFA_.get();
+		} else if (currentTextureName == textureR32fSubGFB) {
+			currentReader = r32fSubReader_;
+			currentTexture = renderingContext->r32fSubGFB_.get();
+		} else if (currentTextureName == textureR8GuidedFilterResult) {
+			currentReader = r8Reader_;
+			currentTexture = renderingContext->r8GuidedFilterResult_.get();
+		} else if (currentTextureName == textureR8TimeAveragedMasks0) {
+			currentReader = r8Reader_;
+			currentTexture = renderingContext->r8TimeAveragedMasks_[0].get();
+		} else if (currentTextureName == textureR8TimeAveragedMasks1) {
+			currentReader = r8Reader_;
+			currentTexture = renderingContext->r8TimeAveragedMasks_[1].get();
+		} else {
+			logger.warn("DebugWindow::videoRender: Unknown texture selected: {}", currentTextureName.toStdString());
+			return;
+		}
+	}
 
-	if (selectedTexture == textureBgrxSource && bgrxReader_) {
-		bgrxReader_->stage(renderingContext->bgrxSource_);
-	} else if (selectedTexture == textureR32fLuma && r32fReader_) {
-		r32fReader_->stage(renderingContext->r32fLuma_);
-	} else if (selectedTexture == textureR32fSubLumas0 && r32fSubReader_) {
-		r32fSubReader_->stage(renderingContext->r32fSubLumas_[0]);
-	} else if (selectedTexture == textureR32fSubLumas1 && r32fSubReader_) {
-		r32fSubReader_->stage(renderingContext->r32fSubLumas_[1]);
-	} else if (selectedTexture == textureR32fSubPaddedSquaredMotion && r32fSubPaddedReader_) {
-		r32fSubPaddedReader_->stage(renderingContext->r32fSubPaddedSquaredMotion_);
-	} else if (selectedTexture == textureBgrxSegmenterInput && bgrxSegmenterInputReader_) {
-		bgrxSegmenterInputReader_->stage(renderingContext->bgrxSegmenterInput_);
-	} else if (selectedTexture == textureR8SegmentationMask && r8MaskRoiReader_) {
-		r8MaskRoiReader_->stage(renderingContext->r8SegmentationMask_);
-	} else if (selectedTexture == textureR32fSubGFSource && r32fSubReader_) {
-		r32fSubReader_->stage(renderingContext->r32fSubGFSource_);
-	} else if (selectedTexture == textureR32fSubGFMeanGuide && r32fSubReader_) {
-		r32fSubReader_->stage(renderingContext->r32fSubGFMeanGuide_);
-	} else if (selectedTexture == textureR32fSubGFMeanSource && r32fSubReader_) {
-		r32fSubReader_->stage(renderingContext->r32fSubGFMeanSource_);
-	} else if (selectedTexture == textureR16fSubGFMeanGuideSource && r32fSubReader_) {
-		r32fSubReader_->stage(renderingContext->r32fSubGFMeanGuideSource_);
-	} else if (selectedTexture == textureR32fSubGFMeanGuideSq && r32fSubReader_) {
-		r32fSubReader_->stage(renderingContext->r32fSubGFMeanGuideSq_);
-	} else if (selectedTexture == textureR32fSubGFA && r32fSubReader_) {
-		r32fSubReader_->stage(renderingContext->r32fSubGFA_);
-	} else if (selectedTexture == textureR32fSubGFB && r32fSubReader_) {
-		r32fSubReader_->stage(renderingContext->r32fSubGFB_);
-	} else if (selectedTexture == textureR8GuidedFilterResult && r8Reader_) {
-		r8Reader_->stage(renderingContext->r8GuidedFilterResult_);
-	} else if (selectedTexture == textureR8TimeAveragedMasks0 && r8Reader_) {
-		r8Reader_->stage(renderingContext->r8TimeAveragedMasks_[0]);
-	} else if (selectedTexture == textureR8TimeAveragedMasks1 && r8Reader_) {
-		r8Reader_->stage(renderingContext->r8TimeAveragedMasks_[1]);
-	} else {
-		logger.warn("DebugWindow::videoRender: Unknown texture selected: {}", selectedTexture.toStdString());
-		return;
+	if (currentReader && currentTexture) {
+		currentReader->stage(currentTexture);
 	}
 }
 
