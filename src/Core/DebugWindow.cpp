@@ -182,7 +182,8 @@ void DebugWindow::videoRender()
 			currentReader = r8Reader_;
 			currentTexture = renderingContext->r8TimeAveragedMasks_[1].get();
 		} else {
-			logger.warn("DebugWindow::videoRender: Unknown texture selected: {}", currentTextureName.toStdString());
+			logger.warn("DebugWindow::videoRender: Unknown texture selected: {}",
+				    currentTextureName.toStdString());
 			return;
 		}
 	}

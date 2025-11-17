@@ -217,10 +217,7 @@ public:
 	 *
 	 * @param sourceTexture The source GPU texture to copy.
 	 */
-	void stage(const unique_gs_texture_t &sourceTexture) noexcept
-	{
-		stage(sourceTexture.get());
-	}
+	void stage(const unique_gs_texture_t &sourceTexture) noexcept { stage(sourceTexture.get()); }
 
 	/**
 	 * @brief Schedules a GPU texture copy. Call from the render/GPU thread.
