@@ -160,7 +160,7 @@ public:
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
 		gs_clear(GS_CLEAR_COLOR, color, 1.0f, 0);
-		gs_matrix_translate3f(-x, -y, 0.0f);
+		gs_matrix_translate3f(x, y, 0.0f);
 
 		while (gs_effect_loop(gsEffect.get(), "Draw")) {
 			gs_effect_set_texture(textureImage, sourceTexture.get());
