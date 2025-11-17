@@ -21,7 +21,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <algorithm>
 #include <array>
 #include <atomic>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -220,7 +219,9 @@ public:
 	 */
 	void stage(const unique_gs_texture_t &sourceTexture) noexcept
 	{
-		assert(sourceTexture.get() != nullptr && "Source texture must not be null");
+		if (sourceTexture == nullptr) {
+			return;
+		}
 
 		std::lock_guard<std::mutex> lock(gpuMutex_);
 		gs_stage_texture(stagesurfs_[gpuWriteIndex_].get(), sourceTexture.get());
@@ -244,7 +245,6 @@ public:
 		}
 		gs_stagesurf_t *const stagesurf = stagesurfs_[gpuReadIndex].get();
 
-		assert(stagesurf != nullptr && "Staging surface is null during sync");
 		if (!stagesurf) {
 			return;
 		}
