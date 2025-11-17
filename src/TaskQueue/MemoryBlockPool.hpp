@@ -158,7 +158,7 @@ private:
 		std::size_t alignment_;
 		void operator()(std::uint8_t *ptr) const noexcept
 		{
-			::operator delete[](ptr, blockSize_, std::align_val_t(alignment_));
+			delete[] ptr;
 		}
 	};
 
