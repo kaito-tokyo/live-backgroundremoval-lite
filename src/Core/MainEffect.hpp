@@ -30,7 +30,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
-namespace main_effect_detail {
+namespace MainEffectDetail {
 
 inline gs_eparam_t *getEffectParam(const BridgeUtils::unique_gs_effect_t &effect, const char *name,
 				   const Logger::ILogger &logger)
@@ -45,7 +45,7 @@ inline gs_eparam_t *getEffectParam(const BridgeUtils::unique_gs_effect_t &effect
 	return param;
 }
 
-} // namespace main_effect_detail
+} // namespace MainEffectDetail
 
 struct TransformStateGuard {
 	TransformStateGuard()
@@ -121,17 +121,17 @@ struct MainEffect {
 public:
 	MainEffect(const BridgeUtils::unique_bfree_char_t &effectPath, const Logger::ILogger &logger)
 		: gsEffect(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
-		  textureImage(main_effect_detail::getEffectParam(gsEffect, "image", logger)),
-		  floatTexelWidth(main_effect_detail::getEffectParam(gsEffect, "texelWidth", logger)),
-		  floatTexelHeight(main_effect_detail::getEffectParam(gsEffect, "texelHeight", logger)),
-		  textureImage1(main_effect_detail::getEffectParam(gsEffect, "image1", logger)),
-		  textureImage2(main_effect_detail::getEffectParam(gsEffect, "image2", logger)),
-		  textureImage3(main_effect_detail::getEffectParam(gsEffect, "image3", logger)),
-		  floatEps(main_effect_detail::getEffectParam(gsEffect, "eps", logger)),
-		  floatGamma(main_effect_detail::getEffectParam(gsEffect, "gamma", logger)),
-		  floatLowerBound(main_effect_detail::getEffectParam(gsEffect, "lowerBound", logger)),
-		  floatUpperBound(main_effect_detail::getEffectParam(gsEffect, "upperBound", logger)),
-		  floatAlpha(main_effect_detail::getEffectParam(gsEffect, "alpha", logger))
+		  textureImage(MainEffectDetail::getEffectParam(gsEffect, "image", logger)),
+		  floatTexelWidth(MainEffectDetail::getEffectParam(gsEffect, "texelWidth", logger)),
+		  floatTexelHeight(MainEffectDetail::getEffectParam(gsEffect, "texelHeight", logger)),
+		  textureImage1(MainEffectDetail::getEffectParam(gsEffect, "image1", logger)),
+		  textureImage2(MainEffectDetail::getEffectParam(gsEffect, "image2", logger)),
+		  textureImage3(MainEffectDetail::getEffectParam(gsEffect, "image3", logger)),
+		  floatEps(MainEffectDetail::getEffectParam(gsEffect, "eps", logger)),
+		  floatGamma(MainEffectDetail::getEffectParam(gsEffect, "gamma", logger)),
+		  floatLowerBound(MainEffectDetail::getEffectParam(gsEffect, "lowerBound", logger)),
+		  floatUpperBound(MainEffectDetail::getEffectParam(gsEffect, "upperBound", logger)),
+		  floatAlpha(MainEffectDetail::getEffectParam(gsEffect, "alpha", logger))
 	{
 	}
 
