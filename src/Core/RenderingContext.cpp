@@ -98,7 +98,7 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 	  selfieSegmenter_(std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
 								 pluginConfig.selfieSegmenterBinPath.c_str(),
 								 numThreads)),
-	  selfieSegmenterMemoryBlockPool_(MemoryBlockPool::create(selfieSegmenter_->getPixelCount() * 4)),
+	  selfieSegmenterMemoryBlockPool_(MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),
 	  region_{0, 0, width, height},
 	  subRegion_{0, 0, (region_.width / subsamplingRate) & ~1u, (region_.height / subsamplingRate) & ~1u},
 	  subPaddedRegion_{0, 0, bit_ceil(subRegion_.width), bit_ceil(subRegion_.height)},

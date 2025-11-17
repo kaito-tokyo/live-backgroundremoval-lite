@@ -32,6 +32,8 @@
 #include <new>
 #include <vector>
 
+#include <ILogger.hpp>
+
 namespace KaitoTokyo {
 namespace TaskQueue {
 
@@ -63,6 +65,7 @@ public:
 	 *
 	 * As the constructor is private, this function must be used to create the pool.
 	 *
+	 * @param logger The instance of ILogger for logging purposes.
 	 * @param blockSize The size (in uint8_ts) of each memory block. Must be greater than 0
 	 * and a multiple of alignment.
 	 * @param alignment The memory alignment (in uint8_ts) required for each block.
@@ -76,8 +79,8 @@ public:
 	 *
 	 * @return A std::shared_ptr to the newly created MemoryBlockPool.
 	 */
-	static std::shared_ptr<MemoryBlockPool> create(std::size_t blockSize, std::size_t alignment = 32,
-						       std::size_t maxSize = 32)
+	static std::shared_ptr<MemoryBlockPool> create(const Logger::ILogger &logger, std::size_t blockSize,
+						       std::size_t alignment = 32, std::size_t maxSize = 32)
 	{
 		if (blockSize == 0) {
 			throw std::invalid_argument("blockSize must be greater than 0");
@@ -91,7 +94,7 @@ public:
 		} else if (blockSize % alignment != 0) {
 			throw std::invalid_argument("blockSize must be a multiple of alignment");
 		}
-		return std::shared_ptr<MemoryBlockPool>(new MemoryBlockPool(blockSize, alignment, maxSize));
+		return std::shared_ptr<MemoryBlockPool>(new MemoryBlockPool(logger, blockSize, alignment, maxSize));
 	}
 
 	/**
@@ -124,6 +127,8 @@ public:
 				block = std::unique_ptr<std::uint8_t[], AlignedDeleter>(
 					new (std::align_val_t(alignment_)) std::uint8_t[blockSize_],
 					AlignedDeleter{alignment_});
+				logger_.debug("Allocated new memory block of size {} bytes with alignment {} bytes",
+					      blockSize_, alignment_);
 			} else {
 				block = std::move(pool_.back());
 				pool_.pop_back();
@@ -156,18 +161,21 @@ private:
 		}
 	};
 
-	MemoryBlockPool(std::size_t blockSize, std::size_t alignment, std::size_t maxSize)
-		: blockSize_(blockSize),
+	MemoryBlockPool(const Logger::ILogger &logger, std::size_t blockSize, std::size_t alignment,
+			std::size_t maxSize)
+		: logger_(logger),
+		  blockSize_(blockSize),
 		  alignment_(alignment),
 		  maxSize_(maxSize)
 	{
 	}
 
+	const Logger::ILogger &logger_;
 	std::size_t blockSize_;
 	std::size_t alignment_;
 	std::size_t maxSize_;
 	std::vector<std::unique_ptr<std::uint8_t[], AlignedDeleter>> pool_;
-	std::mutex poolMutex_;
+	mutable std::mutex poolMutex_;
 };
 
 } // namespace TaskQueue
