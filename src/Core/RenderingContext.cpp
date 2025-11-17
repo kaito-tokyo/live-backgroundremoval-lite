@@ -123,7 +123,6 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 						     1, NULL, GS_RENDER_TARGET)),
 	  bgrxSegmenterInputReader_(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
 				    static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX),
-	  segmenterInputBuffer_(selfieSegmenter_->getPixelCount() * 4),
 	  r8SegmentationMask_(make_unique_gs_texture(maskRoi_.width, maskRoi_.height, GS_R8, 1, NULL, GS_DYNAMIC)),
 	  r32fSubGFIntermediate_(
 		  make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
@@ -274,21 +273,23 @@ void RenderingContext::videoRender()
 		hasNewSegmenterInput_ = true;
 
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
-		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
-			  segmenterInputBuffer_.begin());
-		selfieSegmenterTaskQueue_.push(
-			[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
-				if (auto self = weakSelf.lock()) {
-					if (token->load()) {
-						return;
-					}
-
-					self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
-					self->hasNewSegmentationMask_.store(true, std::memory_order_release);
-				} else {
-					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
+		// Create a copy of the input data for this specific task to avoid data races
+		// when multiple frames are processed concurrently
+		std::vector<std::uint8_t> inputDataCopy(bgrxSegmenterInputReaderBuffer.begin(),
+							bgrxSegmenterInputReaderBuffer.end());
+		selfieSegmenterTaskQueue_.push([weakSelf = weak_from_this(), inputData = std::move(inputDataCopy)](
+						       const ThrottledTaskQueue::CancellationToken &token) {
+			if (auto self = weakSelf.lock()) {
+				if (token->load()) {
+					return;
 				}
-			});
+
+				self->selfieSegmenter_->process(inputData.data());
+				self->hasNewSegmentationMask_.store(true, std::memory_order_release);
+			} else {
+				blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
+			}
+		});
 	}
 }
 

@@ -139,9 +139,6 @@ public:
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
 
-private:
-	std::vector<std::uint8_t> segmenterInputBuffer_;
-
 public:
 	const BridgeUtils::unique_gs_texture_t r8SegmentationMask_;
 
