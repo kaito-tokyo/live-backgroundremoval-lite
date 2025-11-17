@@ -98,6 +98,7 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 	  selfieSegmenter_(std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
 								 pluginConfig.selfieSegmenterBinPath.c_str(),
 								 numThreads)),
+	  selfieSegmenterMemoryBlockPool_(MemoryBlockPool::create(selfieSegmenter_->getPixelCount() * 4)),
 	  region_{0, 0, width, height},
 	  subRegion_{0, 0, (region_.width / subsamplingRate) & ~1u, (region_.height / subsamplingRate) & ~1u},
 	  subPaddedRegion_{0, 0, bit_ceil(subRegion_.width), bit_ceil(subRegion_.height)},
@@ -268,16 +269,17 @@ void RenderingContext::videoRender()
 		hasNewSegmenterInput_ = true;
 
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
+		auto segmenterInputBuffer = selfieSegmenterMemoryBlockPool_->acquire();
 		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
-			  segmenterInputBuffer_.begin());
+			  segmenterInputBuffer.get());
 		selfieSegmenterTaskQueue_.push(
-			[weakSelf = weak_from_this()](const ThrottledTaskQueue::CancellationToken &token) {
+			[weakSelf = weak_from_this(), segmenterInputBuffer = std::move(segmenterInputBuffer)](const ThrottledTaskQueue::CancellationToken &token) {
 				if (auto self = weakSelf.lock()) {
 					if (token->load()) {
 						return;
 					}
 
-					self->selfieSegmenter_->process(self->segmenterInputBuffer_.data());
+					self->selfieSegmenter_->process(segmenterInputBuffer.get());
 					self->hasNewSegmentationMask_.store(true, std::memory_order_release);
 				} else {
 					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
