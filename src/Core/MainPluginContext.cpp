@@ -264,7 +264,7 @@ void MainPluginContext::videoTick(float seconds)
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
-		logger_.info("No parent source found, skipping video tick");
+		logger_.debug("No parent source found, skipping video tick");
 		return;
 	} else if (!obs_source_active(parent)) {
 		logger_.debug("Parent source is not active, skipping video tick");
@@ -307,7 +307,7 @@ void MainPluginContext::videoRender()
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
-		logger_.info("No parent source found, skipping video render");
+		logger_.debug("No parent source found, skipping video render");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	} else if (!obs_source_active(parent)) {
