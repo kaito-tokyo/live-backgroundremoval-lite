@@ -45,7 +45,7 @@ const char *textureR8SegmentationMask = "r8SegmentationMask";
 const char *textureR32fSubGFSource = "r32fSubGFSource";
 const char *textureR32fSubGFMeanGuide = "r32fSubGFMeanGuide";
 const char *textureR32fSubGFMeanSource = "r32fSubGFMeanSource";
-const char *textureR32fSubGFMeanGuideSource = "r16fSubGFMeanGuideSource";
+const char *textureR32fSubGFMeanGuideSource = "r32fSubGFMeanGuideSource";
 const char *textureR32fSubGFMeanGuideSq = "r32fSubGFMeanGuideSq";
 const char *textureR32fSubGFA = "r32fSubGFA";
 const char *textureR32fSubGFB = "r32fSubGFB";
@@ -202,7 +202,7 @@ void DebugWindow::updatePreview()
 {
 	auto mainPluginContext = weakMainPluginContext_.lock();
 	if (!mainPluginContext) {
-		blog(LOG_WARNING, "[" PLUGIN_NAME "] DebugWindow::videoRender: MainPluginContext is null");
+		blog(LOG_WARNING, "[" PLUGIN_NAME "] DebugWindow::updatePreview: MainPluginContext is null");
 		return;
 	}
 
@@ -210,7 +210,7 @@ void DebugWindow::updatePreview()
 
 	auto renderingContext = mainPluginContext->getRenderingContext();
 	if (!renderingContext) {
-		logger.warn("DebugWindow::videoRender: RenderingContext is null");
+		logger.warn("DebugWindow::updatePreview: RenderingContext is null");
 		return;
 	}
 
