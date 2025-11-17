@@ -126,7 +126,7 @@ public:
 			if (pool_.empty()) {
 				block = std::unique_ptr<std::uint8_t[], AlignedDeleter>(
 					new (std::align_val_t(alignment_)) std::uint8_t[blockSize_],
-					AlignedDeleter{alignment_});
+					AlignedDeleter{blockSize_, alignment_});
 				logger_.debug("Allocated new memory block of size {} bytes with alignment {} bytes",
 					      blockSize_, alignment_);
 			} else {
@@ -154,6 +154,7 @@ public:
 
 private:
 	struct AlignedDeleter {
+		std::size_t blockSize_;
 		std::size_t alignment_;
 		void operator()(std::uint8_t *ptr) const noexcept
 		{
