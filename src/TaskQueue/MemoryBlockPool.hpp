@@ -120,13 +120,12 @@ public:
 	 */
 	MemoryBlockSharedPtr acquire()
 	{
-		std::unique_ptr<std::uint8_t[], AlignedDeleter> block;
+		std::unique_ptr<std::uint8_t[]> block;
 		{
 			std::lock_guard<std::mutex> lock(poolMutex_);
 			if (pool_.empty()) {
-				block = std::unique_ptr<std::uint8_t[], AlignedDeleter>(
-					new (std::align_val_t(alignment_)) std::uint8_t[blockSize_],
-					AlignedDeleter{blockSize_, alignment_});
+				block = std::unique_ptr<std::uint8_t[]>(
+					new (std::align_val_t(alignment_)) std::uint8_t[blockSize_]);
 				logger_.debug("Allocated new memory block of size {} bytes with alignment {} bytes",
 					      blockSize_, alignment_);
 			} else {
@@ -153,15 +152,6 @@ public:
 	std::size_t getPixelCount() const noexcept { return blockSize_; }
 
 private:
-	struct AlignedDeleter {
-		std::size_t blockSize_;
-		std::size_t alignment_;
-		void operator()(std::uint8_t *ptr) const noexcept
-		{
-			delete[] ptr;
-		}
-	};
-
 	MemoryBlockPool(const Logger::ILogger &logger, std::size_t blockSize, std::size_t alignment,
 			std::size_t maxSize)
 		: logger_(logger),
@@ -175,7 +165,7 @@ private:
 	std::size_t blockSize_;
 	std::size_t alignment_;
 	std::size_t maxSize_;
-	std::vector<std::unique_ptr<std::uint8_t[], AlignedDeleter>> pool_;
+	std::vector<std::unique_ptr<std::uint8_t[]>> pool_;
 	mutable std::mutex poolMutex_;
 };
 
