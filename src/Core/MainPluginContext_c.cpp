@@ -88,7 +88,6 @@ try {
 	GraphicsContextGuard graphicsContextGuard;
 	auto self =
 		std::make_shared<MainPluginContext>(settings, source, latestVersionFutureInstance(), loggerInstance());
-	self->startup();
 	return new std::shared_ptr<MainPluginContext>(self);
 } catch (const std::exception &e) {
 	loggerInstance().error("Failed to create main plugin context: %s", e.what());
@@ -180,66 +179,6 @@ try {
 	loggerInstance().error("Failed to update main plugin context: %s", e.what());
 } catch (...) {
 	loggerInstance().error("Failed to update main plugin context: unknown error");
-}
-
-void main_plugin_context_activate(void *data)
-try {
-	if (!data) {
-		loggerInstance().error("main_plugin_context_activate called with null data");
-		return;
-	}
-
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	self->get()->activate();
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to activate main plugin context: %s", e.what());
-} catch (...) {
-	loggerInstance().error("Failed to activate main plugin context: unknown error");
-}
-
-void main_plugin_context_deactivate(void *data)
-try {
-	if (!data) {
-		loggerInstance().error("main_plugin_context_deactivate called with null data");
-		return;
-	}
-
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	self->get()->deactivate();
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to deactivate main plugin context: %s", e.what());
-} catch (...) {
-	loggerInstance().error("Failed to deactivate main plugin context: unknown error");
-}
-
-void main_plugin_context_show(void *data)
-try {
-	if (!data) {
-		loggerInstance().error("main_plugin_context_show called with null data");
-		return;
-	}
-
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	self->get()->show();
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to show main plugin context: %s", e.what());
-} catch (...) {
-	loggerInstance().error("Failed to show main plugin context: unknown error");
-}
-
-void main_plugin_context_hide(void *data)
-try {
-	if (!data) {
-		loggerInstance().error("main_plugin_context_hide called with null data");
-		return;
-	}
-
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	self->get()->hide();
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to hide main plugin context: %s", e.what());
-} catch (...) {
-	loggerInstance().error("Failed to hide main plugin context: unknown error");
 }
 
 void main_plugin_context_video_tick(void *data, float seconds)

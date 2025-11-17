@@ -18,61 +18,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "RenderingContext.hpp"
 
-#include <array>
-
 #include <NcnnSelfieSegmenter.hpp>
-#include <NullSelfieSegmenter.hpp>
 
-using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
-using namespace KaitoTokyo::TaskQueue;
+using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::SelfieSegmenter;
+using namespace KaitoTokyo::TaskQueue;
 
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
 namespace {
-
-inline RenderingContextRegion getMaskRoiPosition(std::uint32_t width, std::uint32_t height,
-						 const std::unique_ptr<ISelfieSegmenter> &selfieSegmenter)
-{
-	using namespace KaitoTokyo::LiveBackgroundRemovalLite;
-
-	std::uint32_t selfieSegmenterWidth = static_cast<std::uint32_t>(selfieSegmenter->getWidth());
-	std::uint32_t selfieSegmenterHeight = static_cast<std::uint32_t>(selfieSegmenter->getHeight());
-
-	double widthScale = static_cast<double>(selfieSegmenterWidth) / static_cast<double>(width);
-	double heightScale = static_cast<double>(selfieSegmenterHeight) / static_cast<double>(height);
-	double scale = std::min(widthScale, heightScale);
-
-	std::uint32_t scaledWidth = static_cast<std::uint32_t>(std::round(width * scale));
-	std::uint32_t scaledHeight = static_cast<std::uint32_t>(std::round(height * scale));
-
-	std::uint32_t offsetX = (selfieSegmenterWidth - scaledWidth) / 2;
-	std::uint32_t offsetY = (selfieSegmenterHeight - scaledHeight) / 2;
-
-	return {offsetX, offsetY, scaledWidth, scaledHeight};
-}
-
-inline std::vector<unique_gs_texture_t> createReductionPyramid(std::uint32_t width, std::uint32_t height)
-{
-	std::vector<unique_gs_texture_t> pyramid;
-
-	std::uint32_t currentWidth = width;
-	std::uint32_t currentHeight = height;
-
-	while (currentWidth > 1 || currentHeight > 1) {
-		currentWidth = std::max(1u, (currentWidth + 1) / 2);
-		currentHeight = std::max(1u, (currentHeight + 1) / 2);
-
-		blog(LOG_INFO, "Creating reduction pyramid level: %ux%u", currentWidth, currentHeight);
-
-		pyramid.push_back(
-			make_unique_gs_texture(currentWidth, currentHeight, GS_R32F, 1, NULL, GS_RENDER_TARGET));
-	}
-
-	return pyramid;
-}
 
 inline std::uint32_t bit_ceil(std::uint32_t x)
 {
@@ -89,6 +45,44 @@ inline std::uint32_t bit_ceil(std::uint32_t x)
 }
 
 } // anonymous namespace
+
+RenderingContextRegion RenderingContext::getMaskRoiPosition() const noexcept
+{
+	using namespace KaitoTokyo::LiveBackgroundRemovalLite;
+
+	std::uint32_t selfieSegmenterWidth = static_cast<std::uint32_t>(selfieSegmenter_->getWidth());
+	std::uint32_t selfieSegmenterHeight = static_cast<std::uint32_t>(selfieSegmenter_->getHeight());
+
+	double widthScale = static_cast<double>(selfieSegmenterWidth) / static_cast<double>(region_.width);
+	double heightScale = static_cast<double>(selfieSegmenterHeight) / static_cast<double>(region_.height);
+	double scale = std::min(widthScale, heightScale);
+
+	std::uint32_t scaledWidth = static_cast<std::uint32_t>(std::round(region_.width * scale));
+	std::uint32_t scaledHeight = static_cast<std::uint32_t>(std::round(region_.height * scale));
+	std::uint32_t offsetX = (selfieSegmenterWidth - scaledWidth) / 2;
+	std::uint32_t offsetY = (selfieSegmenterHeight - scaledHeight) / 2;
+
+	return {offsetX, offsetY, scaledWidth, scaledHeight};
+}
+
+std::vector<unique_gs_texture_t> RenderingContext::createReductionPyramid(std::uint32_t width,
+									  std::uint32_t height) const
+{
+	std::vector<unique_gs_texture_t> pyramid;
+
+	std::uint32_t currentWidth = width;
+	std::uint32_t currentHeight = height;
+
+	while (currentWidth > 1 || currentHeight > 1) {
+		currentWidth = std::max(1u, (currentWidth + 1) / 2);
+		currentHeight = std::max(1u, (currentHeight + 1) / 2);
+
+		pyramid.push_back(
+			make_unique_gs_texture(currentWidth, currentHeight, GS_R32F, 1, NULL, GS_RENDER_TARGET));
+	}
+
+	return pyramid;
+}
 
 RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &logger, const MainEffect &mainEffect,
 				   ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
@@ -107,7 +101,7 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 	  region_{0, 0, width, height},
 	  subRegion_{0, 0, (region_.width / subsamplingRate) & ~1u, (region_.height / subsamplingRate) & ~1u},
 	  subPaddedRegion_{0, 0, bit_ceil(subRegion_.width), bit_ceil(subRegion_.height)},
-	  maskRoi_(getMaskRoiPosition(region_.width, region_.height, selfieSegmenter_)),
+	  maskRoi_(getMaskRoiPosition()),
 	  bgrxSource_(make_unique_gs_texture(region_.width, region_.height, GS_BGRX, 1, NULL, GS_RENDER_TARGET)),
 	  r32fLuma_(make_unique_gs_texture(region_.width, region_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET)),
 	  r32fSubLumas_{make_unique_gs_texture(subRegion_.width, subRegion_.height, GS_R32F, 1, NULL, GS_RENDER_TARGET),
@@ -299,6 +293,45 @@ obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 		shouldNextVideoRenderProcessFrame_.store(true, std::memory_order_release);
 	}
 	return frame;
+}
+
+void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
+{
+	FilterLevel newFilterLevel;
+	if (pluginProperty.filterLevel == FilterLevel::Default) {
+		newFilterLevel = FilterLevel::TimeAveragedFilter;
+		logger_.info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
+	} else {
+		newFilterLevel = pluginProperty.filterLevel;
+		logger_.info("Filter level set to {}", static_cast<int>(newFilterLevel));
+	}
+	filterLevel_.store(newFilterLevel, std::memory_order_release);
+
+	float newMotionIntensityThreshold =
+		static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
+	motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_release);
+	logger_.info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
+
+	float newGuidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
+	guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_release);
+	logger_.info("Guided filter epsilon set to {}", newGuidedFilterEps);
+
+	float newTimeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
+	timeAveragedFilteringAlpha_.store(newTimeAveragedFilteringAlpha, std::memory_order_release);
+	logger_.info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
+
+	float newMaskGamma = static_cast<float>(pluginProperty.maskGamma);
+	maskGamma_.store(newMaskGamma, std::memory_order_release);
+	logger_.info("Mask gamma set to {}", newMaskGamma);
+
+	float newMaskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
+	maskLowerBound_.store(newMaskLowerBound, std::memory_order_release);
+	logger_.info("Mask lower bound set to {}", newMaskLowerBound);
+
+	float newMaskUpperBoundMargin =
+		static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
+	maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_release);
+	logger_.info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
 }
 
 } // namespace LiveBackgroundRemovalLite
