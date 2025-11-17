@@ -242,12 +242,13 @@ void DebugWindow::updatePreview()
 			r32fReader_ = r32fReader;
 		}
 
-		if (checkIfReaderNeedsRecreation(bgrxSegmenterInputReader_,
-						 renderingContext->selfieSegmenter_->getWidth(),
-						 renderingContext->selfieSegmenter_->getHeight())) {
+		if (checkIfReaderNeedsRecreation(
+			    bgrxSegmenterInputReader_,
+			    static_cast<std::uint32_t>(renderingContext->selfieSegmenter_->getWidth()),
+			    static_cast<std::uint32_t>(renderingContext->selfieSegmenter_->getHeight()))) {
 			auto bgrxSegmenterInputReader = std::make_shared<AsyncTextureReader>(
-				renderingContext->selfieSegmenter_->getWidth(),
-				renderingContext->selfieSegmenter_->getHeight(), GS_BGRX);
+				static_cast<std::uint32_t>(renderingContext->selfieSegmenter_->getWidth()),
+				static_cast<std::uint32_t>(renderingContext->selfieSegmenter_->getHeight()), GS_BGRX);
 			std::lock_guard<std::mutex> lock(readerMutex_);
 			bgrxSegmenterInputReader_ = bgrxSegmenterInputReader;
 		}
