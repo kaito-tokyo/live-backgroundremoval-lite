@@ -275,29 +275,31 @@ void MainPluginContext::videoTick(float seconds)
 		}
 	}
 
-	obs_source_t *target = obs_filter_get_target(source_);
-	uint32_t targetWidth = obs_source_get_base_width(target);
-	uint32_t targetHeight = obs_source_get_base_height(target);
+	if (obs_source_t *const target = obs_filter_get_target(source_)) {
+		uint32_t targetWidth = obs_source_get_base_width(target);
+		uint32_t targetHeight = obs_source_get_base_height(target);
 
-	if (targetWidth == 0 || targetHeight == 0) {
-		logger_.debug("Target source has zero width or height, skipping video tick");
-		return;
-	}
-
-	std::shared_ptr<RenderingContext> _renderingContext;
-	{
-		std::lock_guard<std::mutex> lock(renderingContextMutex_);
-		if (!renderingContext_ || renderingContext_->region_.width != targetWidth ||
-		    renderingContext_->region_.height != targetHeight) {
-			GraphicsContextGuard graphicsContextGuard;
-			renderingContext_ = createRenderingContext(targetWidth, targetHeight);
-			GsUnique::drain();
+		if (targetWidth == 0 || targetHeight == 0) {
+			logger_.debug("Target source has zero width or height, skipping video tick");
+			return;
 		}
-		_renderingContext = renderingContext_;
-	}
 
-	if (_renderingContext) {
-		_renderingContext->videoTick(seconds);
+		std::shared_ptr<RenderingContext> renderingContext;
+		{
+			std::lock_guard<std::mutex> lock(renderingContextMutex_);
+			renderingContext = renderingContext_;
+			if (!renderingContext || renderingContext->region_.width != targetWidth ||
+				renderingContext->region_.height != targetHeight) {
+				GraphicsContextGuard graphicsContextGuard;
+				renderingContext_ = createRenderingContext(targetWidth, targetHeight);
+				GsUnique::drain();
+				renderingContext = renderingContext_;
+			}
+		}
+
+		if (renderingContext) {
+			renderingContext->videoTick(seconds);
+		}
 	}
 }
 
