@@ -56,18 +56,22 @@ struct PluginConfig {
 		PluginConfig pluginConfig;
 
 		if (!data) {
+			logger.info("No config file found, using default configuration");
 			return pluginConfig;
 		}
 
 		if (const char *str = obs_data_get_string(data.get(), "latestVersionURL")) {
+			logger.info("Loaded latestVersionURL from config: {}", str);
 			pluginConfig.latestVersionURL = str;
 		}
 
 		if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterParamPath")) {
+			logger.info("Loaded selfieSegmenterParamPath from config: {}", str);
 			pluginConfig.selfieSegmenterParamPath = str;
 		}
 
 		if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterBinPath")) {
+			logger.info("Loaded selfieSegmenterBinPath from config: {}", str);
 			pluginConfig.selfieSegmenterBinPath = str;
 		}
 

@@ -69,12 +69,14 @@ MainPluginContext::~MainPluginContext() noexcept {}
 
 std::uint32_t MainPluginContext::getWidth() const noexcept
 {
-	return renderingContext_ ? renderingContext_->region_.width : 0;
+	auto renderingContext = getRenderingContext();
+	return renderingContext ? renderingContext->region_.width : 0;
 }
 
 std::uint32_t MainPluginContext::getHeight() const noexcept
 {
-	return renderingContext_ ? renderingContext_->region_.height : 0;
+	auto renderingContext = getRenderingContext();
+	return renderingContext ? renderingContext->region_.height : 0;
 }
 
 void MainPluginContext::getDefaults(obs_data_t *data)
