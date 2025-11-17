@@ -30,23 +30,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 namespace KaitoTokyo {
 namespace LiveBackgroundRemovalLite {
 
-namespace MainEffectDetail {
-
-inline gs_eparam_t *getEffectParam(const BridgeUtils::unique_gs_effect_t &effect, const char *name,
-				   const Logger::ILogger &logger)
-{
-	gs_eparam_t *param = gs_effect_get_param_by_name(effect.get(), name);
-
-	if (!param) {
-		logger.error("Effect parameter {} not found", name);
-		throw std::runtime_error("Effect parameter not found");
-	}
-
-	return param;
-}
-
-} // namespace MainEffectDetail
-
 struct TransformStateGuard {
 	TransformStateGuard()
 	{
@@ -118,20 +101,34 @@ struct TextureRenderGuard {
 };
 
 struct MainEffect {
+private:
+	gs_eparam_t *getEffectParam(const char *name)
+	{
+		gs_eparam_t *param = gs_effect_get_param_by_name(gsEffect_.get(), name);
+
+		if (!param) {
+			logger_.error("Effect parameter {} not found", name);
+			throw std::runtime_error("Effect parameter not found");
+		}
+
+		return param;
+	}
+
 public:
-	MainEffect(const BridgeUtils::unique_bfree_char_t &effectPath, const Logger::ILogger &logger)
-		: gsEffect(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
-		  textureImage(MainEffectDetail::getEffectParam(gsEffect, "image", logger)),
-		  floatTexelWidth(MainEffectDetail::getEffectParam(gsEffect, "texelWidth", logger)),
-		  floatTexelHeight(MainEffectDetail::getEffectParam(gsEffect, "texelHeight", logger)),
-		  textureImage1(MainEffectDetail::getEffectParam(gsEffect, "image1", logger)),
-		  textureImage2(MainEffectDetail::getEffectParam(gsEffect, "image2", logger)),
-		  textureImage3(MainEffectDetail::getEffectParam(gsEffect, "image3", logger)),
-		  floatEps(MainEffectDetail::getEffectParam(gsEffect, "eps", logger)),
-		  floatGamma(MainEffectDetail::getEffectParam(gsEffect, "gamma", logger)),
-		  floatLowerBound(MainEffectDetail::getEffectParam(gsEffect, "lowerBound", logger)),
-		  floatUpperBound(MainEffectDetail::getEffectParam(gsEffect, "upperBound", logger)),
-		  floatAlpha(MainEffectDetail::getEffectParam(gsEffect, "alpha", logger))
+	MainEffect(const Logger::ILogger &logger, const BridgeUtils::unique_bfree_char_t &effectPath)
+		: logger_(logger),
+		  gsEffect_(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
+		  textureImage_(getEffectParam("image")),
+		  floatTexelWidth_(getEffectParam("texelWidth")),
+		  floatTexelHeight_(getEffectParam("texelHeight")),
+		  textureImage1_(getEffectParam("image1")),
+		  textureImage2_(getEffectParam("image2")),
+		  textureImage3_(getEffectParam("image3")),
+		  floatEps_(getEffectParam("eps")),
+		  floatGamma_(getEffectParam("gamma")),
+		  floatLowerBound_(getEffectParam("lowerBound")),
+		  floatUpperBound_(getEffectParam("upperBound")),
+		  floatAlpha_(getEffectParam("alpha"))
 	{
 	}
 
@@ -147,7 +144,7 @@ public:
 
 		obs_source_t *target = obs_filter_get_target(source);
 		gs_set_render_target_with_color_space(targetTexture.get(), nullptr, GS_CS_709_EXTENDED);
-		while (gs_effect_loop(gsEffect.get(), "Draw")) {
+		while (gs_effect_loop(gsEffect_.get(), "Draw")) {
 			obs_source_video_render(target);
 		}
 	}
@@ -162,8 +159,8 @@ public:
 		gs_clear(GS_CLEAR_COLOR, color, 1.0f, 0);
 		gs_matrix_translate3f(x, y, 0.0f);
 
-		while (gs_effect_loop(gsEffect.get(), "Draw")) {
-			gs_effect_set_texture(textureImage, sourceTexture.get());
+		while (gs_effect_loop(gsEffect_.get(), "Draw")) {
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
 			gs_draw_sprite(sourceTexture.get(), 0, static_cast<uint32_t>(width),
 				       static_cast<uint32_t>(height));
 		}
@@ -174,8 +171,8 @@ public:
 	{
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
-		while (gs_effect_loop(gsEffect.get(), "ConvertToGrayscale")) {
-			gs_effect_set_texture(textureImage, sourceTexture.get());
+		while (gs_effect_loop(gsEffect_.get(), "ConvertToGrayscale")) {
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
 			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
@@ -185,8 +182,8 @@ public:
 	{
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
-		while (gs_effect_loop(gsEffect.get(), "ResampleByNearestR8")) {
-			gs_effect_set_texture(textureImage, sourceTexture.get());
+		while (gs_effect_loop(gsEffect_.get(), "ResampleByNearestR8")) {
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
 			gs_draw_sprite(targetTexture.get(), 0, 0u, 0u);
 		}
 	}
@@ -197,9 +194,9 @@ public:
 	{
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
-		while (gs_effect_loop(gsEffect.get(), "CalculateSquaredMotion")) {
-			gs_effect_set_texture(textureImage, currentLumaTexture.get());
-			gs_effect_set_texture(textureImage1, lastLumaTexture.get());
+		while (gs_effect_loop(gsEffect_.get(), "CalculateSquaredMotion")) {
+			gs_effect_set_texture(textureImage_, currentLumaTexture.get());
+			gs_effect_set_texture(textureImage1_, lastLumaTexture.get());
 			gs_draw_sprite(currentLumaTexture.get(), 0, 0, 0);
 		}
 	}
@@ -217,8 +214,8 @@ public:
 			const std::uint32_t targetWidth = gs_texture_get_width(currentTargetTexture.get());
 			const std::uint32_t targetHeight = gs_texture_get_height(currentTargetTexture.get());
 
-			while (gs_effect_loop(gsEffect.get(), "Reduce")) {
-				gs_effect_set_texture(textureImage, currentSourceTexture);
+			while (gs_effect_loop(gsEffect_.get(), "Reduce")) {
+				gs_effect_set_texture(textureImage_, currentSourceTexture);
 				gs_draw_sprite(nullptr, 0, targetWidth, targetHeight);
 			}
 
@@ -235,9 +232,9 @@ public:
 
 			float texelWidth = 1.0f / static_cast<float>(gs_texture_get_width(sourceTexture.get()));
 
-			while (gs_effect_loop(gsEffect.get(), "HorizontalBoxFilterR8KS17")) {
-				gs_effect_set_texture(textureImage, sourceTexture.get());
-				gs_effect_set_float(floatTexelWidth, texelWidth);
+			while (gs_effect_loop(gsEffect_.get(), "HorizontalBoxFilterR8KS17")) {
+				gs_effect_set_texture(textureImage_, sourceTexture.get());
+				gs_effect_set_float(floatTexelWidth_, texelWidth);
 				gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 			}
 		}
@@ -247,9 +244,9 @@ public:
 
 			float texelHeight = 1.0f / static_cast<float>(gs_texture_get_height(intermediateTexture.get()));
 
-			while (gs_effect_loop(gsEffect.get(), "VerticalBoxFilterR8KS17")) {
-				gs_effect_set_texture(textureImage, intermediateTexture.get());
-				gs_effect_set_float(floatTexelHeight, texelHeight);
+			while (gs_effect_loop(gsEffect_.get(), "VerticalBoxFilterR8KS17")) {
+				gs_effect_set_texture(textureImage_, intermediateTexture.get());
+				gs_effect_set_float(floatTexelHeight_, texelHeight);
 				gs_draw_sprite(intermediateTexture.get(), 0, 0u, 0u);
 			}
 		}
@@ -265,10 +262,10 @@ public:
 
 			float texelWidth = 1.0f / static_cast<float>(gs_texture_get_width(sourceTexture1.get()));
 
-			while (gs_effect_loop(gsEffect.get(), "HorizontalBoxFilterWithMulR8KS17")) {
-				gs_effect_set_texture(textureImage, sourceTexture1.get());
-				gs_effect_set_texture(textureImage1, sourceTexture2.get());
-				gs_effect_set_float(floatTexelWidth, texelWidth);
+			while (gs_effect_loop(gsEffect_.get(), "HorizontalBoxFilterWithMulR8KS17")) {
+				gs_effect_set_texture(textureImage_, sourceTexture1.get());
+				gs_effect_set_texture(textureImage1_, sourceTexture2.get());
+				gs_effect_set_float(floatTexelWidth_, texelWidth);
 				gs_draw_sprite(sourceTexture1.get(), 0, 0u, 0u);
 			}
 		}
@@ -278,9 +275,9 @@ public:
 
 			float texelHeight = 1.0f / static_cast<float>(gs_texture_get_height(intermediateTexture.get()));
 
-			while (gs_effect_loop(gsEffect.get(), "VerticalBoxFilterR8KS17")) {
-				gs_effect_set_texture(textureImage, intermediateTexture.get());
-				gs_effect_set_float(floatTexelHeight, texelHeight);
+			while (gs_effect_loop(gsEffect_.get(), "VerticalBoxFilterR8KS17")) {
+				gs_effect_set_texture(textureImage_, intermediateTexture.get());
+				gs_effect_set_float(floatTexelHeight_, texelHeight);
 				gs_draw_sprite(intermediateTexture.get(), 0, 0u, 0u);
 			}
 		}
@@ -295,9 +292,9 @@ public:
 
 			float texelWidth = 1.0f / static_cast<float>(gs_texture_get_width(sourceTexture.get()));
 
-			while (gs_effect_loop(gsEffect.get(), "HorizontalBoxFilterWithSqR8KS17")) {
-				gs_effect_set_texture(textureImage, sourceTexture.get());
-				gs_effect_set_float(floatTexelWidth, texelWidth);
+			while (gs_effect_loop(gsEffect_.get(), "HorizontalBoxFilterWithSqR8KS17")) {
+				gs_effect_set_texture(textureImage_, sourceTexture.get());
+				gs_effect_set_float(floatTexelWidth_, texelWidth);
 				gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 			}
 		}
@@ -307,9 +304,9 @@ public:
 
 			float texelHeight = 1.0f / static_cast<float>(gs_texture_get_height(intermediateTexture.get()));
 
-			while (gs_effect_loop(gsEffect.get(), "VerticalBoxFilterR8KS17")) {
-				gs_effect_set_texture(textureImage, intermediateTexture.get());
-				gs_effect_set_float(floatTexelHeight, texelHeight);
+			while (gs_effect_loop(gsEffect_.get(), "VerticalBoxFilterR8KS17")) {
+				gs_effect_set_texture(textureImage_, intermediateTexture.get());
+				gs_effect_set_float(floatTexelHeight_, texelHeight);
 				gs_draw_sprite(intermediateTexture.get(), 0, 0u, 0u);
 			}
 		}
@@ -326,12 +323,12 @@ public:
 		{
 			TextureRenderGuard renderTargetGuard(targetATexture);
 
-			while (gs_effect_loop(gsEffect.get(), "CalculateGuidedFilterA")) {
-				gs_effect_set_texture(textureImage, sourceMeanGuideSqTexture.get());
-				gs_effect_set_texture(textureImage1, sourceMeanGuideTexture.get());
-				gs_effect_set_texture(textureImage2, sourceMeanGuideSourceTexture.get());
-				gs_effect_set_texture(textureImage3, sourceMeanSourceTexture.get());
-				gs_effect_set_float(floatEps, eps);
+			while (gs_effect_loop(gsEffect_.get(), "CalculateGuidedFilterA")) {
+				gs_effect_set_texture(textureImage_, sourceMeanGuideSqTexture.get());
+				gs_effect_set_texture(textureImage1_, sourceMeanGuideTexture.get());
+				gs_effect_set_texture(textureImage2_, sourceMeanGuideSourceTexture.get());
+				gs_effect_set_texture(textureImage3_, sourceMeanSourceTexture.get());
+				gs_effect_set_float(floatEps_, eps);
 
 				gs_draw_sprite(sourceMeanGuideSqTexture.get(), 0, 0u, 0u);
 			}
@@ -340,10 +337,10 @@ public:
 		{
 			TextureRenderGuard renderTargetGuard(targetBTexture);
 
-			while (gs_effect_loop(gsEffect.get(), "CalculateGuidedFilterB")) {
-				gs_effect_set_texture(textureImage, targetATexture.get());
-				gs_effect_set_texture(textureImage1, sourceMeanSourceTexture.get());
-				gs_effect_set_texture(textureImage2, sourceMeanGuideTexture.get());
+			while (gs_effect_loop(gsEffect_.get(), "CalculateGuidedFilterB")) {
+				gs_effect_set_texture(textureImage_, targetATexture.get());
+				gs_effect_set_texture(textureImage1_, sourceMeanSourceTexture.get());
+				gs_effect_set_texture(textureImage2_, sourceMeanGuideTexture.get());
 
 				gs_draw_sprite(targetATexture.get(), 0, 0u, 0u);
 			}
@@ -357,10 +354,10 @@ public:
 	{
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
-		while (gs_effect_loop(gsEffect.get(), "FinalizeGuidedFilter")) {
-			gs_effect_set_texture(textureImage, sourceGuideTexture.get());
-			gs_effect_set_texture(textureImage1, sourceATexture.get());
-			gs_effect_set_texture(textureImage2, sourceBTexture.get());
+		while (gs_effect_loop(gsEffect_.get(), "FinalizeGuidedFilter")) {
+			gs_effect_set_texture(textureImage_, sourceGuideTexture.get());
+			gs_effect_set_texture(textureImage1_, sourceATexture.get());
+			gs_effect_set_texture(textureImage2_, sourceBTexture.get());
 
 			gs_draw_sprite(sourceGuideTexture.get(), 0, 0u, 0u);
 		}
@@ -373,10 +370,10 @@ public:
 	{
 		TextureRenderGuard textureRenderGuard(targetTexture);
 
-		while (gs_effect_loop(gsEffect.get(), "TimeAveragedFilter")) {
-			gs_effect_set_texture(textureImage, sourceTexture.get());
-			gs_effect_set_texture(textureImage1, previousMaskTexture.get());
-			gs_effect_set_float(floatAlpha, alpha);
+		while (gs_effect_loop(gsEffect_.get(), "TimeAveragedFilter")) {
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
+			gs_effect_set_texture(textureImage1_, previousMaskTexture.get());
+			gs_effect_set_float(floatAlpha_, alpha);
 
 			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
@@ -384,8 +381,8 @@ public:
 
 	void directDraw(const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
-		while (gs_effect_loop(gsEffect.get(), "Draw")) {
-			gs_effect_set_texture(textureImage, sourceTexture.get());
+		while (gs_effect_loop(gsEffect_.get(), "Draw")) {
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
 			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
@@ -393,9 +390,9 @@ public:
 	void directDrawWithMask(const BridgeUtils::unique_gs_texture_t &sourceTexture,
 				const BridgeUtils::unique_gs_texture_t &maskTexture) const noexcept
 	{
-		while (gs_effect_loop(gsEffect.get(), "DrawWithMask")) {
-			gs_effect_set_texture(textureImage, sourceTexture.get());
-			gs_effect_set_texture(textureImage1, maskTexture.get());
+		while (gs_effect_loop(gsEffect_.get(), "DrawWithMask")) {
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
+			gs_effect_set_texture(textureImage1_, maskTexture.get());
 			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
@@ -404,34 +401,35 @@ public:
 				       const BridgeUtils::unique_gs_texture_t &maskTexture, const double gamma,
 				       const double lowerBound, const double upperBoundMargin) const noexcept
 	{
-		while (gs_effect_loop(gsEffect.get(), "DrawWithRefinedMask")) {
-			gs_effect_set_texture(textureImage, sourceTexture.get());
-			gs_effect_set_texture(textureImage1, maskTexture.get());
+		while (gs_effect_loop(gsEffect_.get(), "DrawWithRefinedMask")) {
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
+			gs_effect_set_texture(textureImage1_, maskTexture.get());
 
-			gs_effect_set_float(floatGamma, static_cast<float>(gamma));
-			gs_effect_set_float(floatLowerBound, static_cast<float>(lowerBound));
-			gs_effect_set_float(floatUpperBound, static_cast<float>(1.0 - upperBoundMargin));
+			gs_effect_set_float(floatGamma_, static_cast<float>(gamma));
+			gs_effect_set_float(floatLowerBound_, static_cast<float>(lowerBound));
+			gs_effect_set_float(floatUpperBound_, static_cast<float>(1.0 - upperBoundMargin));
 
 			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
 		}
 	}
 
-	const BridgeUtils::unique_gs_effect_t gsEffect = nullptr;
+	const Logger::ILogger &logger_;
+	const BridgeUtils::unique_gs_effect_t gsEffect_ = nullptr;
 
-	gs_eparam_t *const textureImage = nullptr;
+	gs_eparam_t *const textureImage_ = nullptr;
 
-	gs_eparam_t *const floatTexelWidth = nullptr;
-	gs_eparam_t *const floatTexelHeight = nullptr;
+	gs_eparam_t *const floatTexelWidth_ = nullptr;
+	gs_eparam_t *const floatTexelHeight_ = nullptr;
 
-	gs_eparam_t *const textureImage1 = nullptr;
-	gs_eparam_t *const textureImage2 = nullptr;
-	gs_eparam_t *const textureImage3 = nullptr;
+	gs_eparam_t *const textureImage1_ = nullptr;
+	gs_eparam_t *const textureImage2_ = nullptr;
+	gs_eparam_t *const textureImage3_ = nullptr;
 
-	gs_eparam_t *const floatEps = nullptr;
-	gs_eparam_t *const floatGamma = nullptr;
-	gs_eparam_t *const floatLowerBound = nullptr;
-	gs_eparam_t *const floatUpperBound = nullptr;
-	gs_eparam_t *const floatAlpha = nullptr;
+	gs_eparam_t *const floatEps_ = nullptr;
+	gs_eparam_t *const floatGamma_ = nullptr;
+	gs_eparam_t *const floatLowerBound_ = nullptr;
+	gs_eparam_t *const floatUpperBound_ = nullptr;
+	gs_eparam_t *const floatAlpha_ = nullptr;
 };
 
 } // namespace LiveBackgroundRemovalLite

@@ -46,9 +46,14 @@ class MainPluginContext : public std::enable_shared_from_this<MainPluginContext>
 public:
 	MainPluginContext(obs_data_t *settings, obs_source_t *source,
 			  std::shared_future<std::string> latestVersionFuture, const Logger::ILogger &logger);
-	void startup() noexcept;
+
 	void shutdown() noexcept;
 	~MainPluginContext() noexcept;
+
+	MainPluginContext(const MainPluginContext &) = delete;
+	MainPluginContext &operator=(const MainPluginContext &) = delete;
+	MainPluginContext(MainPluginContext &&) = delete;
+	MainPluginContext &operator=(MainPluginContext &&) = delete;
 
 	uint32_t getWidth() const noexcept;
 	uint32_t getHeight() const noexcept;
@@ -57,10 +62,6 @@ public:
 
 	obs_properties_t *getProperties();
 	void update(obs_data_t *settings);
-	void activate();
-	void deactivate();
-	void show();
-	void hide();
 
 	void videoTick(float seconds);
 	void videoRender();

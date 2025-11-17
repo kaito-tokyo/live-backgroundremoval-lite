@@ -34,10 +34,6 @@ struct obs_source_info main_plugin_context = {.id = "live_backgroundremoval_lite
 					      .get_defaults = main_plugin_context_get_defaults,
 					      .get_properties = main_plugin_context_get_properties,
 					      .update = main_plugin_context_update,
-					      .activate = main_plugin_context_activate,
-					      .deactivate = main_plugin_context_deactivate,
-					      .show = main_plugin_context_show,
-					      .hide = main_plugin_context_hide,
 					      .video_tick = main_plugin_context_video_tick,
 					      .video_render = main_plugin_context_video_render,
 					      .filter_video = main_plugin_context_filter_video};

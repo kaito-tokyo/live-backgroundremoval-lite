@@ -42,20 +42,21 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *source,
 				     std::shared_future<std::string> latestVersionFuture, const ILogger &logger)
 	: source_{source},
 	  logger_(logger),
-	  mainEffect_(unique_obs_module_file("effects/main.effect"), logger_),
+	  mainEffect_(logger_, unique_obs_module_file("effects/main.effect")),
 	  latestVersionFuture_(latestVersionFuture),
 	  selfieSegmenterTaskQueue_(logger_, 1)
 {
 	update(settings);
 }
 
-void MainPluginContext::startup() noexcept {}
-
 void MainPluginContext::shutdown() noexcept
 {
-	if (DebugWindow *debugWindow = debugWindow_.load()) {
-		debugWindow->close();
-	}
+	if (DebugWindow *debugWindow = debugWindow_.load())
+		try {
+			debugWindow->close();
+		} catch (...) {
+			// Ignore
+		}
 
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
@@ -259,57 +260,64 @@ void MainPluginContext::update(obs_data_t *settings)
 	}
 }
 
-void MainPluginContext::activate() {}
-
-void MainPluginContext::deactivate() {}
-
-void MainPluginContext::show() {}
-
-void MainPluginContext::hide() {}
-
 void MainPluginContext::videoTick(float seconds)
 {
-	if (obs_source_t *const parent = obs_filter_get_parent(source_)) {
-		if (!obs_source_active(parent)) {
-			return;
+	obs_source_t *const parent = obs_filter_get_parent(source_);
+	if (!parent) {
+		logger_.info("No parent source found, skipping video tick");
+		return;
+	} else if (!obs_source_active(parent)) {
+		logger_.debug("Parent source is not active, skipping video tick");
+		return;
+	}
+
+	obs_source_t *const target = obs_filter_get_target(source_);
+	if (!target) {
+		logger_.debug("No target source found, skipping video tick");
+		return;
+	}
+
+	uint32_t targetWidth = obs_source_get_base_width(target);
+	uint32_t targetHeight = obs_source_get_base_height(target);
+
+	if (targetWidth == 0 || targetHeight == 0) {
+		logger_.debug("Target source has zero width or height, skipping video tick");
+		return;
+	}
+
+	std::shared_ptr<RenderingContext> renderingContext;
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex_);
+		renderingContext = renderingContext_;
+		if (!renderingContext || renderingContext->region_.width != targetWidth ||
+		    renderingContext->region_.height != targetHeight) {
+			GraphicsContextGuard graphicsContextGuard;
+			renderingContext_ = createRenderingContext(targetWidth, targetHeight);
+			GsUnique::drain();
+			renderingContext = renderingContext_;
 		}
 	}
 
-	if (obs_source_t *const target = obs_filter_get_target(source_)) {
-		uint32_t targetWidth = obs_source_get_base_width(target);
-		uint32_t targetHeight = obs_source_get_base_height(target);
-
-		if (targetWidth == 0 || targetHeight == 0) {
-			logger_.debug("Target source has zero width or height, skipping video tick");
-			return;
-		}
-
-		std::shared_ptr<RenderingContext> renderingContext;
-		{
-			std::lock_guard<std::mutex> lock(renderingContextMutex_);
-			renderingContext = renderingContext_;
-			if (!renderingContext || renderingContext->region_.width != targetWidth ||
-				renderingContext->region_.height != targetHeight) {
-				GraphicsContextGuard graphicsContextGuard;
-				renderingContext_ = createRenderingContext(targetWidth, targetHeight);
-				GsUnique::drain();
-				renderingContext = renderingContext_;
-			}
-		}
-
-		if (renderingContext) {
-			renderingContext->videoTick(seconds);
-		}
+	if (renderingContext) {
+		renderingContext->videoTick(seconds);
 	}
 }
 
 void MainPluginContext::videoRender()
 {
-	if (obs_source_t *const parent = obs_filter_get_parent(source_)) {
-		if (!obs_source_active(parent) || !obs_source_showing(parent)) {
-			// Draw nothing to prevent unexpected background disclosure
-			return;
-		}
+	obs_source_t *const parent = obs_filter_get_parent(source_);
+	if (!parent) {
+		logger_.info("No parent source found, skipping video render");
+		// Draw nothing to prevent unexpected background disclosure
+		return;
+	} else if (!obs_source_active(parent)) {
+		logger_.debug("Parent source is not active, skipping video render");
+		// Draw nothing to prevent unexpected background disclosure
+		return;
+	} else if (!obs_source_showing(parent)) {
+		logger_.debug("Parent source is not showing, skipping video render");
+		// Draw nothing to prevent unexpected background disclosure
+		return;
 	}
 
 	if (auto _renderingContext = getRenderingContext()) {

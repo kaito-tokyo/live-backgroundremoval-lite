@@ -54,6 +54,11 @@ struct RenderingContextRegion {
 };
 
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
+private:
+	RenderingContextRegion getMaskRoiPosition() const noexcept;
+	std::vector<BridgeUtils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
+									     std::uint32_t height) const;
+
 public:
 	RenderingContext(obs_source_t *const source, const Logger::ILogger &logger, const MainEffect &mainEffect,
 			 TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
@@ -65,45 +70,10 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
-	void applyPluginProperty(const PluginProperty &pluginProperty)
-	{
-		FilterLevel newFilterLevel;
-		if (pluginProperty.filterLevel == FilterLevel::Default) {
-			newFilterLevel = FilterLevel::TimeAveragedFilter;
-			logger_.info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
-		} else {
-			newFilterLevel = pluginProperty.filterLevel;
-			logger_.info("Filter level set to {}", static_cast<int>(newFilterLevel));
-		}
-		filterLevel_.store(newFilterLevel, std::memory_order_release);
+	void applyPluginProperty(const PluginProperty &pluginProperty);
 
-		float newMotionIntensityThreshold =
-			static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
-		motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_release);
-		logger_.info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
-
-		float newGuidedFilterEps =
-			static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
-		guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_release);
-		logger_.info("Guided filter epsilon set to {}", newGuidedFilterEps);
-
-		float newTimeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
-		timeAveragedFilteringAlpha_.store(newTimeAveragedFilteringAlpha, std::memory_order_release);
-		logger_.info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
-
-		float newMaskGamma = static_cast<float>(pluginProperty.maskGamma);
-		maskGamma_.store(newMaskGamma, std::memory_order_release);
-		logger_.info("Mask gamma set to {}", newMaskGamma);
-
-		float newMaskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
-		maskLowerBound_.store(newMaskLowerBound, std::memory_order_release);
-		logger_.info("Mask lower bound set to {}", newMaskLowerBound);
-
-		float newMaskUpperBoundMargin =
-			static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
-		maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_release);
-		logger_.info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
-	}
+	std::uint32_t getWidth() const noexcept { return region_.width; }
+	std::uint32_t getHeight() const noexcept { return region_.height; }
 
 private:
 	obs_source_t *const source_;
@@ -120,7 +90,6 @@ public:
 	bool hasNewSegmenterInput_ = false;
 	std::atomic<bool> hasNewSegmentationMask_ = false;
 
-public:
 	const RenderingContextRegion region_;
 	const RenderingContextRegion subRegion_;
 	const RenderingContextRegion subPaddedRegion_;
@@ -139,16 +108,12 @@ public:
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
 
-private:
 	std::vector<std::uint8_t> segmenterInputBuffer_;
 
-public:
 	const BridgeUtils::unique_gs_texture_t r8SegmentationMask_;
 
-private:
 	const BridgeUtils::unique_gs_texture_t r32fSubGFIntermediate_;
 
-public:
 	const BridgeUtils::unique_gs_texture_t r32fSubGFSource_;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide_;
 	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanSource_;
@@ -161,7 +126,7 @@ public:
 	const std::array<BridgeUtils::unique_gs_texture_t, 2> r8TimeAveragedMasks_;
 	std::size_t currentTimeAveragedMaskIndex_ = 0;
 
-public:
+private:
 	std::atomic<FilterLevel> filterLevel_;
 
 	std::atomic<float> motionIntensityThreshold_;
@@ -174,7 +139,6 @@ public:
 
 	std::atomic<float> timeAveragedFilteringAlpha_;
 
-private:
 	std::uint64_t lastFrameTimestamp_ = 0;
 	float timeSinceLastProcessFrame_ = 0.0f;
 	constexpr static float kMaximumIntervalSecondsBetweenProcessFrames_ = 1.0f;
