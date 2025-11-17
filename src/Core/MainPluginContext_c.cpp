@@ -221,6 +221,11 @@ try {
 		return frame;
 	}
 
+	if (!frame) {
+		loggerInstance().error("main_plugin_context_filter_video called with null frame");
+		return nullptr;
+	}
+
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	obs_source_frame *result = self->get()->filterVideo(frame);
 	return result;

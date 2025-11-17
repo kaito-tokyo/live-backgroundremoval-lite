@@ -21,7 +21,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <algorithm>
 #include <array>
 #include <atomic>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -216,14 +215,23 @@ public:
 	/**
 	 * @brief Schedules a GPU texture copy. Call from the render/GPU thread.
 	 *
-	 * @param sourceTexture The source GPU texture to copy. Must not be null.
+	 * @param sourceTexture The source GPU texture to copy.
 	 */
-	void stage(const unique_gs_texture_t &sourceTexture) noexcept
+	void stage(const unique_gs_texture_t &sourceTexture) noexcept { stage(sourceTexture.get()); }
+
+	/**
+	 * @brief Schedules a GPU texture copy. Call from the render/GPU thread.
+	 *
+	 * @param sourceTexture The source GPU texture to copy.
+	 */
+	void stage(gs_texture_t *sourceTexture) noexcept
 	{
-		assert(sourceTexture.get() != nullptr && "Source texture must not be null");
+		if (sourceTexture == nullptr) {
+			return;
+		}
 
 		std::lock_guard<std::mutex> lock(gpuMutex_);
-		gs_stage_texture(stagesurfs_[gpuWriteIndex_].get(), sourceTexture.get());
+		gs_stage_texture(stagesurfs_[gpuWriteIndex_].get(), sourceTexture);
 		gpuWriteIndex_ = 1 - gpuWriteIndex_;
 	}
 
@@ -244,7 +252,6 @@ public:
 		}
 		gs_stagesurf_t *const stagesurf = stagesurfs_[gpuReadIndex].get();
 
-		assert(stagesurf != nullptr && "Staging surface is null during sync");
 		if (!stagesurf) {
 			return;
 		}

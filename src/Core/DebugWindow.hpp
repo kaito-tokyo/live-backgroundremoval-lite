@@ -34,17 +34,6 @@ namespace LiveBackgroundRemovalLite {
 
 class MainPluginContext;
 
-struct DebugRenderData {
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerBgrx;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR8;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32f;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> reader256Bgrx;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerMaskRoiR8;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerSubR8;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32fSub;
-	std::unique_ptr<BridgeUtils::AsyncTextureReader> readerR32fSubPadded;
-};
-
 class DebugWindow : public QDialog {
 	Q_OBJECT
 public:
@@ -54,9 +43,6 @@ public:
 	DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
 
 	void videoRender();
-
-signals:
-	void readerReady();
 
 private slots:
 	void updatePreview();
@@ -69,9 +55,15 @@ private:
 	QLabel *previewImageLabel_;
 	QTimer *updateTimer_;
 
-	std::atomic<DebugRenderData *> atomicRenderData_ = nullptr;
-	std::unique_ptr<DebugRenderData> currentRenderData_;
-	std::vector<std::unique_ptr<DebugRenderData>> oldRenderData_;
+	std::mutex readerMutex_;
+	std::shared_ptr<BridgeUtils::AsyncTextureReader> bgrxReader_;
+	std::shared_ptr<BridgeUtils::AsyncTextureReader> r8Reader_;
+	std::shared_ptr<BridgeUtils::AsyncTextureReader> r32fReader_;
+	std::shared_ptr<BridgeUtils::AsyncTextureReader> bgrxSegmenterInputReader_;
+	std::shared_ptr<BridgeUtils::AsyncTextureReader> r8MaskRoiReader_;
+	std::shared_ptr<BridgeUtils::AsyncTextureReader> r8SubR8Reader_;
+	std::shared_ptr<BridgeUtils::AsyncTextureReader> r32fSubReader_;
+	std::shared_ptr<BridgeUtils::AsyncTextureReader> r32fSubPaddedReader_;
 
 	std::vector<std::uint8_t> bufferR8_;
 	std::vector<std::uint8_t> bufferSubR8_;

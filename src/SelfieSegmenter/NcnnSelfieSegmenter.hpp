@@ -57,6 +57,10 @@ public:
 
 		inputMat_.create(static_cast<int>(getWidth()), static_cast<int>(getHeight()), 3);
 		outputMat_.create(static_cast<int>(getWidth()), static_cast<int>(getHeight()), 1);
+
+		if (inputMat_.empty() || outputMat_.empty()) {
+			throw std::runtime_error("Failed to create NcnnSelfieSegmenter internal mats");
+		}
 	}
 
 	~NcnnSelfieSegmenter() noexcept override = default;
@@ -71,6 +75,10 @@ public:
 			throw std::invalid_argument(
 				"NcnnSelfieSegmenter::process received null bgraData; expected non-null pointer to 4 * pixelCount (" +
 				std::to_string(getPixelCount()) + ") bytes");
+		}
+
+		if (inputMat_.empty() || outputMat_.empty()) {
+			throw std::runtime_error("NcnnSelfieSegmenter internal mats are not properly initialized");
 		}
 
 		copy_r8_bgra_to_float_chw(inputMat_.channel(0), inputMat_.channel(1), inputMat_.channel(2), bgraData,
