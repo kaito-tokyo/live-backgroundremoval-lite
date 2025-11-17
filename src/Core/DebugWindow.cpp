@@ -167,7 +167,8 @@ void DebugWindow::videoRender()
 	}
 }
 
-inline bool checkIfReaderNeedsRecreation(const std::unique_ptr<AsyncTextureReader> &reader, std::uint32_t width, std::uint32_t height)
+inline bool checkIfReaderNeedsRecreation(const std::shared_ptr<AsyncTextureReader> &reader, std::uint32_t width,
+					 std::uint32_t height)
 {
 	return !reader || reader->getWidth() != width || reader->getHeight() != height;
 }
@@ -188,42 +189,94 @@ void DebugWindow::updatePreview()
 		return;
 	}
 
-	logger.info("aaa");
-
 	{
 		GraphicsContextGuard graphicsContextGuard;
 
-		if (checkIfReaderNeedsRecreation(bgrxReader_, renderingContext->getWidth(), renderingContext->getHeight())) {
-			bgrxReader_ = std::make_unique<AsyncTextureReader>(renderingContext->getWidth(), renderingContext->getHeight(), GS_BGRX);
+		if (checkIfReaderNeedsRecreation(bgrxReader_, renderingContext->getWidth(),
+						 renderingContext->getHeight())) {
+			auto bgrxReader = std::make_shared<AsyncTextureReader>(renderingContext->getWidth(),
+									       renderingContext->getHeight(), GS_BGRX);
+			std::lock_guard<std::mutex> lock(readerMutex_);
+			bgrxReader_ = bgrxReader;
 		}
 
-		if (checkIfReaderNeedsRecreation(r8Reader_, renderingContext->getWidth(), renderingContext->getHeight())) {
-			r8Reader_ = std::make_unique<AsyncTextureReader>(renderingContext->getWidth(), renderingContext->getHeight(), GS_R8);
+		if (checkIfReaderNeedsRecreation(r8Reader_, renderingContext->getWidth(),
+						 renderingContext->getHeight())) {
+			auto r8Reader = std::make_shared<AsyncTextureReader>(renderingContext->getWidth(),
+									     renderingContext->getHeight(), GS_R8);
+			std::lock_guard<std::mutex> lock(readerMutex_);
+			r8Reader_ = r8Reader;
 		}
 
-		if (checkIfReaderNeedsRecreation(r32fReader_, renderingContext->getWidth(), renderingContext->getHeight())) {
-			r32fReader_ =  std::make_unique<AsyncTextureReader>(renderingContext->getWidth(), renderingContext->getHeight(), GS_R32F);
+		if (checkIfReaderNeedsRecreation(r32fReader_, renderingContext->getWidth(),
+						 renderingContext->getHeight())) {
+			auto r32fReader = std::make_shared<AsyncTextureReader>(renderingContext->getWidth(),
+									       renderingContext->getHeight(), GS_R32F);
+			std::lock_guard<std::mutex> lock(readerMutex_);
+			r32fReader_ = r32fReader;
 		}
 
-		if (checkIfReaderNeedsRecreation(bgrxSegmenterInputReader_, renderingContext->selfieSegmenter_->getWidth(), renderingContext->selfieSegmenter_->getHeight())) {
-			bgrxSegmenterInputReader_ = std::make_unique<AsyncTextureReader>(renderingContext->selfieSegmenter_->getWidth(), renderingContext->selfieSegmenter_->getHeight(), GS_BGRX);
+		if (checkIfReaderNeedsRecreation(bgrxSegmenterInputReader_,
+						 renderingContext->selfieSegmenter_->getWidth(),
+						 renderingContext->selfieSegmenter_->getHeight())) {
+			auto bgrxSegmenterInputReader = std::make_shared<AsyncTextureReader>(
+				renderingContext->selfieSegmenter_->getWidth(),
+				renderingContext->selfieSegmenter_->getHeight(), GS_BGRX);
+			std::lock_guard<std::mutex> lock(readerMutex_);
+			bgrxSegmenterInputReader_ = bgrxSegmenterInputReader;
 		}
 
-		if (checkIfReaderNeedsRecreation(r8MaskRoiReader_, renderingContext->maskRoi_.width, renderingContext->maskRoi_.height)) {
-			r8MaskRoiReader_ = std::make_unique<AsyncTextureReader>(renderingContext->maskRoi_.width, renderingContext->maskRoi_.height, GS_R8);
+		if (checkIfReaderNeedsRecreation(r8MaskRoiReader_, renderingContext->maskRoi_.width,
+						 renderingContext->maskRoi_.height)) {
+			auto r8MaskRoiReader = std::make_shared<AsyncTextureReader>(
+				renderingContext->maskRoi_.width, renderingContext->maskRoi_.height, GS_R8);
+			std::lock_guard<std::mutex> lock(readerMutex_);
+			r8MaskRoiReader_ = r8MaskRoiReader;
 		}
 
-		if (checkIfReaderNeedsRecreation(r8SubR8Reader_, renderingContext->subRegion_.width, renderingContext->subRegion_.height)) {
-			r8SubR8Reader_ = std::make_unique<AsyncTextureReader>(renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R8);
+		if (checkIfReaderNeedsRecreation(r8SubR8Reader_, renderingContext->subRegion_.width,
+						 renderingContext->subRegion_.height)) {
+			auto r8SubR8Reader = std::make_shared<AsyncTextureReader>(
+				renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R8);
+			std::lock_guard<std::mutex> lock(readerMutex_);
+			r8SubR8Reader_ = r8SubR8Reader;
 		}
 
-		if (checkIfReaderNeedsRecreation(r32fSubReader_, renderingContext->subRegion_.width, renderingContext->subRegion_.height)) {
-			r32fSubReader_ = std::make_unique<AsyncTextureReader>(renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R32F);
+		if (checkIfReaderNeedsRecreation(r32fSubReader_, renderingContext->subRegion_.width,
+						 renderingContext->subRegion_.height)) {
+			auto r32fSubReader = std::make_shared<AsyncTextureReader>(
+				renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R32F);
+			std::lock_guard<std::mutex> lock(readerMutex_);
+			r32fSubReader_ = r32fSubReader;
 		}
 
-		if (checkIfReaderNeedsRecreation(r32fSubPaddedReader_, renderingContext->subPaddedRegion_.width, renderingContext->subPaddedRegion_.height)) {
-			r32fSubPaddedReader_ = std::make_unique<AsyncTextureReader>(renderingContext->subPaddedRegion_.width, renderingContext->subPaddedRegion_.height, GS_R32F);
+		if (checkIfReaderNeedsRecreation(r32fSubPaddedReader_, renderingContext->subPaddedRegion_.width,
+						 renderingContext->subPaddedRegion_.height)) {
+			auto r32fSubPaddedReader = std::make_shared<AsyncTextureReader>(
+				renderingContext->subPaddedRegion_.width, renderingContext->subPaddedRegion_.height,
+				GS_R32F);
+			std::lock_guard<std::mutex> lock(readerMutex_);
+			r32fSubPaddedReader_ = r32fSubPaddedReader;
 		}
+	}
+
+	std::shared_ptr<AsyncTextureReader> bgrxReader;
+	std::shared_ptr<AsyncTextureReader> r8Reader;
+	std::shared_ptr<AsyncTextureReader> r32fReader;
+	std::shared_ptr<AsyncTextureReader> bgrxSegmenterInputReader;
+	std::shared_ptr<AsyncTextureReader> r8MaskRoiReader;
+	std::shared_ptr<AsyncTextureReader> r32fSubReader;
+	std::shared_ptr<AsyncTextureReader> r32fSubPaddedReader;
+
+	{
+		std::lock_guard<std::mutex> lock(readerMutex_);
+		bgrxReader = bgrxReader_;
+		r8Reader = r8Reader_;
+		r32fReader = r32fReader_;
+		bgrxSegmenterInputReader = bgrxSegmenterInputReader_;
+		r8MaskRoiReader = r8MaskRoiReader_;
+		r32fSubReader = r32fSubReader_;
+		r32fSubPaddedReader = r32fSubPaddedReader_;
 	}
 
 	auto currentTexture = previewTextureSelector_->currentText();
@@ -233,93 +286,75 @@ void DebugWindow::updatePreview()
 		if (std::find(bgrxTextures.begin(), bgrxTextures.end(), currentTextureStd) != bgrxTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
-				bgrxReader_->sync();
+				bgrxReader->sync();
 			}
-			image = QImage(bgrxReader_->getBuffer().data(),
-				       bgrxReader_->getWidth(),
-				       bgrxReader_->getHeight(),
-				       bgrxReader_->getBufferLinesize(), QImage::Format_RGB32);
+			image = QImage(bgrxReader->getBuffer().data(), bgrxReader->getWidth(), bgrxReader->getHeight(),
+				       bgrxReader->getBufferLinesize(), QImage::Format_RGB32);
 		} else if (std::find(r8Textures.begin(), r8Textures.end(), currentTextureStd) != r8Textures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
-				r8Reader_->sync();
+				r8Reader->sync();
 			}
-			image = QImage(r8Reader_->getBuffer().data(),
-				       r8Reader_->getWidth(),
-				       r8Reader_->getHeight(),
-				       r8Reader_->getBufferLinesize(), QImage::Format_Grayscale8);
+			image = QImage(r8Reader->getBuffer().data(), r8Reader->getWidth(), r8Reader->getHeight(),
+				       r8Reader->getBufferLinesize(), QImage::Format_Grayscale8);
 		} else if (std::find(r32fTextures.begin(), r32fTextures.end(), currentTextureStd) !=
 			   r32fTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
-				r32fReader_->sync();
+				r32fReader->sync();
 			}
-			auto r32fDataView =
-				reinterpret_cast<const float *>(r32fReader_->getBuffer().data());
-			bufferR8_.resize(r32fReader_->getWidth() *
-					 r32fReader_->getHeight());
-			for (std::uint32_t i = 0; i < r32fReader_->getWidth() *
-							      r32fReader_->getHeight();
-			     ++i) {
+			auto r32fDataView = reinterpret_cast<const float *>(r32fReader->getBuffer().data());
+			bufferR8_.resize(r32fReader->getWidth() * r32fReader->getHeight());
+			for (std::uint32_t i = 0; i < r32fReader->getWidth() * r32fReader->getHeight(); ++i) {
 				bufferR8_[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);
 			}
-			image = QImage(bufferR8_.data(), r32fReader_->getWidth(),
-				       r32fReader_->getHeight(), QImage::Format_Grayscale8);
-		} else if (std::find(bgrxSegmenterInputTextures.begin(), bgrxSegmenterInputTextures.end(), currentTextureStd) !=
-			   bgrxSegmenterInputTextures.end()) {
+			image = QImage(bufferR8_.data(), r32fReader->getWidth(), r32fReader->getHeight(),
+				       QImage::Format_Grayscale8);
+		} else if (std::find(bgrxSegmenterInputTextures.begin(), bgrxSegmenterInputTextures.end(),
+				     currentTextureStd) != bgrxSegmenterInputTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
-				bgrxSegmenterInputReader_->sync();
+				bgrxSegmenterInputReader->sync();
 			}
-			image = QImage(bgrxSegmenterInputReader_->getBuffer().data(),
-				       bgrxSegmenterInputReader_->getWidth(),
-				       bgrxSegmenterInputReader_->getHeight(),
-				       bgrxSegmenterInputReader_->getBufferLinesize(), QImage::Format_RGB32);
+			image = QImage(bgrxSegmenterInputReader->getBuffer().data(),
+				       bgrxSegmenterInputReader->getWidth(), bgrxSegmenterInputReader->getHeight(),
+				       bgrxSegmenterInputReader->getBufferLinesize(), QImage::Format_RGB32);
 		} else if (std::find(r8MaskRoiTextures.begin(), r8MaskRoiTextures.end(), currentTextureStd) !=
 			   r8MaskRoiTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
-				r8MaskRoiReader_->sync();
+				r8MaskRoiReader->sync();
 			}
-			image = QImage(r8MaskRoiReader_->getBuffer().data(),
-				       r8MaskRoiReader_->getWidth(),
-				       r8MaskRoiReader_->getHeight(),
-				       r8MaskRoiReader_->getBufferLinesize(),
+			image = QImage(r8MaskRoiReader->getBuffer().data(), r8MaskRoiReader->getWidth(),
+				       r8MaskRoiReader->getHeight(), r8MaskRoiReader->getBufferLinesize(),
 				       QImage::Format_Grayscale8);
 		} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), currentTextureStd) !=
 			   r32fSubTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
-				r32fSubReader_->sync();
+				r32fSubReader->sync();
 			}
-			auto r32fDataView =
-				reinterpret_cast<const float *>(r32fSubReader_->getBuffer().data());
-			bufferSubR8_.resize(r32fSubReader_->getWidth() *
-					    r32fSubReader_->getHeight());
-			for (std::uint32_t i = 0; i < r32fSubReader_->getWidth() *
-							      r32fSubReader_->getHeight();
-			     ++i) {
+			auto r32fDataView = reinterpret_cast<const float *>(r32fSubReader->getBuffer().data());
+			bufferSubR8_.resize(r32fSubReader->getWidth() * r32fSubReader->getHeight());
+			for (std::uint32_t i = 0; i < r32fSubReader->getWidth() * r32fSubReader->getHeight(); ++i) {
 				bufferSubR8_[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);
 			}
-			image = QImage(bufferSubR8_.data(), r32fSubReader_->getWidth(),
-				       r32fSubReader_->getHeight(), QImage::Format_Grayscale8);
+			image = QImage(bufferSubR8_.data(), r32fSubReader->getWidth(), r32fSubReader->getHeight(),
+				       QImage::Format_Grayscale8);
 		} else if (std::find(r32fSubPaddedTextures.begin(), r32fSubPaddedTextures.end(), currentTextureStd) !=
 			   r32fSubPaddedTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
-				r32fSubPaddedReader_->sync();
+				r32fSubPaddedReader->sync();
 			}
-			auto r32fDataView = reinterpret_cast<const float *>(
-				r32fSubPaddedReader_->getBuffer().data());
-			bufferSubPaddedR8_.resize(r32fSubPaddedReader_->getWidth() *
-						  r32fSubPaddedReader_->getHeight());
-			for (std::uint32_t i = 0; i < r32fSubPaddedReader_->getWidth() *
-							      r32fSubPaddedReader_->getHeight();
-			     ++i) {
+			auto r32fDataView = reinterpret_cast<const float *>(r32fSubPaddedReader->getBuffer().data());
+			bufferSubPaddedR8_.resize(r32fSubPaddedReader->getWidth() * r32fSubPaddedReader->getHeight());
+			for (std::uint32_t i = 0;
+			     i < r32fSubPaddedReader->getWidth() * r32fSubPaddedReader->getHeight(); ++i) {
 				bufferSubPaddedR8_[i] = static_cast<std::uint8_t>((r32fDataView[i]) * 255);
 			}
-			image = QImage(bufferSubPaddedR8_.data(), r32fSubPaddedReader_->getWidth(),
-				       r32fSubPaddedReader_->getHeight(), QImage::Format_Grayscale8);
+			image = QImage(bufferSubPaddedR8_.data(), r32fSubPaddedReader->getWidth(),
+				       r32fSubPaddedReader->getHeight(), QImage::Format_Grayscale8);
 		}
 	} catch (const std::exception &e) {
 		mainPluginContext->getLogger().error("Failed to sync and update preview: {}", e.what());
