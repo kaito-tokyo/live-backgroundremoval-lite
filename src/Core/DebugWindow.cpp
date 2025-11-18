@@ -53,7 +53,7 @@ const char *textureR8GuidedFilterResult = "r8GuidedFilterResult";
 const char *textureR8TimeAveragedMasks0 = "r8TimeAveragedMasks[0]";
 const char *textureR8TimeAveragedMasks1 = "r8TimeAveragedMasks[1]";
 
-const std::vector<std::string> textureNames = {
+const std::vector<const char *> textureNames = {
 	textureBgrxSource,
 	textureR32fLuma,
 	textureR32fSubLumas0,
@@ -73,14 +73,14 @@ const std::vector<std::string> textureNames = {
 	textureR8TimeAveragedMasks1,
 };
 
-const std::vector<std::string> bgrxTextures = {textureBgrxSource};
-const std::vector<std::string> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0,
-					     textureR8TimeAveragedMasks1};
-const std::vector<std::string> r32fTextures = {textureR32fLuma};
-const std::vector<std::string> bgrxSegmenterInputTextures = {textureBgrxSegmenterInput};
-const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
-const std::vector<std::string> r32fSubPaddedTextures = {textureR32fSubPaddedSquaredMotion};
-const std::vector<std::string> r32fSubTextures = {
+const std::vector<const char *> bgrxTextures = {textureBgrxSource};
+const std::vector<const char *> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0,
+					      textureR8TimeAveragedMasks1};
+const std::vector<const char *> r32fTextures = {textureR32fLuma};
+const std::vector<const char *> bgrxSegmenterInputTextures = {textureBgrxSegmenterInput};
+const std::vector<const char *> r8MaskRoiTextures = {textureR8SegmentationMask};
+const std::vector<const char *> r32fSubPaddedTextures = {textureR32fSubPaddedSquaredMotion};
+const std::vector<const char *> r32fSubTextures = {
 	textureR32fSubLumas0,        textureR32fSubLumas1,       textureR32fSubGFSource,
 	textureR32fSubGFMeanGuide,   textureR32fSubGFMeanSource, textureR32fSubGFMeanGuideSource,
 	textureR32fSubGFMeanGuideSq, textureR32fSubGFA,          textureR32fSubGFB};
@@ -99,7 +99,7 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext,
 	  updateTimer_(new QTimer(this))
 {
 	for (const auto &textureName : textureNames) {
-		previewTextureSelector_->addItem(textureName.c_str());
+		previewTextureSelector_->addItem(textureName);
 	}
 
 	connect(previewTextureSelector_, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
