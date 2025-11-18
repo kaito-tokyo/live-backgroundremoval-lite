@@ -35,6 +35,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <AsyncTextureReader.hpp>
 #include <GsUnique.hpp>
 
+#include <MemoryBlockPool.hpp>
 #include <ThrottledTaskQueue.hpp>
 
 #include <ISelfieSegmenter.hpp>
@@ -87,6 +88,7 @@ public:
 	const int numThreads_;
 
 	std::unique_ptr<SelfieSegmenter::ISelfieSegmenter> selfieSegmenter_;
+	std::shared_ptr<TaskQueue::MemoryBlockPool> selfieSegmenterMemoryBlockPool_;
 	bool hasNewSegmenterInput_ = false;
 	std::atomic<bool> hasNewSegmentationMask_ = false;
 

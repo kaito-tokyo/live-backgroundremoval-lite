@@ -74,7 +74,7 @@ public:
 		if (!bgraData) {
 			throw std::invalid_argument(
 				"NcnnSelfieSegmenter::process received null bgraData; expected non-null pointer to 4 * pixelCount (" +
-				std::to_string(getPixelCount()) + ") bytes");
+				std::to_string(getPixelCount()) + ") uint8_ts");
 		}
 
 		if (inputMat_.empty() || outputMat_.empty()) {
