@@ -56,7 +56,13 @@ struct RenderingContextRegion {
 
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 private:
+	[[nodiscard]]
+	BridgeUtils::unique_gs_texture_t makeTexture(std::uint32_t width, std::uint32_t height, enum gs_color_format color_format, std::uint32_t flags) const noexcept;
+
+	[[nodiscard]]
 	RenderingContextRegion getMaskRoiPosition() const noexcept;
+	
+	[[nodiscard]]
 	std::vector<BridgeUtils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
 									     std::uint32_t height) const;
 
