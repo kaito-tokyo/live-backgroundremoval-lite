@@ -53,14 +53,34 @@ const char *textureR8GuidedFilterResult = "r8GuidedFilterResult";
 const char *textureR8TimeAveragedMasks0 = "r8TimeAveragedMasks[0]";
 const char *textureR8TimeAveragedMasks1 = "r8TimeAveragedMasks[1]";
 
-const std::vector<std::string> bgrxTextures = {textureBgrxSource};
-const std::vector<std::string> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0,
-					     textureR8TimeAveragedMasks1};
-const std::vector<std::string> r32fTextures = {textureR32fLuma};
-const std::vector<std::string> bgrxSegmenterInputTextures = {textureBgrxSegmenterInput};
-const std::vector<std::string> r8MaskRoiTextures = {textureR8SegmentationMask};
-const std::vector<std::string> r32fSubPaddedTextures = {textureR32fSubPaddedSquaredMotion};
-const std::vector<std::string> r32fSubTextures = {
+const std::vector<const char *> textureNames = {
+	textureBgrxSource,
+	textureR32fLuma,
+	textureR32fSubLumas0,
+	textureR32fSubLumas1,
+	textureR32fSubPaddedSquaredMotion,
+	textureBgrxSegmenterInput,
+	textureR8SegmentationMask,
+	textureR32fSubGFSource,
+	textureR32fSubGFMeanGuide,
+	textureR32fSubGFMeanSource,
+	textureR32fSubGFMeanGuideSource,
+	textureR32fSubGFMeanGuideSq,
+	textureR32fSubGFA,
+	textureR32fSubGFB,
+	textureR8GuidedFilterResult,
+	textureR8TimeAveragedMasks0,
+	textureR8TimeAveragedMasks1,
+};
+
+const std::vector<const char *> bgrxTextures = {textureBgrxSource};
+const std::vector<const char *> r8Textures = {textureR8GuidedFilterResult, textureR8TimeAveragedMasks0,
+					      textureR8TimeAveragedMasks1};
+const std::vector<const char *> r32fTextures = {textureR32fLuma};
+const std::vector<const char *> bgrxSegmenterInputTextures = {textureBgrxSegmenterInput};
+const std::vector<const char *> r8MaskRoiTextures = {textureR8SegmentationMask};
+const std::vector<const char *> r32fSubPaddedTextures = {textureR32fSubPaddedSquaredMotion};
+const std::vector<const char *> r32fSubTextures = {
 	textureR32fSubLumas0,        textureR32fSubLumas1,       textureR32fSubGFSource,
 	textureR32fSubGFMeanGuide,   textureR32fSubGFMeanSource, textureR32fSubGFMeanGuideSource,
 	textureR32fSubGFMeanGuideSq, textureR32fSubGFA,          textureR32fSubGFB};
@@ -78,23 +98,12 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext,
 	  previewImageLabel_(new QLabel(this)),
 	  updateTimer_(new QTimer(this))
 {
-	previewTextureSelector_->addItem(textureBgrxSource);
-	previewTextureSelector_->addItem(textureR32fLuma);
-	previewTextureSelector_->addItem(textureR32fSubLumas0);
-	previewTextureSelector_->addItem(textureR32fSubLumas1);
-	previewTextureSelector_->addItem(textureR32fSubPaddedSquaredMotion);
-	previewTextureSelector_->addItem(textureBgrxSegmenterInput);
-	previewTextureSelector_->addItem(textureR8SegmentationMask);
-	previewTextureSelector_->addItem(textureR32fSubGFSource);
-	previewTextureSelector_->addItem(textureR32fSubGFMeanGuide);
-	previewTextureSelector_->addItem(textureR32fSubGFMeanSource);
-	previewTextureSelector_->addItem(textureR32fSubGFMeanGuideSource);
-	previewTextureSelector_->addItem(textureR32fSubGFMeanGuideSq);
-	previewTextureSelector_->addItem(textureR32fSubGFA);
-	previewTextureSelector_->addItem(textureR32fSubGFB);
-	previewTextureSelector_->addItem(textureR8GuidedFilterResult);
-	previewTextureSelector_->addItem(textureR8TimeAveragedMasks0);
-	previewTextureSelector_->addItem(textureR8TimeAveragedMasks1);
+	for (const auto &textureName : textureNames) {
+		previewTextureSelector_->addItem(textureName);
+	}
+
+	connect(previewTextureSelector_, QOverload<int>::of(&QComboBox::currentIndexChanged), this,
+		&DebugWindow::onTextureSelectionChanged);
 
 	layout_->addWidget(previewTextureSelector_);
 
@@ -125,65 +134,71 @@ void DebugWindow::videoRender()
 		return;
 	}
 
-	auto currentTextureName = previewTextureSelector_->currentText();
+	auto selectedPreviewTextureIndex = selectedPreviewTextureIndex_.load(std::memory_order_acquire);
+	if (selectedPreviewTextureIndex >= static_cast<int>(textureNames.size())) {
+		logger.warn("DebugWindow::videoRender: selectedPreviewTextureIndex out of bounds");
+		return;
+	}
+	auto selectedPreviewTextureName = textureNames[selectedPreviewTextureIndex];
+
 	std::shared_ptr<AsyncTextureReader> currentReader;
 	gs_texture_t *currentTexture;
 	{
 		std::lock_guard<std::mutex> lock(readerMutex_);
-		if (currentTextureName == textureBgrxSource) {
+		if (selectedPreviewTextureName == textureBgrxSource) {
 			currentReader = bgrxReader_;
 			currentTexture = renderingContext->bgrxSource_.get();
-		} else if (currentTextureName == textureR32fLuma) {
+		} else if (selectedPreviewTextureName == textureR32fLuma) {
 			currentReader = r32fReader_;
 			currentTexture = renderingContext->r32fLuma_.get();
-		} else if (currentTextureName == textureR32fSubLumas0) {
+		} else if (selectedPreviewTextureName == textureR32fSubLumas0) {
 			currentReader = r32fSubReader_;
 			currentTexture = renderingContext->r32fSubLumas_[0].get();
-		} else if (currentTextureName == textureR32fSubLumas1) {
+		} else if (selectedPreviewTextureName == textureR32fSubLumas1) {
 			currentReader = r32fSubReader_;
 			currentTexture = renderingContext->r32fSubLumas_[1].get();
-		} else if (currentTextureName == textureR32fSubPaddedSquaredMotion) {
+		} else if (selectedPreviewTextureName == textureR32fSubPaddedSquaredMotion) {
 			currentReader = r32fSubPaddedReader_;
 			currentTexture = renderingContext->r32fSubPaddedSquaredMotion_.get();
-		} else if (currentTextureName == textureBgrxSegmenterInput) {
+		} else if (selectedPreviewTextureName == textureBgrxSegmenterInput) {
 			currentReader = bgrxSegmenterInputReader_;
 			currentTexture = renderingContext->bgrxSegmenterInput_.get();
-		} else if (currentTextureName == textureR8SegmentationMask) {
+		} else if (selectedPreviewTextureName == textureR8SegmentationMask) {
 			currentReader = r8MaskRoiReader_;
 			currentTexture = renderingContext->r8SegmentationMask_.get();
-		} else if (currentTextureName == textureR32fSubGFSource) {
+		} else if (selectedPreviewTextureName == textureR32fSubGFSource) {
 			currentReader = r32fSubReader_;
 			currentTexture = renderingContext->r32fSubGFSource_.get();
-		} else if (currentTextureName == textureR32fSubGFMeanGuide) {
+		} else if (selectedPreviewTextureName == textureR32fSubGFMeanGuide) {
 			currentReader = r32fSubReader_;
 			currentTexture = renderingContext->r32fSubGFMeanGuide_.get();
-		} else if (currentTextureName == textureR32fSubGFMeanSource) {
+		} else if (selectedPreviewTextureName == textureR32fSubGFMeanSource) {
 			currentReader = r32fSubReader_;
 			currentTexture = renderingContext->r32fSubGFMeanSource_.get();
-		} else if (currentTextureName == textureR32fSubGFMeanGuideSource) {
+		} else if (selectedPreviewTextureName == textureR32fSubGFMeanGuideSource) {
 			currentReader = r32fSubReader_;
 			currentTexture = renderingContext->r32fSubGFMeanGuideSource_.get();
-		} else if (currentTextureName == textureR32fSubGFMeanGuideSq) {
+		} else if (selectedPreviewTextureName == textureR32fSubGFMeanGuideSq) {
 			currentReader = r32fSubReader_;
 			currentTexture = renderingContext->r32fSubGFMeanGuideSq_.get();
-		} else if (currentTextureName == textureR32fSubGFA) {
+		} else if (selectedPreviewTextureName == textureR32fSubGFA) {
 			currentReader = r32fSubReader_;
 			currentTexture = renderingContext->r32fSubGFA_.get();
-		} else if (currentTextureName == textureR32fSubGFB) {
+		} else if (selectedPreviewTextureName == textureR32fSubGFB) {
 			currentReader = r32fSubReader_;
 			currentTexture = renderingContext->r32fSubGFB_.get();
-		} else if (currentTextureName == textureR8GuidedFilterResult) {
+		} else if (selectedPreviewTextureName == textureR8GuidedFilterResult) {
 			currentReader = r8Reader_;
 			currentTexture = renderingContext->r8GuidedFilterResult_.get();
-		} else if (currentTextureName == textureR8TimeAveragedMasks0) {
+		} else if (selectedPreviewTextureName == textureR8TimeAveragedMasks0) {
 			currentReader = r8Reader_;
 			currentTexture = renderingContext->r8TimeAveragedMasks_[0].get();
-		} else if (currentTextureName == textureR8TimeAveragedMasks1) {
+		} else if (selectedPreviewTextureName == textureR8TimeAveragedMasks1) {
 			currentReader = r8Reader_;
 			currentTexture = renderingContext->r8TimeAveragedMasks_[1].get();
 		} else {
 			logger.warn("DebugWindow::videoRender: Unknown texture selected: {}",
-				    currentTextureName.toStdString());
+				    selectedPreviewTextureName);
 			return;
 		}
 	}
@@ -215,14 +230,22 @@ void DebugWindow::updatePreview()
 		return;
 	}
 
+	std::shared_ptr<AsyncTextureReader> bgrxReader;
+	std::shared_ptr<AsyncTextureReader> r8Reader;
+	std::shared_ptr<AsyncTextureReader> r32fReader;
+	std::shared_ptr<AsyncTextureReader> bgrxSegmenterInputReader;
+	std::shared_ptr<AsyncTextureReader> r8MaskRoiReader;
+	std::shared_ptr<AsyncTextureReader> r32fSubReader;
+	std::shared_ptr<AsyncTextureReader> r32fSubPaddedReader;
+
 	{
 		GraphicsContextGuard graphicsContextGuard;
+		std::lock_guard<std::mutex> lock(readerMutex_);
 
 		if (checkIfReaderNeedsRecreation(bgrxReader_, renderingContext->getWidth(),
 						 renderingContext->getHeight())) {
 			auto bgrxReader = std::make_shared<AsyncTextureReader>(renderingContext->getWidth(),
 									       renderingContext->getHeight(), GS_BGRX);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			bgrxReader_ = bgrxReader;
 		}
 
@@ -230,7 +253,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->getHeight())) {
 			auto r8Reader = std::make_shared<AsyncTextureReader>(renderingContext->getWidth(),
 									     renderingContext->getHeight(), GS_R8);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r8Reader_ = r8Reader;
 		}
 
@@ -238,7 +260,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->getHeight())) {
 			auto r32fReader = std::make_shared<AsyncTextureReader>(renderingContext->getWidth(),
 									       renderingContext->getHeight(), GS_R32F);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r32fReader_ = r32fReader;
 		}
 
@@ -249,7 +270,6 @@ void DebugWindow::updatePreview()
 			auto bgrxSegmenterInputReader = std::make_shared<AsyncTextureReader>(
 				static_cast<std::uint32_t>(renderingContext->selfieSegmenter_->getWidth()),
 				static_cast<std::uint32_t>(renderingContext->selfieSegmenter_->getHeight()), GS_BGRX);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			bgrxSegmenterInputReader_ = bgrxSegmenterInputReader;
 		}
 
@@ -257,7 +277,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->maskRoi_.height)) {
 			auto r8MaskRoiReader = std::make_shared<AsyncTextureReader>(
 				renderingContext->maskRoi_.width, renderingContext->maskRoi_.height, GS_R8);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r8MaskRoiReader_ = r8MaskRoiReader;
 		}
 
@@ -265,7 +284,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->subRegion_.height)) {
 			auto r8SubR8Reader = std::make_shared<AsyncTextureReader>(
 				renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R8);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r8SubR8Reader_ = r8SubR8Reader;
 		}
 
@@ -273,7 +291,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->subRegion_.height)) {
 			auto r32fSubReader = std::make_shared<AsyncTextureReader>(
 				renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R32F);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r32fSubReader_ = r32fSubReader;
 		}
 
@@ -282,21 +299,9 @@ void DebugWindow::updatePreview()
 			auto r32fSubPaddedReader = std::make_shared<AsyncTextureReader>(
 				renderingContext->subPaddedRegion_.width, renderingContext->subPaddedRegion_.height,
 				GS_R32F);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r32fSubPaddedReader_ = r32fSubPaddedReader;
 		}
-	}
 
-	std::shared_ptr<AsyncTextureReader> bgrxReader;
-	std::shared_ptr<AsyncTextureReader> r8Reader;
-	std::shared_ptr<AsyncTextureReader> r32fReader;
-	std::shared_ptr<AsyncTextureReader> bgrxSegmenterInputReader;
-	std::shared_ptr<AsyncTextureReader> r8MaskRoiReader;
-	std::shared_ptr<AsyncTextureReader> r32fSubReader;
-	std::shared_ptr<AsyncTextureReader> r32fSubPaddedReader;
-
-	{
-		std::lock_guard<std::mutex> lock(readerMutex_);
 		bgrxReader = bgrxReader_;
 		r8Reader = r8Reader_;
 		r32fReader = r32fReader_;
@@ -306,25 +311,31 @@ void DebugWindow::updatePreview()
 		r32fSubPaddedReader = r32fSubPaddedReader_;
 	}
 
-	auto currentTexture = previewTextureSelector_->currentText();
-	auto currentTextureStd = currentTexture.toStdString();
+	auto selectedPreviewTextureIndex = selectedPreviewTextureIndex_.load(std::memory_order_acquire);
+	if (selectedPreviewTextureIndex >= static_cast<int>(textureNames.size())) {
+		return;
+	}
+	auto selectedPreviewTextureName = textureNames[selectedPreviewTextureIndex];
+
 	QImage image;
 	try {
-		if (std::find(bgrxTextures.begin(), bgrxTextures.end(), currentTextureStd) != bgrxTextures.end()) {
+		if (std::find(bgrxTextures.begin(), bgrxTextures.end(), selectedPreviewTextureName) !=
+		    bgrxTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
 				bgrxReader->sync();
 			}
 			image = QImage(bgrxReader->getBuffer().data(), bgrxReader->getWidth(), bgrxReader->getHeight(),
 				       bgrxReader->getBufferLinesize(), QImage::Format_RGB32);
-		} else if (std::find(r8Textures.begin(), r8Textures.end(), currentTextureStd) != r8Textures.end()) {
+		} else if (std::find(r8Textures.begin(), r8Textures.end(), selectedPreviewTextureName) !=
+			   r8Textures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
 				r8Reader->sync();
 			}
 			image = QImage(r8Reader->getBuffer().data(), r8Reader->getWidth(), r8Reader->getHeight(),
 				       r8Reader->getBufferLinesize(), QImage::Format_Grayscale8);
-		} else if (std::find(r32fTextures.begin(), r32fTextures.end(), currentTextureStd) !=
+		} else if (std::find(r32fTextures.begin(), r32fTextures.end(), selectedPreviewTextureName) !=
 			   r32fTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
@@ -338,7 +349,7 @@ void DebugWindow::updatePreview()
 			image = QImage(bufferR8_.data(), r32fReader->getWidth(), r32fReader->getHeight(),
 				       QImage::Format_Grayscale8);
 		} else if (std::find(bgrxSegmenterInputTextures.begin(), bgrxSegmenterInputTextures.end(),
-				     currentTextureStd) != bgrxSegmenterInputTextures.end()) {
+				     selectedPreviewTextureName) != bgrxSegmenterInputTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
 				bgrxSegmenterInputReader->sync();
@@ -346,7 +357,7 @@ void DebugWindow::updatePreview()
 			image = QImage(bgrxSegmenterInputReader->getBuffer().data(),
 				       bgrxSegmenterInputReader->getWidth(), bgrxSegmenterInputReader->getHeight(),
 				       bgrxSegmenterInputReader->getBufferLinesize(), QImage::Format_RGB32);
-		} else if (std::find(r8MaskRoiTextures.begin(), r8MaskRoiTextures.end(), currentTextureStd) !=
+		} else if (std::find(r8MaskRoiTextures.begin(), r8MaskRoiTextures.end(), selectedPreviewTextureName) !=
 			   r8MaskRoiTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
@@ -355,7 +366,7 @@ void DebugWindow::updatePreview()
 			image = QImage(r8MaskRoiReader->getBuffer().data(), r8MaskRoiReader->getWidth(),
 				       r8MaskRoiReader->getHeight(), r8MaskRoiReader->getBufferLinesize(),
 				       QImage::Format_Grayscale8);
-		} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), currentTextureStd) !=
+		} else if (std::find(r32fSubTextures.begin(), r32fSubTextures.end(), selectedPreviewTextureName) !=
 			   r32fSubTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
@@ -368,8 +379,8 @@ void DebugWindow::updatePreview()
 			}
 			image = QImage(bufferSubR8_.data(), r32fSubReader->getWidth(), r32fSubReader->getHeight(),
 				       QImage::Format_Grayscale8);
-		} else if (std::find(r32fSubPaddedTextures.begin(), r32fSubPaddedTextures.end(), currentTextureStd) !=
-			   r32fSubPaddedTextures.end()) {
+		} else if (std::find(r32fSubPaddedTextures.begin(), r32fSubPaddedTextures.end(),
+				     selectedPreviewTextureName) != r32fSubPaddedTextures.end()) {
 			{
 				GraphicsContextGuard graphicsContextGuard;
 				r32fSubPaddedReader->sync();
@@ -397,6 +408,11 @@ void DebugWindow::updatePreview()
 		pixmap.scaled(kPreviewWidth, kPreviewHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
 	previewImageLabel_->setPixmap(scaledPixmap);
+}
+
+void DebugWindow::onTextureSelectionChanged(int index)
+{
+	selectedPreviewTextureIndex_.store(index, std::memory_order_release);
 }
 
 } // namespace LiveBackgroundRemovalLite

@@ -51,18 +51,21 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *source,
 
 void MainPluginContext::shutdown() noexcept
 {
-	if (DebugWindow *debugWindow = debugWindow_.load())
-		try {
-			debugWindow->close();
-		} catch (...) {
-			// Ignore
+	{
+		std::lock_guard<std::mutex> lock(debugWindowMutex_);
+		if (debugWindow_) {
+			try {
+				debugWindow_->close();
+			} catch (...) {
+				// Ignore
+			}
 		}
+	}
 
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
 		renderingContext_.reset();
 	}
-
 	selfieSegmenterTaskQueue_.shutdown();
 }
 
@@ -133,23 +136,38 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
-			auto self = static_cast<MainPluginContext *>(data)->shared_from_this();
+			auto this_ = static_cast<MainPluginContext *>(data);
+			DebugWindow *windowToShow = nullptr;
 
-			if (DebugWindow *debugWindow = self->debugWindow_.load()) {
-				debugWindow->show();
-				debugWindow->raise();
-				debugWindow->activateWindow();
-			} else {
-				auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
-				DebugWindow *newDebugWindow = new DebugWindow(self->weak_from_this(), parent);
-				newDebugWindow->setAttribute(Qt::WA_DeleteOnClose);
+			{
+				std::lock_guard<std::mutex> lock(this_->debugWindowMutex_);
+				if (this_->debugWindow_) {
+					windowToShow = this_->debugWindow_;
+				} else {
+					auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
+					auto newDebugWindow = new DebugWindow(this_->weak_from_this(), parent);
 
-				QObject::connect(newDebugWindow, &QDialog::destroyed,
-						 [self]() { self->setDebugWindowNull(); });
+					newDebugWindow->setAttribute(Qt::WA_DeleteOnClose);
 
-				self->debugWindow_ = newDebugWindow;
+					QObject::connect(newDebugWindow, &QDialog::destroyed,
+							 [newDebugWindow, weakSelf = this_->weak_from_this()]() {
+								 if (auto self = weakSelf.lock()) {
+									 std::lock_guard<std::mutex> lock(
+										 self->debugWindowMutex_);
+									 if (self->debugWindow_ == newDebugWindow) {
+										 self->debugWindow_ = nullptr;
+									 }
+								 }
+							 });
+					windowToShow = newDebugWindow;
+					this_->debugWindow_ = newDebugWindow;
+				}
+			}
 
-				newDebugWindow->show();
+			if (windowToShow) {
+				windowToShow->show();
+				windowToShow->raise();
+				windowToShow->activateWindow();
 			}
 
 			return false;
@@ -324,8 +342,12 @@ void MainPluginContext::videoRender()
 		_renderingContext->videoRender();
 	}
 
-	if (DebugWindow *debugWindow = debugWindow_.load()) {
-		debugWindow->videoRender();
+	{
+		std::lock_guard<std::mutex> lock(debugWindowMutex_);
+
+		if (debugWindow_) {
+			debugWindow_->videoRender();
+		}
 	}
 }
 

@@ -46,6 +46,7 @@ public:
 
 private slots:
 	void updatePreview();
+	void onTextureSelectionChanged(int index);
 
 private:
 	std::weak_ptr<MainPluginContext> weakMainPluginContext_;
@@ -54,6 +55,8 @@ private:
 	QComboBox *previewTextureSelector_;
 	QLabel *previewImageLabel_;
 	QTimer *updateTimer_;
+
+	std::atomic<int> selectedPreviewTextureIndex_ = 0;
 
 	std::mutex readerMutex_;
 	std::shared_ptr<BridgeUtils::AsyncTextureReader> bgrxReader_;
