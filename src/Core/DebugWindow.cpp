@@ -135,7 +135,7 @@ void DebugWindow::videoRender()
 	}
 
 	auto selectedPreviewTextureIndex = selectedPreviewTextureIndex_.load(std::memory_order_acquire);
-	if (selectedPreviewTextureIndex >= textureNames.size()) {
+	if (selectedPreviewTextureIndex >= static_cast<int>(textureNames.size())) {
 		logger.warn("DebugWindow::videoRender: selectedPreviewTextureIndex out of bounds");
 		return;
 	}
@@ -312,7 +312,7 @@ void DebugWindow::updatePreview()
 	}
 
 	auto selectedPreviewTextureIndex = selectedPreviewTextureIndex_.load(std::memory_order_acquire);
-	if (selectedPreviewTextureIndex >= textureNames.size()) {
+	if (selectedPreviewTextureIndex >= static_cast<int>(textureNames.size())) {
 		return;
 	}
 	auto selectedPreviewTextureName = textureNames[selectedPreviewTextureIndex];
