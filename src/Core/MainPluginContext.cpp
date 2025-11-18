@@ -338,14 +338,12 @@ void MainPluginContext::videoRender()
 		_renderingContext->videoRender();
 	}
 
-	DebugWindow *debugWindow;
 	{
 		std::lock_guard<std::mutex> lock(debugWindowMutex_);
-		debugWindow = debugWindow_;
-	}
 
-	if (debugWindow) {
-		debugWindow->videoRender();
+		if (debugWindow_) {
+			debugWindow_->videoRender();
+		}
 	}
 }
 
