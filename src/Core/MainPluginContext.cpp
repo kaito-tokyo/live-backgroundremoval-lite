@@ -62,6 +62,10 @@ void MainPluginContext::shutdown() noexcept
 		}
 	}
 
+	{
+		std::lock_guard<std::mutex> lock(renderingContextMutex_);
+		renderingContext_.reset();
+	}
 	selfieSegmenterTaskQueue_.shutdown();
 }
 

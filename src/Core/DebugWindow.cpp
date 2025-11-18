@@ -135,6 +135,10 @@ void DebugWindow::videoRender()
 	}
 
 	auto selectedPreviewTextureIndex = selectedPreviewTextureIndex_.load(std::memory_order_acquire);
+	if (selectedPreviewTextureIndex >= textureNames.size()) {
+		logger.warn("DebugWindow::videoRender: selectedPreviewTextureIndex out of bounds");
+		return;
+	}
 	auto selectedPreviewTextureName = textureNames[selectedPreviewTextureIndex];
 
 	std::shared_ptr<AsyncTextureReader> currentReader;
@@ -308,6 +312,9 @@ void DebugWindow::updatePreview()
 	}
 
 	auto selectedPreviewTextureIndex = selectedPreviewTextureIndex_.load(std::memory_order_acquire);
+	if (selectedPreviewTextureIndex >= textureNames.size()) {
+		return;
+	}
 	auto selectedPreviewTextureName = textureNames[selectedPreviewTextureIndex];
 
 	QImage image;
