@@ -46,7 +46,9 @@ inline std::uint32_t bit_ceil(std::uint32_t x)
 
 } // anonymous namespace
 
-BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t width, std::uint32_t height, enum gs_color_format color_format, std::uint32_t flags) const noexcept
+BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t width, std::uint32_t height,
+							       enum gs_color_format color_format,
+							       std::uint32_t flags) const noexcept
 {
 	unique_gs_texture_t texture = make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
 	TextureRenderGuard renderTargetGuard(texture);
@@ -86,13 +88,11 @@ std::vector<unique_gs_texture_t> RenderingContext::createReductionPyramid(std::u
 		currentWidth = std::max(1u, (currentWidth + 1) / 2);
 		currentHeight = std::max(1u, (currentHeight + 1) / 2);
 
-		pyramid.push_back(
-			makeTexture(currentWidth, currentHeight, GS_R32F, GS_RENDER_TARGET));
+		pyramid.push_back(makeTexture(currentWidth, currentHeight, GS_R32F, GS_RENDER_TARGET));
 	}
 
 	return pyramid;
 }
-
 
 RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &logger, const MainEffect &mainEffect,
 				   ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
@@ -117,32 +117,27 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 	  r32fLuma_(makeTexture(region_.width, region_.height, GS_R32F, GS_RENDER_TARGET)),
 	  r32fSubLumas_{makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET),
 			makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)},
-	  r32fSubPaddedSquaredMotion_(makeTexture(subPaddedRegion_.width, subPaddedRegion_.height, GS_R32F, GS_RENDER_TARGET)),
+	  r32fSubPaddedSquaredMotion_(
+		  makeTexture(subPaddedRegion_.width, subPaddedRegion_.height, GS_R32F, GS_RENDER_TARGET)),
 	  r32fMeanSquaredMotionReductionPyramid_(
 		  createReductionPyramid(subPaddedRegion_.width, subPaddedRegion_.height)),
 	  r32fReducedMeanSquaredMotionReader_(1, 1, GS_R32F),
 	  bgrxSegmenterInput_(makeTexture(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
-						     static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX, GS_RENDER_TARGET)),
+					  static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX,
+					  GS_RENDER_TARGET)),
 	  bgrxSegmenterInputReader_(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
 				    static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX),
 	  segmenterInputBuffer_(selfieSegmenter_->getPixelCount() * 4),
 	  r8SegmentationMask_(makeTexture(maskRoi_.width, maskRoi_.height, GS_R8, GS_DYNAMIC)),
-	  r32fSubGFIntermediate_(
-		  makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
-	  r32fSubGFSource_(
-		  makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
-	  r32fSubGFMeanGuide_(
-		  makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
-	  r32fSubGFMeanSource_(
-		  makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
-	  r32fSubGFMeanGuideSource_(
-		  makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
-	  r32fSubGFMeanGuideSq_(
-		  makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
+	  r32fSubGFIntermediate_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
+	  r32fSubGFSource_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
+	  r32fSubGFMeanGuide_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
+	  r32fSubGFMeanSource_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
+	  r32fSubGFMeanGuideSource_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
+	  r32fSubGFMeanGuideSq_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
 	  r32fSubGFA_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
 	  r32fSubGFB_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
-	  r8GuidedFilterResult_(
-		  makeTexture(region_.width, region_.height, GS_R8, GS_RENDER_TARGET)),
+	  r8GuidedFilterResult_(makeTexture(region_.width, region_.height, GS_R8, GS_RENDER_TARGET)),
 	  r8TimeAveragedMasks_{makeTexture(region_.width, region_.height, GS_R8, GS_RENDER_TARGET),
 			       makeTexture(region_.width, region_.height, GS_R8, GS_RENDER_TARGET)}
 {
