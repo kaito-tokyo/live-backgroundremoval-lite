@@ -39,54 +39,6 @@ namespace BridgeUtils {
 namespace AsyncTextureReaderDetail {
 
 /**
- * @brief Returns the number of bytes per pixel for a given color format.
- *
- * @param format The color format to query.
- * @return Number of bytes per pixel for the format.
- * @throws std::runtime_error If the format is unsupported or compressed.
- */
-inline std::uint32_t getBytesPerPixel(const gs_color_format format)
-{
-	switch (format) {
-	case GS_UNKNOWN:
-		throw std::runtime_error("GS_UNKNOWN format is not supported");
-	case GS_A8:
-	case GS_R8:
-		return 1;
-	case GS_R8G8:
-		return 2;
-	case GS_R16:
-	case GS_R16F:
-		return 2;
-	case GS_RGBA:
-	case GS_BGRA:
-	case GS_BGRX:
-	case GS_R10G10B10A2:
-	case GS_R32F:
-	case GS_RGBA_UNORM:
-	case GS_BGRA_UNORM:
-	case GS_BGRX_UNORM:
-		return 4;
-	case GS_RGBA16:
-	case GS_RGBA16F:
-		return 8;
-	case GS_RGBA32F:
-		return 16;
-	case GS_RG16:
-	case GS_RG16F:
-		return 4;
-	case GS_RG32F:
-		return 8;
-	case GS_DXT1:
-	case GS_DXT3:
-	case GS_DXT5:
-		throw std::runtime_error("Compressed formats are not supported");
-	default:
-		throw std::runtime_error("Unsupported color format");
-	}
-}
-
-/**
  * @class ScopedStageSurfMap
  * @brief RAII helper for mapping and unmapping a gs_stagesurf_t.
  *
@@ -183,6 +135,53 @@ private:
 class AsyncTextureReader final {
 public:
 	/**
+	 * @brief Returns the number of bytes per pixel for a given color format.
+	 *
+	 * @param format The color format to query.
+	 * @return Number of bytes per pixel for the format.
+	 * @throws std::runtime_error If the format is unsupported or compressed.
+	 */
+	static std::uint32_t getBytesPerPixel(const gs_color_format format)
+	{
+		switch (format) {
+		case GS_UNKNOWN:
+			throw std::runtime_error("GS_UNKNOWN format is not supported");
+		case GS_A8:
+		case GS_R8:
+			return 1;
+		case GS_R8G8:
+			return 2;
+		case GS_R16:
+		case GS_R16F:
+			return 2;
+		case GS_RGBA:
+		case GS_BGRA:
+		case GS_BGRX:
+		case GS_R10G10B10A2:
+		case GS_R32F:
+		case GS_RGBA_UNORM:
+		case GS_BGRA_UNORM:
+		case GS_BGRX_UNORM:
+			return 4;
+		case GS_RGBA16:
+		case GS_RGBA16F:
+			return 8;
+		case GS_RGBA32F:
+			return 16;
+		case GS_RG16:
+		case GS_RG16F:
+			return 4;
+		case GS_RG32F:
+			return 8;
+		case GS_DXT1:
+		case GS_DXT3:
+		case GS_DXT5:
+			throw std::runtime_error("Compressed formats are not supported");
+		default:
+			throw std::runtime_error("Unsupported color format");
+		}
+	}
+	/**
 	 * @brief Constructs the AsyncTextureReader and allocates all necessary resources.
 	 *
 	 * @param width Width of the texture to read.
@@ -193,7 +192,7 @@ public:
 	AsyncTextureReader(const std::uint32_t width, const std::uint32_t height, const gs_color_format format)
 		: width_(width),
 		  height_(height),
-		  bufferLinesize_(width_ * AsyncTextureReaderDetail::getBytesPerPixel(format)),
+		  bufferLinesize_(width_ * getBytesPerPixel(format)),
 		  cpuBuffers_{std::vector<std::uint8_t>(static_cast<std::size_t>(height_) * bufferLinesize_),
 			      std::vector<std::uint8_t>(static_cast<std::size_t>(height_) * bufferLinesize_)},
 		  stagesurfs_{BridgeUtils::make_unique_gs_stagesurf(width, height, format),

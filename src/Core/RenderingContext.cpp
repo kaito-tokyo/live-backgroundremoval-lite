@@ -51,9 +51,19 @@ BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t wid
 							       std::uint32_t flags) const noexcept
 {
 	unique_gs_texture_t texture = make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
-	TextureRenderGuard renderTargetGuard(texture);
-	vec4 clearColor{0.0f, 0.0f, 0.0f, 1.0f};
-	gs_clear(GS_CLEAR_COLOR, &clearColor, 0.0f, 0);
+	if ((flags & GS_RENDER_TARGET) == GS_RENDER_TARGET) {
+		TextureRenderGuard renderTargetGuard(texture);
+		vec4 clearColor{0.0f, 0.0f, 0.0f, 1.0f};
+		gs_clear(GS_CLEAR_COLOR, &clearColor, 0.0f, 0);
+	} else if ((flags & GS_DYNAMIC) == GS_DYNAMIC) {
+		// Dynamic textures should be initialized to zero
+		std::vector<std::uint8_t> zeroData(
+			static_cast<std::size_t>(width) * static_cast<std::size_t>(height) *
+				static_cast<std::size_t>(AsyncTextureReader::getBytesPerPixel(color_format)),
+			0);
+		gs_texture_set_image(texture.get(), zeroData.data(),
+				     width * AsyncTextureReader::getBytesPerPixel(color_format), 0);
+	}
 	return texture;
 }
 
