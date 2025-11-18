@@ -61,7 +61,8 @@ BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t wid
 			static_cast<std::size_t>(width) * static_cast<std::size_t>(height) *
 				static_cast<std::size_t>(AsyncTextureReader::getBytesPerPixel(color_format)),
 			0);
-		gs_texture_set_image(texture.get(), zeroData.data(), width * AsyncTextureReader::getBytesPerPixel(color_format), 0);
+		gs_texture_set_image(texture.get(), zeroData.data(),
+				     width * AsyncTextureReader::getBytesPerPixel(color_format), 0);
 	}
 	return texture;
 }
