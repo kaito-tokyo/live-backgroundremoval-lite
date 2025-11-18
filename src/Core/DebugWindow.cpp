@@ -226,14 +226,22 @@ void DebugWindow::updatePreview()
 		return;
 	}
 
+	std::shared_ptr<AsyncTextureReader> bgrxReader;
+	std::shared_ptr<AsyncTextureReader> r8Reader;
+	std::shared_ptr<AsyncTextureReader> r32fReader;
+	std::shared_ptr<AsyncTextureReader> bgrxSegmenterInputReader;
+	std::shared_ptr<AsyncTextureReader> r8MaskRoiReader;
+	std::shared_ptr<AsyncTextureReader> r32fSubReader;
+	std::shared_ptr<AsyncTextureReader> r32fSubPaddedReader;
+
 	{
 		GraphicsContextGuard graphicsContextGuard;
+		std::lock_guard<std::mutex> lock(readerMutex_);
 
 		if (checkIfReaderNeedsRecreation(bgrxReader_, renderingContext->getWidth(),
 						 renderingContext->getHeight())) {
 			auto bgrxReader = std::make_shared<AsyncTextureReader>(renderingContext->getWidth(),
 									       renderingContext->getHeight(), GS_BGRX);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			bgrxReader_ = bgrxReader;
 		}
 
@@ -241,7 +249,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->getHeight())) {
 			auto r8Reader = std::make_shared<AsyncTextureReader>(renderingContext->getWidth(),
 									     renderingContext->getHeight(), GS_R8);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r8Reader_ = r8Reader;
 		}
 
@@ -249,7 +256,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->getHeight())) {
 			auto r32fReader = std::make_shared<AsyncTextureReader>(renderingContext->getWidth(),
 									       renderingContext->getHeight(), GS_R32F);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r32fReader_ = r32fReader;
 		}
 
@@ -260,7 +266,6 @@ void DebugWindow::updatePreview()
 			auto bgrxSegmenterInputReader = std::make_shared<AsyncTextureReader>(
 				static_cast<std::uint32_t>(renderingContext->selfieSegmenter_->getWidth()),
 				static_cast<std::uint32_t>(renderingContext->selfieSegmenter_->getHeight()), GS_BGRX);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			bgrxSegmenterInputReader_ = bgrxSegmenterInputReader;
 		}
 
@@ -268,7 +273,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->maskRoi_.height)) {
 			auto r8MaskRoiReader = std::make_shared<AsyncTextureReader>(
 				renderingContext->maskRoi_.width, renderingContext->maskRoi_.height, GS_R8);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r8MaskRoiReader_ = r8MaskRoiReader;
 		}
 
@@ -276,7 +280,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->subRegion_.height)) {
 			auto r8SubR8Reader = std::make_shared<AsyncTextureReader>(
 				renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R8);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r8SubR8Reader_ = r8SubR8Reader;
 		}
 
@@ -284,7 +287,6 @@ void DebugWindow::updatePreview()
 						 renderingContext->subRegion_.height)) {
 			auto r32fSubReader = std::make_shared<AsyncTextureReader>(
 				renderingContext->subRegion_.width, renderingContext->subRegion_.height, GS_R32F);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r32fSubReader_ = r32fSubReader;
 		}
 
@@ -293,21 +295,9 @@ void DebugWindow::updatePreview()
 			auto r32fSubPaddedReader = std::make_shared<AsyncTextureReader>(
 				renderingContext->subPaddedRegion_.width, renderingContext->subPaddedRegion_.height,
 				GS_R32F);
-			std::lock_guard<std::mutex> lock(readerMutex_);
 			r32fSubPaddedReader_ = r32fSubPaddedReader;
 		}
-	}
 
-	std::shared_ptr<AsyncTextureReader> bgrxReader;
-	std::shared_ptr<AsyncTextureReader> r8Reader;
-	std::shared_ptr<AsyncTextureReader> r32fReader;
-	std::shared_ptr<AsyncTextureReader> bgrxSegmenterInputReader;
-	std::shared_ptr<AsyncTextureReader> r8MaskRoiReader;
-	std::shared_ptr<AsyncTextureReader> r32fSubReader;
-	std::shared_ptr<AsyncTextureReader> r32fSubPaddedReader;
-
-	{
-		std::lock_guard<std::mutex> lock(readerMutex_);
 		bgrxReader = bgrxReader_;
 		r8Reader = r8Reader_;
 		r32fReader = r32fReader_;

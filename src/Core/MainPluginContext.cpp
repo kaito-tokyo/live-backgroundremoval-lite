@@ -51,17 +51,14 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *source,
 
 void MainPluginContext::shutdown() noexcept
 {
-	std::shared_ptr<DebugWindow> debugWindow;
 	{
 		std::lock_guard<std::mutex> lock(debugWindowMutex_);
-		debugWindow.swap(debugWindow_);
-	}
-
-	if (debugWindow) {
-		try {
-			debugWindow->close();
-		} catch (...) {
-			// Ignore
+		if (debugWindow_) {
+			try {
+				debugWindow_->close();
+			} catch (...) {
+				// Ignore
+			}
 		}
 	}
 
@@ -136,28 +133,25 @@ obs_properties_t *MainPluginContext::getProperties()
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
 			auto this_ = static_cast<MainPluginContext *>(data);
-			std::shared_ptr<DebugWindow> windowToShow;
+			DebugWindow *windowToShow = nullptr;
 
 			{
 				std::lock_guard<std::mutex> lock(this_->debugWindowMutex_);
-				if (auto debugWindow = this_->debugWindow_) {
-					windowToShow = debugWindow;
+				if (this_->debugWindow_) {
+					windowToShow = this_->debugWindow_;
 				} else {
 					auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
-					auto newDebugWindow =
-						std::make_shared<DebugWindow>(this_->weak_from_this(), parent);
+					auto newDebugWindow = new DebugWindow(this_->weak_from_this(), parent);
 
-					std::weak_ptr<DebugWindow> weakNewDebugWindow = newDebugWindow;
+					newDebugWindow->setAttribute(Qt::WA_DeleteOnClose);
 
-					QObject::connect(newDebugWindow.get(), &QDialog::destroyed,
-							 [weakSelf = this_->weak_from_this(), weakNewDebugWindow]() {
+					QObject::connect(newDebugWindow, &QDialog::destroyed,
+							 [newDebugWindow, weakSelf = this_->weak_from_this()]() {
 								 if (auto self = weakSelf.lock()) {
 									 std::lock_guard<std::mutex> lock(
 										 self->debugWindowMutex_);
-									 if (self->debugWindow_ &&
-									     self->debugWindow_.get() ==
-										     weakNewDebugWindow.lock().get()) {
-										 self->debugWindow_.reset();
+									 if (self->debugWindow_ == newDebugWindow) {
+										 self->debugWindow_ = nullptr;
 									 }
 								 }
 							 });
@@ -344,7 +338,7 @@ void MainPluginContext::videoRender()
 		_renderingContext->videoRender();
 	}
 
-	std::shared_ptr<DebugWindow> debugWindow;
+	DebugWindow *debugWindow;
 	{
 		std::lock_guard<std::mutex> lock(debugWindowMutex_);
 		debugWindow = debugWindow_;

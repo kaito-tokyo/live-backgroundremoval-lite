@@ -90,7 +90,7 @@ private:
 	mutable std::mutex renderingContextMutex_;
 	std::shared_ptr<RenderingContext> renderingContext_;
 
-	std::shared_ptr<DebugWindow> debugWindow_;
+	DebugWindow *debugWindow_;
 	mutable std::mutex debugWindowMutex_;
 };
 
