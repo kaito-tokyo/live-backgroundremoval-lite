@@ -34,6 +34,8 @@
 
 #include <ILogger.hpp>
 
+#include "AlignedMemoryResource.hpp"
+
 namespace KaitoTokyo {
 namespace TaskQueue {
 
@@ -58,7 +60,7 @@ public:
 	 * automatically returned to the pool (if the pool still exists and is not full)
 	 * or deallocated.
 	 */
-	using MemoryBlockSharedPtr = std::shared_ptr<std::uint8_t[]>;
+	using MemoryBlockSharedPtr = std::shared_ptr<std::pmr::vector<std::uint8_t>>;
 
 	/**
 	 * @brief Factory function to create a new MemoryBlockPool instance.
@@ -68,9 +70,6 @@ public:
 	 * @param logger The instance of ILogger for logging purposes.
 	 * @param blockSize The size (in uint8_ts) of each memory block. Must be greater than 0
 	 * and a multiple of alignment.
-	 * @param alignment The memory alignment (in uint8_ts) required for each block.
-	 * Must be a power of two and at least alignof(std::max_align_t).
-	 * Defaults to 32.
 	 * @param maxSize The maximum number of idle blocks to keep in the pool.
 	 * Must be greater than 0. Defaults to 32.
 	 *
@@ -86,13 +85,6 @@ public:
 			throw std::invalid_argument("blockSize must be greater than 0");
 		} else if (maxSize == 0) {
 			throw std::invalid_argument("maxSize must be greater than 0");
-		} else if (alignment & (alignment - 1)) {
-			throw std::invalid_argument("alignment must be a power of two");
-		} else if (alignment < alignof(std::max_align_t)) {
-			throw std::invalid_argument("alignment must be at least " +
-						    std::to_string(alignof(std::max_align_t)));
-		} else if (blockSize % alignment != 0) {
-			throw std::invalid_argument("blockSize must be a multiple of alignment");
 		}
 		return std::shared_ptr<MemoryBlockPool>(new MemoryBlockPool(logger, blockSize, alignment, maxSize));
 	}
@@ -120,22 +112,20 @@ public:
 	 */
 	MemoryBlockSharedPtr acquire()
 	{
-		std::unique_ptr<std::uint8_t[]> block;
+		std::unique_ptr<std::pmr::vector<std::uint8_t>> block;
 		{
 			std::lock_guard<std::mutex> lock(poolMutex_);
 			if (pool_.empty()) {
-				block = std::unique_ptr<std::uint8_t[]>(new (std::align_val_t(alignment_))
-										std::uint8_t[blockSize_]);
-				logger_.debug("Allocated new memory block of size {} bytes with alignment {} bytes",
-					      blockSize_, alignment_);
+				block = std::make_unique<std::pmr::vector<std::uint8_t>>(
+					blockSize_, std::pmr::polymorphic_allocator<std::uint8_t>(&memoryResource_));
 			} else {
 				block = std::move(pool_.back());
 				pool_.pop_back();
 			}
 		}
 
-		return MemoryBlockSharedPtr(block.get(), [block = std::move(block),
-							  weakSelf = weak_from_this()](std::uint8_t *) mutable {
+		return MemoryBlockSharedPtr(block.get(), [block = std::move(block), weakSelf = weak_from_this()](
+								 std::pmr::vector<std::uint8_t> *) mutable {
 			if (auto self = weakSelf.lock()) {
 				std::lock_guard<std::mutex> lock(self->poolMutex_);
 				if (self->pool_.size() < self->maxSize_) {
@@ -156,16 +146,16 @@ private:
 			std::size_t maxSize)
 		: logger_(logger),
 		  blockSize_(blockSize),
-		  alignment_(alignment),
+		  memoryResource_(alignment),
 		  maxSize_(maxSize)
 	{
 	}
 
 	const Logger::ILogger &logger_;
 	std::size_t blockSize_;
-	std::size_t alignment_;
+	AlignedMemoryResource memoryResource_;
 	std::size_t maxSize_;
-	std::vector<std::unique_ptr<std::uint8_t[]>> pool_;
+	std::vector<std::unique_ptr<std::pmr::vector<std::uint8_t>>> pool_;
 	mutable std::mutex poolMutex_;
 };
 

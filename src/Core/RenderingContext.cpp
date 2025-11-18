@@ -271,7 +271,7 @@ void RenderingContext::videoRender()
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 		auto segmenterInputBuffer = selfieSegmenterMemoryBlockPool_->acquire();
 		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
-			  segmenterInputBuffer.get());
+			  segmenterInputBuffer->begin());
 		selfieSegmenterTaskQueue_.push(
 			[weakSelf = weak_from_this(), segmenterInputBuffer = std::move(segmenterInputBuffer)](
 				const ThrottledTaskQueue::CancellationToken &token) {
@@ -280,7 +280,7 @@ void RenderingContext::videoRender()
 						return;
 					}
 
-					self->selfieSegmenter_->process(segmenterInputBuffer.get());
+					self->selfieSegmenter_->process(segmenterInputBuffer.get()->data());
 					self->hasNewSegmentationMask_.store(true, std::memory_order_release);
 				} else {
 					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
