@@ -51,7 +51,7 @@ BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t wid
 	unique_gs_texture_t texture = make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
 	TextureRenderGuard renderTargetGuard(texture);
 	vec4 clearColor{0.0f, 0.0f, 0.0f, 1.0f};
-	gs_clear(GS_CLEAR_COLOR, nullptr, 0.0f, 0);
+	gs_clear(GS_CLEAR_COLOR, &clearColor, 0.0f, 0);
 	return texture;
 }
 
