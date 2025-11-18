@@ -69,8 +69,6 @@ public:
 
 	const Logger::ILogger &getLogger() const noexcept { return logger_; }
 
-	void setDebugWindowNull() { debugWindow_ = nullptr; }
-
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
@@ -92,7 +90,8 @@ private:
 	mutable std::mutex renderingContextMutex_;
 	std::shared_ptr<RenderingContext> renderingContext_;
 
-	std::atomic<DebugWindow *> debugWindow_ = nullptr;
+	std::shared_ptr<DebugWindow> debugWindow_;
+	mutable std::mutex debugWindowMutex_;
 };
 
 } // namespace LiveBackgroundRemovalLite
