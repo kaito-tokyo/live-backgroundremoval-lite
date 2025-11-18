@@ -37,8 +37,8 @@ public:
 	explicit MaskBuffer(std::size_t size)
 		: defaultResource_(*std::pmr::new_delete_resource()),
 		  alignedResource_(kAlignment, &defaultResource_),
-		  buffers_{std::pmr::vector<std::uint8_t>(size, {&alignedResource_}),
-			   std::pmr::vector<std::uint8_t>(size, {&alignedResource_})}
+		  buffers_{std::pmr::vector<std::uint8_t>(size, 0, {&alignedResource_}),
+			   std::pmr::vector<std::uint8_t>(size, 0, {&alignedResource_})}
 	{
 	}
 
