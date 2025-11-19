@@ -22,6 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using namespace KaitoTokyo::BridgeUtils;
 using namespace KaitoTokyo::Logger;
+using namespace KaitoTokyo::Memory;
 using namespace KaitoTokyo::SelfieSegmenter;
 using namespace KaitoTokyo::TaskQueue;
 

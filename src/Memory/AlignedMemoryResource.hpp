@@ -31,7 +31,7 @@
 #include <memory_resource>
 
 namespace KaitoTokyo {
-namespace TaskQueue {
+namespace Memory {
 
 class AlignedMemoryResource : public std::pmr::memory_resource {
 public:
@@ -78,5 +78,5 @@ private:
 	std::pmr::memory_resource *upstream_;
 };
 
-} // namespace TaskQueue
+} // namespace Memory
 } // namespace KaitoTokyo

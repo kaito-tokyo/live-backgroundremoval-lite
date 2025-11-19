@@ -96,7 +96,7 @@ public:
 	const int numThreads_;
 
 	std::unique_ptr<SelfieSegmenter::ISelfieSegmenter> selfieSegmenter_;
-	std::shared_ptr<TaskQueue::MemoryBlockPool> selfieSegmenterMemoryBlockPool_;
+	std::shared_ptr<Memory::MemoryBlockPool> selfieSegmenterMemoryBlockPool_;
 	bool hasNewSegmenterInput_ = false;
 	std::atomic<bool> hasNewSegmentationMask_ = false;
 
