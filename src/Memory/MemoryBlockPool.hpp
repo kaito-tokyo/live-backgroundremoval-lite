@@ -37,7 +37,7 @@
 #include "AlignedMemoryResource.hpp"
 
 namespace KaitoTokyo {
-namespace TaskQueue {
+namespace Memory {
 
 /**
  * @class MemoryBlockPool
@@ -68,7 +68,7 @@ public:
 	 * As the constructor is private, this function must be used to create the pool.
 	 *
 	 * @param logger The instance of ILogger for logging purposes.
-	 * @param blockSize The size (in uint8_ts) of each memory block. Must be greater than 0
+	 * @param blockSize The size (in bytes) of each memory block. Must be greater than 0
 	 * and a multiple of alignment.
 	 * @param maxSize The maximum number of idle blocks to keep in the pool.
 	 * Must be greater than 0. Defaults to 32.
@@ -137,7 +137,7 @@ public:
 
 	/**
 	 * @brief Gets the size of the memory blocks managed by this pool.
-	 * @return The size (in uint8_ts) of each block.
+	 * @return The size (in bytes) of each block.
 	 */
 	std::size_t getPixelCount() const noexcept { return blockSize_; }
 
@@ -159,5 +159,5 @@ private:
 	mutable std::mutex poolMutex_;
 };
 
-} // namespace TaskQueue
+} // namespace Memory
 } // namespace KaitoTokyo

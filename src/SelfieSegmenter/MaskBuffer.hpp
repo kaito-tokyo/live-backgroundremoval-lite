@@ -25,7 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <mutex>
 #include <vector>
 
-#include "ForceAlignmentResource.hpp"
+#include <AlignedMemoryResource.hpp>
 
 namespace KaitoTokyo {
 namespace SelfieSegmenter {
@@ -35,10 +35,10 @@ public:
 	constexpr static std::size_t kAlignment = 32;
 
 	explicit MaskBuffer(std::size_t size)
-		: defaultResource_(*std::pmr::new_delete_resource()),
-		  alignedResource_(kAlignment, &defaultResource_),
-		  buffers_{std::pmr::vector<std::uint8_t>(size, 0, {&alignedResource_}),
-			   std::pmr::vector<std::uint8_t>(size, 0, {&alignedResource_})}
+		: memoryResource_(kAlignment),
+		  buffers_{std::pmr::vector<std::uint8_t>(size, 0, {&memoryResource_}),
+			   std::pmr::vector<std::uint8_t>(size, 0, {&memoryResource_}),
+			   std::pmr::vector<std::uint8_t>(size, 0, {&memoryResource_})}
 	{
 	}
 
@@ -47,13 +47,20 @@ public:
 	void write(std::function<void(std::uint8_t *)> writeFunc)
 	{
 		std::lock_guard<std::mutex> lock(bufferMutex_);
-		const int writeIndex = (readableIndex_.load(std::memory_order_relaxed) + 1) % 2;
-		auto &buffer = buffers_[writeIndex];
+		auto &buffer = buffers_[writerIndex_];
 		writeFunc(buffer.data());
-		readableIndex_.store(writeIndex, std::memory_order_release);
+		writerIndex_ = freshIndex_.exchange(writerIndex_);
+		hasNewFrame_.store(true, std::memory_order_release);
 	}
 
-	const std::uint8_t *read() const { return buffers_[readableIndex_.load(std::memory_order_acquire)].data(); }
+	const std::uint8_t *read() const
+	{
+		if (hasNewFrame_.exchange(false, std::memory_order_acq_rel)) {
+			readerIndex_ = freshIndex_.exchange(readerIndex_, std::memory_order_acq_rel);
+		}
+
+		return buffers_[readerIndex_].data();
+	}
 
 	MaskBuffer(const MaskBuffer &) = delete;
 	MaskBuffer &operator=(const MaskBuffer &) = delete;
@@ -61,11 +68,13 @@ public:
 	MaskBuffer &operator=(MaskBuffer &&) = delete;
 
 private:
-	std::pmr::memory_resource &defaultResource_;
-	ForceAlignmentResource alignedResource_;
+	Memory::AlignedMemoryResource memoryResource_;
 
-	std::array<std::pmr::vector<std::uint8_t>, 2> buffers_;
-	std::atomic<std::size_t> readableIndex_ = 0;
+	std::array<std::pmr::vector<std::uint8_t>, 3> buffers_;
+	mutable std::size_t readerIndex_ = 0;
+	std::size_t writerIndex_ = 1;
+	mutable std::atomic<std::size_t> freshIndex_ = 2;
+	mutable std::atomic<bool> hasNewFrame_ = false;
 	mutable std::mutex bufferMutex_;
 };
 

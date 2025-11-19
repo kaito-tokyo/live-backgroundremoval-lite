@@ -82,6 +82,9 @@ target_include_directories(Logger INTERFACE ${CMAKE_SOURCE_DIR}/src/Logger)
 target_link_libraries(Logger INTERFACE fmt::fmt)
 target_sources(Logger PRIVATE src/Logger/ILogger.hpp)
 
+add_library(Memory INTERFACE)
+target_include_directories(Memory INTERFACE ${CMAKE_SOURCE_DIR}/src/Memory)
+
 add_library(BridgeUtils INTERFACE)
 target_include_directories(BridgeUtils INTERFACE ${CMAKE_SOURCE_DIR}/src/BridgeUtils)
 target_link_libraries(BridgeUtils INTERFACE OBS::libobs Logger)
@@ -107,7 +110,7 @@ target_sources(UpdateChecker PRIVATE src/UpdateChecker/UpdateChecker.hpp)
 add_library(SelfieSegmenter STATIC)
 target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/ShapeConverter.cpp)
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
-target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn)
+target_link_libraries(SelfieSegmenter PUBLIC Memory ncnn::ncnn)
 
 target_compile_definitions(
   ${CMAKE_PROJECT_NAME}
