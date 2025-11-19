@@ -59,7 +59,7 @@ try {
 		}).share();
 	return true;
 } catch (const std::exception &e) {
-	loggerInstance().error("Failed to load main plugin context: %s", e.what());
+	loggerInstance().logException(e, "Failed to load main plugin context");
 	return false;
 } catch (...) {
 	loggerInstance().error("Failed to load main plugin context: unknown error");
@@ -72,7 +72,7 @@ try {
 	GsUnique::drain();
 	curl_global_cleanup();
 } catch (const std::exception &e) {
-	loggerInstance().error("Failed to unload plugin context: %s", e.what());
+	loggerInstance().logException(e, "Failed to unload plugin context");
 } catch (...) {
 	loggerInstance().error("Failed to unload main plugin context: unknown error");
 }
@@ -86,11 +86,10 @@ const char *main_plugin_context_get_name(void *type_data)
 void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
 try {
 	GraphicsContextGuard graphicsContextGuard;
-	auto self =
-		std::make_shared<MainPluginContext>(settings, source, latestVersionFutureInstance(), loggerInstance());
-	return new std::shared_ptr<MainPluginContext>(self);
+	return new std::shared_ptr<MainPluginContext>(
+		new MainPluginContext(settings, source, latestVersionFutureInstance(), loggerInstance()));
 } catch (const std::exception &e) {
-	loggerInstance().error("Failed to create main plugin context: %s", e.what());
+	loggerInstance().logException(e, "Failed to create main plugin context");
 	return nullptr;
 } catch (...) {
 	loggerInstance().error("Failed to create main plugin context: unknown error");
@@ -111,7 +110,7 @@ try {
 	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
 } catch (const std::exception &e) {
-	loggerInstance().error("Failed to destroy main plugin context: %s", e.what());
+	loggerInstance().logException(e, "Failed to destroy main plugin context");
 
 	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
@@ -159,7 +158,7 @@ try {
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	return self->get()->getProperties();
 } catch (const std::exception &e) {
-	loggerInstance().error("Failed to get properties: %s", e.what());
+	loggerInstance().logException(e, "Failed to get properties");
 	return obs_properties_create();
 } catch (...) {
 	loggerInstance().error("Failed to get properties: unknown error");
@@ -176,7 +175,7 @@ try {
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->update(settings);
 } catch (const std::exception &e) {
-	loggerInstance().error("Failed to update main plugin context: %s", e.what());
+	loggerInstance().logException(e, "Failed to update main plugin context");
 } catch (...) {
 	loggerInstance().error("Failed to update main plugin context: unknown error");
 }
@@ -191,7 +190,7 @@ try {
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
 	self->get()->videoTick(seconds);
 } catch (const std::exception &e) {
-	loggerInstance().error("Failed to tick main plugin context: %s", e.what());
+	loggerInstance().logException(e, "Failed to tick main plugin context");
 } catch (...) {
 	loggerInstance().error("Failed to tick main plugin context: unknown error");
 }
@@ -209,7 +208,7 @@ try {
 	self->get()->videoRender();
 	GsUnique::drain();
 } catch (const std::exception &e) {
-	loggerInstance().error("Failed to render video in main plugin context: %s", e.what());
+	loggerInstance().logException(e, "Failed to render video in main plugin context");
 } catch (...) {
 	loggerInstance().error("Failed to render video in main plugin context: unknown error");
 }
@@ -230,7 +229,7 @@ try {
 	obs_source_frame *result = self->get()->filterVideo(frame);
 	return result;
 } catch (const std::exception &e) {
-	loggerInstance().error("Failed to filter video in main plugin context: %s", e.what());
+	loggerInstance().logException(e, "Failed to filter video in main plugin context");
 	return frame;
 } catch (...) {
 	loggerInstance().error("Failed to filter video in main plugin context: unknown error");
