@@ -124,11 +124,13 @@ public:
 			}
 		}
 
-		return MemoryBlockSharedPtr(block.get(), [self = shared_from_this(), block = std::move(block)](
+		return MemoryBlockSharedPtr(block.get(), [block = std::move(block), weakSelf = weak_from_this()](
 								 std::pmr::vector<std::uint8_t> *) mutable {
-			std::lock_guard<std::mutex> lock(self->poolMutex_);
-			if (self->pool_.size() < self->maxSize_) {
-				self->pool_.push_back(std::move(block));
+			if (auto self = weakSelf.lock()) {
+				std::lock_guard<std::mutex> lock(self->poolMutex_);
+				if (self->pool_.size() < self->maxSize_) {
+					self->pool_.push_back(std::move(block));
+				}
 			}
 		});
 	}
