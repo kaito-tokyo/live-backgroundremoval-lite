@@ -143,6 +143,11 @@ public:
 		TextureRenderGuard textureRenderGuard(targetTexture);
 
 		obs_source_t *target = obs_filter_get_target(source);
+		if (target == nullptr) {
+			logger_.error("Failed to get target source for drawing");
+			return;
+		}
+
 		gs_set_render_target_with_color_space(targetTexture.get(), nullptr, GS_CS_709_EXTENDED);
 		while (gs_effect_loop(gsEffect_.get(), "Draw")) {
 			obs_source_video_render(target);
