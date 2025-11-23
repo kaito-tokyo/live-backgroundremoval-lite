@@ -2,24 +2,61 @@
 
 **A high-performance, crash-resistant OBS plugin for real-time background removal.**
 
-This plugin allows you to remove the background from your video source without a physical green screen. It is a **complete rewrite** of the popular `obs-backgroundremoval` tool, engineered from scratch to prioritize **stability**, **memory safety**, and **low resource usage**.
+This plugin allows you to remove the background from your video source without a physical green screen. It is a **complete rewrite** of the popular `obs-backgroundremoval` tool, engineered from scratch to prioritize **stability**, **compatibility**, and **smart resource management**.
 
 [**⬇️ Download Latest Release**](https://kaito-tokyo.github.io/live-backgroundremoval-lite/)
 
 ---
 
-## ⚡ Why "Lite"? (Engineering Philosophy)
+## 🧠 Engineering Philosophy: The "Smart Hybrid" Approach
 
-While inspired by existing tools, **Live Background Removal Lite** was developed with a specific goal: **To eliminate the crashes and instability often associated with AI plugins.**
+Most AI plugins rely heavily on the GPU, often causing frame drops in games or compatibility issues with drivers. **Live Background Removal Lite** challenges this status quo with a unique architecture designed to maximize your computer's total potential.
 
-* **🛡️ Zero-Crash Stability:**
-    The core logic has been rewritten using **Modern C++ practices** (RAII, smart pointers) to ensure robust memory management. We have rigorously engineered the plugin to prevent segmentation faults and memory leaks, ensuring it **never crashes your OBS Studio**, even during long streams.
+### 1. ⚡ Optimized CPU Inference (Breaking the Myth)
+There is a common misconception that "AI must run on the GPU." We aim to prove that **highly optimized CPU inference** is not only viable but superior for multitasking.
+* By offloading the AI inference to the CPU using a tuned implementation, we leave your **GPU resources completely free for gaming and rendering**, ensuring your stream remains buttery smooth.
 
-* **🚀 Optimized Pipeline:**
-    By stripping away legacy overhead and optimizing the data flow between the CPU/GPU and OBS, this plugin achieves lower latency and higher FPS compared to other implementations using the same AI models.
+### 2. 🎨 Native GPU Post-Processing
+We are not "anti-GPU." Instead, we use it where it matters most: **Image Processing**.
+* The plugin leverages OBS's native GPU capabilities for scaling, masking, and compositing.
+* Because we use standard OBS GPU calls rather than custom AI CUDA/Tensor kernels, there are **zero compatibility issues** or driver conflicts.
 
-* **💻 Lightweight & Native:**
-    No external "virtual camera" software is required. It runs natively within OBS, keeping your system load minimal—perfect for laptops or setups without high-end RTX GPUs.
+### 3. 🛡️ Zero-Crash Stability
+The core logic utilizes **Modern C++ practices** (RAII, smart pointers) to ensure robust memory management. We have rigorously engineered the plugin to prevent segmentation faults, ensuring it **never crashes your OBS Studio**, even during long streams.
+
+---
+
+## 🛠️ Under the Hood: The Hybrid Pipeline
+
+To achieve maximum performance, **Live Background Removal Lite** employs a sophisticated **CPU/GPU Hybrid Pipeline**. Every step is mathematically optimized to ensure zero waste.
+
+### 1. ⚡ Smart Motion Detection (GPU)
+* **Technique:** PSNR-based Change Detection via OBS GPU
+* Before running any AI, the plugin uses the GPU to check if the frame has actually changed (technically similar to calculating Peak Signal-to-Noise Ratio).
+* **Benefit:** If you aren't moving, the plugin skips the heavy calculations entirely. This drastically reduces power consumption and heat.
+
+### 2. 🧠 Constant-Cost AI Inference (CPU)
+* **Technique:** `ncnn` + Google MediaPipe Model (Fixed @ 256x144)
+* The core background segmentation runs on the CPU, but with a twist: the input is always resized to a tiny **256x144** resolution before inference.
+* **Benefit:** This ensures the CPU load remains **low and constant**, regardless of whether your camera is 720p or 4K. The processing time is deterministic and lightning-fast.
+
+### 3. 🎨 Fast Guided Filter Upscaling (GPU)
+* **Technique:** Custom Pixel Shader (Fast Guided Filter Implementation)
+* To turn the low-res (256x144) mask back into a crisp, full-resolution image, we utilize the **Fast Guided Filter** [2]—an accelerated variant of the original Guided Filter [1].
+* **Benefit:** This algorithm performs computations on a subsampled grid, drastically reducing the number of pixels to process. Combined with a **Separable (Horizontal/Vertical) implementation**, this achieves theoretical optimality in computational complexity, delivering high-quality edge preservation with virtually zero GPU overhead.
+    > *We consciously utilize published, non-patented algorithms to ensure complete legal safety and transparency.*
+
+### 4. 🌊 Temporal Smoothing (GPU)
+* **Technique:** Minimum Group Delay Averaging
+* Finally, a time-average filter is applied to suppress flicker.
+* **Benefit:** This isn't just a simple blur; the algorithm is tuned to **minimize group delay**. This means the mask adapts to your movements instantly (no "ghosting" or lag) while effectively filtering out high-frequency noise.
+
+#### 📚 References
+<small>
+[1] He, Kaiming, Jian Sun, and Xiaoou Tang. “Guided Image Filtering.” IEEE Transactions on Pattern Analysis and Machine Intelligence 35, no. 6 (June 2013): 1397–1409. https://doi.org/10.1109/TPAMI.2012.213.
+
+[2] He, Kaiming, and Jian Sun. "Fast Guided Filter." arXiv preprint arXiv:1505.00996 (2015). https://doi.org/10.48550/arXiv.1505.00996
+</small>
 
 ---
 
