@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@astrojs/svelte": "^7.2.2",
+    "@mlc-ai/web-llm": "^0.2.79",
     "astro": "^5.15.9",
     "svelte": "^5.43.14",
     "typescript": "^5.9.3"
