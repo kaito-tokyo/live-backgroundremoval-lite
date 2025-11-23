@@ -8,18 +8,20 @@ This plugin allows you to remove the background from your video source without a
 
 ---
 
-## 🧠 Engineering Philosophy: The "Smart Hybrid" Approach
+## 🧠 Engineering & UX Philosophy
 
-Most AI plugins rely heavily on the GPU, often causing frame drops in games or compatibility issues with drivers. **Live Background Removal Lite** challenges this status quo with a unique architecture designed to maximize your computer's total potential.
+We built this plugin with two core goals: to maximize your hardware's potential and to eliminate user frustration.
 
-### 1. ⚡ Optimized CPU Inference (Breaking the Myth)
-There is a common misconception that "AI must run on the GPU." We aim to prove that **highly optimized CPU inference** is not only viable but superior for multitasking.
-* By offloading the AI inference to the CPU using a tuned implementation, we leave your **GPU resources completely free for gaming and rendering**, ensuring your stream remains buttery smooth.
+### 1. The "Smart Hybrid" Approach (Engineering)
+Most AI plugins rely heavily on the GPU, causing frame drops in games. We challenge this status quo.
+* **Optimized CPU Inference:** We proved that **highly optimized CPU inference** is superior for multitasking. By offloading the AI to the CPU, we keep the **GPU load negligible**, preserving maximum headroom for your games and rendering.
+* **Native GPU Post-Processing:** We use OBS's native GPU capabilities for image processing (scaling, masking). This ensures **zero compatibility issues** or driver conflicts.
 
-### 2. 🎨 Native GPU Post-Processing
-We are not "anti-GPU." Instead, we use it where it matters most: **Image Processing**.
-* The plugin leverages OBS's native GPU capabilities for scaling, masking, and compositing.
-* Because we use standard OBS GPU calls rather than custom AI CUDA/Tensor kernels, there are **zero compatibility issues** or driver conflicts.
+### 2. ✨ "It Just Works" (User Experience)
+We know the frustration of installing a plugin only to be overwhelmed by complex settings. Inheriting the user-first spirit of the original `obs-backgroundremoval`, we designed this tool to be **Zero-Configuration**.
+* **Robust by Design:** We deliberately selected algorithms that are inherently robust against various lighting conditions and inputs. There is no complex "auto-adjustment" logic running in the background—just solid algorithms that handle diverse environments naturally.
+* **Carefully Tuned Defaults:** Because the core algorithms are so stable, a single set of carefully calibrated default values works for almost everyone. You should not need to touch a single slider.
+* **Advanced Mode (For Enthusiasts):** We provide an "Advanced Mode" for users who want granular control. However, since the default parameters are already tuned to the "sweet spot" of these algorithms, manual tweaking rarely offers significant improvements.
 
 ### 3. 🛡️ Zero-Crash Stability
 The core logic utilizes **Modern C++ practices** (RAII, smart pointers) to ensure robust memory management. We have rigorously engineered the plugin to prevent segmentation faults, ensuring it **never crashes your OBS Studio**, even during long streams.
@@ -43,7 +45,7 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 ### 3. 🎨 Fast Guided Filter Upscaling (GPU)
 * **Technique:** Custom Pixel Shader (Fast Guided Filter Implementation)
 * To turn the low-res (256x144) mask back into a crisp, full-resolution image, we utilize the **Fast Guided Filter** [2]—an accelerated variant of the original Guided Filter [1].
-* **Benefit:** This algorithm performs computations on a subsampled grid, drastically reducing the number of pixels to process. Combined with a **Separable (Horizontal/Vertical) implementation**, this achieves theoretical optimality in computational complexity, delivering high-quality edge preservation with virtually zero GPU overhead.
+* **Benefit:** This algorithm performs computations on a subsampled grid, drastically reducing the number of pixels to process. Combined with a **Separable (Horizontal/Vertical) implementation**, this achieves theoretical optimality in computational complexity, delivering high-quality edge preservation with minimal GPU overhead.
     > *We consciously utilize published, non-patented algorithms to ensure complete legal safety and transparency.*
 
 ### 4. 🌊 Temporal Smoothing (GPU)
@@ -79,6 +81,7 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 ## 🌟 Features
 
 * **Rock-Solid Stability:** Built with a focus on exception handling and thread safety. If an error occurs in the inference engine, the plugin handles it gracefully without taking down the entire application.
+* **Built-in Debug View:** Includes a comprehensive debug window that visualizes the internal pipeline (raw masks, motion detection heatmaps) in real-time. While developed for our own engineering use, we kept it accessible because we know pro streamers love to see exactly how their tech is performing under the hood.
 * **No Green Screen Required:** High-quality background removal using AI, without the need for a physical chroma key setup.
 * **Simple & Easy to Use:** Just add it as a filter to your source. No complex configuration or external dependencies needed.
 * **Cross-Platform Support:** Works reliably across Windows, macOS, and Linux.
@@ -105,7 +108,7 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 1.  In OBS Studio, right-click on the video source (e.g., your webcam) you want to apply the effect to.
 2.  Select **"Filters"** from the context menu.
 3.  Click the **"+"** button at the bottom left of the Filters window and select **"Live Background Removal Lite"** from the list.
-4.  Adjust the settings as needed.
+4.  **Done!** (Adjust settings only if absolutely necessary).
 
 ## 🙏 Acknowledgements
 
