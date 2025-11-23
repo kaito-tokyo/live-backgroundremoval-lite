@@ -2,11 +2,12 @@
 import { joinURL } from "ufo";
 
 interface Props {
-  title: string;
   lang: string;
+  title: string;
+  description: string;
 }
 
-const { title, lang } = Astro.props;
+const { lang, title, description } = Astro.props;
 const { BASE_URL } = import.meta.env;
 ---
 
@@ -14,6 +15,7 @@ const { BASE_URL } = import.meta.env;
 <html lang={lang}>
   <head>
     <meta charset="utf-8" />
+    <meta name="description" content={description} />
     <link
       rel="icon"
       type="image/png"

@@ -8,6 +8,21 @@ This plugin allows you to remove the background from your video source without a
 
 ---
 
+## 📸 Demo
+
+<div align="center">
+
+<img src="docs/public/demo.gif" alt="Background Removal Lite Demo" width="480" style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;">
+
+<p style="margin-top:8px; color:#666; font-size:90%;">
+  <em>
+    The plugin seamlessly removes a cluttered background, revealing the source behind it.
+  </em>
+</p>
+
+</div>
+---
+
 ## 🧠 Engineering & UX Philosophy
 
 We built this plugin with two core goals: to maximize your hardware's potential and to eliminate user frustration.
@@ -59,22 +74,6 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 
 [2] He, Kaiming, and Jian Sun. "Fast Guided Filter." arXiv preprint arXiv:1505.00996 (2015). https://doi.org/10.48550/arXiv.1505.00996
 </small>
-
----
-
-## 📸 Demo
-
-<div align="center">
-
-<img src="docs/public/demo.gif" alt="Background Removal Lite Demo" width="480" style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;">
-
-<p style="margin-top:8px; color:#666; font-size:90%;">
-  <em>
-    The plugin seamlessly removes a cluttered background, revealing the source behind it.
-  </em>
-</p>
-
-</div>
 
 ---
 

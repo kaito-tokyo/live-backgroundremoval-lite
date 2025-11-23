@@ -10,10 +10,15 @@
     "format": "prettier --write ."
   },
   "dependencies": {
-    "astro": "^5.15.9"
+    "@astrojs/svelte": "^7.2.2",
+    "@mlc-ai/web-llm": "^0.2.79",
+    "astro": "^5.15.9",
+    "svelte": "^5.43.14",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "prettier": "^3.6.2",
-    "prettier-plugin-astro": "^0.14.1"
+    "prettier-plugin-astro": "^0.14.1",
+    "prettier-plugin-svelte": "^3.4.0"
   }
 }
