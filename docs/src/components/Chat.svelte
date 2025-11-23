@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   const assistantName = "BR Lite Buddy";
 
   import { writable } from "svelte/store";
@@ -47,20 +49,14 @@
 
   // Change writable type to SimpleMessage[]
   const messages = writable<SimpleMessage[]>([initialMessage]);
-  let input = "";
-  let isLoading = false; // Loading during conversation
-  let messagesEnd: HTMLDivElement;
+  let input = $state("");
+  let isLoading = $state(false); // Loading during conversation
+  let messagesEnd: HTMLDivElement = $state();
 
   // Monitor LLM store status
   const llmState = llmStore;
 
-  // Determine LLM status
-  $: isLLMReady = $llmState.status === "ready";
-  $: isLLMLoading = $llmState.status === "loading";
-  $: isLLMPending = $llmState.status === "pending";
 
-  // Reactive statement to scroll to the bottom when messages change
-  $: ($messages, scrollToBottom());
 
   /** Scrolls the chat view to the bottom. */
   function scrollToBottom() {
@@ -179,6 +175,14 @@ ${FaqContent}
       isLoading = false;
     }
   }
+  // Determine LLM status
+  let isLLMReady = $derived($llmState.status === "ready");
+  let isLLMLoading = $derived($llmState.status === "loading");
+  let isLLMPending = $derived($llmState.status === "pending");
+  // Reactive statement to scroll to the bottom when messages change
+  run(() => {
+    ($messages, scrollToBottom());
+  });
 </script>
 
 <div class="chat-container">
