@@ -21,6 +21,7 @@ This plugin allows you to remove the background from your video source without a
 </p>
 
 </div>
+
 ---
 
 ## 🧠 Engineering & UX Philosophy
