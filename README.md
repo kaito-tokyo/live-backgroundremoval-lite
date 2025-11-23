@@ -46,7 +46,7 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 * **Technique:** Custom Pixel Shader (Fast Guided Filter Implementation)
 * To turn the low-res (256x144) mask back into a crisp, full-resolution image, we utilize the **Fast Guided Filter** [2]—an accelerated variant of the original Guided Filter [1].
 * **Benefit:** This algorithm performs computations on a subsampled grid, drastically reducing the number of pixels to process. Combined with a **Separable (Horizontal/Vertical) implementation**, this achieves theoretical optimality in computational complexity, delivering high-quality edge preservation with minimal GPU overhead.
-    > *We consciously utilize published, non-patented algorithms to ensure complete legal safety and transparency.*
+    > *We consciously utilize published, non-patented algorithms to minimize legal risks and ensure transparency.*
 
 ### 4. 🌊 Temporal Smoothing (GPU)
 * **Technique:** Minimum Group Delay Averaging
