@@ -1,71 +1,24 @@
 ---
 import { joinURL } from "ufo";
 
+import Layout from "./Layout.astro";
+
 interface Props {
   frontmatter: {
-    title: string;
     lang: string;
+    title: string;
+    description: string;
   };
 }
 
-const { title, lang } = Astro.props.frontmatter;
 const { BASE_URL } = import.meta.env;
-
-const backToTopText = lang === "ja" ? "トップページへ戻る" : "Back to Top";
+const { lang, title, description } = Astro.props.frontmatter;
 ---
 
-<!doctype html>
-<html lang={lang}>
-  <head>
-    <meta charset="utf-8" />
-    <link
-      rel="icon"
-      type="image/png"
-      href={joinURL(BASE_URL, "favicon-96x96.png")}
-      sizes="96x96"
-    />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href={joinURL(BASE_URL, "favicon.svg")}
-    />
-    <link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href={joinURL(BASE_URL, "apple-touch-icon.png")}
-    />
-    <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
-  </head>
-  <body>
-    <main>
-      <div class="white-box">
-        <slot />
-        <a href="/">{backToTopText}</a>
-      </div>
-    </main>
-  </body>
-</html>
+<Layout lang={lang} title={title} description={description}>
+  <main class="white-box">
+    <slot />
 
-<style>
-  body {
-    background-color: #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    margin: 0;
-  }
-  .white-box {
-    background-color: #fff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 800px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-</style>
+    <p><a href={joinURL(BASE_URL, "/")}>Back to the top page</a></p>
+  </main>
+</Layout>
