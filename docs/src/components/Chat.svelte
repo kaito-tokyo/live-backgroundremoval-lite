@@ -1,4 +1,6 @@
 <script lang="ts">
+  const assistantName = "BR Lite Buddy";
+
   import { writable } from "svelte/store";
   import { llmStore } from "../lib/llm.ts";
   // Please correct the appropriate path
@@ -40,7 +42,7 @@
   // Initialize messages with an initial assistant greeting
   const initialMessage = createMessage(
     "assistant",
-    "Hi there! I'm Cora, your interactive support assistant. Feel free to ask me anything about the knowledge base, and I'll do my best to help you out! 🤖",
+    `Hi there! I'm ${assistantName}, your interactive support assistant. Feel free to ask me anything about the knowledge base, and I'll do my best to help you out! 🤖`,
   );
 
   // Change writable type to SimpleMessage[]
@@ -96,7 +98,7 @@
 
   // System prompt including FAQ content (Used every time)
   const systemPrompt = `
-You are Cora, a friendly and helpful interactive support assistant.
+You are ${assistantName}, a friendly and helpful interactive support assistant.
 Your primary goal is to provide clear, concise, and structured answers to the user's questions, prioritizing the information contained within the "KNOWLEDGE BASE" provided below.
 
 When answering, please adhere to these guidelines:
@@ -179,8 +181,6 @@ ${FaqContent}
   }
 </script>
 
----
-
 <div class="chat-container">
   <div class="message-list">
     {#if isLLMPending}
@@ -205,7 +205,7 @@ ${FaqContent}
           class:user={message.role === "user"}
           class:assistant={message.role === "assistant"}
         >
-          <span class="role">{message.role === "user" ? "You" : "Cora"}:</span>
+          <span class="role">{message.role === "user" ? "You" : assistantName}:</span>
           <pre style="white-space: pre-wrap; font-family: inherit;">{(
               message.parts[0] as TextPart
             )?.text || "..."}</pre>
