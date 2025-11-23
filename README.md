@@ -14,7 +14,7 @@ We built this plugin with two core goals: to maximize your hardware's potential 
 
 ### 1. The "Smart Hybrid" Approach (Engineering)
 Most AI plugins rely heavily on the GPU, causing frame drops in games. We challenge this status quo.
-* **Optimized CPU Inference:** We proved that **highly optimized CPU inference** is superior for multitasking. By offloading the AI to the CPU, we keep the **GPU load negligible**, preserving maximum headroom for your games and rendering.
+* **Optimized CPU Inference:** We found that **highly optimized CPU inference** works better for multitasking scenarios. By offloading the AI to the CPU, we keep the **GPU load negligible**, preserving maximum headroom for your games and rendering.
 * **Native GPU Post-Processing:** We use OBS's native GPU capabilities for image processing (scaling, masking). This ensures **zero compatibility issues** or driver conflicts.
 
 ### 2. ✨ "It Just Works" (User Experience)
