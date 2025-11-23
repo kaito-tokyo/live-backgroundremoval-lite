@@ -149,8 +149,8 @@ obs_properties_t *MainPluginContext::getProperties()
 
 					newDebugWindow->setAttribute(Qt::WA_DeleteOnClose);
 
-					QObject::connect(newDebugWindow, &QDialog::destroyed,
-							 [newDebugWindow, weakSelf = this_->weak_from_this()]() {
+					QObject::connect(newDebugWindow, &QDialog::finished,
+							 [newDebugWindow, weakSelf = this_->weak_from_this()](int) {
 								 if (auto self = weakSelf.lock()) {
 									 std::lock_guard<std::mutex> lock(
 										 self->debugWindowMutex_);
