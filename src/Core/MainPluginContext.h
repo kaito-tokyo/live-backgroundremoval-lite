@@ -88,9 +88,9 @@ private:
 	PluginProperty pluginProperty_;
 
 	mutable std::mutex renderingContextMutex_;
-	std::shared_ptr<RenderingContext> renderingContext_;
+	std::shared_ptr<RenderingContext> renderingContext_ = nullptr;
 
-	DebugWindow *debugWindow_;
+	DebugWindow *debugWindow_ = nullptr;
 	mutable std::mutex debugWindowMutex_;
 };
 
