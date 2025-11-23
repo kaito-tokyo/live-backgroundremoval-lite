@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   const assistantName = "BR Lite Buddy";
 
   import { writable } from "svelte/store";
@@ -51,22 +49,10 @@
   const messages = writable<SimpleMessage[]>([initialMessage]);
   let input = $state("");
   let isLoading = $state(false); // Loading during conversation
-  let messagesEnd: HTMLDivElement = $state();
+  let messagesEnd: HTMLDivElement | undefined = $state();
 
   // Monitor LLM store status
   const llmState = llmStore;
-
-
-
-  /** Scrolls the chat view to the bottom. */
-  function scrollToBottom() {
-    if (messagesEnd) {
-      // Use setTimeout to ensure the DOM has updated before scrolling
-      setTimeout(() => {
-        messagesEnd.scrollIntoView({ behavior: "smooth" });
-      }, 0);
-    }
-  }
 
   /** Handler for the user agreeing to download and starting LLM initialization */
   function handleAgreeAndStart() {
@@ -175,13 +161,19 @@ ${FaqContent}
       isLoading = false;
     }
   }
+
   // Determine LLM status
   let isLLMReady = $derived($llmState.status === "ready");
   let isLLMLoading = $derived($llmState.status === "loading");
   let isLLMPending = $derived($llmState.status === "pending");
+
   // Reactive statement to scroll to the bottom when messages change
-  run(() => {
-    ($messages, scrollToBottom());
+  $effect(() => {
+    $messages;
+
+    if (messagesEnd) {
+      messagesEnd.scrollIntoView({ behavior: "smooth" });
+    }
   });
 </script>
 
@@ -209,7 +201,9 @@ ${FaqContent}
           class:user={message.role === "user"}
           class:assistant={message.role === "assistant"}
         >
-          <span class="role">{message.role === "user" ? "You" : assistantName}:</span>
+          <span class="role"
+            >{message.role === "user" ? "You" : assistantName}:</span
+          >
           <pre style="white-space: pre-wrap; font-family: inherit;">{(
               message.parts[0] as TextPart
             )?.text || "..."}</pre>
