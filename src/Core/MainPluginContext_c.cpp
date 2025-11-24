@@ -23,6 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <obs-module.h>
 
 #include <GsUnique.hpp>
+#include <NullLogger.hpp>
 #include <ObsLogger.hpp>
 
 #include <UpdateChecker.hpp>
@@ -35,88 +36,107 @@ using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 
 namespace {
 
-inline std::shared_future<std::string> &latestVersionFutureInstance()
-{
-	static std::shared_future<std::string> instance;
-	return instance;
-}
-
-inline const ILogger &loggerInstance()
-{
+inline const ILogger &loggerInstance() noexcept
+try {
 	static const ObsLogger instance("[" PLUGIN_NAME "] ");
 	return instance;
+} catch (const std::exception &e) {
+	fprintf(stderr, "Failed to create logger instance: %s\n", e.what());
+	static const NullLogger nullInstance;
+	return nullInstance;
+} catch (...) {
+	fprintf(stderr, "Failed to create logger instance: unknown error\n");
+	static const NullLogger nullInstance;
+	return nullInstance;
+}
+
+inline std::shared_future<std::string> *latestVersionFutureInstance() noexcept
+{
+	const ILogger &logger = loggerInstance();
+
+	try {
+		static std::shared_future<std::string> instance =
+			std::async(std::launch::async, [&logger] {
+				PluginConfig pluginConfig(PluginConfig::load(logger));
+				return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
+			}).share();
+
+		return &instance;
+	} catch (const std::exception &e) {
+		logger.logException(e, "Failed to create latest version future instance");
+		static std::shared_future<std::string> failedInstance;
+		return &failedInstance;
+	} catch (...) {
+		logger.error("Failed to create latest version future instance: unknown error");
+		static std::shared_future<std::string> failedInstance;
+		return &failedInstance;
+	}
 }
 
 } // namespace
 
 bool main_plugin_context_module_load()
-try {
+{
 	curl_global_init(CURL_GLOBAL_DEFAULT);
-	latestVersionFutureInstance() =
-		std::async(std::launch::async, [] {
-			PluginConfig pluginConfig(PluginConfig::load(loggerInstance()));
-			return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
-		}).share();
+
+	const ILogger &logger = loggerInstance();
+	if (logger.isInvalid()) {
+		fprintf(stderr, "Logger instance is invalid\n");
+		return false;
+	}
+
+	latestVersionFutureInstance();
+
 	return true;
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to load main plugin context: %s", e.what());
-	return false;
-} catch (...) {
-	loggerInstance().error("Failed to load main plugin context: unknown error");
-	return false;
 }
 
 void main_plugin_context_module_unload()
-try {
+{
 	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
 	curl_global_cleanup();
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to unload plugin context: %s", e.what());
-} catch (...) {
-	loggerInstance().error("Failed to unload main plugin context: unknown error");
 }
 
-const char *main_plugin_context_get_name(void *type_data)
+const char *main_plugin_context_get_name(void *)
 {
-	UNUSED_PARAMETER(type_data);
 	return obs_module_text("pluginName");
 }
 
 void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
-try {
+{
+	const ILogger &logger = loggerInstance();
+	const auto &latestVersionFuture = latestVersionFutureInstance();
 	GraphicsContextGuard graphicsContextGuard;
-	auto self =
-		std::make_shared<MainPluginContext>(settings, source, latestVersionFutureInstance(), loggerInstance());
-	return new std::shared_ptr<MainPluginContext>(self);
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to create main plugin context: %s", e.what());
-	return nullptr;
-} catch (...) {
-	loggerInstance().error("Failed to create main plugin context: unknown error");
-	return nullptr;
+	try {
+		auto self = std::make_shared<MainPluginContext>(settings, source, latestVersionFuture, logger);
+		return new std::shared_ptr<MainPluginContext>(self);
+	} catch (const std::exception &e) {
+		logger.logException(e, "Failed to create main plugin context");
+		return nullptr;
+	} catch (...) {
+		logger.error("Failed to create main plugin context: unknown error");
+		return nullptr;
+	}
 }
 
 void main_plugin_context_destroy(void *data)
-try {
+{
+	const ILogger &logger = loggerInstance();
+
 	if (!data) {
-		loggerInstance().error("main_plugin_context_destroy called with null data");
+		logger.error("main_plugin_context_destroy called with null data");
 		return;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	self->get()->shutdown();
-	delete self;
+	auto selfPtr = static_cast<std::shared_ptr<MainPluginContext> *>(data);
+	auto self = selfPtr->get();
+	if (!self) {
+		logger.error("main_plugin_context_destroy called with null MainPluginContext");
+		return;
+	}
 
-	GraphicsContextGuard graphicsContextGuard;
-	GsUnique::drain();
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to destroy main plugin context: %s", e.what());
-
-	GraphicsContextGuard graphicsContextGuard;
-	GsUnique::drain();
-} catch (...) {
-	loggerInstance().error("Failed to destroy main plugin context: unknown error");
+	self->shutdown();
+	delete selfPtr;
 
 	GraphicsContextGuard graphicsContextGuard;
 	GsUnique::drain();
@@ -124,24 +144,38 @@ try {
 
 std::uint32_t main_plugin_context_get_width(void *data)
 {
+	const ILogger &logger = loggerInstance();
+
 	if (!data) {
-		loggerInstance().error("main_plugin_context_get_width called with null data");
+		logger.error("main_plugin_context_get_width called with null data");
 		return 0;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	return self->get()->getWidth();
+	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data)->get();
+	if (!self) {
+		logger.error("main_plugin_context_get_width called with null MainPluginContext");
+		return 0;
+	}
+
+	return self->getWidth();
 }
 
 std::uint32_t main_plugin_context_get_height(void *data)
 {
+	const ILogger &logger = loggerInstance();
+
 	if (!data) {
-		loggerInstance().error("main_plugin_context_get_height called with null data");
+		logger.error("main_plugin_context_get_height called with null data");
 		return 0;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	return self->get()->getHeight();
+	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data)->get();
+	if (!self) {
+		logger.error("main_plugin_context_get_height called with null MainPluginContext");
+		return 0;
+	}
+
+	return self->getHeight();
 }
 
 void main_plugin_context_get_defaults(obs_data_t *data)
@@ -150,89 +184,121 @@ void main_plugin_context_get_defaults(obs_data_t *data)
 }
 
 obs_properties_t *main_plugin_context_get_properties(void *data)
-try {
+{
+	const ILogger &logger = loggerInstance();
+
 	if (!data) {
-		loggerInstance().error("main_plugin_context_get_properties called with null data");
+		logger.error("main_plugin_context_get_properties called with null data");
 		return obs_properties_create();
 	}
 
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	return self->get()->getProperties();
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to get properties: %s", e.what());
-	return obs_properties_create();
-} catch (...) {
-	loggerInstance().error("Failed to get properties: unknown error");
+	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data)->get();
+	if (!self) {
+		logger.error("main_plugin_context_get_properties called with null MainPluginContext");
+		return obs_properties_create();
+	}
+
+	try {
+		return self->getProperties();
+	} catch (const std::exception &e) {
+		logger.logException(e, "Failed to get properties");
+	} catch (...) {
+		logger.error("Failed to get properties: unknown error");
+	}
+
 	return obs_properties_create();
 }
 
 void main_plugin_context_update(void *data, obs_data_t *settings)
-try {
+{
+	const ILogger &logger = loggerInstance();
+
 	if (!data) {
 		loggerInstance().error("main_plugin_context_update called with null data");
 		return;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	self->get()->update(settings);
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to update main plugin context: %s", e.what());
-} catch (...) {
-	loggerInstance().error("Failed to update main plugin context: unknown error");
+	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data)->get();
+	if (!self) {
+		logger.error("main_plugin_context_update called with null MainPluginContext");
+		return;
+	}
+
+	try {
+		self->update(settings);
+	} catch (const std::exception &e) {
+		logger.logException(e, "Failed to update main plugin context");
+	} catch (...) {
+		logger.error("Failed to update main plugin context: unknown error");
+	}
 }
 
 void main_plugin_context_video_tick(void *data, float seconds)
-try {
+{
+	const ILogger &logger = loggerInstance();
+
 	if (!data) {
-		loggerInstance().error("main_plugin_context_video_tick called with null data");
+		logger.error("main_plugin_context_video_tick called with null data");
 		return;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	self->get()->videoTick(seconds);
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to tick main plugin context: %s", e.what());
-} catch (...) {
-	loggerInstance().error("Failed to tick main plugin context: unknown error");
+	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data)->get();
+	try {
+		self->videoTick(seconds);
+	} catch (const std::exception &e) {
+		logger.logException(e, "Failed to tick main plugin context");
+	} catch (...) {
+		logger.error("Failed to tick main plugin context: unknown error");
+	}
 }
 
-void main_plugin_context_video_render(void *data, gs_effect_t *_unused)
-try {
-	UNUSED_PARAMETER(_unused);
+void main_plugin_context_video_render(void *data, gs_effect_t *)
+{
+	const ILogger &logger = loggerInstance();
 
 	if (!data) {
-		loggerInstance().error("main_plugin_context_video_render called with null data");
+		logger.error("main_plugin_context_video_render called with null data");
 		return;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	self->get()->videoRender();
-	GsUnique::drain();
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to render video in main plugin context: %s", e.what());
-} catch (...) {
-	loggerInstance().error("Failed to render video in main plugin context: unknown error");
+	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data)->get();
+	try {
+		self->videoRender();
+		GsUnique::drain();
+	} catch (const std::exception &e) {
+		logger.logException(e, "Failed to render video in main plugin context");
+	} catch (...) {
+		logger.error("Failed to render video in main plugin context: unknown error");
+	}
 }
 
 struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs_source_frame *frame)
-try {
-	if (!data) {
-		loggerInstance().error("main_plugin_context_filter_video called with null data");
-		return frame;
-	}
+{
+	const ILogger &logger = loggerInstance();
 
 	if (!frame) {
-		loggerInstance().error("main_plugin_context_filter_video called with null frame");
+		logger.error("main_plugin_context_filter_video called with null frame");
 		return nullptr;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data);
-	obs_source_frame *result = self->get()->filterVideo(frame);
-	return result;
-} catch (const std::exception &e) {
-	loggerInstance().error("Failed to filter video in main plugin context: %s", e.what());
-	return frame;
-} catch (...) {
-	loggerInstance().error("Failed to filter video in main plugin context: unknown error");
+	if (!data) {
+		logger.error("main_plugin_context_filter_video called with null data");
+		return frame;
+	}
+
+	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data)->get();
+	if (!self) {
+		logger.error("main_plugin_context_filter_video called with null MainPluginContext");
+		return frame;
+	}
+
+	try {
+		return self->filterVideo(frame);
+	} catch (const std::exception &e) {
+		logger.logException(e, "Failed to filter video in main plugin context");
+	} catch (...) {
+		logger.error("Failed to filter video in main plugin context: unknown error");
+	}
+
 	return frame;
 }
