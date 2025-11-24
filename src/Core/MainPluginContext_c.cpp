@@ -50,7 +50,7 @@ try {
 	return nullInstance;
 }
 
-inline std::shared_future<std::string> *latestVersionFutureInstance() noexcept
+inline std::shared_future<std::string> &latestVersionFutureInstance() noexcept
 {
 	const ILogger &logger = loggerInstance();
 
@@ -61,15 +61,15 @@ inline std::shared_future<std::string> *latestVersionFutureInstance() noexcept
 				return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
 			}).share();
 
-		return &instance;
+		return instance;
 	} catch (const std::exception &e) {
 		logger.logException(e, "Failed to create latest version future instance");
 		static std::shared_future<std::string> failedInstance;
-		return &failedInstance;
+		return failedInstance;
 	} catch (...) {
 		logger.error("Failed to create latest version future instance: unknown error");
 		static std::shared_future<std::string> failedInstance;
-		return &failedInstance;
+		return failedInstance;
 	}
 }
 
@@ -105,7 +105,7 @@ const char *main_plugin_context_get_name(void *)
 void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
 {
 	const ILogger &logger = loggerInstance();
-	const auto &latestVersionFuture = latestVersionFutureInstance();
+	auto latestVersionFuture = latestVersionFutureInstance();
 	GraphicsContextGuard graphicsContextGuard;
 	try {
 		auto self = std::make_shared<MainPluginContext>(settings, source, latestVersionFuture, logger);

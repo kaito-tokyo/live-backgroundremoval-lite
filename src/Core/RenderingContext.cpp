@@ -290,8 +290,14 @@ void RenderingContext::videoRender()
 
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 		auto segmenterInputBuffer = selfieSegmenterMemoryBlockPool_->acquire();
+		if (!segmenterInputBuffer) {
+			logger_.error("Failed to acquire memory block for segmenter input");
+			return;
+		}
+
 		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
 			  segmenterInputBuffer->begin());
+
 		selfieSegmenterTaskQueue_.push(
 			[weakSelf = weak_from_this(), segmenterInputBuffer = std::move(segmenterInputBuffer)](
 				const ThrottledTaskQueue::CancellationToken &token) {

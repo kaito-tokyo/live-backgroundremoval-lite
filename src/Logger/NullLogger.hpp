@@ -36,7 +36,7 @@ public:
 	bool isInvalid() const noexcept override { return true; }
 
 protected:
-	void log(LogLevel level, std::string_view message) const noexcept override
+	void log(LogLevel, std::string_view) const noexcept override
 	{
 		// No-op
 	}
