@@ -11,9 +11,9 @@
 
 ## Building and Running Tests on macOS
 
-1. Run `cmake --preset macos-testing`.
-2. Run `cmake --build --preset macos-testing`.
-3. Run `ctest --preset macos-testing --rerun-failed --output-on-failure`.
+1. Run `cmake --preset macos`.
+2. Run `cmake --build --preset macos`.
+3. Run `ctest --preset macos --rerun-failed --output-on-failure`.
 
 ## Testing the Plugin with OBS on Mac
 

@@ -160,6 +160,11 @@ public:
 		error("[LOGGER FATAL] Unknown error during exception logging.");
 	}
 
+	/**
+	 * @brief Returns true if this logger is an invalid logger.
+	 */
+	virtual bool isInvalid() const noexcept { return false; }
+
 protected:
 	/**
 	 * @brief Defines the severity levels for log messages.
