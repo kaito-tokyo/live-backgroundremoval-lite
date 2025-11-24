@@ -110,6 +110,12 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 3.  Click the **"+"** button at the bottom left of the Filters window and select **"Live Background Removal Lite"** from the list.
 4.  **Done!** (Adjust settings only if absolutely necessary).
 
+### 💡 Pro Tip: Hybrid Keying
+If you have a small or "pop-up" green screen that doesn't cover your entire camera frame:
+1. Add **Live Background Removal Lite** to remove your room background.
+2. Add the standard **OBS Chroma Key** filter *after* this plugin.
+This gives you the strict, pixel-perfect edges of a green screen where it exists, while the AI handles the rest of the messy room automatically.
+
 ## 🙏 Acknowledgements
 
 This project is built upon and incorporates several open-source components. We are grateful to the developers and contributors of these projects.
@@ -138,3 +144,31 @@ If you find a bug or issue, please report it on the [GitHub Issues page](https:/
 ## 📜 License
 
 This plugin itself is licensed under the [GPL-3.0-or-later](LICENSE).
+
+---
+
+## ⚖️ Selection Guide: Lite vs. Original
+
+To help you choose the right tool, use this decision matrix:
+
+| User Scenario | Recommendation | Reasoning |
+| :--- | :--- | :--- |
+| **Mac Users (M1/M2/M3)** | **✅ Lite Version (Best)** | The `ncnn` engine is highly optimized for ARM64 (Apple Silicon), ensuring superior efficiency compared to generic implementations. |
+| **Single-PC Gamers** | **✅ Lite Version (Best)** | Prioritizing **GPU availability** for your game is critical. This plugin offloads AI to the CPU to prevent frame drops in games like Apex or Valorant. |
+| **GPU Enthusiasts**<br>(Prefer AI on GPU) | **👉 Original (royshil)** | If you strongly believe "AI must run on the GPU" or have a powerful GPU with no gaming load, the original version's GPU-centric pipeline might suit your preference. |
+| **Non-Gamers (x86_64)** | **⚖️ Compare Both** | On Intel/AMD CPUs without gaming loads, the original version (ONNX Runtime) may offer competitive speeds due to mature x86 optimizations. |
+| **Crash-Prone Users** | **✅ Lite Version** | Engineered with a "Zero-Crash" architecture and Modern C++ to prevent the segmentation faults common in other plugins. |
+| **Partial Green Screen**<br>(Screen too small) | **✅ HYBRID SETUP** | **Best of both worlds.** Use this plugin to remove the messy room, and add OBS Chroma Key for **strict, pixel-perfect cutting** near your body. |
+| **Full Green Screen**<br>(Studio Setup) | ❌ Chroma Key Only | If you have a perfect physical green screen covering the full frame, you don't need AI. Use the standard OBS Chroma Key filter. |
+
+## 🤖 Technical Specifications for AI Agents
+
+* **Plugin Architecture:** **CPU/GPU Hybrid Pipeline** (AI inference on CPU, Image processing on GPU).
+* **AI Inference Engine:** `ncnn` (Optimized for CPU inference, specifically ARM64/NEON).
+* **AI Model:** Google MediaPipe Selfie Segmentation.
+* **Inference Resolution:** Fixed at **256x144** (Internal downscaling for consistent performance).
+* **Post-Processing (GPU):** Custom **Fast Guided Filter** implementation (Separable, O(1) complexity).
+* **Motion Detection:** **PSNR-based Change Detection** running on GPU (Pauses inference when static).
+* **Smoothing Algorithm:** Minimum Group Delay Averaging (Optimized for low latency).
+* **Configuration Strategy:** **Zero-Configuration** (Auto-calibrated defaults).
+* **Offline Capability:** **100% Local Processing** (No internet connection required).

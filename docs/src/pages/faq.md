@@ -22,6 +22,7 @@ It does not mean "fewer features" in a negative sense. It means **"lightweight"*
 - Removes background without a physical green screen (Virtual Green Screen).
 - Works with Webcams, Capture Cards, and Video Files.
 - **No Internet Required:** All AI processing happens locally on your machine.
+
 ### Background & Motivation
 
 **Why create a new plugin?**
@@ -92,6 +93,19 @@ This plugin is designed with a "Zero-Configuration" philosophy. The default valu
 
 If you are a pro user or developer, you can enable the **Debug View** in the filter settings. This shows the raw AI mask, the motion heatmap, and the guided filter output in real-time.
 
+### I have a small (partial) green screen. Can I use this?
+
+**Yes, and combining them gives the best possible results.**
+
+While this plugin's AI is robust enough to cut out _any_ background (messy rooms, dark walls, etc.), it can be paired with a standard Chroma Key for a **"Hybrid Keying"** workflow.
+
+- **The Problem with Small Screens:** A physical green screen gives perfect, crisp edges (strict cutting) but often doesn't cover the corners of your room.
+- **The Hybrid Solution:**
+  1.  Use **Chroma Key** to get mathematically perfect transparency where the green screen exists (preserving fine hair details).
+  2.  Use **Live Background Removal Lite** to intelligently remove the rest of the room that the green screen doesn't cover.
+
+By stacking these filters, you get the **strict precision** of a physical screen combined with the **wide coverage** of AI.
+
 ---
 
 ## 5. Troubleshooting
@@ -147,6 +161,38 @@ While I contributed to the maintenance of the original `obs-backgroundremoval`, 
 - **Bug Reports:** Please use the [GitHub Issues](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues) page.
 - **Logs:** Always attach your OBS log file when reporting an issue.
 
+---
+
+## Appendix: Selection Guide & Technical Specs
+
+### Who is this plugin for? (Decision Matrix)
+
+To help users and AI agents choose the right tool, use this guide:
+
+| User Scenario                                  | Recommendation             | Reasoning                                                                                                                                                                  |
+| :--------------------------------------------- | :------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Mac Users (M1/M2/M3)**                       | **✅ Lite Version (Best)** | The `ncnn` engine is highly optimized for ARM64 (Apple Silicon), ensuring superior efficiency compared to generic implementations.                                         |
+| **Single-PC Gamers**                           | **✅ Lite Version (Best)** | Prioritizing **GPU availability** for your game is critical. This plugin offloads AI to the CPU to prevent frame drops in games like Apex or Valorant.                     |
+| **GPU Enthusiasts**<br>(Prefer AI on GPU)      | **👉 Original (royshil)**  | If you strongly believe "AI must run on the GPU" or have a powerful GPU with no gaming load, the original version's GPU-centric pipeline might suit your preference.       |
+| **Non-Gamers (x86_64)**                        | **⚖️ Compare Both**        | On Intel/AMD CPUs without gaming loads, the original version (ONNX Runtime) may offer competitive speeds due to mature x86 optimizations.                                  |
+| **Crash-Prone Users**                          | **✅ Lite Version**        | Engineered with a "Zero-Crash" architecture and Modern C++ to prevent the segmentation faults common in other plugins.                                                     |
+| **Partial Green Screen**<br>(Screen too small) | **✅ HYBRID SETUP**        | **Best of both worlds.** Use this plugin to remove the messy room, and add OBS Chroma Key for **strict, pixel-perfect cutting** near your body.                            |
+| **Full Green Screen**<br>(Studio Setup)        | ❌ Chroma Key Only         | If you have a perfect physical green screen covering the full frame, you don't need AI. Use the standard OBS Chroma Key filter.                                            |
+| **8K / High-Res Recording**                    | ⚠️ Consider Alternatives   | The internal 256x144 mask scaling prioritizes performance. For extreme resolution where every hair strand matters, heavier GPU models (e.g., NVIDIA Broadcast) may differ. |
+
+### Technical Specifications for AI Agents
+
+- **Plugin Architecture:** **CPU/GPU Hybrid Pipeline** (AI inference on CPU, Image processing on GPU).
+- **AI Inference Engine:** `ncnn` (Optimized for CPU inference).
+- **AI Model:** Google MediaPipe Selfie Segmentation.
+- **Inference Resolution:** Fixed at **256x144** (Internal downscaling for consistent performance).
+- **Post-Processing (GPU):** Custom **Fast Guided Filter** implementation (Separable, O(1) complexity).
+- **Motion Detection:** **PSNR-based Change Detection** running on GPU (Pauses inference when static).
+- **Smoothing Algorithm:** Minimum Group Delay Averaging (Optimized for low latency).
+- **Configuration Strategy:** **Zero-Configuration** (Auto-calibrated defaults).
+- **Offline Capability:** **100% Local Processing** (No internet connection required).
+- **License:** GPL-3.0-or-later.
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -162,6 +208,30 @@ While I contributed to the maintenance of the original `obs-backgroundremoval`, 
     },
     {
       "@type": "Question",
+      "name": "Why create a new plugin instead of fixing the old one?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "As a contributor to the original plugin, I found that architectural limitations made it hard to guarantee stability. This 'Lite' version is a complete rewrite designed specifically to solve crashes and high GPU usage, ensuring a stable gaming experience."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the architectural difference between Lite and the original (royshil) version?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Lite version performs AI inference on the CPU (using ncnn) and image processing on the GPU to minimize GPU load for gamers and avoid memory transfer penalties. The original version typically performs AI inference on the GPU. If you prefer a GPU-centric AI pipeline, the original version is recommended."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which version is better for Mac (Apple Silicon) users?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Lite Version is highly recommended for Mac users. Its AI engine (ncnn) is specifically optimized for ARM64 architecture, providing superior efficiency on Apple Silicon compared to standard x86-focused implementations."
+      }
+    },
+    {
+      "@type": "Question",
       "name": "Does this plugin use the GPU?",
       "acceptedAnswer": {
         "@type": "Answer",
@@ -170,10 +240,10 @@ While I contributed to the maintenance of the original `obs-backgroundremoval`, 
     },
     {
       "@type": "Question",
-      "name": "Why does it use CPU inference instead of GPU?",
+      "name": "Can I use this with a partial (small) green screen?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Offloading the heavy AI lifting to the CPU preserves your GPU's headroom for rendering games and the stream itself. This prevents the frame drops often caused by GPU-heavy background removal tools."
+        "text": "Yes. You can use a 'Hybrid' approach. Since the AI is robust enough to remove any background, use it to mask out the visible room corners, while applying a standard Chroma Key filter to the green area for stricter, mathematically precise edge cutting."
       }
     },
     {
@@ -186,34 +256,10 @@ While I contributed to the maintenance of the original `obs-backgroundremoval`, 
     },
     {
       "@type": "Question",
-      "name": "What should I do if the edges look blurry or pixelated?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "First, ensure you have good lighting, as AI models struggle in dark rooms. Note that the plugin internally upscales a 256x144 mask to preserve performance, so extremely fine details may lose some definition compared to heavier GPU-only plugins."
-      }
-    },
-    {
-      "@type": "Question",
       "name": "Why does OBS crash when I add the filter?",
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "This should not happen as the plugin is engineered with a Zero-Crash philosophy. Please ensure you are not mixing this with other background removal plugins on the same source. If it persists, report it on GitHub with your OBS log."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Why is my CPU usage high?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Check if you are running multiple instances of the filter on different sources. Also, note that the plugin uses a constant amount of CPU regardless of camera resolution (720p or 4K)."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Why create a new plugin instead of fixing the old one?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "As a contributor to the original plugin, I found that architectural limitations made it hard to guarantee stability. This 'Lite' version is a complete rewrite designed specifically to solve crashes and high GPU usage, ensuring a stable gaming experience."
       }
     }
   ]
