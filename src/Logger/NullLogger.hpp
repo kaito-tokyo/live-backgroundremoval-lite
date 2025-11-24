@@ -31,7 +31,7 @@ namespace Logger {
 
 class NullLogger final : public ILogger {
 public:
-	NullLogger() {}
+	NullLogger() = default;
 	~NullLogger() noexcept override = default;
 	bool isInvalid() const noexcept override { return true; }
 
