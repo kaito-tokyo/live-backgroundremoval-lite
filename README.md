@@ -114,7 +114,7 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 If you have a small or "pop-up" green screen that doesn't cover your entire camera frame:
 1. Add **Live Background Removal Lite** to remove your room background.
 2. Add the standard **OBS Chroma Key** filter *after* this plugin.
-This gives you the strict, pixel-perfect edges of a green screen where it exists, while the AI handles the rest of the messy room automatically.
+This gives you the clean, pixel-perfect edges of a green screen where it exists, while the AI handles the rest of the messy room automatically.
 
 ## 🙏 Acknowledgements
 

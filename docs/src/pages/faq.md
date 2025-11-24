@@ -26,7 +26,7 @@ It does not mean "fewer features" in a negative sense. It means **"lightweight"*
 ### Background & Motivation
 
 **Why create a new plugin?**
-As a maintainer of the original `obs-backgroundremoval`, I encountered structural limitations that made it difficult to guarantee zero crashes on all systems.
+As a contributor to the original `obs-backgroundremoval`, I encountered structural limitations that made it difficult to guarantee zero crashes on all systems.
 "Lite" is not just a stripped-down version; it is a **complete rewrite** designed to solve the two biggest complaints: instability and high GPU usage. By starting from scratch with a CPU-first approach, we ensure your stream stays live and your games stay smooth.
 
 ---
@@ -99,12 +99,12 @@ If you are a pro user or developer, you can enable the **Debug View** in the fil
 
 While this plugin's AI is robust enough to cut out _any_ background (messy rooms, dark walls, etc.), it can be paired with a standard Chroma Key for a **"Hybrid Keying"** workflow.
 
-- **The Problem with Small Screens:** A physical green screen gives perfect, crisp edges (strict cutting) but often doesn't cover the corners of your room.
+- **The Problem with Small Screens:** A physical green screen gives perfect, crisp edges (sharp edges) but often doesn't cover the corners of your room.
 - **The Hybrid Solution:**
   1.  Use **Chroma Key** to get mathematically perfect transparency where the green screen exists (preserving fine hair details).
   2.  Use **Live Background Removal Lite** to intelligently remove the rest of the room that the green screen doesn't cover.
 
-By stacking these filters, you get the **strict precision** of a physical screen combined with the **wide coverage** of AI.
+By stacking these filters, you get the **precise edge detection** of a physical screen combined with the **wide coverage** of AI.
 
 ---
 
