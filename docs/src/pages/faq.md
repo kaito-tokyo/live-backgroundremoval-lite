@@ -22,6 +22,11 @@ It does not mean "fewer features" in a negative sense. It means **"lightweight"*
 - Removes background without a physical green screen (Virtual Green Screen).
 - Works with Webcams, Capture Cards, and Video Files.
 - **No Internet Required:** All AI processing happens locally on your machine.
+### Background & Motivation
+
+**Why create a new plugin?**
+As a maintainer of the original `obs-backgroundremoval`, I encountered structural limitations that made it difficult to guarantee zero crashes on all systems.
+"Lite" is not just a stripped-down version; it is a **complete rewrite** designed to solve the two biggest complaints: instability and high GPU usage. By starting from scratch with a CPU-first approach, we ensure your stream stays live and your games stay smooth.
 
 ---
 
@@ -114,6 +119,11 @@ If you are a pro user or developer, you can enable the **Debug View** in the fil
 
 ## 6. Comparison with `obs-backgroundremoval`
 
+### Is this a fork?
+
+No, it is a complete **rewrite**.
+While I contributed to the maintenance of the original `obs-backgroundremoval`, this "Lite" version was developed to address architectural challenges that were difficult to solve in the legacy codebase. It shifts the focus from "general-purpose AI features" to **"gaming-first stability."**
+
 | Feature        | Original (`obs-backgroundremoval`) | Live Background Removal Lite            |
 | :------------- | :--------------------------------- | :-------------------------------------- |
 | **Codebase**   | Legacy implementation              | **Rewritten from scratch (Modern C++)** |
@@ -196,6 +206,14 @@ If you are a pro user or developer, you can enable the **Debug View** in the fil
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Check if you are running multiple instances of the filter on different sources. Also, note that the plugin uses a constant amount of CPU regardless of camera resolution (720p or 4K)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why create a new plugin instead of fixing the old one?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "As a contributor to the original plugin, I found that architectural limitations made it hard to guarantee stability. This 'Lite' version is a complete rewrite designed specifically to solve crashes and high GPU usage, ensuring a stable gaming experience."
       }
     }
   ]
