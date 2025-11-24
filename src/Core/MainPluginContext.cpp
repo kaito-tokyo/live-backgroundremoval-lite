@@ -303,6 +303,11 @@ void MainPluginContext::videoTick(float seconds)
 		return;
 	}
 
+	if (targetWidht < 2 * pluginProperty_.subsamplingRate || targetHeight < 2 * pluginProperty_.subsamplingRate) {
+		logger_.debug("Target source is too small for the current subsampling rate, skipping video tick");
+		return;
+	}
+
 	std::shared_ptr<RenderingContext> renderingContext;
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
