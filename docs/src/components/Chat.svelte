@@ -9,7 +9,7 @@
     ChatCompletionMessageParam,
   } from "@mlc-ai/web-llm";
 
-  import FaqContent from "../../../FAQ.md?raw";
+  import FaqContent from "../pages/faq.md?raw";
 
   // Define the message structure for the UI, independent of the LLM type
   type SimpleMessage = {

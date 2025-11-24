@@ -39,30 +39,39 @@ const { BASE_URL } = import.meta.env;
     <title>{title}</title>
   </head>
   <body>
-    <main>
-      <div class="white-box">
-        <slot />
-      </div>
-    </main>
+    <slot />
   </body>
 </html>
 
+<style is:global>
+  :root {
+    --color-bg: #000;
+    --color-white-box-bg: #fff;
+    --color-box-shadow: #0000001a;
+  }
+
+  main.white-box {
+    max-width: 800px;
+    width: 100%;
+    margin: 1rem auto;
+    padding: 2rem;
+    box-sizing: border-box;
+    overflow: visible;
+
+    border-radius: 8px;
+    box-shadow: 0 4px 8px var(--color-box-shadow);
+
+    background-color: var(--color-white-box-bg);
+  }
+</style>
+
 <style>
   body {
-    background-color: #000;
+    background-color: var(--color-bg);
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     margin: 0;
-  }
-  .white-box {
-    background-color: #fff;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 800px;
-    width: 100%;
-    box-sizing: border-box;
   }
 </style>
