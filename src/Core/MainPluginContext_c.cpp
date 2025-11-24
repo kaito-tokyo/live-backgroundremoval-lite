@@ -215,7 +215,7 @@ void main_plugin_context_update(void *data, obs_data_t *settings)
 	const ILogger &logger = loggerInstance();
 
 	if (!data) {
-		loggerInstance().error("main_plugin_context_update called with null data");
+		logger.error("main_plugin_context_update called with null data");
 		return;
 	}
 
@@ -244,6 +244,11 @@ void main_plugin_context_video_tick(void *data, float seconds)
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data)->get();
+	if (!self) {
+		logger.error("main_plugin_context_video_tick called with null MainPluginContext");
+		return;
+	}
+
 	try {
 		self->videoTick(seconds);
 	} catch (const std::exception &e) {
@@ -263,6 +268,11 @@ void main_plugin_context_video_render(void *data, gs_effect_t *)
 	}
 
 	auto self = static_cast<std::shared_ptr<MainPluginContext> *>(data)->get();
+	if (!self) {
+		logger.error("main_plugin_context_video_render called with null MainPluginContext");
+		return;
+	}
+
 	try {
 		self->videoRender();
 		GsUnique::drain();
