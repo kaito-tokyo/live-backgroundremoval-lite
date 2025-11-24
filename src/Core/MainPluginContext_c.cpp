@@ -71,7 +71,6 @@ inline std::shared_future<std::string> &latestVersionFutureInstance() noexcept
 
 	static std::shared_future<std::string> failedInstance;
 	return failedInstance;
-
 }
 
 } // namespace
