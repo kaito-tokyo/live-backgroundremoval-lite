@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://kaito-tokyo.github.io/live-backgroundremoval-lite/sitemap-index.xml
