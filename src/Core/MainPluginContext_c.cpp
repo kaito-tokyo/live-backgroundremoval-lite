@@ -130,6 +130,11 @@ void main_plugin_context_destroy(void *data)
 	}
 
 	auto selfPtr = static_cast<std::shared_ptr<MainPluginContext> *>(data);
+	if (!selfPtr) {
+		logger.error("main_plugin_context_destroy called with null MainPluginContext pointer");
+		return;
+	}
+
 	auto self = selfPtr->get();
 	if (!self) {
 		logger.error("main_plugin_context_destroy called with null MainPluginContext");
