@@ -298,25 +298,25 @@ void MainPluginContext::videoTick(float seconds)
 	uint32_t targetWidth = obs_source_get_base_width(target);
 	uint32_t targetHeight = obs_source_get_base_height(target);
 
-	if (targetWidth == 0 || targetHeight == 0) {
-		logger_.debug(
-			"Target source has zero width or height, skipping video tick and destroying rendering context");
-		std::lock_guard<std::mutex> lock(renderingContextMutex_);
-		renderingContext_.reset();
-		return;
-	}
-
-	if (targetWidth < 2 * pluginProperty_.subsamplingRate || targetHeight < 2 * pluginProperty_.subsamplingRate) {
-		logger_.debug(
-			"Target source is too small for the current subsampling rate, skipping video tick and destroying rendering context");
-		std::lock_guard<std::mutex> lock(renderingContextMutex_);
-		renderingContext_.reset();
-		return;
-	}
-
 	std::shared_ptr<RenderingContext> renderingContext;
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
+
+		if (targetWidth == 0 || targetHeight == 0) {
+			logger_.debug(
+				"Target source has zero width or height, skipping video tick and destroying rendering context");
+			renderingContext_.reset();
+			return;
+		}
+
+		const std::uint32_t minSize = 2 * static_cast<std::uint32_t>(pluginProperty_.subsamplingRate);
+		if (targetWidth < minSize || targetHeight < minSize) {
+			logger_.debug(
+				"Target source is too small for the current subsampling rate, skipping video tick and destroying rendering context");
+			renderingContext_.reset();
+			return;
+		}
+
 		renderingContext = renderingContext_;
 		if (!renderingContext || renderingContext->region_.width != targetWidth ||
 		    renderingContext->region_.height != targetHeight) {
