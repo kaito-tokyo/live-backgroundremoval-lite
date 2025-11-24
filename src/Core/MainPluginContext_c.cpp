@@ -37,15 +37,16 @@ using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 namespace {
 
 inline const ILogger &loggerInstance() noexcept
-try {
-	static const ObsLogger instance("[" PLUGIN_NAME "] ");
-	return instance;
-} catch (const std::exception &e) {
-	fprintf(stderr, "Failed to create logger instance: %s\n", e.what());
-	static const NullLogger nullInstance;
-	return nullInstance;
-} catch (...) {
-	fprintf(stderr, "Failed to create logger instance: unknown error\n");
+{
+	try {
+		static const ObsLogger instance("[" PLUGIN_NAME "] ");
+		return instance;
+	} catch (const std::exception &e) {
+		fprintf(stderr, "Failed to create logger instance: %s\n", e.what());
+	} catch (...) {
+		fprintf(stderr, "Failed to create logger instance: unknown error\n");
+	}
+
 	static const NullLogger nullInstance;
 	return nullInstance;
 }
