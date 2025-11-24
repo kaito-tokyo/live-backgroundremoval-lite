@@ -4,126 +4,237 @@ import { joinURL } from "ufo";
 import Layout from "../layouts/Layout.astro";
 import { getLatestRelease } from "../lib/github.js";
 
-import { name } from "../../../buildspec.json";
+import { dependencies, name } from "../../../buildspec.json";
 const githubURL = `https://github.com/kaito-tokyo/${name}`;
 
 const { BASE_URL } = import.meta.env;
 
 const release = await getLatestRelease();
 const tagName = release.tag_name;
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Live Background Removal Lite",
+  url: "https://kaito-tokyo.github.io/live-backgroundremoval-lite/",
+  author: {
+    "@type": "Person",
+    name: "Kaito Udagawa",
+    url: "https://github.com/kaito-tokyo",
+  },
+  description:
+    "A high-performance, crash-resistant OBS plugin for real-time background removal without a green screen. Optimized for gaming and low-spec PCs.",
+  applicationCategory: "MultimediaApplication",
+  operatingSystem: "Windows 11, macOS, Ubuntu, Arch Linux, Flatpak",
+  softwareRequirements: `OBS Studio ${dependencies["obs-studio"].version} or later`,
+  fileFormat:
+    "application/x-msdownload, application/octet-stream, application/vnd.debian.binary-package",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+    availability: "https://schema.org/InStock",
+  },
+  featureList: [
+    "Zero-Crash Architecture (Modern C++)",
+    "Smart Hybrid Pipeline (CPU Inference + GPU Post-Processing)",
+    "Gaming-First optimization with negligible GPU load",
+    "No physical green screen required",
+    "Support for Windows, macOS (CoreML), and Linux",
+  ],
+  screenshot:
+    "https://kaito-tokyo.github.io/live-backgroundremoval-lite/demo.gif",
+  softwareVersion: tagName,
+};
 ---
 
-<Layout title="Live Background Removal Lite" lang="en">
-  <h1>Remove your bg, Enrich your stream</h1>
-  <p>
-    Live Background Removal Lite is a lightweight and easy-to-use plugin for OBS
-    Studio that allows you to remove the background from your webcam feed
-    without the need for a green screen. It uses advanced AI technology to
-    accurately detect and remove the background, leaving you with a clean and
-    professional look.
-  </p>
-  <div
-    style="display: flex; flex-direction: column; align-items: center; margin: 2em 0 2em 0;"
-  >
-    <img
-      src={joinURL(BASE_URL, "demo.gif")}
-      alt="Background Removal Lite Demo"
-      width="480"
-      style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;"
-    />
-    <p style="margin-top:8px; color:#666; font-size:90%;">
-      <em>
-        The plugin removes a cluttered room background, revealing a gray color
-        source set behind in OBS.
-      </em>
-    </p>
-  </div>
-  <div class="links">
-    <a
-      href={joinURL(
-        githubURL,
-        `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`,
-      )}>Windows</a
-    >
-    <a
-      href={joinURL(
-        githubURL,
-        `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`,
-      )}>Mac</a
-    >
-    <a
-      href={joinURL(
-        githubURL,
-        `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`,
-      )}>Ubuntu</a
-    >
-    <a href={joinURL(githubURL, "tree/main/unsupported/arch#readme")}
-      >Arch Linux</a
-    >
-    <a href={joinURL(githubURL, "tree/main/unsupported/flatpak#readme")}
-      >Flatpak</a
-    >
-  </div>
+<Layout
+  lang="en"
+  title="Live Background Removal Lite"
+  description={structuredData.description}
+>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData)}
+  />
 
-  <div style="text-align: center;">
-    <a
-      href={joinURL(BASE_URL, "interactive-help/")}
-      class="ask-anything-button"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="32"
-        height="32"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        style="vertical-align: middle; margin-right: 0.5em;"
-        ><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-        ></path></svg
-      >
-      <span style="vertical-align: middle; font-weight: bold;"
-        >Ask Anything (Experimental)</span
-      >
-    </a>
-  </div>
+  <main class="white-box">
+    <h1>Live Background Removal Lite</h1>
 
-  <nav aria-label="Main documentation navigation">
-    <ul>
-      <li>
-        <a href={joinURL(BASE_URL, "building/arch/")}>Building on Arch Linux</a>
-      </li>
-      <li><a href={githubURL}>GitHub Repository</a></li>
-    </ul>
-  </nav>
+    <section>
+      <h2>✂️ Remove your bg, Enrich your stream</h2>
+      <p>
+        Live Background Removal Lite is a lightweight and easy-to-use plugin for
+        OBS Studio that allows you to remove the background from your webcam
+        feed without the need for a green screen. It uses advanced AI technology
+        to accurately detect and remove the background, leaving you with a clean
+        and professional look.
+      </p>
+    </section>
+
+    <section class="download-links">
+      <h2>⬇️ Download Latest Release (v{tagName})</h2>
+      <div>
+        <a
+          href={joinURL(
+            githubURL,
+            `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`,
+          )}>Windows</a
+        >
+        <a
+          href={joinURL(
+            githubURL,
+            `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`,
+          )}>Mac</a
+        >
+        <a
+          href={joinURL(
+            githubURL,
+            `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`,
+          )}>Ubuntu</a
+        >
+        <a href={joinURL(githubURL, "tree/main/unsupported/arch/#readme")}
+          >Arch Linux</a
+        >
+        <a href={joinURL(githubURL, "tree/main/unsupported/flatpak/#readme")}
+          >Flatpak</a
+        >
+      </div>
+      <ul>
+        <li>
+          <a href={joinURL(githubURL, "installation/")}> How to install? </a>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>📸 Demo</h2>
+      <div
+        style="display: flex; flex-direction: column; align-items: center; margin: 2em 0 2em 0;"
+      >
+        <img
+          src={joinURL(BASE_URL, "demo.gif")}
+          alt="Background Removal Lite Demo"
+          width="480"
+          style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;"
+        />
+        <p style="margin-top:8px; color:#666; font-size:90%;">
+          <em>
+            The plugin removes a cluttered room background, revealing a gray
+            color source set behind in OBS.
+          </em>
+        </p>
+      </div>
+    </section>
+
+    <hr />
+
+    <section>
+      <h2>For who?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>🎮 Gamers & GPU-Heavy Streamers</h3>
+          <p>
+            Don't sacrifice your in-game FPS for a webcam effect. Unlike other
+            plugins that hog your GPU, this plugin follows a <strong
+              >"Gaming-First" philosophy</strong
+            >. It intelligently offloads AI inference to the CPU, preserving
+            your GPU's headroom for rendering games at maximum performance.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>💻 Laptop & Non-RTX Users</h3>
+          <p>
+            Running OBS on a laptop or without a high-end dedicated GPU? No
+            problem. The AI engine runs on a highly optimized CPU model with <strong
+              >constant low usage</strong
+            >, regardless of whether your camera is 720p or 4K.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>🛡️ Streamers Seeking Stability</h3>
+          <p>
+            Tired of plugins crashing your OBS mid-stream? Built with a <strong
+              >"Zero-Crash Architecture"</strong
+            > in Modern C++, this plugin is engineered to be crash-resistant and
+            safe, ensuring your stream stays live no matter what.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>✨ Users Who Want "Plug & Play"</h3>
+          <p>
+            No complex parameters or manual tweaking required. Designed with a <strong
+              >"Zero-Configuration"</strong
+            > mindset, the default settings are carefully calibrated to work in 99%
+            of environments instantly.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <hr />
+
+    <section style="text-align: center;">
+      <a
+        href={joinURL(BASE_URL, "interactive-help/")}
+        class="ask-anything-button"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="vertical-align: middle; margin-right: 0.5em;"
+          ><path
+            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+          ></path></svg
+        >
+        <span style="vertical-align: middle; font-weight: bold;"
+          >Ask Anything (Experimental)</span
+        >
+      </a>
+    </section>
+
+    <hr />
+
+    <nav aria-label="Main documentation navigation">
+      <ul>
+        <li>
+          <a href={joinURL(BASE_URL, "faq/")}
+            >Frequently Asked Questions (FAQ)</a
+          >
+        </li>
+        <li>
+          <a href={joinURL(BASE_URL, "building/arch/")}
+            >Building on Arch Linux</a
+          >
+        </li>
+        <li><a href={githubURL}>GitHub Repository</a></li>
+      </ul>
+    </nav>
+  </main>
 </Layout>
 
 <style>
-  main {
-    margin: auto;
-    padding: 1rem;
-    width: 800px;
-    max-width: calc(100% - 2rem);
-    color: black;
-    font-size: 20px;
-    line-height: 1.6;
-  }
   h1 {
-    font-size: 4rem;
     font-weight: 700;
-    line-height: 1;
     text-align: center;
-    margin-bottom: 1em;
   }
-  .links {
+
+  .download-links > div {
     display: flex;
     justify-content: center;
     gap: 20px;
-    margin-top: 2em;
   }
-  .links a {
+  .download-links > div a {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -136,7 +247,7 @@ const tagName = release.tag_name;
     border-radius: 5px;
     transition: background-color 0.3s ease;
   }
-  .links a:hover {
+  .download-links > div a:hover {
     background-color: #45a049;
   }
 
