@@ -121,7 +121,13 @@ RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &lo
 								 numThreads)),
 	  selfieSegmenterMemoryBlockPool_(MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),
 	  region_{0, 0, width, height},
-	  subRegion_{0, 0, (region_.width / subsamplingRate) & ~1u, (region_.height / subsamplingRate) & ~1u},
+	  subRegion_{0, 0,
+		     region_.width / subsamplingRate >= 2
+			     ? (region_.width / subsamplingRate) & ~1u
+			     : throw std::invalid_argument("Width too small for subsampling rate"),
+		     region_.height / subsamplingRate >= 2
+			     ? (region_.height / subsamplingRate) & ~1u
+			     : throw std::invalid_argument("Height too small for subsampling rate")},
 	  subPaddedRegion_{0, 0, bit_ceil(subRegion_.width), bit_ceil(subRegion_.height)},
 	  maskRoi_(getMaskRoiPosition()),
 	  bgrxSource_(makeTexture(region_.width, region_.height, GS_BGRX, GS_RENDER_TARGET)),

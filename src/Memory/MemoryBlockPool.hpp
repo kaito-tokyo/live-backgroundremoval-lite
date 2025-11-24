@@ -124,8 +124,10 @@ public:
 			}
 		}
 
-		return MemoryBlockSharedPtr(block.get(), [self = shared_from_this(), block = std::move(block)](
-								 std::pmr::vector<std::uint8_t> *) mutable {
+		auto *blockPtr = block.get();
+
+		return MemoryBlockSharedPtr(blockPtr, [self = shared_from_this(), block = std::move(block)](
+							      std::pmr::vector<std::uint8_t> *) mutable {
 			std::lock_guard<std::mutex> lock(self->poolMutex_);
 			if (self->pool_.size() < self->maxSize_) {
 				self->pool_.push_back(std::move(block));
