@@ -65,13 +65,13 @@ inline std::shared_future<std::string> &latestVersionFutureInstance() noexcept
 		return instance;
 	} catch (const std::exception &e) {
 		logger.logException(e, "Failed to create latest version future instance");
-		static std::shared_future<std::string> failedInstance;
-		return failedInstance;
 	} catch (...) {
 		logger.error("Failed to create latest version future instance: unknown error");
-		static std::shared_future<std::string> failedInstance;
-		return failedInstance;
 	}
+
+	static std::shared_future<std::string> failedInstance;
+	return failedInstance;
+
 }
 
 } // namespace
