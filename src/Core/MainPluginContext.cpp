@@ -299,12 +299,18 @@ void MainPluginContext::videoTick(float seconds)
 	uint32_t targetHeight = obs_source_get_base_height(target);
 
 	if (targetWidth == 0 || targetHeight == 0) {
-		logger_.debug("Target source has zero width or height, skipping video tick");
+		logger_.debug(
+			"Target source has zero width or height, skipping video tick and destroying rendering context");
+		std::lock_guard<std::mutex> lock(renderingContextMutex_);
+		renderingContext_.reset();
 		return;
 	}
 
-	if (targetWidht < 2 * pluginProperty_.subsamplingRate || targetHeight < 2 * pluginProperty_.subsamplingRate) {
-		logger_.debug("Target source is too small for the current subsampling rate, skipping video tick");
+	if (targetWidth < 2 * pluginProperty_.subsamplingRate || targetHeight < 2 * pluginProperty_.subsamplingRate) {
+		logger_.debug(
+			"Target source is too small for the current subsampling rate, skipping video tick and destroying rendering context");
+		std::lock_guard<std::mutex> lock(renderingContextMutex_);
+		renderingContext_.reset();
 		return;
 	}
 
