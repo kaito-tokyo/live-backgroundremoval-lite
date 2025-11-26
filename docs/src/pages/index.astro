@@ -7,7 +7,7 @@ import { getLatestRelease } from "../lib/github.js";
 
 import { dependencies, name } from "../../../buildspec.json";
 
-import demoImage from "../../public/demo.gif"
+import demoImage from "../../public/demo.gif";
 
 const githubURL = `https://github.com/kaito-tokyo/${name}`;
 
@@ -107,6 +107,9 @@ const structuredData = {
       <ul>
         <li>
           <a href={joinURL(BASE_URL, "install/")}> How to install? </a>
+        </li>
+        <li>
+          <a href={joinURL(BASE_URL, "usage/")}> How to use? </a>
         </li>
       </ul>
     </section>

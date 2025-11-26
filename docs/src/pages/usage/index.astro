@@ -3,24 +3,73 @@ import { joinURL } from "ufo";
 import { Image } from "astro:assets";
 
 import Layout from "../../layouts/Layout.astro";
-import effectFiltersImage from "./effect-filters.png";
-import basicPropertiesImage from "./basic-properties.png";
-import advancedPropertiesImage from "./advanced-properties.png";
+import effectFiltersImage from "../../../public/effect-filters.png";
+import basicPropertiesImage from "../../../public/basic-properties.png";
+import advancedPropertiesImage from "../../../public/advanced-properties.png";
 
 const { BASE_URL } = import.meta.env;
+
+const siteUrl = Astro.site ? Astro.site.toString() : Astro.url.origin;
+
+const structuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to use Live Background Removal Lite",
+  description:
+    "Step-by-step instructions on adding the filter to OBS Studio and configuring basic and advanced properties.",
+  tool: {
+    "@type": "SoftwareApplication",
+    name: "Live Background Removal Lite",
+    applicationCategory: "MultimediaApplication",
+    operatingSystem: "Windows 11, macOS, Ubuntu, Arch Linux, Flatpak",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+  },
+  step: [
+    {
+      "@type": "HowToStep",
+      name: "Add the Filter",
+      text: "Right-click your video source in OBS, select Filters, add a new Effect Filter, and choose Live Background Removal Lite.",
+      image: joinURL(siteUrl, "effect-filters.png"),
+      url: joinURL(BASE_URL || "", "usage#adding-filter"),
+    },
+    {
+      "@type": "HowToStep",
+      name: "Configure Basic Properties",
+      text: "Adjust the Motion Intensity Threshold to balance sensitivity and load, and set Motion Tracking Speed to reduce flickering.",
+      image: joinURL(siteUrl, "basic-properties.png"),
+      url: joinURL(BASE_URL || "", "usage#basic-properties"),
+    },
+    {
+      "@type": "HowToStep",
+      name: "Configure Advanced Properties",
+      text: "Enable Advanced Settings to tune thread count, Guided Filter epsilon, and mask boundaries for higher quality cutouts.",
+      image: joinURL(siteUrl, "advanced-properties.png"),
+      url: joinURL(BASE_URL || "", "usage#advanced-properties"),
+    },
+  ],
+});
 ---
 
 <Layout
   lang="en"
-  title="How to install?"
-  description="Instructions for installing Live Background Removal Lite on various operating systems."
+  title="Usage Guide - Live Background Removal Lite"
+  description="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio."
 >
+  <script type="application/ld+json" set:html={structuredData} />
+
   <main class="white-box">
     <h1>Usage</h1>
 
-    <section>
+    <section id="adding-filter">
       <h2>Adding the Filter</h2>
-      <Image src={effectFiltersImage} alt="Effect Filters" />
+      <Image
+        src={effectFiltersImage}
+        alt="Screenshot of the OBS Studio Filters window, showing the selection of 'Live Background Removal Lite' from the Effect Filters list."
+      />
       <ol>
         <li>
           In OBS Studio, right-click your video source (e.g., your webcam) in
@@ -44,9 +93,12 @@ const { BASE_URL } = import.meta.env;
       </ol>
     </section>
 
-    <section>
+    <section id="basic-properties">
       <h2>Basic Properties</h2>
-      <Image src={basicPropertiesImage} alt="Basic Properties" />
+      <Image
+        src={basicPropertiesImage}
+        alt="Screenshot of the Basic Properties panel showing Plugin Status, Debug Window toggle, and Motion Intensity settings."
+      />
       <ul>
         <li>
           <strong>Plugin Status</strong>: The top section displays the current
@@ -87,9 +139,12 @@ const { BASE_URL } = import.meta.env;
       </ul>
     </section>
 
-    <section>
+    <section id="advanced-properties">
       <h2>Advanced Properties</h2>
-      <Image src={advancedPropertiesImage} alt="Advanced Properties" />
+      <Image
+        src={advancedPropertiesImage}
+        alt="Advanced Properties panel with the 'Advanced Settings' checkbox enabled, displaying sliders for Threads, Guided Filter Eps, Mask Gamma, and Mask Bounds."
+      />
       <p>
         To modify the extended configurations, you must enable the <strong
           >Advanced Settings</strong
