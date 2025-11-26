@@ -7,7 +7,11 @@ Unlike other plugins, it is engineered specifically for **Gamers** and **Stabili
 
 ## Primary Documentation Resources
 
-- **Main Documentation (README):** https://kaito-tokyo.github.io/live-backgroundremoval-lite/
+- **Main Page (Overview):** https://kaito-tokyo.github.io/live-backgroundremoval-lite/
+- **Installation Guide:** https://kaito-tokyo.github.io/live-backgroundremoval-lite/install/
+  - *Contains specific instructions for Windows (.zip), macOS (.pkg), and Ubuntu (.deb).*
+- **Usage & Configuration:** https://kaito-tokyo.github.io/live-backgroundremoval-lite/usage/
+  - *Details on "Motion Intensity" and "Advanced Settings".*
 - **FAQ & Technical Specs:** https://kaito-tokyo.github.io/live-backgroundremoval-lite/faq/
 - **GitHub Repository:** https://github.com/kaito-tokyo/live-backgroundremoval-lite
 
