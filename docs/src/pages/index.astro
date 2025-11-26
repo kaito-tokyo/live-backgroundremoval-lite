@@ -1,10 +1,14 @@
 ---
 import { joinURL } from "ufo";
+import { Image } from "astro:assets";
 
 import Layout from "../layouts/Layout.astro";
 import { getLatestRelease } from "../lib/github.js";
 
 import { dependencies, name } from "../../../buildspec.json";
+
+import demoImage from "../../public/demo.gif";
+
 const githubURL = `https://github.com/kaito-tokyo/${name}`;
 
 const { BASE_URL } = import.meta.env;
@@ -61,7 +65,7 @@ const structuredData = {
   <main class="white-box">
     <h1>Live Background Removal Lite</h1>
 
-    <section>
+    <section id="about">
       <h2>✂️ Remove your bg, Enrich your stream</h2>
       <p>
         Live Background Removal Lite is a lightweight and easy-to-use plugin for
@@ -72,27 +76,33 @@ const structuredData = {
       </p>
     </section>
 
-    <section class="download-links">
+    <section class="download-links" id="download-links">
       <h2>⬇️ Download Latest Release (v{tagName})</h2>
       <div>
         <a
           href={joinURL(
             githubURL,
             `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`,
-          )}>Windows</a
+          )}
+          title={`Download v${tagName} for Windows (x64)`}>Windows</a
         >
+
         <a
           href={joinURL(
             githubURL,
             `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`,
-          )}>Mac</a
+          )}
+          title={`Download v${tagName} for macOS (Universal)`}>Mac</a
         >
+
         <a
           href={joinURL(
             githubURL,
             `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`,
-          )}>Ubuntu</a
+          )}
+          title={`Download v${tagName} for Ubuntu (deb)`}>Ubuntu</a
         >
+
         <a href={joinURL(githubURL, "tree/main/unsupported/arch/#readme")}
           >Arch Linux</a
         >
@@ -100,36 +110,47 @@ const structuredData = {
           >Flatpak</a
         >
       </div>
-      <ul>
-        <li>
-          <a href={joinURL(BASE_URL, "install/")}> How to install? </a>
-        </li>
-      </ul>
+      <nav aria-label="Installing and configuring documentation navigation">
+        <ul>
+          <li>
+            <a
+              href={joinURL(BASE_URL, "install/")}
+              title="Installation Guide of Live Background Removal Lite"
+              >Installation Guide</a
+            >
+          </li>
+          <li>
+            <a
+              href={joinURL(BASE_URL, "usage/")}
+              title="Usage & Configuration of Live Background Removal Lite"
+              >Usage & Configuration</a
+            >
+          </li>
+        </ul>
+      </nav>
     </section>
 
-    <section>
+    <section id="demo">
       <h2>📸 Demo</h2>
-      <div
-        style="display: flex; flex-direction: column; align-items: center; margin: 2em 0 2em 0;"
-      >
-        <img
-          src={joinURL(BASE_URL, "demo.gif")}
-          alt="Background Removal Lite Demo"
+      <div class="demo-container">
+        <Image
+          src={demoImage}
+          alt="Split-screen demo showing the plugin removing a cluttered room background in real-time."
           width="480"
-          style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;"
+          class="demo-image"
         />
-        <p style="margin-top:8px; color:#666; font-size:90%;">
-          <em>
-            The plugin removes a cluttered room background, revealing a gray
-            color source set behind in OBS.
-          </em>
+        <p class="demo-caption">
+          <em
+            >The plugin removes a cluttered room background, revealing a gray
+            color source set behind in OBS.</em
+          >
         </p>
       </div>
     </section>
 
     <hr />
 
-    <section>
+    <section id="features">
       <h2>For who?</h2>
       <div class="features-grid">
         <div class="feature-card">
@@ -177,12 +198,13 @@ const structuredData = {
 
     <hr />
 
-    <section style="text-align: center;">
+    <section id="ask-anything" style="text-align: center;">
       <a
         href={joinURL(BASE_URL, "interactive-help/")}
         class="ask-anything-button"
       >
         <svg
+          aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
           width="32"
           height="32"
@@ -192,29 +214,23 @@ const structuredData = {
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          style="vertical-align: middle; margin-right: 0.5em;"
+          class="button-icon"
           ><path
             d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
           ></path></svg
         >
-        <span style="vertical-align: middle; font-weight: bold;"
-          >Ask Anything (Experimental)</span
-        >
+        <span class="button-text">Ask Anything (Experimental)</span>
       </a>
     </section>
 
     <hr />
 
-    <nav aria-label="Main documentation navigation">
+    <nav aria-label="Additional resource navigation">
+      <h2>Additional Resources</h2>
       <ul>
         <li>
           <a href={joinURL(BASE_URL, "faq/")}
             >Frequently Asked Questions (FAQ)</a
-          >
-        </li>
-        <li>
-          <a href={joinURL(BASE_URL, "building/arch/")}
-            >Building on Arch Linux</a
           >
         </li>
         <li><a href={githubURL}>GitHub Repository</a></li>
@@ -232,6 +248,7 @@ const structuredData = {
   .download-links > div {
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 20px;
   }
   .download-links > div a {
@@ -249,6 +266,43 @@ const structuredData = {
   }
   .download-links > div a:hover {
     background-color: #45a049;
+  }
+
+  .demo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 2em 0;
+  }
+  .demo-image {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    max-width: 100%;
+    height: auto;
+  }
+  .demo-caption {
+    margin-top: 8px;
+    color: #666;
+    font-size: 90%;
+    text-align: center;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  .feature-card {
+    background-color: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  .feature-card h3 {
+    margin-top: 0;
+    font-size: 1.1em;
   }
 
   .ask-anything-button {
@@ -272,5 +326,11 @@ const structuredData = {
   .ask-anything-button:focus {
     background: var(--color-button-1, #2563eb);
     box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
+  }
+  .button-icon {
+    margin-right: 0.5em;
+  }
+  .button-text {
+    vertical-align: middle;
   }
 </style>

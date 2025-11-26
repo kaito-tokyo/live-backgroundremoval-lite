@@ -1,0 +1,209 @@
+---
+import { joinURL } from "ufo";
+import { Image } from "astro:assets";
+
+import Layout from "../../layouts/Layout.astro";
+import effectFiltersImage from "../../../public/effect-filters.png";
+import basicPropertiesImage from "../../../public/basic-properties.png";
+import advancedPropertiesImage from "../../../public/advanced-properties.png";
+
+const { BASE_URL } = import.meta.env;
+
+const siteUrl = Astro.site ? Astro.site.toString() : Astro.url.origin;
+
+const structuredData = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  name: "How to use Live Background Removal Lite",
+  description:
+    "Step-by-step instructions on adding the filter to OBS Studio and configuring basic and advanced properties.",
+  tool: {
+    "@type": "SoftwareApplication",
+    name: "Live Background Removal Lite",
+    applicationCategory: "MultimediaApplication",
+    operatingSystem: "Windows 11, macOS, Ubuntu, Arch Linux, Flatpak",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+  },
+  step: [
+    {
+      "@type": "HowToStep",
+      name: "Add the Filter",
+      text: "Right-click your video source in OBS, select Filters, add a new Effect Filter, and choose Live Background Removal Lite.",
+      image: joinURL(siteUrl, "effect-filters.png"),
+      url: joinURL(BASE_URL || "", "usage#adding-filter"),
+    },
+    {
+      "@type": "HowToStep",
+      name: "Configure Basic Properties",
+      text: "Adjust the Motion Intensity Threshold to balance sensitivity and load, and set Motion Tracking Speed to reduce flickering.",
+      image: joinURL(siteUrl, "basic-properties.png"),
+      url: joinURL(BASE_URL || "", "usage#basic-properties"),
+    },
+    {
+      "@type": "HowToStep",
+      name: "Configure Advanced Properties",
+      text: "Enable Advanced Settings to tune thread count, Guided Filter epsilon, and mask boundaries for higher quality cutouts.",
+      image: joinURL(siteUrl, "advanced-properties.png"),
+      url: joinURL(BASE_URL || "", "usage#advanced-properties"),
+    },
+  ],
+});
+---
+
+<Layout
+  lang="en"
+  title="Usage Guide - Live Background Removal Lite"
+  description="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio."
+>
+  <script type="application/ld+json" set:html={structuredData} />
+
+  <main class="white-box">
+    <h1>Usage</h1>
+
+    <section id="adding-filter">
+      <h2>Adding the Filter</h2>
+      <Image
+        src={effectFiltersImage}
+        alt="Screenshot of the OBS Studio Filters window, showing the selection of 'Live Background Removal Lite' from the Effect Filters list."
+      />
+      <ol>
+        <li>
+          In OBS Studio, right-click your video source (e.g., your webcam) in
+          the "Sources" panel.
+        </li>
+        <li>
+          Select <strong>Filters</strong> from the context menu.
+        </li>
+        <li>
+          In the "Filters" window, under the "Effect Filters" section, click the
+          <strong>+</strong> button to add a new filter.
+        </li>
+        <li>
+          From the list of available filters, select
+          <strong>Live Background Removal Lite</strong>.
+        </li>
+        <li>
+          The filter will be added to your source, and you can now adjust its
+          properties as needed.
+        </li>
+      </ol>
+    </section>
+
+    <section id="basic-properties">
+      <h2>Basic Properties</h2>
+      <Image
+        src={basicPropertiesImage}
+        alt="Screenshot of the Basic Properties panel showing Plugin Status, Debug Window toggle, and Motion Intensity settings."
+      />
+      <ul>
+        <li>
+          <strong>Plugin Status</strong>: The top section displays the current
+          update status of the plugin.
+        </li>
+        <li>
+          <strong>Show Debug Window</strong>: Opens the debug view. <br />
+          <em
+            >Note: Keeping the debug window open significantly increases system
+            load. Close it when not in use.</em
+          >
+        </li>
+        <li>
+          <strong>Motion Intensity Threshold [dB]</strong>: Determines the
+          movement sensitivity to trigger the AI. Lowering this value makes it
+          less sensitive (duller) and reduces load. <br />
+          <em
+            >Tip: Adjust this value as low as possible while maintaining
+            accurate mask tracking when you move.</em
+          >
+        </li>
+        <li>
+          <strong>Motion Tracking Speed</strong>: Adjusts the filter to suppress
+          flickering.
+          <ul>
+            <li>
+              <strong>Lower values</strong>: Less flickering, but increases mask
+              latency (lag).
+            </li>
+            <li>
+              <strong>Higher values</strong>: Faster tracking response, but may
+              increase flickering.
+            </li>
+            <li><strong>0</strong>: The mask stops moving.</li>
+            <li><strong>1</strong>: Disables the filter completely.</li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <section id="advanced-properties">
+      <h2>Advanced Properties</h2>
+      <Image
+        src={advancedPropertiesImage}
+        alt="Advanced Properties panel with the 'Advanced Settings' checkbox enabled, displaying sliders for Threads, Guided Filter Eps, Mask Gamma, and Mask Bounds."
+      />
+      <p>
+        To modify the extended configurations, you must enable the <strong
+          >Advanced Settings</strong
+        > checkbox.<br />
+        <em
+          >Note: When this checkbox is unchecked, all settings below are forced
+          to their default values.</em
+        >
+      </p>
+
+      <ul>
+        <li>
+          <strong>Number of Threads</strong>: Specifies the number of CPU
+          threads used for processing. A value of <strong>2</strong> is optimal for
+          most environments.
+        </li>
+        <li>
+          <strong>Guided Filter Eps [dB]</strong>: Controls the epsilon
+          parameter of the Guided Filter. This balances smoothing versus edge
+          preservation. Adjust this if fine details look too blurry or noisy.
+        </li>
+        <li>
+          <strong>Mask Gamma</strong>: Controls the edge hardness.
+          <ul>
+            <li>
+              <strong>&gt; 1.0</strong>: Makes edges sharper/thinner (choke).
+            </li>
+            <li>
+              <strong>&lt; 1.0</strong>: Makes edges softer/thicker (spread).
+            </li>
+            <li><em>Typical value: 1.5 - 2.5</em></li>
+          </ul>
+        </li>
+        <li>
+          <strong>Mask Lower Bound [dB]</strong> & <strong
+            >Mask Upper Bound Margin [dB]</strong
+          >: These parameters prevent ambiguous semi-transparency to improve the
+          cutout quality.
+          <ul>
+            <li>
+              <strong>Lower Bound</strong>: Pixels below this level become fully
+              transparent. Controls <strong>halo removal</strong>.
+            </li>
+            <li>
+              <strong>Upper Bound Margin</strong>: Pixels above this level
+              become fully opaque. Controls <strong>core solidity</strong>.
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </section>
+
+    <a href={joinURL(BASE_URL, "")}>Back to Top</a>
+  </main>
+</Layout>
+
+<style>
+  img {
+    width: 100%;
+    height: auto;
+  }
+</style>
