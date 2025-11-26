@@ -15,7 +15,14 @@ const { BASE_URL } = import.meta.env;
 <html lang={lang}>
   <head>
     <meta charset="utf-8" />
+    <title>{title}</title>
     <meta name="description" content={description} />
+    <link
+      rel="alternate"
+      type="text/markdown"
+      href={joinURL(BASE_URL, "llms.txt")}
+      title="LLM Context"
+    />
     <link
       rel="icon"
       type="image/png"
@@ -36,10 +43,19 @@ const { BASE_URL } = import.meta.env;
     <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <title>{title}</title>
   </head>
   <body>
-    <slot />
+    <div>
+      <slot />
+      <footer>
+        <p>&copy; 2025 Kaito Udagawa</p>
+        <p>
+          <a href={joinURL(BASE_URL, "llms.txt")} target="_blank" rel="noopener noreferrer">
+            llms.txt
+          </a>
+        </p>
+      </footer>
+    </div>
   </body>
 </html>
 
@@ -73,5 +89,17 @@ const { BASE_URL } = import.meta.env;
     align-items: center;
     min-height: 100vh;
     margin: 0;
+  }
+
+  footer {
+    color: #fff;
+  }
+
+  footer p {
+    display: inline-block
+  }
+
+  footer a {
+    color: #fff;
   }
 </style>
