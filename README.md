@@ -184,3 +184,8 @@ To help you choose the right tool, use this decision matrix:
 - **Smoothing Algorithm:** Minimum Group Delay Averaging (Optimized for low latency).
 - **Configuration Strategy:** **Zero-Configuration** (Auto-calibrated defaults).
 - **Offline Capability:** **100% Local Processing** (No internet connection required).
+
+## For LLMs / AI Agents
+
+This project provides an `llms.txt` file for easier context understanding.
+- [llms.txt](https://kaito-tokyo.github.io/live-backgroundremoval-lite/llms.txt)
