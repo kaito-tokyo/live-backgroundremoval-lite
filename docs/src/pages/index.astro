@@ -1,10 +1,14 @@
 ---
 import { joinURL } from "ufo";
+import { Image } from "astro:assets";
 
 import Layout from "../layouts/Layout.astro";
 import { getLatestRelease } from "../lib/github.js";
 
 import { dependencies, name } from "../../../buildspec.json";
+
+import demoImage from "../../public/demo.gif"
+
 const githubURL = `https://github.com/kaito-tokyo/${name}`;
 
 const { BASE_URL } = import.meta.env;
@@ -112,8 +116,8 @@ const structuredData = {
       <div
         style="display: flex; flex-direction: column; align-items: center; margin: 2em 0 2em 0;"
       >
-        <img
-          src={joinURL(BASE_URL, "demo.gif")}
+        <Image
+          src={demoImage}
           alt="Background Removal Lite Demo"
           width="480"
           style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;"

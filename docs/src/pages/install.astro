@@ -20,73 +20,119 @@ const tagName = release.tag_name;
     <h2>Windows</h2>
     <ol>
       <li>
-        <strong>Download:</strong> <a
+        <strong>Download:</strong>
+        <a
           href={joinURL(
             githubURL,
-            `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`
-          )}><code>{`${name}-${tagName}-windows-x64.zip`}</code></a> (latest release for Windows)
+            `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`,
+          )}><code>{`${name}-${tagName}-windows-x64.zip`}</code></a
+        > (latest release for Windows)
       </li>
       <li>
-    Extract the <code>obs-plugins</code> and <code>data</code> folders from the zip file.<br />
-    Drag and drop the <code>obs-plugins</code> and <code>data</code> folders from the zip file into your OBS Studio installation directory (<code>C:\Program Files\obs-studio</code>), and choose to overwrite when prompted.
+        Extract the <code>obs-plugins</code> and <code>data</code> folders from the
+        zip file.<br />
+        Drag and drop the <code>obs-plugins</code> and <code>data</code> folders
+        from the zip file into your OBS Studio installation directory (<code
+          >C:\Program Files\obs-studio</code
+        >), and choose to overwrite when prompted.
       </li>
       <li>Restart OBS Studio.</li>
-  <li><strong>Test your installation:</strong> Open OBS Studio, right-click your video source, go to <b>Filters</b>, and check if <b>Live Background Removal Lite</b> appears in the <b>Effect Filters</b> list.<br />
-  For usage instructions, see the <a href={joinURL(BASE_URL, "usage/")}>usage page</a>.</li>
+      <li>
+        <strong>Test your installation:</strong> Open OBS Studio, right-click your
+        video source, go to <b>Filters</b>, and check if <b
+          >Live Background Removal Lite</b
+        > appears in the <b>Effect Filters</b> list.<br />
+        For usage instructions, see the <a href={joinURL(BASE_URL, "usage/")}
+          >usage page</a
+        >.
+      </li>
     </ol>
 
     <h2>macOS</h2>
     <ol>
       <li>
-        <strong>Download:</strong> <a
+        <strong>Download:</strong>
+        <a
           href={joinURL(
             githubURL,
-            `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`
-          )}><code>{`${name}-${tagName}-macos-universal.pkg`}</code></a> (latest release for macOS)
+            `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`,
+          )}><code>{`${name}-${tagName}-macos-universal.pkg`}</code></a
+        > (latest release for macOS)
       </li>
       <li>
         Run the installer and follow the prompts to complete installation.
       </li>
       <li>Restart OBS Studio.</li>
-      <li><strong>Test your installation:</strong> Open OBS Studio, right-click your video source, go to <b>Filters</b>, and check if <b>Live Background Removal Lite</b> appears in the <b>Effect Filters</b> list.<br />
-      For usage instructions, see the <a href={joinURL(BASE_URL, "usage/")}>usage page</a>.</li>
+      <li>
+        <strong>Test your installation:</strong> Open OBS Studio, right-click your
+        video source, go to <b>Filters</b>, and check if <b
+          >Live Background Removal Lite</b
+        > appears in the <b>Effect Filters</b> list.<br />
+        For usage instructions, see the <a href={joinURL(BASE_URL, "usage/")}
+          >usage page</a
+        >.
+      </li>
     </ol>
 
     <h2>Ubuntu</h2>
     <ol>
       <li>
-        <strong>Download:</strong> <a
+        <strong>Download:</strong>
+        <a
           href={joinURL(
             githubURL,
-            `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`
-          )}><code>{`${name}-${tagName}-x86_64-linux-gnu.deb`}</code></a> (latest release for Ubuntu)
+            `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`,
+          )}><code>{`${name}-${tagName}-x86_64-linux-gnu.deb`}</code></a
+        > (latest release for Ubuntu)
       </li>
       <li>
         <strong>Install the package:</strong><br />
         <ul>
-          <li><strong>Terminal Way:</strong> Open a terminal and run:<br /><code>sudo dpkg -i ./{`${name}-${tagName}-x86_64-linux-gnu.deb`}</code></li>
-          <li><strong>GUI Way:</strong> Double-click the <code>{`${name}-${tagName}-x86_64-linux-gnu.deb`}</code> file in your file manager and follow the on-screen instructions.</li>
+          <li>
+            <strong>Terminal Way:</strong> Open a terminal and run:<br /><code
+              >sudo dpkg -i ./{`${name}-${tagName}-x86_64-linux-gnu.deb`}</code>
+          </li>
+          <li>
+            <strong>GUI Way:</strong> Double-click the <code
+              >{`${name}-${tagName}-x86_64-linux-gnu.deb`}</code
+            > file in your file manager and follow the on-screen instructions.
+          </li>
         </ul>
       </li>
       <li>Restart OBS Studio.</li>
-      <li><strong>Test your installation:</strong> Open OBS Studio, right-click your video source, go to <b>Filters</b>, and check if <b>Live Background Removal Lite</b> appears in the <b>Effect Filters</b> list.<br />
-      For usage instructions, see the <a href={joinURL(BASE_URL, "usage/")}>usage page</a>.</li>
+      <li>
+        <strong>Test your installation:</strong> Open OBS Studio, right-click your
+        video source, go to <b>Filters</b>, and check if <b
+          >Live Background Removal Lite</b
+        > appears in the <b>Effect Filters</b> list.<br />
+        For usage instructions, see the <a href={joinURL(BASE_URL, "usage/")}
+          >usage page</a
+        >.
+      </li>
     </ol>
 
     <h2>Arch Linux</h2>
     <p>
-      For Arch Linux, we provide an <strong>unofficial PKGBUILD</strong> in the repository.<br />
-      You can install this plugin by building with <code>makepkg</code> or using an AUR helper like <code>yay</code>.<br />
+      For Arch Linux, we provide an <strong>unofficial PKGBUILD</strong> in the repository.<br
+      />
+      You can install this plugin by building with <code>makepkg</code> or using
+      an AUR helper like <code>yay</code>.<br />
       For detailed instructions, see:<br />
-      <a href={joinURL(githubURL, "tree/main/unsupported/arch/#readme")}>Arch Linux packaging documentation</a>
+      <a href={joinURL(githubURL, "tree/main/unsupported/arch/#readme")}
+        >Arch Linux packaging documentation</a
+      >
     </p>
 
     <h2>Flatpak</h2>
     <p>
-      For Flatpak, we provide an <strong>unofficial build definition</strong> in the repository.<br />
-      Users can build and install this plugin using <code>flatpak-builder</code>.<br />
+      For Flatpak, we provide an <strong>unofficial build definition</strong> in
+      the repository.<br />
+      Users can build and install this plugin using <code>flatpak-builder</code
+      >.<br />
       For detailed instructions, see:<br />
-      <a href={joinURL(githubURL, "tree/main/unsupported/flatpak/#readme")}>Flatpak packaging documentation</a>
+      <a href={joinURL(githubURL, "tree/main/unsupported/flatpak/#readme")}
+        >Flatpak packaging documentation</a
+      >
     </p>
 
     <a href={joinURL(BASE_URL, "")}>Back to Top</a>
