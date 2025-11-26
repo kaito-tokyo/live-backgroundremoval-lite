@@ -2,10 +2,10 @@
 import { joinURL } from "ufo";
 import { Image } from "astro:assets";
 
-import Layout from "../../layouts/Layout.astro";
-import effectFiltersImage from "../../../public/effect-filters.png";
-import basicPropertiesImage from "../../../public/basic-properties.png";
-import advancedPropertiesImage from "../../../public/advanced-properties.png";
+import Layout from "../layouts/Layout.astro";
+import effectFiltersImage from "../../public/effect-filters.png";
+import basicPropertiesImage from "../../public/basic-properties.png";
+import advancedPropertiesImage from "../../public/advanced-properties.png";
 
 const { BASE_URL } = import.meta.env;
 
@@ -103,6 +103,16 @@ const structuredData = JSON.stringify({
         <li>
           <strong>Plugin Status</strong>: The top section displays the current
           update status of the plugin.
+        </li>
+        <li>
+          <strong>Filter Level</strong>: Selects the processing stage for background removal. <br />
+          <ul>
+            <li><strong>Passthrough</strong>: No background removal, source is shown as-is.</li>
+            <li><strong>Segmentation</strong>: Applies a basic segmentation mask to remove the background.</li>
+            <li><strong>Motion Intensity Thresholding</strong>: Only applies segmentation when motion is detected above a threshold.</li>
+            <li><strong>Guided Filter</strong>: Refines the mask edges using a guided filter for better quality.</li>
+            <li><strong>Time Averaged Filter</strong>: Further smooths and stabilizes the mask over time for the highest quality cutout.</li>
+          </ul>
         </li>
         <li>
           <strong>Show Debug Window</strong>: Opens the debug view. <br />
