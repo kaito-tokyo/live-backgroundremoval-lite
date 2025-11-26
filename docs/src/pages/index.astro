@@ -126,20 +126,18 @@ const structuredData = {
 
     <section>
       <h2>📸 Demo</h2>
-      <div
-        style="display: flex; flex-direction: column; align-items: center; margin: 2em 0 2em 0;"
-      >
+      <div class="demo-container">
         <Image
           src={demoImage}
-          alt="Background Removal Lite Demo"
+          alt="Split-screen demo showing the plugin removing a cluttered room background in real-time."
           width="480"
-          style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;"
+          class="demo-image"
         />
-        <p style="margin-top:8px; color:#666; font-size:90%;">
-          <em>
-            The plugin removes a cluttered room background, revealing a gray
-            color source set behind in OBS.
-          </em>
+        <p class="demo-caption">
+          <em
+            >The plugin removes a cluttered room background, revealing a gray
+            color source set behind in OBS.</em
+          >
         </p>
       </div>
     </section>
@@ -200,6 +198,7 @@ const structuredData = {
         class="ask-anything-button"
       >
         <svg
+          aria-hidden="true"
           xmlns="http://www.w3.org/2000/svg"
           width="32"
           height="32"
@@ -209,20 +208,19 @@ const structuredData = {
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
-          style="vertical-align: middle; margin-right: 0.5em;"
+          class="button-icon"
           ><path
             d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
           ></path></svg
         >
-        <span style="vertical-align: middle; font-weight: bold;"
-          >Ask Anything (Experimental)</span
-        >
+        <span class="button-text">Ask Anything (Experimental)</span>
       </a>
     </section>
 
     <hr />
 
     <nav aria-label="Additional resource navigation">
+      <h2>Additional Resources</h2>
       <ul>
         <li>
           <a href={joinURL(BASE_URL, "faq/")}
@@ -244,6 +242,7 @@ const structuredData = {
   .download-links > div {
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 20px;
   }
   .download-links > div a {
@@ -261,6 +260,43 @@ const structuredData = {
   }
   .download-links > div a:hover {
     background-color: #45a049;
+  }
+
+  .demo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 2em 0;
+  }
+  .demo-image {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    max-width: 100%;
+    height: auto;
+  }
+  .demo-caption {
+    margin-top: 8px;
+    color: #666;
+    font-size: 90%;
+    text-align: center;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  .feature-card {
+    background-color: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  .feature-card h3 {
+    margin-top: 0;
+    font-size: 1.1em;
   }
 
   .ask-anything-button {
@@ -284,5 +320,11 @@ const structuredData = {
   .ask-anything-button:focus {
     background: var(--color-button-1, #2563eb);
     box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
+  }
+  .button-icon {
+    margin-right: 0.5em;
+  }
+  .button-text {
+    vertical-align: middle;
   }
 </style>
