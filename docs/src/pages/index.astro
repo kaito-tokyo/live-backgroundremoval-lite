@@ -104,14 +104,24 @@ const structuredData = {
           >Flatpak</a
         >
       </div>
-      <ul>
-        <li>
-          <a href={joinURL(BASE_URL, "install/")}> How to install? </a>
-        </li>
-        <li>
-          <a href={joinURL(BASE_URL, "usage/")}> How to use? </a>
-        </li>
-      </ul>
+      <nav aria-label="Installing and configuring documentation navigation">
+        <ul>
+          <li>
+            <a
+              href={joinURL(BASE_URL, "install/")}
+              title="Installation Guide of Live Background Removal Lite"
+              >Installation Guide</a
+            >
+          </li>
+          <li>
+            <a
+              href={joinURL(BASE_URL, "usage/")}
+              title="Usage & Configuration of Live Background Removal Lite"
+              >Usage & Configuration</a
+            >
+          </li>
+        </ul>
+      </nav>
     </section>
 
     <section>
@@ -212,16 +222,11 @@ const structuredData = {
 
     <hr />
 
-    <nav aria-label="Main documentation navigation">
+    <nav aria-label="Additional resource navigation">
       <ul>
         <li>
           <a href={joinURL(BASE_URL, "faq/")}
             >Frequently Asked Questions (FAQ)</a
-          >
-        </li>
-        <li>
-          <a href={joinURL(BASE_URL, "building/arch/")}
-            >Building on Arch Linux</a
           >
         </li>
         <li><a href={githubURL}>GitHub Repository</a></li>
