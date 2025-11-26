@@ -65,7 +65,7 @@ const structuredData = {
   <main class="white-box">
     <h1>Live Background Removal Lite</h1>
 
-    <section>
+    <section id="about">
       <h2>✂️ Remove your bg, Enrich your stream</h2>
       <p>
         Live Background Removal Lite is a lightweight and easy-to-use plugin for
@@ -76,27 +76,33 @@ const structuredData = {
       </p>
     </section>
 
-    <section class="download-links">
+    <section class="download-links" id="download-links">
       <h2>⬇️ Download Latest Release (v{tagName})</h2>
       <div>
         <a
           href={joinURL(
             githubURL,
             `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`,
-          )}>Windows</a
+          )}
+          title={`Download v${tagName} for Windows (x64)`}>Windows</a
         >
+
         <a
           href={joinURL(
             githubURL,
             `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`,
-          )}>Mac</a
+          )}
+          title={`Download v${tagName} for macOS (Universal)`}>Mac</a
         >
+
         <a
           href={joinURL(
             githubURL,
             `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`,
-          )}>Ubuntu</a
+          )}
+          title={`Download v${tagName} for Ubuntu (deb)`}>Ubuntu</a
         >
+
         <a href={joinURL(githubURL, "tree/main/unsupported/arch/#readme")}
           >Arch Linux</a
         >
@@ -124,7 +130,7 @@ const structuredData = {
       </nav>
     </section>
 
-    <section>
+    <section id="demo">
       <h2>📸 Demo</h2>
       <div class="demo-container">
         <Image
@@ -144,7 +150,7 @@ const structuredData = {
 
     <hr />
 
-    <section>
+    <section id="features">
       <h2>For who?</h2>
       <div class="features-grid">
         <div class="feature-card">
@@ -192,7 +198,7 @@ const structuredData = {
 
     <hr />
 
-    <section style="text-align: center;">
+    <section id="ask-anything" style="text-align: center;">
       <a
         href={joinURL(BASE_URL, "interactive-help/")}
         class="ask-anything-button"
