@@ -138,13 +138,13 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PUBLIC NOMINMAX)
 
 if(APPLE)
   target_link_options(
-    ${PROJECT_NAME}
+    ${CMAKE_PROJECT_NAME}
     PRIVATE "-Wl,-exported_symbols_list,${CMAKE_SOURCE_DIR}/cmake/macos/exported_symbols_list.txt"
   )
 elseif(MSVC)
-  target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/cmake/windows/export_symbols.def")
+  target_sources(${CMAKE_PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/cmake/windows/export_symbols.def")
 else()
-  target_link_options(${PROJECT_NAME} PRIVATE "-Wl,--version-script,${CMAKE_SOURCE_DIR}/cmake/linux/version_script.map")
+  target_link_options(${CMAKE_PROJECT_NAME} PRIVATE "-Wl,--version-script,${CMAKE_SOURCE_DIR}/cmake/linux/version_script.map")
 endif()
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
