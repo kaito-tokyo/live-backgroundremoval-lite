@@ -144,7 +144,10 @@ if(APPLE)
 elseif(MSVC)
   target_sources(${CMAKE_PROJECT_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/cmake/windows/export_symbols.def")
 else()
-  target_link_options(${CMAKE_PROJECT_NAME} PRIVATE "-Wl,--version-script,${CMAKE_SOURCE_DIR}/cmake/linux/version_script.map")
+  target_link_options(
+    ${CMAKE_PROJECT_NAME}
+    PRIVATE "-Wl,--version-script,${CMAKE_SOURCE_DIR}/cmake/linux/version_script.map"
+  )
 endif()
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${_name})
