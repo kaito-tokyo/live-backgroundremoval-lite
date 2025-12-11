@@ -459,7 +459,7 @@ jobs:
 
       - name: Verify symbols 🛡️
         env:
-          PLUGIN_BINARY: "${{ github.workspace }}/build_linux/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}"
+          PLUGIN_BINARY: "${{ github.workspace }}/build_x86_64/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}"
         run: |
           LEAKED_SYMBOLS=$(nm -D -g --defined-only "$PLUGIN_BINARY" | grep " T " | grep -v "obs_module_" || true)
           if [[ -n "$LEAKED_SYMBOLS" ]]; then
