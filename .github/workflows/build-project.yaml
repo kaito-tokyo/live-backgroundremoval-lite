@@ -47,7 +47,7 @@ jobs:
       commitHash: ${{ steps.setup.outputs.commitHash }}
       pluginName: ${{ steps.setup.outputs.pluginName }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Check Event Data ☑️
@@ -107,7 +107,7 @@ jobs:
         shell: zsh --no-rcs --errexit --pipefail {0}
     if: ${{ inputs.production == false }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
@@ -175,7 +175,7 @@ jobs:
       - name: Install mono
         run: brew install mono
 
-      - name: "Setup NuGet Credentials"
+      - name: Setup NuGet Credentials
         run: |
           NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
           mono "$NUGET_PATH" sources add \
@@ -185,8 +185,8 @@ jobs:
             -UserName "${{ github.repository_owner }}" \
             -Password "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: "Install dependencies from vcpkg"
-        run: ".github/scripts/install-vcpkg-macos.bash"
+      - name: Install dependencies from vcpkg
+        run: .github/scripts/install-vcpkg-macos.bash
 
       - name: Build Plugin 🧱
         uses: ./.github/actions/build-plugin
@@ -198,7 +198,7 @@ jobs:
 
       - name: Verify symbols 🛡️
         env:
-          PLUGIN_BINARY: "${{ github.workspace }}/build_macos/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}"
+          PLUGIN_BINARY: ${{ github.workspace }}/build_macos/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}
         run: |
           LEAKED_SYMBOLS=$(nm -gCU "$PLUGIN_BINARY" | grep -v "_obs_module_" || true)
           if [[ -n "$LEAKED_SYMBOLS" ]]; then
@@ -252,7 +252,7 @@ jobs:
     if: ${{ inputs.production == true }}
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
@@ -320,7 +320,7 @@ jobs:
       - name: Install mono
         run: brew install mono
 
-      - name: "Setup NuGet Credentials"
+      - name: Setup NuGet Credentials
         run: |
           NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
           mono "$NUGET_PATH" sources add \
@@ -330,8 +330,8 @@ jobs:
             -UserName "${{ github.repository_owner }}" \
             -Password "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: "Install dependencies from vcpkg"
-        run: ".github/scripts/install-vcpkg-macos.bash"
+      - name: Install dependencies from vcpkg
+        run: .github/scripts/install-vcpkg-macos.bash
 
       - name: Build Plugin 🧱
         uses: ./.github/actions/build-plugin
@@ -343,7 +343,7 @@ jobs:
 
       - name: Verify symbols 🛡️
         env:
-          PLUGIN_BINARY: "${{ github.workspace }}/build_macos/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}"
+          PLUGIN_BINARY: ${{ github.workspace }}/build_macos/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}
         run: |
           LEAKED_SYMBOLS=$(nm -gCU "$PLUGIN_BINARY" | grep -v "_obs_module_" || true)
           if [[ -n "$LEAKED_SYMBOLS" ]]; then
@@ -398,7 +398,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
@@ -436,7 +436,7 @@ jobs:
       - name: Install mono
         run: sudo apt-get -y install mono-devel
 
-      - name: "Setup NuGet Credentials"
+      - name: Setup NuGet Credentials
         run: |
           NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
           mono "$NUGET_PATH" sources add \
@@ -448,8 +448,8 @@ jobs:
           mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
             -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
-      - name: "Install dependencies from vcpkg"
-        run: "$VCPKG_ROOT/vcpkg install --triplet x64-linux-obs"
+      - name: Install dependencies from vcpkg
+        run: $VCPKG_ROOT/vcpkg install --triplet x64-linux-obs
 
       - name: Build Plugin 🧱
         uses: ./.github/actions/build-plugin
@@ -459,7 +459,7 @@ jobs:
 
       - name: Verify symbols 🛡️
         env:
-          PLUGIN_BINARY: "${{ github.workspace }}/build_x86_64/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}"
+          PLUGIN_BINARY: ${{ github.workspace }}/build_x86_64/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}
         run: |
           LEAKED_SYMBOLS=$(nm -D -g --defined-only "$PLUGIN_BINARY" | grep " T " | grep -v "obs_module_" || true)
           if [[ -n "$LEAKED_SYMBOLS" ]]; then
@@ -510,7 +510,7 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
@@ -536,13 +536,12 @@ jobs:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
 
-      - name: "Bootstrap vcpkg"
-        working-directory: "${{ env.VCPKG_ROOT }}"
-        shell: "pwsh"
-        run: |
-          .\bootstrap-vcpkg.bat
+      - name: Bootstrap vcpkg
+        working-directory: ${{ env.VCPKG_ROOT }}
+        shell: pwsh
+        run: .\bootstrap-vcpkg.bat
 
-      - name: "Setup NuGet Credentials on Windows"
+      - name: Setup NuGet Credentials on Windows
         shell: pwsh
         run: |
           $NUGET_EXE_PATH = & "${{ env.VCPKG_ROOT }}/vcpkg" fetch nuget | Select-Object -Last 1
@@ -556,9 +555,9 @@ jobs:
           & $NUGET_EXE_PATH setapikey "${{ secrets.GITHUB_TOKEN }}" `
             -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
-      - name: "Install dependencies from vcpkg"
+      - name: Install dependencies from vcpkg
         shell: bash
-        run: "$VCPKG_ROOT/vcpkg install --triplet x64-windows-static-md-obs"
+        run: $VCPKG_ROOT/vcpkg install --triplet x64-windows-static-md-obs
 
       - name: Build Plugin 🧱
         uses: ./.github/actions/build-plugin
