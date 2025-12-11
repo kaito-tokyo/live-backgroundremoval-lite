@@ -196,6 +196,19 @@ jobs:
           codesign: ${{ fromJSON(needs.check-event.outputs.codesign) }}
           codesignIdent: ${{ steps.codesign.outputs.codesignIdent }}
 
+      - name: Verify symbols 🛡️
+        env:
+          PLUGIN_BINARY: "${{ github.workspace }}/build_macos/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}"
+        run: |
+          LEAKED_SYMBOLS=$(nm -gCU "$PLUGIN_BINARY" | grep -v "_obs_module_" || true)
+          if [[ -n "$LEAKED_SYMBOLS" ]]; then
+            echo "::error::❌ Symbol leak detected! The following unauthorized symbols are exported:"
+            echo "$LEAKED_SYMBOLS"
+            exit 1
+          else
+            echo "✅ Symbol check passed. No leaked symbols found."
+          fi
+
       - name: Package Plugin 📀
         uses: ./.github/actions/package-plugin
         with:
@@ -328,6 +341,19 @@ jobs:
           codesign: ${{ fromJSON(needs.check-event.outputs.codesign) }}
           codesignIdent: ${{ steps.codesign.outputs.codesignIdent }}
 
+      - name: Verify symbols 🛡️
+        env:
+          PLUGIN_BINARY: "${{ github.workspace }}/build_macos/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}"
+        run: |
+          LEAKED_SYMBOLS=$(nm -gCU "$PLUGIN_BINARY" | grep -v "_obs_module_" || true)
+          if [[ -n "$LEAKED_SYMBOLS" ]]; then
+            echo "::error::❌ Symbol leak detected! The following unauthorized symbols are exported:"
+            echo "$LEAKED_SYMBOLS"
+            exit 1
+          else
+            echo "✅ Symbol check passed. No leaked symbols found."
+          fi
+
       - name: Package Plugin 📀
         uses: ./.github/actions/package-plugin
         with:
@@ -430,6 +456,19 @@ jobs:
         with:
           target: x86_64
           config: ${{ needs.check-event.outputs.config }}
+
+      - name: Verify symbols 🛡️
+        env:
+          PLUGIN_BINARY: "${{ github.workspace }}/build_x86_64/${{ needs.check-event.outputs.config }}/${{ steps.setup.outputs.pluginName }}"
+        run: |
+          LEAKED_SYMBOLS=$(nm -D -g --defined-only "$PLUGIN_BINARY" | grep " T " | grep -v "obs_module_" || true)
+          if [[ -n "$LEAKED_SYMBOLS" ]]; then
+            echo "::error::❌ Symbol leak detected! The following unauthorized symbols are exported:"
+            echo "$LEAKED_SYMBOLS"
+            exit 1
+          else
+            echo "✅ Symbol check passed. No leaked symbols found."
+          fi
 
       - name: Package Plugin 📀
         uses: ./.github/actions/package-plugin
