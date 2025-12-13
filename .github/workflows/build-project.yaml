@@ -47,7 +47,7 @@ jobs:
       commitHash: ${{ steps.setup.outputs.commitHash }}
       pluginName: ${{ steps.setup.outputs.pluginName }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Check Event Data ☑️
@@ -107,7 +107,7 @@ jobs:
         shell: zsh --no-rcs --errexit --pipefail {0}
     if: ${{ inputs.production == false }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -163,7 +163,7 @@ jobs:
           notarizationPassword: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
@@ -239,7 +239,7 @@ jobs:
     if: ${{ inputs.production == true }}
     environment: production
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -295,7 +295,7 @@ jobs:
           notarizationPassword: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
@@ -372,7 +372,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -398,7 +398,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.os }}-ccache-x86_64-
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
@@ -463,7 +463,7 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -484,7 +484,7 @@ jobs:
           "pluginVersion=${ProductVersion}" >> $env:GITHUB_OUTPUT
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}

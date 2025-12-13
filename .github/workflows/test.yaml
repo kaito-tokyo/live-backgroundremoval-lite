@@ -28,10 +28,12 @@ jobs:
 
     steps:
       - name: Checkout project repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
@@ -58,10 +60,12 @@ jobs:
 
     steps:
       - name: Checkout project repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
@@ -89,10 +93,12 @@ jobs:
 
     steps:
       - name: Checkout project repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
