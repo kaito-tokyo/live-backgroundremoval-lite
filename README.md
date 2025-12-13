@@ -155,7 +155,11 @@ If you find a bug or issue, please report it on the [GitHub Issues page](https:/
 
 ## 📜 License
 
-This plugin itself is licensed under the [GPL-3.0-or-later](LICENSE).
+This project uses dual licensing:
+- The plugin as a whole is licensed under [GPL-3.0-or-later](LICENSE.GPL-3.0-or-later)
+- Some reusable components are licensed under the [MIT License](LICENSE.MIT)
+
+See the [LICENSE](LICENSE) file for detailed information about component-specific licensing.
 
 ---
 
