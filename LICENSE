@@ -1,0 +1,73 @@
+Live Background Removal Lite - License Information
+===================================================
+
+This project uses dual licensing: some components are licensed under the
+GNU General Public License v3.0 or later (GPL-3.0-or-later), and others
+under the MIT License.
+
+The overall project, when distributed as a compiled binary or complete
+work, must comply with GPL-3.0-or-later due to GPL's copyleft requirements.
+
+------------------------------------------------------------------------------
+COMPONENT LICENSING
+------------------------------------------------------------------------------
+
+GPL-3.0-or-later Components:
+----------------------------
+The following components are licensed under GPL-3.0-or-later:
+- Core plugin functionality (src/Core/)
+- OBS Studio bridge utilities (src/BridgeUtils/)
+- Plugin entry point (src/plugin-main.c)
+- All other components not explicitly listed as MIT-licensed below
+
+For the full text of the GPL-3.0-or-later license, see the file:
+  LICENSE.GPL-3.0-or-later
+
+MIT License Components:
+-----------------------
+The following components are licensed under the MIT License and may be
+used independently under MIT terms:
+- TaskQueue (src/TaskQueue/)
+- SelfieSegmenter (src/SelfieSegmenter/)
+- UpdateChecker (src/UpdateChecker/)
+- Memory management utilities (src/Memory/)
+- Logger interfaces (src/Logger/)
+
+For the full text of the MIT License, see the file:
+  LICENSE.MIT
+
+------------------------------------------------------------------------------
+DISTRIBUTION AND USE
+------------------------------------------------------------------------------
+
+When distributing this software:
+1. As a complete work or compiled binary: The GPL-3.0-or-later license
+   applies to the entire distribution.
+
+2. For MIT-licensed components separately: You may extract and use the
+   MIT-licensed components independently under the terms of the MIT License.
+
+------------------------------------------------------------------------------
+COPYRIGHT
+------------------------------------------------------------------------------
+
+Copyright (C) 2025 Kaito Udagawa <umireon@kaito.tokyo>
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+------------------------------------------------------------------------------
+For more information, see:
+- Full GPL-3.0-or-later text: LICENSE.GPL-3.0-or-later
+- Full MIT License text: LICENSE.MIT
+- Project documentation: README.md
