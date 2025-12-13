@@ -35,14 +35,8 @@ jobs:
           chown -R builder:builder .
           pacman -Syu --noconfirm git
 
-      - name: Install cpp-httplib
-        run: |
-          sudo -u builder git clone https://aur.archlinux.org/cpp-httplib.git
-          cd cpp-httplib
-          sudo -u builder makepkg -si --noconfirm
-
       - name: Build
-        working-directory: unsupported/arch/live-stream-segmenter
+        working-directory: unsupported/arch/live-backgroundremoval-lite
         run: sudo -u builder makepkg -s --noconfirm
 
   BuildOnArchGit:
@@ -64,14 +58,8 @@ jobs:
           chown -R builder:builder .
           pacman -Syu --noconfirm git
 
-      - name: Install cpp-httplib
-        run: |
-          sudo -u builder git clone https://aur.archlinux.org/cpp-httplib.git
-          cd cpp-httplib
-          sudo -u builder makepkg -si --noconfirm
-
       - name: Build
-        working-directory: unsupported/arch/live-stream-segmenter-git
+        working-directory: unsupported/arch/live-backgroundremoval-lite-git
         run: sudo -u builder makepkg -s --noconfirm
 
   BuildFlatpak:
@@ -90,6 +78,6 @@ jobs:
       - name: Build Flatpak
         uses: flatpak/flatpak-github-actions/flatpak-builder@10a3c29f0162516f0f68006be14c92f34bd4fa6c
         with:
-          bundle: com.obsproject.Studio.Plugin.LiveStreamSegmenter
-          manifest-path: unsupported/flatpak/com.obsproject.Studio.Plugin.LiveStreamSegmenter.json
+          bundle: com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite
+          manifest-path: unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.json
           cache-key: flatpak-builder-${{ github.sha }}
