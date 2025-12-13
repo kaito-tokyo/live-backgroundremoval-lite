@@ -70,7 +70,7 @@ Use the [feature request template](https://github.com/kaito-tokyo/live-backgroun
 
 ### Prerequisites
 
-- **C++17 compiler**: clang-format-19 for formatting
+- **C++17 compiler**
 - **CMake**: Version 3.28 or higher
 - **Development Tools**:
   - clang-format-19 (for C/C++ formatting)
@@ -93,7 +93,7 @@ Use the [feature request template](https://github.com/kaito-tokyo/live-backgroun
 ### General Rules
 
 - Develop this project using **C++17**
-- Use `()` instead of `(void)` for empty argument lists, except within regions marked by `extern "C"`
+- Use `()` instead of `(void)` for empty argument lists (note: within `extern "C"` blocks, follow C conventions)
 - Member variables must be suffixed with an underscore (`_`)
 - Each file must end with a single empty newline (builds will fail otherwise)
 - The default branch is `main`
@@ -171,8 +171,7 @@ For Windows and Linux build instructions, please refer to the GitHub Actions wor
    - Include any relevant issue numbers
 
 6. **Respond to feedback**:
-   - The maintainer (@umireon) reviews issues and PRs about once a week
-   - Be patient and responsive to review comments
+   - Be patient and responsive to review comments (see [Response Times](#response-times) for details)
    - Make requested changes promptly
 
 ### Pull Request Guidelines
