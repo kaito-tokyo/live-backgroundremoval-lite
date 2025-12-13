@@ -157,7 +157,7 @@ if(BUILD_TESTING)
 
   add_subdirectory(vendor/googletest)
 
-  add_library(stb::stb INTERFACE)
+  add_library(stb::stb INTERFACE IMPORTED)
   target_include_directories(stb::stb INTERFACE ${CMAKE_SOURCE_DIR}/vendor/stb)
 
   add_subdirectory(tests)
