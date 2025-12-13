@@ -81,6 +81,5 @@ TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 	for (std::size_t i = 0; i < selfieSegmenter.getPixelCount(); i++) {
 		totalDiff += std::abs(resultImage[i] - refImageData[i]);
 	}
-	(void)refImageData;
 	EXPECT_LT(totalDiff, width * height);
 }
