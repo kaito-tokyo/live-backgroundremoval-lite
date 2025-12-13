@@ -29,8 +29,8 @@ permissions:
   packages: read
 
 env:
-  VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json,read"
-  VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
+  VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
+  VCPKG_ROOT: ${{ github.workspace }}/vcpkg
 
 jobs:
   check-event:
@@ -47,7 +47,7 @@ jobs:
       commitHash: ${{ steps.setup.outputs.commitHash }}
       pluginName: ${{ steps.setup.outputs.pluginName }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Check Event Data ☑️
@@ -107,7 +107,7 @@ jobs:
         shell: zsh --no-rcs --errexit --pipefail {0}
     if: ${{ inputs.production == false }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -163,7 +163,7 @@ jobs:
           notarizationPassword: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
@@ -171,19 +171,6 @@ jobs:
       - name: Bootstrap vcpkg
         working-directory: ${{ env.VCPKG_ROOT }}
         run: ./bootstrap-vcpkg.sh
-      
-      - name: Install mono
-        run: brew install mono
-
-      - name: Setup NuGet Credentials
-        run: |
-          NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
-          mono "$NUGET_PATH" sources add \
-            -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-            -StorePasswordInClearText \
-            -Name "GitHub" \
-            -UserName "${{ github.repository_owner }}" \
-            -Password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Install dependencies from vcpkg
         run: .github/scripts/install-vcpkg-macos.bash
@@ -252,7 +239,7 @@ jobs:
     if: ${{ inputs.production == true }}
     environment: production
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -308,7 +295,7 @@ jobs:
           notarizationPassword: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
@@ -316,19 +303,6 @@ jobs:
       - name: Bootstrap vcpkg
         working-directory: ${{ env.VCPKG_ROOT }}
         run: ./bootstrap-vcpkg.sh
-      
-      - name: Install mono
-        run: brew install mono
-
-      - name: Setup NuGet Credentials
-        run: |
-          NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
-          mono "$NUGET_PATH" sources add \
-            -Source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-            -StorePasswordInClearText \
-            -Name "GitHub" \
-            -UserName "${{ github.repository_owner }}" \
-            -Password "${{ secrets.GITHUB_TOKEN }}"
 
       - name: Install dependencies from vcpkg
         run: .github/scripts/install-vcpkg-macos.bash
@@ -398,7 +372,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -424,7 +398,7 @@ jobs:
             ${{ runner.os }}-${{ matrix.os }}-ccache-x86_64-
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
@@ -432,21 +406,6 @@ jobs:
       - name: Bootstrap vcpkg
         working-directory: ${{ env.VCPKG_ROOT }}
         run: ./bootstrap-vcpkg.sh
-      
-      - name: Install mono
-        run: sudo apt-get -y install mono-devel
-
-      - name: Setup NuGet Credentials
-        run: |
-          NUGET_PATH="$($VCPKG_ROOT/vcpkg fetch nuget | tail -n1)"
-          mono "$NUGET_PATH" sources add \
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" \
-            -StorePasswordInClearText \
-            -Name "GitHub" \
-            -UserName "kaito-tokyo" \
-            -Password "${{ secrets.GITHUB_TOKEN }}"
-          mono "$NUGET_PATH" setapikey "${{ secrets.GITHUB_TOKEN }}" \
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: Install dependencies from vcpkg
         run: $VCPKG_ROOT/vcpkg install --triplet x64-linux-obs
@@ -504,7 +463,7 @@ jobs:
       run:
         shell: pwsh
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
           fetch-depth: 0
@@ -525,7 +484,7 @@ jobs:
           "pluginVersion=${ProductVersion}" >> $env:GITHUB_OUTPUT
 
       - name: Checkout vcpkg repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: microsoft/vcpkg
           path: ${{ env.VCPKG_ROOT }}
@@ -534,20 +493,6 @@ jobs:
         working-directory: ${{ env.VCPKG_ROOT }}
         shell: pwsh
         run: .\bootstrap-vcpkg.bat
-
-      - name: Setup NuGet Credentials on Windows
-        shell: pwsh
-        run: |
-          $NUGET_EXE_PATH = & "${{ env.VCPKG_ROOT }}/vcpkg" fetch nuget | Select-Object -Last 1
-          
-          & $NUGET_EXE_PATH sources add `
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json" `
-            -StorePasswordInClearText `
-            -Name "GitHub" `
-            -UserName "kaito-tokyo" `
-            -Password "${{ secrets.GITHUB_TOKEN }}"
-          & $NUGET_EXE_PATH setapikey "${{ secrets.GITHUB_TOKEN }}" `
-            -Source "https://nuget.pkg.github.com/kaito-tokyo/index.json"
 
       - name: Install dependencies from vcpkg
         shell: bash

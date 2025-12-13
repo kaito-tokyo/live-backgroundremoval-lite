@@ -1,35 +1,30 @@
 /*
-Live Background Removal Lite
-Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ * Live Background Removal Lite
+ * Copyright (c) 2025 Kaito Udagawa umireon@kaito.tokyo
+ *
+ * This software is licensed under the MIT License.
+ * For the full text of the license, see the file "LICENSE.MIT" 
+ * in the distribution root.
+ */
 
 #include <gtest/gtest.h>
 
 #include <NcnnSelfieSegmenter.hpp>
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
-
-#include <opencv2/opencv.hpp>
+#include <vector>
+#include <iostream>
 
 #ifdef PREFIXED_NCNN_HEADERS
 #include <ncnn/net.h>
 #else
 #include <net.h>
 #endif
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 using namespace KaitoTokyo::SelfieSegmenter;
 
@@ -46,22 +41,28 @@ TEST(NcnnSelfieSegmenterTest, Construction)
 
 TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 {
-	// Set up
-	int width = 256;
-	int height = 144;
+	const int width = 256;
+	const int height = 144;
 
-	cv::Mat bgrImage = cv::imread(kTestImage, cv::IMREAD_COLOR), bgraImage;
-	cv::cvtColor(bgrImage, bgraImage, cv::COLOR_BGR2BGRA);
-	ASSERT_FALSE(bgraImage.empty());
-	ASSERT_EQ(bgraImage.cols, width);
-	ASSERT_EQ(bgraImage.rows, height);
-	ASSERT_EQ(bgraImage.channels(), 4);
+	int testImageX, testImageY, testImageChannels;
+	std::uint8_t *testImageRGB = stbi_load(kTestImage, &testImageX, &testImageY, &testImageChannels, 3);
+	ASSERT_EQ(testImageX, width);
+	ASSERT_EQ(testImageY, height);
+	ASSERT_EQ(testImageChannels, 3);
 
-	cv::Mat refImage = cv::imread(kTestImageMask, cv::IMREAD_GRAYSCALE);
-	ASSERT_FALSE(refImage.empty());
-	ASSERT_EQ(refImage.cols, width);
-	ASSERT_EQ(refImage.rows, height);
-	ASSERT_EQ(refImage.channels(), 1);
+	std::vector<std::uint8_t> testImageBGRA(testImageX * testImageY * 4);
+	for (int i = 0; i < testImageX * testImageY; i++) {
+		testImageBGRA[i * 4 + 0] = testImageRGB[i * 3 + 2];
+		testImageBGRA[i * 4 + 1] = testImageRGB[i * 3 + 1];
+		testImageBGRA[i * 4 + 2] = testImageRGB[i * 3 + 0];
+		testImageBGRA[i * 4 + 3] = 255;
+	}
+
+	int refImageX, refImageY, refImageChannels;
+	std::uint8_t *refImageData = stbi_load(kTestImageMask, &refImageX, &refImageY, &refImageChannels, 1);
+	ASSERT_EQ(refImageX, width);
+	ASSERT_EQ(refImageY, height);
+	ASSERT_EQ(refImageChannels, 1);
 
 	// Test
 	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
@@ -69,15 +70,16 @@ TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 	ASSERT_EQ(selfieSegmenter.getHeight(), static_cast<std::size_t>(height));
 	ASSERT_EQ(selfieSegmenter.getPixelCount(), static_cast<std::size_t>(width * height));
 
-	selfieSegmenter.process(bgraImage.data);
+	selfieSegmenter.process(testImageBGRA.data());
 
-	// Verify
-	cv::Mat maskImage((int)selfieSegmenter.getHeight(), (int)selfieSegmenter.getWidth(), CV_8UC1);
-	std::memcpy(maskImage.data, selfieSegmenter.getMask(), selfieSegmenter.getPixelCount());
+	const std::uint8_t *resultImage = selfieSegmenter.getMask();
+	ASSERT_EQ(selfieSegmenter.getWidth(), width);
+	ASSERT_EQ(selfieSegmenter.getHeight(), height);
+	ASSERT_EQ(selfieSegmenter.getPixelCount(), static_cast<std::size_t>(width * height));
 
-	EXPECT_GT(cv::countNonZero(maskImage), 0);
-
-	cv::Mat diffImage;
-	cv::absdiff(refImage, maskImage, diffImage);
-	EXPECT_LT(cv::norm(diffImage, cv::NORM_L1), width * height);
+	std::uint64_t totalDiff = 0;
+	for (std::size_t i = 0; i < selfieSegmenter.getPixelCount(); i++) {
+		totalDiff += std::abs(resultImage[i] - refImageData[i]);
+	}
+	EXPECT_LT(totalDiff, width * height);
 }

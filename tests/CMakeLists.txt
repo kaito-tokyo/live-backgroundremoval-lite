@@ -3,10 +3,7 @@ include(GoogleTest)
 set(TEST_LIST "")
 
 add_executable(NcnnSelfieSegmenter_test SelfieSegmenter/NcnnSelfieSegmenter_test.cpp)
-target_link_libraries(
-  NcnnSelfieSegmenter_test
-  PRIVATE GTest::gtest_main SelfieSegmenter OpenCV::opencv_core OpenCV::opencv_imgproc OpenCV::opencv_imgcodecs
-)
+target_link_libraries(NcnnSelfieSegmenter_test PRIVATE GTest::gtest_main SelfieSegmenter stb::stb)
 list(APPEND TEST_LIST NcnnSelfieSegmenter_test)
 
 # UpdateChecker_test
