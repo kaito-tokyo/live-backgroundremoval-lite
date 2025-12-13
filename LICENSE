@@ -16,6 +16,8 @@ GPL-3.0-or-later Components:
 ----------------------------
 The following components are licensed under GPL-3.0-or-later:
 - Core plugin functionality (src/Core/)
+- OBS Studio bridge utilities (src/BridgeUtils/)
+- Plugin entry point (src/plugin-main.c)
 - All other components not explicitly listed as MIT-licensed below
 
 For the full text of the GPL-3.0-or-later license, see the file:
