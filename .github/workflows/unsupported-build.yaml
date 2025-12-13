@@ -33,7 +33,7 @@ jobs:
           useradd -m builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
           chown -R builder:builder .
-          pacman -Sy --noconfirm git
+          pacman -Syu --noconfirm git
 
       - name: Install cpp-httplib
         run: |
@@ -62,7 +62,7 @@ jobs:
           useradd -m builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
           chown -R builder:builder .
-          pacman -Sy --noconfirm git
+          pacman -Syu --noconfirm git
 
       - name: Install cpp-httplib
         run: |
