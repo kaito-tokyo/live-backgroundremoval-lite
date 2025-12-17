@@ -40,6 +40,7 @@ if(MSVC)
   list(
     PREPEND
     CMAKE_PREFIX_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps"
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-qt6-${QT6_VERSION}-x64"
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-${PREBUILT_VERSION}-x64"
   )
@@ -47,6 +48,8 @@ elseif(APPLE)
   list(
     PREPEND
     CMAKE_PREFIX_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps/Frameworks"
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps"
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-qt6-${QT6_VERSION}-universal"
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-${PREBUILT_VERSION}-universal"
   )
@@ -129,15 +132,18 @@ target_sources(SelfieSegmenter PRIVATE src/SelfieSegmenter/ShapeConverter.cpp)
 target_include_directories(SelfieSegmenter PUBLIC ${CMAKE_SOURCE_DIR}/src/SelfieSegmenter)
 target_link_libraries(SelfieSegmenter PUBLIC Memory ncnn::ncnn)
 
-add_library(${CMAKE_PROJECT_NAME} MODULE
-    src/Core/DebugWindow.cpp
-    src/Core/MainPluginContext_c.cpp
-    src/Core/MainPluginContext.cpp
-    src/Core/RenderingContext.cpp
-    src/plugin-main.c)
+add_library(
+  ${CMAKE_PROJECT_NAME}
+  MODULE
+  src/Core/DebugWindow.cpp
+  src/Core/MainPluginContext_c.cpp
+  src/Core/MainPluginContext.cpp
+  src/Core/RenderingContext.cpp
+  src/plugin-main.c
+)
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs BridgeUtils SelfieSegmenter UpdateChecker TaskQueue
+  PUBLIC OBS::libobs Qt6::Core Qt6::Widgets BridgeUtils SelfieSegmenter UpdateChecker TaskQueue
 )
 
 if(Backward_FOUND)
