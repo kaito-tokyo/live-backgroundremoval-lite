@@ -31,7 +31,7 @@ function(set_target_properties_plugin target)
       XCODE_ATTRIBUTE_GENERATE_INFOPLIST_FILE YES
       XCODE_ATTRIBUTE_INFOPLIST_FILE ""
       XCODE_ATTRIBUTE_INFOPLIST_KEY_CFBundleDisplayName ${target}
-      XCODE_ATTRIBUTE_INFOPLIST_KEY_NSHumanReadableCopyright "(c) ${CURRENT_YEAR} ${PLUGIN_AUTHOR}"
+      XCODE_ATTRIBUTE_INFOPLIST_KEY_NSHumanReadableCopyright "(C) ${CURRENT_YEAR} ${PLUGIN_AUTHOR}"
       XCODE_ATTRIBUTE_INSTALL_PATH "$(USER_LIBRARY_DIR)/Application Support/obs-studio/plugins"
   )
 
@@ -67,9 +67,10 @@ function(set_target_properties_plugin target)
   install(TARGETS ${target} LIBRARY DESTINATION .)
   install(FILES "$<TARGET_BUNDLE_DIR:${target}>.dsym" CONFIGURATIONS Release DESTINATION . OPTIONAL)
 
-  configure_file(cmake/macos/resources/distribution.in "${CMAKE_CURRENT_BINARY_DIR}/distribution" @ONLY)
-  configure_file(cmake/macos/resources/create-package.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/create-package.cmake" @ONLY)
-  install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/create-package.cmake")
+  # -- DISABLED --
+  # configure_file(cmake/macos/resources/distribution.in "${CMAKE_CURRENT_BINARY_DIR}/distribution" @ONLY)
+  # configure_file(cmake/macos/resources/create-package.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/create-package.cmake" @ONLY)
+  # install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/create-package.cmake")
 endfunction()
 
 # target_install_resources: Helper function to add resources into bundle

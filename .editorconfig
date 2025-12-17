@@ -1,0 +1,43 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{c,h,cpp,hpp,cc,cxx}]
+indent_style = tab
+indent_size = 8
+tab_width = 8
+
+[*.{m,mm}]
+indent_style = space
+indent_size = 4
+
+[*.{cmake,CMakeLists.txt}]
+indent_style = space
+indent_size = 2
+
+[*.{sh,zsh,bash}]
+indent_style = space
+indent_size = 2
+
+[run-*]
+indent_style = space
+indent_size = 2
+
+[*.ps1]
+indent_style = space
+indent_size = 4
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.{yaml,yml}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false

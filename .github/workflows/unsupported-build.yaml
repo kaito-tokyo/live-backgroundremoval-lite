@@ -8,27 +8,25 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: bash
-
-permissions:
-  contents: read
-
 jobs:
-  BuildOnArch:
-    runs-on: ubuntu-24.04
+  build-arch:
+    name: Build on Arch Linux
 
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
 
     container:
       image: archlinux:base-devel
+
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout project repository
         uses: actions/checkout@v6
 
       - name: Setup builder
+        shell: bash
         run: |
           useradd -m builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
@@ -36,13 +34,18 @@ jobs:
           pacman -Syu --noconfirm git
 
       - name: Build
+        shell: bash
         working-directory: unsupported/arch/live-backgroundremoval-lite
         run: sudo -u builder makepkg -s --noconfirm
 
-  BuildOnArchGit:
-    runs-on: ubuntu-24.04
+  build-arch-git:
+    name: Build on Arch Linux (Git Version)
 
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
+
+    permissions:
+      contents: read
 
     container:
       image: archlinux:base-devel
@@ -52,6 +55,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Setup builder
+        shell: bash
         run: |
           useradd -m builder
           echo 'builder ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/builder
@@ -59,17 +63,22 @@ jobs:
           pacman -Syu --noconfirm git
 
       - name: Build
+        shell: bash
         working-directory: unsupported/arch/live-backgroundremoval-lite-git
         run: sudo -u builder makepkg -s --noconfirm
 
-  BuildFlatpak:
+  build-flatpak:
+    name: Build Flatpak
+
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
 
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:kde-6.8
       options: --privileged
 
-    timeout-minutes: 30
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout

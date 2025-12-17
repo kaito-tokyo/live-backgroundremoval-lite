@@ -18,10 +18,7 @@ function(set_target_properties_plugin target)
     set_property(TARGET ${target} PROPERTY ${key} "${value}")
   endwhile()
 
-  set_target_properties(
-    ${target}
-    PROPERTIES VERSION ${PLUGIN_VERSION} SOVERSION ${PLUGIN_VERSION_MAJOR} PREFIX ""
-  )
+  set_target_properties(${target} PROPERTIES PREFIX "")
 
   install(
     TARGETS ${target}

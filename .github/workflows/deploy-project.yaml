@@ -1,0 +1,461 @@
+name: Deploy Project
+
+on:
+  push:
+    branches: [main, master, develop]
+    tags: ["*"]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/master' && github.ref != 'refs/heads/develop' }}
+
+env:
+  VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
+
+jobs:
+  macos-deploy:
+    name: macOS Deploy
+
+    runs-on: macos-15
+    timeout-minutes: 60
+    environment: production-macos
+
+    permissions:
+      contents: read
+
+    env:
+      HOMEBREW_NO_ANALYTICS: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+      HOMEBREW_NO_ENV_HINTS: 1
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      CODESIGN_OK: ${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY != '' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Read metadata
+        id: metadata
+        shell: bash
+        run: |
+          {
+            echo "buildspec<<EOF"
+            jq -c . buildspec.json
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "ImageVersion=$ImageVersion" >> "$GITHUB_OUTPUT"
+
+      - name: Set up macOS Signing Certificates
+        if: ${{ env.CODESIGN_OK == 'true' }}
+        uses: ./.github/actions/setup-macos-codesigning
+        id: codesign
+        with:
+          MACOS_SIGNING_APPLICATION_IDENTITY: ${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY }}
+          MACOS_SIGNING_CERT: ${{ secrets.MACOS_SIGNING_CERT }}
+          MACOS_SIGNING_CERT_PASSWORD: ${{ secrets.MACOS_SIGNING_CERT_PASSWORD }}
+
+      - name: Install dependencies via Homebrew
+        shell: bash
+        run: brew install -q cmake xcbeautify
+
+      - name: Set up vcpkg
+        shell: bash
+        run: echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> "$GITHUB_ENV"
+
+      - name: Install dependencies from vcpkg
+        shell: bash
+        run: ./scripts/install-vcpkg-macos.sh
+
+      - name: Download dependencies
+        shell: bash
+        run: cmake -P scripts/download-deps.cmake
+
+      - name: Build libobs
+        shell: bash
+        env:
+          ENABLE_XCBEAUTIFY: true
+        run: scripts/build-obs-studio-macos.sh
+
+      - name: Save libobs cache
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        continue-on-error: true
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            .deps/Frameworks
+            .deps/include
+            .deps/lib
+            .deps/obs-studio-${{ fromJson(steps.metadata.outputs.buildspec).dependencies.obs-studio.version }}
+          key: ${{ runner.os }}-libobs-${{ hashFiles('buildspec.json') }}-${{ runner.arch }}-${{ steps.metadata.outputs.ImageVersion }}
+
+      - name: Configure
+        shell: bash
+        run: cmake --preset macos-ci
+
+      - name: Build
+        shell: bash
+        run: cmake --build --preset macos-ci 2>&1 | tee Build.log | xcbeautify
+
+      - name: Package
+        shell: bash
+        env:
+          MACOS_SIGNING_APPLICATION_IDENTITY: ${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY }}
+          MACOS_SIGNING_INSTALLER_IDENTITY: ${{ secrets.MACOS_SIGNING_INSTALLER_IDENTITY }}
+          BUNDLE_ID: ${{ fromJson(steps.metadata.outputs.buildspec).platformConfig.macos.bundleId }}
+          DISPLAY_NAME: ${{ fromJson(steps.metadata.outputs.buildspec).displayName }}
+          PKG_NAME: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-${{ fromJson(steps.metadata.outputs.buildspec).version }}-macos-universal.pkg
+          VERSION: ${{ fromJson(steps.metadata.outputs.buildspec).version }}
+        run: |
+          cmake --install build_macos --config RelWithDebInfo --prefix "release/payload/Library/Application Support/obs-studio/plugins" --strip
+
+          codesign --force --deep --options runtime --timestamp \
+            --sign "${MACOS_SIGNING_APPLICATION_IDENTITY:--}" \
+            "release/payload/Library/Application Support/obs-studio/plugins/"*.plugin
+
+          pkgbuild \
+            --root release/payload \
+            --identifier "$BUNDLE_ID" \
+            --version "$VERSION" \
+            release/component.pkg
+
+          {
+            printf '<?xml version="1.0" encoding="utf-8"?>\n'
+            printf '<installer-gui-script minSpecVersion="2">\n'
+            printf '  <title>%s</title>\n' "$DISPLAY_NAME"
+            printf '  <options customize="never" require-scripts="false" hostArchitectures="x86_64,arm64"/>\n'
+            printf '  <domains enable_localSystem="false" enable_currentUserHome="true" enable_anywhere="false"/>\n'
+            printf '  <choices-outline>\n'
+            printf '    <line choice="default"/>\n'
+            printf '  </choices-outline>\n'
+            printf '  <choice id="default" title="%s" visible="false">\n' "$DISPLAY_NAME"
+            printf '    <pkg-ref id="%s"/>\n' "$BUNDLE_ID"
+            printf '  </choice>\n'
+            printf '  <pkg-ref id="%s" version="%s" onConclusion="none" auth="none">component.pkg</pkg-ref>\n' "$BUNDLE_ID" "$VERSION"
+            printf '</installer-gui-script>\n'
+          } | tee release/distribution.xml
+
+          PRODUCTBUILD_ARGS=(
+            --distribution "release/distribution.xml"
+            --package-path "release"
+          )
+
+          if [[ -n $MACOS_SIGNING_INSTALLER_IDENTITY ]]; then
+            PRODUCTBUILD_ARGS+=(--sign "$MACOS_SIGNING_INSTALLER_IDENTITY")
+          fi
+
+          productbuild "${PRODUCTBUILD_ARGS[@]}" "release/$PKG_NAME"
+
+      - name: Notarize Installer
+        if: env.CODESIGN_OK == 'true' && startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.MACOS_NOTARIZATION_USERNAME }}
+          APPLE_PASSWORD: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
+          TEAM_ID: ${{ steps.codesign.outputs.CODESIGN_TEAM }}
+        run: |
+          xcrun notarytool submit release/*-macos-universal.pkg \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_PASSWORD" \
+            --team-id "$TEAM_ID" \
+            --wait
+
+          xcrun stapler staple release/*-macos-universal.pkg
+
+      - name: Upload pkg
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}
+          path: release/${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.pkg
+          if-no-files-found: error
+
+      - name: Zip dSYM
+        shell: bash
+        env:
+          PLUGIN_NAME: ${{ fromJson(steps.metadata.outputs.buildspec).name }}
+          FILE_NAME: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-${{ fromJson(steps.metadata.outputs.buildspec).version }}-macos-universal.dSYM.zip
+        run: |
+          cd build_macos/RelWithDebInfo
+          zip -r "$FILE_NAME" "$PLUGIN_NAME.plugin.dSYM"
+          echo "dSYM zipped successfully."
+
+      - name: Upload dSYM
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}-dsym
+          path: build_macos/RelWithDebInfo/${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.dSYM.zip
+          if-no-files-found: error
+
+      - name: Upload Raw Build Log
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ runner.os }}-deploy-rawlogs-${{ github.run_number }}
+          path: "*.log"
+
+      - name: Verify vcpkg-obs.kaito.tokyo binary caches
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: ./scripts/verify-vcpkg-obs-kaito-tokyo.sh vcpkg_installed/arm64-osx-obs/vcpkg/status vcpkg_installed/x64-osx-obs/vcpkg/status
+
+  ubuntu-deploy:
+    name: Ubuntu Deploy
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: production-ubuntu
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Read metadata
+        id: metadata
+        shell: bash
+        run: |
+          {
+            echo "buildspec<<EOF"
+            jq -c . buildspec.json
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Install system dependencies on Ubuntu
+        shell: bash
+        run: |
+          echo "man-db man-db/auto-update boolean false" | sudo debconf-set-selections
+          sudo apt-get remove --purge -y man-db
+          sudo add-apt-repository -y ppa:obsproject/obs-studio
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            libgles2-mesa-dev \
+            libqt6svg6-dev \
+            libsimde-dev \
+            ninja-build \
+            obs-studio \
+            pkg-config \
+            qt6-base-dev \
+            qt6-base-private-dev
+
+      - name: Set up vcpkg
+        shell: bash
+        run: echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> "$GITHUB_ENV"
+
+      - name: Install dependencies from vcpkg
+        shell: bash
+        run: '"$VCPKG_ROOT/vcpkg" install --triplet x64-linux-obs'
+
+      - name: Configure
+        shell: bash
+        run: cmake --preset ubuntu-x86_64
+
+      - name: Build
+        shell: bash
+        run: cmake --build --preset ubuntu-x86_64
+
+      - name: Package
+        shell: bash
+        working-directory: ${{ github.workspace }}/build_x86_64
+        run: cpack -G DEB
+
+      - name: Upload deb
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}
+          path: release/*.deb
+          if-no-files-found: error
+
+      - name: Upload ddeb
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}-dbgsym
+          path: release/*.ddeb
+          if-no-files-found: error
+
+      - name: Verify vcpkg-obs.kaito.tokyo binary caches
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: ./scripts/verify-vcpkg-obs-kaito-tokyo.sh vcpkg_installed/vcpkg/status
+
+  windows-deploy:
+    name: Windows Deploy
+
+    runs-on: windows-2022
+    timeout-minutes: 60
+    environment: production-windows
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Read metadata
+        id: metadata
+        shell: bash
+        run: |
+          {
+            echo "buildspec<<EOF"
+            jq -c . buildspec.json
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "ImageVersion=$ImageVersion" >> "$GITHUB_OUTPUT"
+
+      - name: Set up vcpkg
+        shell: bash
+        run: echo "VCPKG_ROOT=$VCPKG_INSTALLATION_ROOT" >> "$GITHUB_ENV"
+
+      - name: Install dependencies from vcpkg
+        shell: bash
+        run: '"$VCPKG_ROOT/vcpkg" install --triplet x64-windows-static-md-obs'
+
+      - name: Download dependencies
+        shell: bash
+        run: cmake -P scripts/download-deps.cmake
+
+      - name: Build libobs
+        shell: pwsh
+        run: ./scripts/build-obs-studio-windows.ps1
+
+      - name: Save libobs cache
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        uses: actions/cache/save@v5
+        id: libobs-cache
+        with:
+          path: |
+            .deps/bin
+            .deps/cmake
+            .deps/include
+            .deps/lib
+            .deps/obs-studio-${{ fromJson(steps.metadata.outputs.buildspec).dependencies.obs-studio.version }}
+          key: ${{ runner.os }}-libobs-${{ hashFiles('buildspec.json') }}-${{ runner.arch }}-${{ steps.metadata.outputs.ImageVersion }}
+
+      - name: Configure
+        shell: bash
+        run: cmake --preset windows-ci-x64
+
+      - name: Build
+        shell: bash
+        run: cmake --build --preset windows-ci-x64
+
+      - name: Package
+        shell: pwsh
+        run: ./scripts/package-plugin-windows.ps1
+
+      - name: Upload Binary
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}
+          path: release/${{ fromJson(steps.metadata.outputs.buildspec).name }}-${{ fromJson(steps.metadata.outputs.buildspec).version }}-windows-x64.zip
+
+      - name: Upload PDB
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}-pdb
+          path: release/${{ fromJson(steps.metadata.outputs.buildspec).name }}-${{ fromJson(steps.metadata.outputs.buildspec).version }}-windows-x64-pdb.zip
+
+      - name: Verify vcpkg-obs.kaito.tokyo binary caches
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: ./scripts/verify-vcpkg-obs-kaito-tokyo.sh vcpkg_installed/vcpkg/status
+
+  create-release:
+    name: Create Release
+
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-24.04
+    needs: [macos-deploy, ubuntu-deploy, windows-deploy]
+
+    permissions:
+      attestations: write
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Read metadata
+        id: metadata
+        shell: bash
+        run: |
+          {
+            echo "buildspec<<EOF"
+            jq -c . buildspec.json
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "ImageVersion=$ImageVersion" >> "$GITHUB_OUTPUT"
+
+      - name: Download macOS Installer
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}
+
+      - name: Download macOS dSYM
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}-dsym
+
+      - name: Download Ubuntu deb
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}
+
+      - name: Download Ubuntu ddeb
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}-dbgsym
+
+      - name: Download Windows Binary
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}
+
+      - name: Download Windows PDB
+        uses: actions/download-artifact@v7
+        with:
+          name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}-pdb
+
+      - name: Attest build artifacts
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            ${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.ddeb
+            ${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.deb
+            ${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.pkg
+            ${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.zip
+
+      - name: Create Draft Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLUGIN_NAME: ${{ fromJson(steps.metadata.outputs.buildspec).name }}
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+
+          gh release delete "$TAG_NAME" --yes || true
+
+          PRERELEASE_FLAG=""
+          if [[ "$TAG_NAME" == *"-"* ]]; then
+            PRERELEASE_FLAG="--prerelease"
+          fi
+
+          gh release create "$TAG_NAME" \
+            $PLUGIN_NAME-*.ddeb \
+            $PLUGIN_NAME-*.deb \
+            $PLUGIN_NAME-*.pkg \
+            $PLUGIN_NAME-*.zip \
+            --draft \
+            --generate-notes \
+            --title "$TAG_NAME" \
+            $PRERELEASE_FLAG
