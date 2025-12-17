@@ -143,7 +143,7 @@ add_library(
 )
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PUBLIC OBS::libobs Qt6::Core Qt6::Widgets BridgeUtils SelfieSegmenter UpdateChecker TaskQueue
+  PUBLIC OBS::libobs OBS::obs-frontend-api Qt6::Core Qt6::Widgets BridgeUtils SelfieSegmenter UpdateChecker TaskQueue
 )
 
 if(Backward_FOUND)
