@@ -27,7 +27,7 @@
 #include "MainPluginContext.h"
 #include "RenderingContext.hpp"
 
-#include "plugin-support.h"
+#include "../plugin-support.h"
 
 using namespace KaitoTokyo::BridgeUtils;
 
