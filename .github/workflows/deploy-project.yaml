@@ -446,8 +446,16 @@ jobs:
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
 
-          jq -c . "$ATTESTATION_BUNDLE_PATH" > "./$PLUGIN_NAME-${PLUGIN_VERSION}-sigstore.jsonl"
+          OUTPUT_BUNDLE="./$PLUGIN_NAME-${PLUGIN_VERSION}-sigstore.jsonl"
+          if ! jq -c . "$ATTESTATION_BUNDLE_PATH" > "$OUTPUT_BUNDLE"; then
+            echo "Error: Failed to create attestation bundle from '$ATTESTATION_BUNDLE_PATH'." >&2
+            exit 1
+          fi
 
+          if [ ! -s "$OUTPUT_BUNDLE" ]; then
+            echo "Error: Attestation bundle '$OUTPUT_BUNDLE' was not created or is empty." >&2
+            exit 1
+          fi
           gh release delete "$TAG_NAME" --yes || true
 
           PRERELEASE_FLAG=""
