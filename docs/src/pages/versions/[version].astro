@@ -4,7 +4,7 @@ import { Octokit } from "@octokit/rest";
 import prettyBytes from "pretty-bytes";
 import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
 
-import { GITHUB_OWNER, GITHUB_REPO } from "../../lib/info.js";
+import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../../lib/info.js";
 import DefineLocalDate from "../../components/DefineLocalDate.astro";
 import Layout from "../../layouts/Layout.astro";
 
@@ -18,11 +18,13 @@ export async function getStaticPaths(
   options: GetStaticPathsOptions,
 ): Promise<GetStaticPathsResult> {
   const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
+
   const allReleases = await octokit.paginate(octokit.rest.repos.listReleases, {
     owner: GITHUB_OWNER,
     repo: GITHUB_REPO,
     per_page: 100,
   });
+
   return allReleases.map((release) => ({
     params: { version: release.tag_name },
     props: { release },
@@ -67,8 +69,9 @@ const schemaData = {
 
   screenshot: {
     "@type": "ImageObject",
-    contentUrl:
-      "https://kaito-tokyo.github.io/live-backgroundremoval-lite/screenshot.webp",
+    contentUrl: joinURL(PRODUCTION_BASE_URL,
+      "screenshot.webp",
+    ),
     encodingFormat: "image/webp",
     caption:
       "OBS plugin real-time background removal comparison: Original footage (left) vs. Transparent output (right).",
