@@ -1,5 +1,9 @@
 ---
+import { joinURL, withTrailingSlash } from "ufo";
+
 import Layout from "../layouts/Layout.astro";
+
+const { BASE_URL } = import.meta.env;
 ---
 
 <Layout lang="en" title="404 Not Found">
@@ -9,6 +13,6 @@ import Layout from "../layouts/Layout.astro";
 
   <main class="white-box">
     <h1>404 Not Found</h1>
-    <a href="/">Back to Top</a>
+    <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
   </main>
 </Layout>

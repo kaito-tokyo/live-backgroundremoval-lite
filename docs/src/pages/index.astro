@@ -15,10 +15,10 @@ import demoImage from "../../public/demo.gif";
 export type LatestRelease =
   RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
 
-const { BASE_URL, GITHUB_TOKEN } = import.meta.env;
+const { BASE_URL } = import.meta.env;
 
 async function getLatestRelease(): Promise<LatestRelease> {
-  const octokit = new Octokit({ auth: GITHUB_TOKEN });
+  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
 
   const latestRelease = await octokit.rest.repos.getLatestRelease({
     owner: GITHUB_OWNER,
@@ -80,7 +80,7 @@ const structuredData = {
   <Fragment slot="head">
     <DefineLocalDate />
     <meta name="description" content={structuredData.description} />
-    <link rel="canonical" href={withTrailingSlash(joinURL(BASE_URL))} />
+    <link rel="canonical" href={withTrailingSlash(BASE_URL)} />
     <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}
@@ -154,16 +154,23 @@ const structuredData = {
         <ul>
           <li>
             <a
-              href={joinURL(BASE_URL, "install/")}
+              href={withTrailingSlash(joinURL(BASE_URL, "install"))}
               title="Installation Guide of Live Background Removal Lite"
               >Installation Guide</a
             >
           </li>
           <li>
             <a
-              href={joinURL(BASE_URL, "usage/")}
+              href={withTrailingSlash(joinURL(BASE_URL, "usage"))}
               title="Usage & Configuration of Live Background Removal Lite"
               >Usage & Configuration</a
+            >
+          </li>
+          <li>
+            <a
+              href={withTrailingSlash(joinURL(BASE_URL, "versions"))}
+              title="Version History of Live Background Removal Lite"
+              >Version History</a
             >
           </li>
         </ul>
@@ -274,8 +281,10 @@ const structuredData = {
           >
         </li>
         <li>
-          <a href={withTrailingSlash(GITHUB_URL)} target="_blank" rel="noopener noreferrer"
-            >GitHub Repository</a
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
           >
         </li>
       </ul>

@@ -7,10 +7,7 @@ import Chat from "../components/Chat.svelte";
 const { BASE_URL } = import.meta.env;
 ---
 
-<Layout
-  lang="en"
-  title="Interactive Help for OBS Background Removal"
->
+<Layout lang="en" title="Interactive Help for OBS Background Removal">
   <Fragment slot="head">
     <meta
       name="description"
@@ -40,7 +37,7 @@ const { BASE_URL } = import.meta.env;
 
     <nav aria-label="Page navigation" style="margin-top: 2rem;">
       <p>
-        <a href={withTrailingSlash(joinURL(BASE_URL))}>Back to Top</a>
+        <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
       </p>
     </nav>
   </main>

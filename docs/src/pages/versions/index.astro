@@ -13,10 +13,10 @@ import Layout from "../../layouts/Layout.astro";
 export type Releases =
   RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"];
 
-const { BASE_URL, GITHUB_TOKEN } = import.meta.env;
+const { BASE_URL } = import.meta.env;
 
 async function listReleases(): Promise<Releases> {
-  const octokit = new Octokit({ auth: GITHUB_TOKEN });
+  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
 
   const allReleases = await octokit.paginate(octokit.rest.repos.listReleases, {
     owner: GITHUB_OWNER,
@@ -108,7 +108,7 @@ const schemaData = {
 
     <nav aria-label="Page navigation">
       <p>
-        <a href={withTrailingSlash(joinURL(BASE_URL))}>Back to Top</a>
+        <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
       </p>
     </nav>
 

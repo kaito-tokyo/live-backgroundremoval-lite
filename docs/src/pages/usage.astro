@@ -60,8 +60,14 @@ const structuredData = JSON.stringify({
   description="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio."
 >
   <Fragment slot="head">
-    <meta name="description" content="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio." />
-    <link rel="canonical" href={withTrailingSlash(joinURL(BASE_URL, "usage"))} />
+    <meta
+      name="description"
+      content="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio."
+    />
+    <link
+      rel="canonical"
+      href={withTrailingSlash(joinURL(BASE_URL, "usage"))}
+    />
     <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}
@@ -233,7 +239,7 @@ const structuredData = JSON.stringify({
 
     <nav aria-label="Page navigation" style="margin-top: 2rem;">
       <p>
-        <a href={withTrailingSlash(joinURL(BASE_URL))}>Back to Top</a>
+        <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
       </p>
     </nav>
   </main>
