@@ -1,5 +1,5 @@
 ---
-import { joinURL } from "ufo";
+import { joinURL, withTrailingSlash } from "ufo";
 import Layout from "../layouts/Layout.astro";
 import { getLatestRelease } from "../lib/github.js";
 import { dependencies, name } from "../../../buildspec.json";
@@ -13,8 +13,12 @@ const tagName = release.tag_name;
 <Layout
   lang="en"
   title="How to install?"
-  description="Instructions for installing Live Background Removal Lite on various operating systems."
 >
+  <Fragment slot="head">
+    <meta name="description" content="Instructions for installing Live Background Removal Lite on various operating systems." />
+    <link rel="canonical" href={withTrailingSlash(joinURL(BASE_URL, "install"))} />
+  </Fragment>
+
   <main class="white-box">
     <h1>How to install?</h1>
     <h2>Windows</h2>
@@ -136,6 +140,10 @@ const tagName = release.tag_name;
       >
     </p>
 
-    <a href={joinURL(BASE_URL, "")}>Back to Top</a>
+    <nav aria-label="Page navigation" style="margin-top: 2rem;">
+      <p>
+        <a href={withTrailingSlash(joinURL(BASE_URL))}>Back to Top</a>
+      </p>
+    </nav>
   </main>
 </Layout>

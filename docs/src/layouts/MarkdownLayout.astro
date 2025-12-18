@@ -1,5 +1,5 @@
 ---
-import { joinURL } from "ufo";
+import { joinURL, withTrailingSlash } from "ufo";
 
 import Layout from "./Layout.astro";
 
@@ -15,10 +15,22 @@ const { BASE_URL } = import.meta.env;
 const { lang, title, description } = Astro.props.frontmatter;
 ---
 
-<Layout lang={lang} title={title} description={description}>
+<Layout lang={lang} title={title}>
   <main class="white-box">
+    <Fragment slot="head">
+      <meta name="description" content={description} />
+      <link
+        rel="canonical"
+        href={withTrailingSlash(joinURL(BASE_URL, Astro.url.pathname))}
+      />
+    </Fragment>
+
     <slot />
 
-    <p><a href={joinURL(BASE_URL, "/")}>Back to the top page</a></p>
+    <nav aria-label="Page navigation" style="margin-top: 2rem;">
+      <p>
+        <a href={withTrailingSlash(joinURL(BASE_URL))}>Back to Top</a>
+      </p>
+    </nav>
   </main>
 </Layout>

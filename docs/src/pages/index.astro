@@ -6,12 +6,11 @@ import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 import Layout from "../layouts/Layout.astro";
 import DefineLocalDate from "../components/DefineLocalDate.astro";
 
-import { GITHUB_OWNER, GITHUB_REPO } from "../lib/info.js";
+import { GITHUB_OWNER, GITHUB_REPO, GITHUB_URL } from "../lib/info.js";
 
 import { dependencies, name } from "../../../buildspec.json";
 
 import demoImage from "../../public/demo.gif";
-import screenshotImage from "../../public/screenshot.webp";
 
 export type LatestRelease =
   RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
@@ -28,8 +27,6 @@ async function getLatestRelease(): Promise<LatestRelease> {
 
   return latestRelease.data;
 }
-
-const githubURL = `https://github.com/kaito-tokyo/${name}`;
 
 const release = await getLatestRelease();
 
@@ -83,7 +80,7 @@ const structuredData = {
   <Fragment slot="head">
     <DefineLocalDate />
     <meta name="description" content={structuredData.description} />
-    <link rel="canonical" href={withTrailingSlash(joinURL(BASE_URL, "/"))} />
+    <link rel="canonical" href={withTrailingSlash(joinURL(BASE_URL))} />
     <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}
@@ -277,7 +274,7 @@ const structuredData = {
           >
         </li>
         <li>
-          <a href={githubURL} target="_blank" rel="noopener noreferrer"
+          <a href={withTrailingSlash(GITHUB_URL)} target="_blank" rel="noopener noreferrer"
             >GitHub Repository</a
           >
         </li>
@@ -289,29 +286,6 @@ const structuredData = {
     h1 {
       font-weight: 700;
       text-align: center;
-    }
-
-    .download-links > div {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
-    .download-links > div a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 20px;
-      background-color: #4caf50;
-      color: white;
-      text-align: center;
-      text-decoration: none;
-      font-size: 18px;
-      border-radius: 5px;
-      transition: background-color 0.3s ease;
-    }
-    .download-links > div a:hover {
-      background-color: #45a049;
     }
 
     .demo-container {

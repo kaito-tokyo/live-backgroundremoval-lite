@@ -1,5 +1,5 @@
 ---
-import { joinURL } from "ufo";
+import { joinURL, withTrailingSlash } from "ufo";
 import { Image } from "astro:assets";
 
 import Layout from "../layouts/Layout.astro";
@@ -59,6 +59,14 @@ const structuredData = JSON.stringify({
   title="Usage Guide - Live Background Removal Lite"
   description="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio."
 >
+  <Fragment slot="head">
+    <meta name="description" content="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio." />
+    <link rel="canonical" href={withTrailingSlash(joinURL(BASE_URL, "usage"))} />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(structuredData)}
+    />
+  </Fragment>
   <script type="application/ld+json" set:html={structuredData} />
 
   <main class="white-box">
@@ -223,7 +231,11 @@ const structuredData = JSON.stringify({
       </ul>
     </section>
 
-    <a href={joinURL(BASE_URL, "")}>Back to Top</a>
+    <nav aria-label="Page navigation" style="margin-top: 2rem;">
+      <p>
+        <a href={withTrailingSlash(joinURL(BASE_URL))}>Back to Top</a>
+      </p>
+    </nav>
   </main>
 </Layout>
 
