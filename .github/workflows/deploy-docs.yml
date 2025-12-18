@@ -58,6 +58,10 @@ jobs:
           BASE: ${{ steps.pages.outputs.base_path }}
         run: npx astro build --site "$SITE" --base "$BASE"
 
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ env.BUILD_PATH }}/dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
