@@ -41,7 +41,7 @@
         "-DENABLE_FRONTEND_API=ON",
         "-DENABLE_QT=ON",
         "-DUSE_PKGCONFIG=ON",
-        "-DBUILD_TESTING=OFF",
+        "-DBUILD_TESTING=OFF"
       ],
       "sources": [
         {
