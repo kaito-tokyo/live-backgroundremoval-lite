@@ -1,5 +1,5 @@
 ---
-import { joinURL } from "ufo";
+import { joinURL, withTrailingSlash } from "ufo";
 import { Octokit } from "@octokit/rest";
 import prettyBytes from "pretty-bytes";
 import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
@@ -159,6 +159,7 @@ const schemaData = {
   <Fragment slot="head">
     <DefineLocalDate />
     <meta name="description" content={dynamicDescription} />
+    <link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions", release.tag_name))} />
     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   </Fragment>
 
@@ -282,9 +283,9 @@ const schemaData = {
       </section>
       <nav id="footer-nav" aria-label="Page navigation">
         <ul>
-          <li><a href={joinURL(BASE_URL)}>Back to Top</a></li>
+          <li><a href={withTrailingSlash(joinURL(BASE_URL))}>Back to Top</a></li>
           <li>
-            <a href={joinURL(BASE_URL, "versions")}>Back to Version List</a>
+            <a href={withTrailingSlash(joinURL(BASE_URL, "versions"))}>Back to Version List</a>
           </li>
         </ul>
       </nav>
