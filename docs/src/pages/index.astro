@@ -3,12 +3,14 @@ import { Image } from "astro:assets";
 import { joinURL, withTrailingSlash } from "ufo";
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 
-import Layout from "../layouts/Layout.astro";
 import DefineLocalDate from "../components/DefineLocalDate.astro";
+import GitHubMark from "../../public/github-mark.svg";
+import Layout from "../layouts/Layout.astro";
+import Logo from "../../public/favicon.svg";
 
 import { GITHUB_OWNER, GITHUB_REPO, GITHUB_URL } from "../lib/info.js";
 
-import { dependencies, name } from "../../../buildspec.json";
+import { dependencies } from "../../../buildspec.json";
 
 import demoImage from "../../public/demo.gif";
 
@@ -88,7 +90,10 @@ const structuredData = {
   </Fragment>
 
   <main class="white-box">
-    <h1>Live Background Removal Lite</h1>
+    <h1>
+      <Logo id="logo" />
+      <span>Live Background Removal Lite</span>
+    </h1>
 
     <section id="about">
       <h2>✂️ Remove your bg, Enrich your stream</h2>
@@ -138,7 +143,7 @@ const structuredData = {
           <a
             href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
           >
-            Arch Linux (Latest)
+            Arch Linux
           </a>
         </li>
 
@@ -146,7 +151,7 @@ const structuredData = {
           <a
             href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak"
           >
-            Flatpak (Latest)
+            Flatpak
           </a>
         </li>
       </ul>
@@ -289,12 +294,38 @@ const structuredData = {
         </li>
       </ul>
     </nav>
+
+    <a
+      href={GITHUB_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="View source on GitHub"
+      id="github-corner-link"
+    >
+      <GitHubMark viewBox="0 0 98 96" width="48" height="48" />
+    </a>
   </main>
 
   <style>
+    main {
+      position: relative;
+      background: linear-gradient(49deg, #fff calc(100% - 110px), #bbb 100%);
+    }
+
     h1 {
+      margin-top: 40px;
       font-weight: 700;
       text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    #logo {
+      width: 96px;
+      height: 96px;
+      flex-shrink: 0;
     }
 
     .demo-container {
@@ -361,6 +392,12 @@ const structuredData = {
     }
     .button-text {
       vertical-align: middle;
+    }
+
+    #github-corner-link {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
     }
   </style>
 </Layout>

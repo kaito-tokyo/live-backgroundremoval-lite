@@ -76,7 +76,7 @@ const { BASE_URL } = import.meta.env;
     --color-alert-fg: #856404;
   }
 
-  main.white-box {
+  .white-box {
     max-width: 800px;
     width: 100%;
     margin: 1rem auto;
@@ -88,31 +88,6 @@ const { BASE_URL } = import.meta.env;
     box-shadow: 0 4px 8px var(--color-box-shadow);
 
     background-color: var(--color-white-box-bg);
-  }
-
-  div.download-links {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-
-  div.download-links > a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 20px;
-    background-color: var(--color-download-button-bg);
-    color: var(--color-download-button-fg, #fff);
-    text-align: center;
-    text-decoration: none;
-    font-size: 18px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-  }
-
-  div.download-links > a:hover {
-    background-color: var(--color-download-button-active-bg);
   }
 
   ul.download-links {
@@ -140,6 +115,22 @@ const { BASE_URL } = import.meta.env;
 
   .download-links > li > a:hover {
     background-color: var(--color-download-button-active-bg);
+  }
+
+  .page-nav {
+    & > ul {
+      padding: 0;
+      list-style: none;
+      margin: 0;
+    }
+
+    & > ul > li {
+      display: inline;
+    }
+
+    & > ul > li:not(:last-child)::after {
+      content: " | " / "";
+    }
   }
 </style>
 

@@ -3,6 +3,8 @@ import { joinURL, withTrailingSlash } from "ufo";
 
 import Layout from "./Layout.astro";
 
+import { GITHUB_URL } from "../lib/info.js";
+
 interface Props {
   frontmatter: {
     lang: string;
@@ -27,10 +29,19 @@ const { lang, title, description } = Astro.props.frontmatter;
 
     <slot />
 
-    <nav aria-label="Page navigation" style="margin-top: 2rem;">
-      <p>
-        <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
-      </p>
+    <nav class="page-nav" aria-label="Page navigation">
+      <ul>
+        <li>
+          <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
+          >
+        </li>
+      </ul>
     </nav>
   </main>
 </Layout>

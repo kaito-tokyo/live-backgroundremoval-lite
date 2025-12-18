@@ -3,6 +3,7 @@ import { joinURL, withTrailingSlash } from "ufo";
 
 import Layout from "../layouts/Layout.astro";
 import Chat from "../components/Chat.svelte";
+import { GITHUB_URL } from "../lib/info.js";
 
 const { BASE_URL } = import.meta.env;
 ---
@@ -35,10 +36,19 @@ const { BASE_URL } = import.meta.env;
       </p>
     </div>
 
-    <nav aria-label="Page navigation" style="margin-top: 2rem;">
-      <p>
-        <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
-      </p>
+    <nav class="page-nav" aria-label="Page navigation">
+      <ul>
+        <li>
+          <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
+          >
+        </li>
+      </ul>
     </nav>
   </main>
 </Layout>

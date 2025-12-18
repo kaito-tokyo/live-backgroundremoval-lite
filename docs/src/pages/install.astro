@@ -163,10 +163,19 @@ const ubuntuDebAsset = release.assets.find((a) =>
       >
     </p>
 
-    <nav aria-label="Page navigation" style="margin-top: 2rem;">
-      <p>
-        <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
-      </p>
+    <nav class="page-nav" aria-label="Page navigation">
+      <ul>
+        <li>
+          <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
+          >
+        </li>
+      </ul>
     </nav>
   </main>
 </Layout>

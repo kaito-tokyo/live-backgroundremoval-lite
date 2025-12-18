@@ -7,6 +7,7 @@ import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
 import {
   GITHUB_OWNER,
   GITHUB_REPO,
+  GITHUB_URL,
   PRODUCTION_BASE_URL,
 } from "../../lib/info.js";
 import DefineLocalDate from "../../components/DefineLocalDate.astro";
@@ -287,7 +288,8 @@ const schemaData = {
           }
         </dl>
       </section>
-      <nav id="footer-nav" aria-label="Page navigation">
+
+      <nav class="page-nav" aria-label="Page navigation">
         <ul>
           <li>
             <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
@@ -295,6 +297,13 @@ const schemaData = {
           <li>
             <a href={withTrailingSlash(joinURL(BASE_URL, "versions"))}
               >Back to Version List</a
+            >
+          </li>
+          <li>
+            <a
+              href={withTrailingSlash(GITHUB_URL)}
+              target="_blank"
+              rel="noopener noreferrer">GitHub Repository</a
             >
           </li>
         </ul>
@@ -326,20 +335,5 @@ const schemaData = {
     max-width: 100%;
     background-color: #f8f9fa;
     padding: 1.5rem;
-  }
-
-  #footer-nav {
-    & > ul {
-      padding: 0;
-      list-style: none;
-    }
-
-    & > ul > li {
-      display: inline;
-    }
-
-    & > ul > li:not(:last-child)::after {
-      content: " | " / "";
-    }
   }
 </style>

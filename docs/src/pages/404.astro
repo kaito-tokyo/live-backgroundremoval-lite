@@ -2,6 +2,7 @@
 import { joinURL, withTrailingSlash } from "ufo";
 
 import Layout from "../layouts/Layout.astro";
+import { GITHUB_URL } from "../lib/info.js";
 
 const { BASE_URL } = import.meta.env;
 ---
@@ -13,6 +14,25 @@ const { BASE_URL } = import.meta.env;
 
   <main class="white-box">
     <h1>404 Not Found</h1>
-    <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
+
+    <p>Think this is a bug?</p>
+    <p>
+      <a href={joinURL(GITHUB_URL, "issues")}>Report an issue on GitHub </a>
+    </p>
+
+    <nav class="page-nav" aria-label="Page navigation">
+      <ul>
+        <li>
+          <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
+          >
+        </li>
+      </ul>
+    </nav>
   </main>
 </Layout>
