@@ -1,11 +1,12 @@
 ---
-import { joinURL } from "ufo";
+import { joinURL, withTrailingSlash } from "ufo";
 import { Image } from "astro:assets";
 
 import Layout from "../layouts/Layout.astro";
 import effectFiltersImage from "../../public/effect-filters.png";
 import basicPropertiesImage from "../../public/basic-properties.png";
 import advancedPropertiesImage from "../../public/advanced-properties.png";
+import { GITHUB_URL, PRODUCTION_BASE_URL } from "../lib/info.js";
 
 const { BASE_URL } = import.meta.env;
 
@@ -59,6 +60,20 @@ const structuredData = JSON.stringify({
   title="Usage Guide - Live Background Removal Lite"
   description="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio."
 >
+  <Fragment slot="head">
+    <meta
+      name="description"
+      content="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio."
+    />
+    <link
+      rel="canonical"
+      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "usage"))}
+    />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(structuredData)}
+    />
+  </Fragment>
   <script type="application/ld+json" set:html={structuredData} />
 
   <main class="white-box">
@@ -105,13 +120,29 @@ const structuredData = JSON.stringify({
           update status of the plugin.
         </li>
         <li>
-          <strong>Filter Level</strong>: Selects the processing stage for background removal. <br />
+          <strong>Filter Level</strong>: Selects the processing stage for
+          background removal. <br />
           <ul>
-            <li><strong>Passthrough</strong>: No background removal, source is shown as-is.</li>
-            <li><strong>Segmentation</strong>: Applies a basic segmentation mask to remove the background.</li>
-            <li><strong>Motion Intensity Thresholding</strong>: Only applies segmentation when motion is detected above a threshold.</li>
-            <li><strong>Guided Filter</strong>: Refines the mask edges using a guided filter for better quality.</li>
-            <li><strong>Time Averaged Filter</strong>: Further smooths and stabilizes the mask over time for the highest quality cutout.</li>
+            <li>
+              <strong>Passthrough</strong>: No background removal, source is
+              shown as-is.
+            </li>
+            <li>
+              <strong>Segmentation</strong>: Applies a basic segmentation mask
+              to remove the background.
+            </li>
+            <li>
+              <strong>Motion Intensity Thresholding</strong>: Only applies
+              segmentation when motion is detected above a threshold.
+            </li>
+            <li>
+              <strong>Guided Filter</strong>: Refines the mask edges using a
+              guided filter for better quality.
+            </li>
+            <li>
+              <strong>Time Averaged Filter</strong>: Further smooths and
+              stabilizes the mask over time for the highest quality cutout.
+            </li>
           </ul>
         </li>
         <li>
@@ -207,7 +238,20 @@ const structuredData = JSON.stringify({
       </ul>
     </section>
 
-    <a href={joinURL(BASE_URL, "")}>Back to Top</a>
+    <nav class="page-nav" aria-label="Page navigation">
+      <ul>
+        <li>
+          <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
+          >
+        </li>
+      </ul>
+    </nav>
   </main>
 </Layout>
 

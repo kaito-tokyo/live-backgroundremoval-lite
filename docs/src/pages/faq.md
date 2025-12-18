@@ -1,5 +1,6 @@
 ---
 layout: ../layouts/MarkdownLayout.astro
+pathname: faq
 lang: en
 title: Live Background Removal Lite – FAQ (Knowledge Base)
 description: "Official FAQ for Live Background Removal Lite. Learn about installation, troubleshooting, and technical details regarding our Gaming-First CPU architecture and Zero-Crash philosophy."

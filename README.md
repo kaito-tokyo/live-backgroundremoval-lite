@@ -107,8 +107,8 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
       - Download and run the `.pkg` installer.
     - **For Linux:**
       - **Ubuntu:** Download and install the provided `.deb` package.
-      - **Arch Linux:** Please refer to the instructions in [`unsupported/arch/`](./unsupported/arch#readme).
-      - **Flatpak:** Please refer to the instructions in [`unsupported/flatpak/`](./unsupported/flatpak#readme).
+      - **Arch Linux:** Please refer to the instructions in [`unsupported/arch/`](./unsupported/arch).
+      - **Flatpak:** Please refer to the instructions in [`unsupported/flatpak/`](./unsupported/flatpak).
       - **Other Distributions:** Users of other distributions will need to build from source. Note: Converting the `.deb` package is known not to work.
 
 3.  Restart OBS Studio after the installation is complete.
