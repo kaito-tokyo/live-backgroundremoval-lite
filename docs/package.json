@@ -9,6 +9,9 @@
     "astro": "astro",
     "format": "prettier --write ."
   },
+  "engines": {
+    "node": "24.x"
+  },
   "dependencies": {
     "@astrojs/sitemap": "^3.6.0",
     "@astrojs/svelte": "^7.2.4",

@@ -1,34 +1,23 @@
-name: Deploy Docs
+name: Build Docs
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
-  release:
-    types: [published, edited]
-  workflow_dispatch:
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 env:
   BUILD_PATH: docs
 
 jobs:
-  deploy:
-    name: Deploy Docs
+  build:
+    name: Build Docs
 
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     permissions:
       contents: read
-      id-token: write
-      pages: write
 
     steps:
       - name: Checkout
@@ -57,7 +46,3 @@ jobs:
           SITE: ${{ steps.pages.outputs.origin }}
           BASE: ${{ steps.pages.outputs.base_path }}
         run: npx astro build --site "$SITE" --base "$BASE"
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
