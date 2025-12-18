@@ -1,0 +1,28 @@
+---
+import { joinURL } from "ufo";
+import { Octokit } from "@octokit/rest";
+import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
+
+import { GITHUB_OWNER, GITHUB_REPO } from "../../lib/info.js";
+
+export async function getStaticPaths(
+  options: GetStaticPathsOptions,
+): Promise<GetStaticPathsResult> {
+  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+  const response = await octokit.rest.repos.listReleases({
+    owner: GITHUB_OWNER,
+    repo: GITHUB_REPO,
+    per_page: 100,
+  });
+
+  return response.data.map((release) => ({
+    params: { version: release.tag_name },
+    props: { release },
+  }));
+}
+
+const { BASE_URL } = import.meta.env;
+---
+
+<Layout lang="en" title="Live Background Removal Lite" description="" />

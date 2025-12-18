@@ -105,13 +105,29 @@ const structuredData = JSON.stringify({
           update status of the plugin.
         </li>
         <li>
-          <strong>Filter Level</strong>: Selects the processing stage for background removal. <br />
+          <strong>Filter Level</strong>: Selects the processing stage for
+          background removal. <br />
           <ul>
-            <li><strong>Passthrough</strong>: No background removal, source is shown as-is.</li>
-            <li><strong>Segmentation</strong>: Applies a basic segmentation mask to remove the background.</li>
-            <li><strong>Motion Intensity Thresholding</strong>: Only applies segmentation when motion is detected above a threshold.</li>
-            <li><strong>Guided Filter</strong>: Refines the mask edges using a guided filter for better quality.</li>
-            <li><strong>Time Averaged Filter</strong>: Further smooths and stabilizes the mask over time for the highest quality cutout.</li>
+            <li>
+              <strong>Passthrough</strong>: No background removal, source is
+              shown as-is.
+            </li>
+            <li>
+              <strong>Segmentation</strong>: Applies a basic segmentation mask
+              to remove the background.
+            </li>
+            <li>
+              <strong>Motion Intensity Thresholding</strong>: Only applies
+              segmentation when motion is detected above a threshold.
+            </li>
+            <li>
+              <strong>Guided Filter</strong>: Refines the mask edges using a
+              guided filter for better quality.
+            </li>
+            <li>
+              <strong>Time Averaged Filter</strong>: Further smooths and
+              stabilizes the mask over time for the highest quality cutout.
+            </li>
           </ul>
         </li>
         <li>

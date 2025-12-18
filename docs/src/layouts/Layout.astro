@@ -4,7 +4,7 @@ import { joinURL } from "ufo";
 interface Props {
   lang: string;
   title: string;
-  description: string;
+  description?: string;
 }
 
 const { lang, title, description } = Astro.props;
@@ -43,6 +43,7 @@ const { BASE_URL } = import.meta.env;
     <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
+    <slot name="head" />
   </head>
   <body>
     <div>
@@ -50,7 +51,11 @@ const { BASE_URL } = import.meta.env;
       <footer>
         <p>&copy; 2025 Kaito Udagawa</p>
         <p>
-          <a href={joinURL(BASE_URL, "llms.txt")} target="_blank" rel="noopener noreferrer">
+          <a
+            href={joinURL(BASE_URL, "llms.txt")}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             llms.txt
           </a>
         </p>
