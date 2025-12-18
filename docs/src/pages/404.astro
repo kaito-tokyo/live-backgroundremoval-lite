@@ -2,11 +2,11 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout
-  lang="en"
-  title="404 Not Found"
-  description="The requested page could not be found."
->
+<Layout lang="en" title="404 Not Found">
+  <Fragment slot="head">
+    <meta name="description" content="The requested page could not be found." />
+  </Fragment>
+
   <main class="white-box">
     <h1>404 Not Found</h1>
     <a href="/">Back to Top</a>

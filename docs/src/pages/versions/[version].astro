@@ -67,7 +67,8 @@ const releaseBody = release.body || "No release notes provided.";
 const baseDescription = `Download version ${release.tag_name} of Live Background Removal Lite.`;
 const cleanBody = stripMarkdown(releaseBody);
 const dynamicDescription = cleanBody
-  ? `${baseDescription} Highlights: ${cleanBody}`.substring(0, 160) + (cleanBody.length > 100 ? "..." : "")
+  ? `${baseDescription} Highlights: ${cleanBody}`.substring(0, 160) +
+    (cleanBody.length > 100 ? "..." : "")
   : `${baseDescription} Check release notes for details.`;
 
 const supportedOSList = [
@@ -159,7 +160,12 @@ const schemaData = {
   <Fragment slot="head">
     <DefineLocalDate />
     <meta name="description" content={dynamicDescription} />
-    <link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions", release.tag_name))} />
+    <link
+      rel="canonical"
+      href={withTrailingSlash(
+        joinURL(PRODUCTION_BASE_URL, "versions", release.tag_name),
+      )}
+    />
     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   </Fragment>
 
@@ -283,9 +289,13 @@ const schemaData = {
       </section>
       <nav id="footer-nav" aria-label="Page navigation">
         <ul>
-          <li><a href={withTrailingSlash(joinURL(BASE_URL))}>Back to Top</a></li>
           <li>
-            <a href={withTrailingSlash(joinURL(BASE_URL, "versions"))}>Back to Version List</a>
+            <a href={withTrailingSlash(joinURL(BASE_URL))}>Back to Top</a>
+          </li>
+          <li>
+            <a href={withTrailingSlash(joinURL(BASE_URL, "versions"))}
+              >Back to Version List</a
+            >
           </li>
         </ul>
       </nav>

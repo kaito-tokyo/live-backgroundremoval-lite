@@ -1,20 +1,47 @@
 ---
-import { joinURL } from "ufo";
 import { Image } from "astro:assets";
+import { joinURL, withTrailingSlash } from "ufo";
+import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 
 import Layout from "../layouts/Layout.astro";
-import { getLatestRelease } from "../lib/github.js";
+import DefineLocalDate from "../components/DefineLocalDate.astro";
+
+import { GITHUB_OWNER, GITHUB_REPO } from "../lib/info.js";
 
 import { dependencies, name } from "../../../buildspec.json";
 
 import demoImage from "../../public/demo.gif";
+import screenshotImage from "../../public/screenshot.webp";
+
+export type LatestRelease =
+  RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
+
+const { BASE_URL, GITHUB_TOKEN } = import.meta.env;
+
+async function getLatestRelease(): Promise<LatestRelease> {
+  const octokit = new Octokit({ auth: GITHUB_TOKEN });
+
+  const latestRelease = await octokit.rest.repos.getLatestRelease({
+    owner: GITHUB_OWNER,
+    repo: GITHUB_REPO,
+  });
+
+  return latestRelease.data;
+}
 
 const githubURL = `https://github.com/kaito-tokyo/${name}`;
 
-const { BASE_URL } = import.meta.env;
-
 const release = await getLatestRelease();
-const tagName = release.tag_name;
+
+const windowsZipAsset = release.assets.find((a) =>
+  a.name.endsWith("windows-x64.zip"),
+);
+const macosPkgAsset = release.assets.find((a) =>
+  a.name.endsWith("macos-universal.pkg"),
+);
+const ubuntuDebAsset = release.assets.find((a) =>
+  a.name.endsWith("x86_64-linux-gnu.deb"),
+);
 
 const structuredData = {
   "@context": "https://schema.org",
@@ -48,19 +75,20 @@ const structuredData = {
   ],
   screenshot:
     "https://kaito-tokyo.github.io/live-backgroundremoval-lite/demo.gif",
-  softwareVersion: tagName,
+  softwareVersion: release.tag_name,
 };
 ---
 
-<Layout
-  lang="en"
-  title="Live Background Removal Lite"
-  description={structuredData.description}
->
-  <script
-    type="application/ld+json"
-    set:html={JSON.stringify(structuredData)}
-  />
+<Layout lang="en" title="Live Background Removal Lite">
+  <Fragment slot="head">
+    <DefineLocalDate />
+    <meta name="description" content={structuredData.description} />
+    <link rel="canonical" href={withTrailingSlash(joinURL(BASE_URL, "/"))} />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(structuredData)}
+    />
+  </Fragment>
 
   <main class="white-box">
     <h1>Live Background Removal Lite</h1>
@@ -76,40 +104,55 @@ const structuredData = {
       </p>
     </section>
 
-    <section class="download-links" id="download-links">
-      <h2>⬇️ Download Latest Release (v{tagName})</h2>
-      <div>
-        <a
-          href={joinURL(
-            githubURL,
-            `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`,
-          )}
-          title={`Download v${tagName} for Windows (x64)`}>Windows</a
-        >
+    <section id="latest-downloads">
+      <h2>
+        ⬇️ Download Latest {release.tag_name} (<local-date
+          data-date={release.published_at}
+          ><time datetime={release.published_at}>{release.published_at}</time
+          ></local-date
+        >)
+      </h2>
+      <ul class="download-links" style="margin-bottom: 1rem;">
+        {
+          windowsZipAsset && (
+            <li>
+              <a href={windowsZipAsset.browser_download_url}>Windows (zip)</a>
+            </li>
+          )
+        }
+        {
+          macosPkgAsset && (
+            <li>
+              <a href={macosPkgAsset.browser_download_url}>Mac (pkg)</a>
+            </li>
+          )
+        }
+        {
+          ubuntuDebAsset && (
+            <li>
+              <a href={ubuntuDebAsset.browser_download_url}>Ubuntu (deb)</a>
+            </li>
+          )
+        }
+      </ul>
 
-        <a
-          href={joinURL(
-            githubURL,
-            `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`,
-          )}
-          title={`Download v${tagName} for macOS (Universal)`}>Mac</a
-        >
+      <ul class="download-links" style="margin-bottom: 1rem;">
+        <li>
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
+          >
+            Arch Linux (Latest)
+          </a>
+        </li>
 
-        <a
-          href={joinURL(
-            githubURL,
-            `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`,
-          )}
-          title={`Download v${tagName} for Ubuntu (deb)`}>Ubuntu</a
-        >
-
-        <a href={joinURL(githubURL, "tree/main/unsupported/arch/#readme")}
-          >Arch Linux</a
-        >
-        <a href={joinURL(githubURL, "tree/main/unsupported/flatpak/#readme")}
-          >Flatpak</a
-        >
-      </div>
+        <li>
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak"
+          >
+            Flatpak (Latest)
+          </a>
+        </li>
+      </ul>
       <nav aria-label="Installing and configuring documentation navigation">
         <ul>
           <li>
@@ -241,100 +284,100 @@ const structuredData = {
       </ul>
     </nav>
   </main>
+
+  <style>
+    h1 {
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .download-links > div {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .download-links > div a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 20px;
+      background-color: #4caf50;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      font-size: 18px;
+      border-radius: 5px;
+      transition: background-color 0.3s ease;
+    }
+    .download-links > div a:hover {
+      background-color: #45a049;
+    }
+
+    .demo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 2em 0;
+    }
+    .demo-image {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      max-width: 100%;
+      height: auto;
+    }
+    .demo-caption {
+      margin-top: 8px;
+      color: #666;
+      font-size: 90%;
+      text-align: center;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .feature-card {
+      background-color: #f9fafb;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .feature-card h3 {
+      margin-top: 0;
+      font-size: 1.1em;
+    }
+
+    .ask-anything-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1em 2em;
+      font-size: 1.2em;
+      border-radius: 999px;
+      background: var(--color-button-2, #4f8cff);
+      color: #fff;
+      text-decoration: none;
+      box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
+      margin: 1em auto;
+      transition:
+        background-color 0.2s,
+        box-shadow 0.2s;
+      font-weight: bold;
+    }
+    .ask-anything-button:hover,
+    .ask-anything-button:focus {
+      background: var(--color-button-1, #2563eb);
+      box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
+    }
+    .button-icon {
+      margin-right: 0.5em;
+    }
+    .button-text {
+      vertical-align: middle;
+    }
+  </style>
 </Layout>
-
-<style>
-  h1 {
-    font-weight: 700;
-    text-align: center;
-  }
-
-  .download-links > div {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px;
-  }
-  .download-links > div a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 20px;
-    background-color: #4caf50;
-    color: white;
-    text-align: center;
-    text-decoration: none;
-    font-size: 18px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-  }
-  .download-links > div a:hover {
-    background-color: #45a049;
-  }
-
-  .demo-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 2em 0;
-  }
-  .demo-image {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    max-width: 100%;
-    height: auto;
-  }
-  .demo-caption {
-    margin-top: 8px;
-    color: #666;
-    font-size: 90%;
-    text-align: center;
-  }
-
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1rem;
-  }
-  .feature-card {
-    background-color: #f9fafb;
-    padding: 1.5rem;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-  }
-  .feature-card h3 {
-    margin-top: 0;
-    font-size: 1.1em;
-  }
-
-  .ask-anything-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1em 2em;
-    font-size: 1.2em;
-    border-radius: 999px;
-    background: var(--color-button-2, #4f8cff);
-    color: #fff;
-    text-decoration: none;
-    box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
-    margin: 1em auto;
-    transition:
-      background-color 0.2s,
-      box-shadow 0.2s;
-    font-weight: bold;
-  }
-  .ask-anything-button:hover,
-  .ask-anything-button:focus {
-    background: var(--color-button-1, #2563eb);
-    box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
-  }
-  .button-icon {
-    margin-right: 0.5em;
-  }
-  .button-text {
-    vertical-align: middle;
-  }
-</style>

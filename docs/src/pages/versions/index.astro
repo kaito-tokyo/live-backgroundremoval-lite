@@ -15,7 +15,7 @@ export type Releases =
 
 const { BASE_URL, GITHUB_TOKEN } = import.meta.env;
 
-async function fetchReleases(): Promise<Releases> {
+async function listReleases(): Promise<Releases> {
   const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
   const allReleases = await octokit.paginate(octokit.rest.repos.listReleases, {
@@ -27,7 +27,7 @@ async function fetchReleases(): Promise<Releases> {
   return allReleases;
 }
 
-const releases = (await fetchReleases()).filter(
+const releases = (await listReleases()).filter(
   (r) => !r.draft && r.published_at,
 );
 
@@ -64,7 +64,9 @@ const schemaData = {
     "@type": "ListItem",
     position: index + 1,
     name: `Version ${release.tag_name}`,
-    url: withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions", release.tag_name)),
+    url: withTrailingSlash(
+      joinURL(PRODUCTION_BASE_URL, "versions", release.tag_name),
+    ),
   })),
 };
 ---
@@ -76,7 +78,10 @@ const schemaData = {
       name="description"
       content="Official release archive for Live Background Removal Lite. Access all past versions, release notes, and download links in one place."
     />
-    <link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions"))} />
+    <link
+      rel="canonical"
+      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions"))}
+    />
     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   </Fragment>
 
@@ -88,7 +93,10 @@ const schemaData = {
 
     <h2>Latest Release</h2>
     <p id="latest-release">
-      <a href={withTrailingSlash(joinURL(BASE_URL, "versions", latestRelease.tag_name))}
+      <a
+        href={withTrailingSlash(
+          joinURL(BASE_URL, "versions", latestRelease.tag_name),
+        )}
         ><strong>{latestRelease.tag_name}</strong>
         (<local-date data-date={latestRelease.published_at}
           ><time datetime={latestRelease.published_at}
@@ -111,7 +119,11 @@ const schemaData = {
       {
         pastReleases.map((release) => (
           <li>
-            <a href={withTrailingSlash(joinURL(BASE_URL, "versions", release.tag_name))}>
+            <a
+              href={withTrailingSlash(
+                joinURL(BASE_URL, "versions", release.tag_name),
+              )}
+            >
               {release.tag_name}
               {/* prettier-ignore */}(
               <local-date data-date={release.published_at}>
