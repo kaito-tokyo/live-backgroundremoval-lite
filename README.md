@@ -133,17 +133,17 @@ gh attestation verify <downloaded-file> --owner kaito-tokyo
 
 - **Windows:**
   ```bash
-  gh attestation verify live-backgroundremoval-lite-2.8.1-windows-x64.zip --owner kaito-tokyo
+  gh attestation verify live-backgroundremoval-lite-X.Y.Z-windows-x64.zip --owner kaito-tokyo
   ```
 
 - **macOS:**
   ```bash
-  gh attestation verify live-backgroundremoval-lite-2.8.1-macos-universal.pkg --owner kaito-tokyo
+  gh attestation verify live-backgroundremoval-lite-X.Y.Z-macos-universal.pkg --owner kaito-tokyo
   ```
 
 - **Linux (Ubuntu):**
   ```bash
-  gh attestation verify live-backgroundremoval-lite-2.8.1-ubuntu-24.04-x86_64.deb --owner kaito-tokyo
+  gh attestation verify live-backgroundremoval-lite-X.Y.Z-ubuntu-24.04-x86_64.deb --owner kaito-tokyo
   ```
 
 A successful verification will display a message confirming the artifact's authenticity and showing the workflow that built it.
