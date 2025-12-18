@@ -1,5 +1,4 @@
 ---
-import { Image } from "astro:assets";
 import { joinURL, withTrailingSlash } from "ufo";
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 
@@ -16,8 +15,6 @@ import {
 } from "../lib/info.js";
 
 import { dependencies } from "../../../buildspec.json";
-
-import demoImage from "../../public/demo.gif";
 
 export type LatestRelease =
   RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
@@ -190,16 +187,29 @@ const structuredData = {
     <section id="demo">
       <h2>📸 Demo</h2>
       <div class="demo-container">
-        <Image
-          src={demoImage}
-          alt="Split-screen demo showing the plugin removing a cluttered room background in real-time."
+        <video
+          autoplay
+          loop
+          muted
+          playsinline
           width="480"
-          class="demo-image"
-        />
+          height="270"
+          poster={joinURL(BASE_URL, "demo-poster.webm")}
+          aria-label="Video showing background removal revealing a checkerboard pattern"
+        >
+          <source
+            src={joinURL(BASE_URL, "demo-av1.mp4")}
+            type="video/mp4; codecs=av01.0.05M.10"
+          />
+          <source
+            src={joinURL(BASE_URL, "demo.mp4")}
+            type='video/mp4; codecs="avc1.64001f"'
+          />
+        </video>
         <p class="demo-caption">
           <em
-            >The plugin removes a cluttered room background, revealing a gray
-            color source set behind in OBS.</em
+            >The plugin removes a cluttered room background, revealing a
+            checkerboard pattern set behind in OBS.</em
           >
         </p>
       </div>
