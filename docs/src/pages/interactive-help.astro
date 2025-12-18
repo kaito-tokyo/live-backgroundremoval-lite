@@ -1,17 +1,21 @@
 ---
-import { joinURL } from "ufo";
+import { joinURL, withTrailingSlash } from "ufo";
 
 import Layout from "../layouts/Layout.astro";
 import Chat from "../components/Chat.svelte";
+import { GITHUB_URL } from "../lib/info.js";
 
 const { BASE_URL } = import.meta.env;
 ---
 
-<Layout
-  lang="en"
-  title="Interactive Help for OBS Background Removal"
-  description="Get instant help for Live Background Removal Lite securely. This experimental AI chatbot runs 100% locally in your browser—no data is sent to servers."
->
+<Layout lang="en" title="Interactive Help for OBS Background Removal">
+  <Fragment slot="head">
+    <meta
+      name="description"
+      content="Get instant help for Live Background Removal Lite securely. This experimental AI chatbot runs 100% locally in your browser—no data is sent to servers."
+    />
+  </Fragment>
+
   <main class="white-box">
     <Chat client:load />
 
@@ -31,7 +35,21 @@ const { BASE_URL } = import.meta.env;
         in the response.
       </p>
     </div>
-    <p><a href={joinURL(BASE_URL, "/")}>Back to the top page</a></p>
+
+    <nav class="page-nav" aria-label="Page navigation">
+      <ul>
+        <li>
+          <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
+          >
+        </li>
+      </ul>
+    </nav>
   </main>
 </Layout>
 

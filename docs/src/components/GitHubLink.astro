@@ -1,0 +1,53 @@
+---
+import { GITHUB_OWNER, GITHUB_REPO } from "../lib/info.js";
+
+import GithubMarkSvg from "../../public/github-mark.svg";
+
+interface Props {
+  size?: number;
+  color?: string;
+  showText?: boolean;
+  className?: string;
+}
+
+const {
+  size = 24,
+  color = "currentColor",
+  showText = false,
+  className = "",
+} = Astro.props;
+
+const url = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`;
+---
+
+<a
+  href={url}
+  target="_blank"
+  rel="noopener noreferrer"
+  class:list={["github-link", className]}
+  aria-label="View source on GitHub"
+  style={`--icon-color: ${color}; --icon-size: ${size}px;`}
+>
+  <GithubMarkSvg />
+
+  {showText && <span class="link-text">GitHub</span>}
+</a>
+
+<style>
+  .github-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s;
+  }
+
+  .github-link:hover {
+    opacity: 0.7;
+  }
+
+  .link-text {
+    font-weight: 600;
+  }
+</style>

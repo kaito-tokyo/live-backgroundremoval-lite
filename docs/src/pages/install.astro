@@ -1,31 +1,65 @@
 ---
-import { joinURL } from "ufo";
+import { joinURL, withTrailingSlash } from "ufo";
+import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
+
 import Layout from "../layouts/Layout.astro";
-import { getLatestRelease } from "../lib/github.js";
-import { dependencies, name } from "../../../buildspec.json";
-const githubURL = `https://github.com/kaito-tokyo/${name}`;
+
+import {
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  GITHUB_URL,
+  PRODUCTION_BASE_URL,
+} from "../lib/info.js";
+
+export type LatestRelease =
+  RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
+
 const { BASE_URL } = import.meta.env;
 
+async function getLatestRelease(): Promise<LatestRelease> {
+  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
+
+  const latestRelease = await octokit.rest.repos.getLatestRelease({
+    owner: GITHUB_OWNER,
+    repo: GITHUB_REPO,
+  });
+
+  return latestRelease.data;
+}
+
 const release = await getLatestRelease();
-const tagName = release.tag_name;
+
+const windowsZipAsset = release.assets.find((a) =>
+  a.name.endsWith("windows-x64.zip"),
+);
+const macosPkgAsset = release.assets.find((a) =>
+  a.name.endsWith("macos-universal.pkg"),
+);
+const ubuntuDebAsset = release.assets.find((a) =>
+  a.name.endsWith("x86_64-linux-gnu.deb"),
+);
 ---
 
-<Layout
-  lang="en"
-  title="How to install?"
-  description="Instructions for installing Live Background Removal Lite on various operating systems."
->
+<Layout lang="en" title="How to install?">
+  <Fragment slot="head">
+    <meta
+      name="description"
+      content="Instructions for installing Live Background Removal Lite on various operating systems."
+    />
+    <link
+      rel="canonical"
+      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "install"))}
+    />
+  </Fragment>
+
   <main class="white-box">
     <h1>How to install?</h1>
     <h2>Windows</h2>
     <ol>
       <li>
         <strong>Download:</strong>
-        <a
-          href={joinURL(
-            githubURL,
-            `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`,
-          )}><code>{`${name}-${tagName}-windows-x64.zip`}</code></a
+        <a href={windowsZipAsset?.browser_download_url}
+          ><code>{windowsZipAsset?.name}</code></a
         > (latest release for Windows)
       </li>
       <li>
@@ -42,8 +76,8 @@ const tagName = release.tag_name;
         video source, go to <b>Filters</b>, and check if <b
           >Live Background Removal Lite</b
         > appears in the <b>Effect Filters</b> list.<br />
-        For usage instructions, see the <a href={joinURL(BASE_URL, "usage/")}
-          >usage page</a
+        For usage instructions, see the <a
+          href={withTrailingSlash(joinURL(BASE_URL, "usage"))}>usage page</a
         >.
       </li>
     </ol>
@@ -52,11 +86,8 @@ const tagName = release.tag_name;
     <ol>
       <li>
         <strong>Download:</strong>
-        <a
-          href={joinURL(
-            githubURL,
-            `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`,
-          )}><code>{`${name}-${tagName}-macos-universal.pkg`}</code></a
+        <a href={macosPkgAsset?.browser_download_url}
+          ><code>{macosPkgAsset?.name}</code></a
         > (latest release for macOS)
       </li>
       <li>
@@ -68,8 +99,8 @@ const tagName = release.tag_name;
         video source, go to <b>Filters</b>, and check if <b
           >Live Background Removal Lite</b
         > appears in the <b>Effect Filters</b> list.<br />
-        For usage instructions, see the <a href={joinURL(BASE_URL, "usage/")}
-          >usage page</a
+        For usage instructions, see the <a
+          href={withTrailingSlash(joinURL(BASE_URL, "usage"))}>usage page</a
         >.
       </li>
     </ol>
@@ -78,11 +109,8 @@ const tagName = release.tag_name;
     <ol>
       <li>
         <strong>Download:</strong>
-        <a
-          href={joinURL(
-            githubURL,
-            `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`,
-          )}><code>{`${name}-${tagName}-x86_64-linux-gnu.deb`}</code></a
+        <a href={ubuntuDebAsset?.browser_download_url}
+          ><code>{ubuntuDebAsset?.name}</code></a
         > (latest release for Ubuntu)
       </li>
       <li>
@@ -90,12 +118,12 @@ const tagName = release.tag_name;
         <ul>
           <li>
             <strong>Terminal Way:</strong> Open a terminal and run:<br /><code
-              >sudo dpkg -i ./{`${name}-${tagName}-x86_64-linux-gnu.deb`}</code
+              >sudo dpkg -i ./{`${ubuntuDebAsset?.name}`}</code
             >
           </li>
           <li>
             <strong>GUI Way:</strong> Double-click the <code
-              >{`${name}-${tagName}-x86_64-linux-gnu.deb`}</code
+              >{`${ubuntuDebAsset?.name}`}</code
             > file in your file manager and follow the on-screen instructions.
           </li>
         </ul>
@@ -106,8 +134,8 @@ const tagName = release.tag_name;
         video source, go to <b>Filters</b>, and check if <b
           >Live Background Removal Lite</b
         > appears in the <b>Effect Filters</b> list.<br />
-        For usage instructions, see the <a href={joinURL(BASE_URL, "usage/")}
-          >usage page</a
+        For usage instructions, see the <a
+          href={withTrailingSlash(joinURL(BASE_URL, "usage"))}>usage page</a
         >.
       </li>
     </ol>
@@ -119,8 +147,10 @@ const tagName = release.tag_name;
       You can install this plugin by building with <code>makepkg</code> or using an
       AUR helper like <code>yay</code>.<br />
       For detailed instructions, see:<br />
-      <a href={joinURL(githubURL, "tree/main/unsupported/arch/#readme")}
-        >Arch Linux packaging documentation</a
+      <a
+        href={withTrailingSlash(
+          joinURL(GITHUB_URL, "tree/main/unsupported/arch/"),
+        )}>Arch Linux packaging documentation</a
       >
     </p>
 
@@ -131,11 +161,26 @@ const tagName = release.tag_name;
       Users can build and install this plugin using <code>flatpak-builder</code
       >.<br />
       For detailed instructions, see:<br />
-      <a href={joinURL(githubURL, "tree/main/unsupported/flatpak/#readme")}
-        >Flatpak packaging documentation</a
+      <a
+        href={withTrailingSlash(
+          joinURL(GITHUB_URL, "tree/main/unsupported/flatpak/"),
+        )}>Flatpak packaging documentation</a
       >
     </p>
 
-    <a href={joinURL(BASE_URL, "")}>Back to Top</a>
+    <nav class="page-nav" aria-label="Page navigation">
+      <ul>
+        <li>
+          <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
+          >
+        </li>
+      </ul>
+    </nav>
   </main>
 </Layout>

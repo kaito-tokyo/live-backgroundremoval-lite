@@ -16,7 +16,9 @@
     "@astrojs/sitemap": "^3.6.0",
     "@astrojs/svelte": "^7.2.4",
     "@mlc-ai/web-llm": "^0.2.80",
+    "@octokit/rest": "^22.0.1",
     "astro": "^5.16.6",
+    "pretty-bytes": "^7.1.0",
     "svelte": "^5.46.0",
     "typescript": "^5.9.3"
   },

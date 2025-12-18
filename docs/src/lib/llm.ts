@@ -1,6 +1,6 @@
 // src/stores/llm.ts
 
-import { writable, type Writable } from "svelte/store";
+import { writable } from "svelte/store";
 import {
   CreateMLCEngine,
   type MLCEngineInterface,

@@ -1,0 +1,13 @@
+---
+import { transform } from "esbuild";
+
+import LocalDateRaw from "./LocalDate.ts?raw";
+
+const { code } = await transform(LocalDateRaw, {
+  loader: "ts",
+  minify: true,
+  target: "esnext",
+});
+---
+
+<script is:inline set:html={code} />
