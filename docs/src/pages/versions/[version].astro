@@ -68,10 +68,10 @@ const schemaData = {
 
   <main class="white-box">
     <article itemscope itemtype="https://schema.org/SoftwareApplication">
-      <header class="version-header">
+      <hgroup class="version-header">
         <h1 itemprop="name">Version {release.tag_name}</h1>
         <h2>Live Background Removal Lite</h2>
-      </header>
+      </hgroup>
 
       {
         release.prerelease && (
@@ -124,23 +124,27 @@ const schemaData = {
               </li>
             )
           }
-        </div>
+        </ul>
 
-        <div class="download-links" style="margin-bottom: 1rem;">
-          <a
-            href="https://github.com/kaito-tokyohttps://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
-            itemprop="downloadUrl"
-          >
-            Arch Linux (Latest)
-          </a>
+        <ul class="download-links" style="margin-bottom: 1rem;">
+          <li>
+            <a
+              href="https://github.com/kaito-tokyohttps://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
+              itemprop="downloadUrl"
+            >
+              Arch Linux (Latest)
+            </a>
+          </li>
 
-          <a
-            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak"
-            itemprop="downloadUrl"
-          >
-            Flatpak (Latest)
-          </a>
-        </div>
+          <li>
+            <a
+              href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak"
+              itemprop="downloadUrl"
+            >
+              Flatpak (Latest)
+            </a>
+          </li>
+        </ul>
       </section>
 
       <section class="release-notes">
@@ -153,14 +157,14 @@ const schemaData = {
         <dl>
           <dt>Publish date</dt>
           <dd>
-            <local-date data-date={release.published_at}></local-date>
+            <local-date data-date={release.published_at}><time datetime={release.published_at}>{release.published_at}</time></local-date>
           </dd>
           {
             windowsZipAsset?.digest && (
               <Fragment>
                 <dt>{windowsZipAsset.name}</dt>
                 <dd>{prettyBytes(windowsZipAsset.size, { binary: true })}</dd>
-                <dd>{windowsZipAsset.digest}</dd>
+                <dd><code>{windowsZipAsset.digest}</code></dd>
               </Fragment>
             )
           }
@@ -170,7 +174,7 @@ const schemaData = {
               <Fragment>
                 <dt>{macosPkgAsset.name}</dt>
                 <dd>{prettyBytes(macosPkgAsset.size, { binary: true })}</dd>
-                <dd>{macosPkgAsset.digest}</dd>
+                <dd><code>{macosPkgAsset.digest}</code></dd>
               </Fragment>
             )
           }
@@ -180,7 +184,7 @@ const schemaData = {
               <Fragment>
                 <dt>{ubuntuDebAsset.name}</dt>
                 <dd>{prettyBytes(ubuntuDebAsset.size, { binary: true })}</dd>
-                <dd>{ubuntuDebAsset.digest}</dd>
+                <dd><code>{ubuntuDebAsset.digest}</code></dd>
               </Fragment>
             )
           }

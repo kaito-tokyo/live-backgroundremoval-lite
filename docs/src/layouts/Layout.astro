@@ -90,14 +90,14 @@ const { BASE_URL } = import.meta.env;
     background-color: var(--color-white-box-bg);
   }
 
-  .download-links {
+  div.download-links {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
     gap: 20px;
   }
 
-  .download-links > a {
+  div.download-links > a {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -111,7 +111,34 @@ const { BASE_URL } = import.meta.env;
     transition: background-color 0.3s ease;
   }
 
-  .download-links > a:hover {
+  div.download-links > a:hover {
+    background-color: var(--color-download-button-active-bg);
+  }
+
+  ul.download-links {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    list-style: none;
+    padding: 0;
+  }
+
+  .download-links > li > a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background-color: var(--color-download-button-bg);
+    color: var(--color-download-button-fg, #fff);
+    text-align: center;
+    text-decoration: none;
+    font-size: 18px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+
+  .download-links > li > a:hover {
     background-color: var(--color-download-button-active-bg);
   }
 </style>

@@ -1,10 +1,13 @@
 customElements.define(
   "local-date",
   class extends HTMLElement {
+    constructor() {
+      super();
+      this.attachShadow({ mode: "open" });
+    }
     connectedCallback() {
-      this.textContent = new Date(this.dataset.date!).toLocaleDateString(
-        "en-CA",
-      );
+      const dateStr = new Date(this.dataset.date!).toLocaleDateString("en-CA");
+      this.shadowRoot!.textContent = dateStr;
     }
   },
 );
