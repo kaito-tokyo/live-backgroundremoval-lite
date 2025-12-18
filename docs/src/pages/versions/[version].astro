@@ -1,4 +1,5 @@
 ---
+import { joinURL } from "ufo";
 import { Octokit } from "@octokit/rest";
 import prettyBytes from "pretty-bytes";
 import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
@@ -28,6 +29,8 @@ export async function getStaticPaths(
   }));
 }
 
+const { BASE_URL } = import.meta.env;
+
 const { release } = Astro.props;
 
 const windowsZipAsset = release.assets.find((a) =>
@@ -45,76 +48,83 @@ const releaseBody = release.body || "No release notes provided.";
 const supportedOSList = [
   windowsZipAsset ? "Windows 10, Windows 11" : null,
   macosPkgAsset ? "macOS (Apple Silicon & Intel)" : null,
-  ubuntuDebAsset ? "Linux (Ubuntu, Arch, Flatpak)" : null
+  ubuntuDebAsset ? "Linux (Ubuntu, Arch, Flatpak)" : null,
 ].filter(Boolean);
 
-const totalDownloads = release.assets.reduce((acc, asset) => acc + asset.download_count, 0);
+const totalDownloads = release.assets.reduce(
+  (acc, asset) => acc + asset.download_count,
+  0,
+);
 
 const schemaData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Live Background Removal Lite",
-  "headline": "High-performance OBS plugin for real-time background removal",
-  "softwareVersion": release.tag_name,
-  "description": "A high-performance, crash-resistant OBS plugin for real-time background removal without a physical green screen. Features a smart CPU/GPU hybrid pipeline to keep gaming performance high.",
+  name: "Live Background Removal Lite",
+  headline: "High-performance OBS plugin for real-time background removal",
+  softwareVersion: release.tag_name,
+  description:
+    "A high-performance, crash-resistant OBS plugin for real-time background removal without a physical green screen. Features a smart CPU/GPU hybrid pipeline to keep gaming performance high.",
 
-  "screenshot": {
+  screenshot: {
     "@type": "ImageObject",
-    "contentUrl": "https://kaito-tokyo.github.io/live-backgroundremoval-lite/screenshot.webp",
-    "encodingFormat": "image/webp",
-    "caption": "OBS plugin real-time background removal comparison: Original footage (left) vs. Transparent output (right).",
-    "width": "1920",
-    "height": "1080",
-    "description": "A split-screen view of OBS Studio showing the plugin in action. The left side shows the raw camera feed, and the right side demonstrates the background removal effect with a checkerboard pattern."
+    contentUrl:
+      "https://kaito-tokyo.github.io/live-backgroundremoval-lite/screenshot.webp",
+    encodingFormat: "image/webp",
+    caption:
+      "OBS plugin real-time background removal comparison: Original footage (left) vs. Transparent output (right).",
+    width: "1920",
+    height: "1080",
+    description:
+      "A split-screen view of OBS Studio showing the plugin in action. The left side shows the raw camera feed, and the right side demonstrates the background removal effect with a checkerboard pattern.",
   },
 
-  "applicationCategory": "MultimediaApplication",
-  "applicationSubCategory": "OBS Studio Plugin",
-  "operatingSystem": supportedOSList.join(", "),
-  "softwareRequirements": "OBS Studio",
-  "featureList": [
+  applicationCategory: "MultimediaApplication",
+  applicationSubCategory: "OBS Studio Plugin",
+  operatingSystem: supportedOSList.join(", "),
+  softwareRequirements: "OBS Studio",
+  featureList: [
     "Real-time background removal without green screen",
     "CPU/GPU Hybrid Pipeline for low resource usage",
     "Zero-Crash Stability with modern C++ architecture",
-    "Support for Windows, macOS, and Linux"
+    "Support for Windows, macOS, and Linux",
   ],
 
-  "downloadUrl": [
+  downloadUrl: [
     windowsZipAsset?.browser_download_url,
     macosPkgAsset?.browser_download_url,
     ubuntuDebAsset?.browser_download_url,
   ].filter(Boolean),
-  "fileSize": windowsZipAsset?.size ? prettyBytes(windowsZipAsset.size, { binary: true }) : "10 MiB",
-  "releaseNotes": release.html_url,
+  fileSize: windowsZipAsset?.size
+    ? prettyBytes(windowsZipAsset.size, { binary: true })
+    : "10 MiB",
+  releaseNotes: release.html_url,
 
-  "license": `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/blob/${release.tag_name}/LICENSE`,
-  "isAccessibleForFree": true,
-  "offers": {
+  license: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/blob/${release.tag_name}/LICENSE`,
+  isAccessibleForFree: true,
+  offers: {
     "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD",
-    "availability": "https://schema.org/InStock",
-    "seller": {
+    price: "0",
+    priceCurrency: "USD",
+    availability: "https://schema.org/InStock",
+    seller: {
       "@type": "Person",
-      "name": "Kaito Udagawa"
-    }
+      name: "Kaito Udagawa",
+    },
   },
 
-  "interactionStatistic": {
+  interactionStatistic: {
     "@type": "InteractionCounter",
-    "interactionType": "https://schema.org/DownloadAction",
-    "userInteractionCount": totalDownloads
+    interactionType: "https://schema.org/DownloadAction",
+    userInteractionCount: totalDownloads,
   },
-  "author": {
+  author: {
     "@type": "Person",
-    "name": "Kaito Udagawa",
-    "url": `https://github.com/${GITHUB_OWNER}`
+    name: "Kaito Udagawa",
+    url: `https://github.com/${GITHUB_OWNER}`,
   },
-  "datePublished": release.published_at,
-  "dateModified": release.published_at,
-  "sameAs": [
-    `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`
-  ]
+  datePublished: release.published_at,
+  dateModified: release.published_at,
+  sameAs: [`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`],
 };
 ---
 
@@ -219,14 +229,20 @@ const schemaData = {
         <dl>
           <dt>Publish date</dt>
           <dd>
-            <local-date data-date={release.published_at}><time datetime={release.published_at}>{release.published_at}</time></local-date>
+            <local-date data-date={release.published_at}
+              ><time datetime={release.published_at}
+                >{release.published_at}</time
+              ></local-date
+            >
           </dd>
           {
             windowsZipAsset?.digest && (
               <Fragment>
                 <dt>{windowsZipAsset.name}</dt>
                 <dd>{prettyBytes(windowsZipAsset.size, { binary: true })}</dd>
-                <dd><code>{windowsZipAsset.digest}</code></dd>
+                <dd>
+                  <code>{windowsZipAsset.digest}</code>
+                </dd>
               </Fragment>
             )
           }
@@ -236,7 +252,9 @@ const schemaData = {
               <Fragment>
                 <dt>{macosPkgAsset.name}</dt>
                 <dd>{prettyBytes(macosPkgAsset.size, { binary: true })}</dd>
-                <dd><code>{macosPkgAsset.digest}</code></dd>
+                <dd>
+                  <code>{macosPkgAsset.digest}</code>
+                </dd>
               </Fragment>
             )
           }
@@ -246,12 +264,22 @@ const schemaData = {
               <Fragment>
                 <dt>{ubuntuDebAsset.name}</dt>
                 <dd>{prettyBytes(ubuntuDebAsset.size, { binary: true })}</dd>
-                <dd><code>{ubuntuDebAsset.digest}</code></dd>
+                <dd>
+                  <code>{ubuntuDebAsset.digest}</code>
+                </dd>
               </Fragment>
             )
           }
         </dl>
       </section>
+      <nav id="footer-nav" aria-label="Page navigation">
+        <ul>
+          <li><a href={joinURL(BASE_URL)}>Back to Top</a></li>
+          <li>
+            <a href={joinURL(BASE_URL, "versions")}>Back to Version List</a>
+          </li>
+        </ul>
+      </nav>
     </article>
   </main>
 </Layout>
@@ -279,5 +307,20 @@ const schemaData = {
     max-width: 100%;
     background-color: #f8f9fa;
     padding: 1.5rem;
+  }
+
+  #footer-nav {
+    & > ul {
+      padding: 0;
+      list-style: none;
+    }
+
+    & > ul > li {
+      display: inline;
+    }
+
+    & > ul > li:not(:last-child)::after {
+      content: " | " / "";
+    }
   }
 </style>

@@ -26,6 +26,13 @@ async function fetchReleases(): Promise<Releases> {
 const releases = (await fetchReleases()).filter(
   (r) => !r.draft && r.published_at,
 );
+
+if (releases.length === 0) {
+  throw new Error("No releases found.");
+}
+
+const latestRelease = releases[0];
+const pastReleases = releases.slice(1);
 ---
 
 <Layout lang="en" title="Version History - Live Background Removal Lite">
@@ -38,16 +45,45 @@ const releases = (await fetchReleases()).filter(
   </Fragment>
 
   <main class="white-box">
-    <h1>Version History</h1>
-    <h2>Live Background Removal Lite</h2>
+    <hgroup>
+      <h1>Version History</h1>
+      <h2>Live Background Removal Lite</h2>
+    </hgroup>
+
+    <h2>Latest Release</h2>
+    <p id="latest-release">
+      <a href={joinURL(BASE_URL, "versions", latestRelease.tag_name)}
+        ><strong>{latestRelease.tag_name}</strong>
+        (<local-date data-date={latestRelease.published_at}
+          ><time datetime={latestRelease.published_at}
+            >{latestRelease.published_at}</time
+          ></local-date
+        >)
+      </a>
+    </p>
+
+    <nav aria-label="Page navigation">
+      <p>
+        <a href={joinURL(BASE_URL)}>Back to Top</a>
+      </p>
+    </nav>
+
+    <hr />
+
+    <h2>Past Versions</h2>
     <ul>
       {
-        releases.map((release) => (
+        pastReleases.map((release) => (
           <li>
             <a href={joinURL(BASE_URL, "versions", release.tag_name)}>
               {release.tag_name}
-              {/* prettier-ignore */}
-              (<local-date data-date={release.published_at} />)
+              {/* prettier-ignore */}(
+              <local-date data-date={release.published_at}>
+                <time datetime={release.published_at}>
+                  {release.published_at}
+                </time>
+              </local-date>
+              )
             </a>
           </li>
         ))
@@ -59,5 +95,10 @@ const releases = (await fetchReleases()).filter(
 <style>
   ul {
     max-width: 600px;
+  }
+
+  #latest-release {
+    font-size: 1.25rem;
+    margin-left: 2rem;
   }
 </style>
