@@ -41,3 +41,11 @@ indent_size = 2
 
 [*.md]
 trim_trailing_whitespace = false
+
+[*.{js,ts}]
+indent_style = space
+indent_size = 2
+
+[*.astro]
+indent_style = space
+indent_size = 2

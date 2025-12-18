@@ -1,0 +1,62 @@
+---
+import { GITHUB_OWNER, GITHUB_REPO } from "../../lib/info.js";
+import { joinURL } from "ufo";
+import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
+
+import DefineLocalDate from "../../components/DefineLocalDate.astro";
+import Layout from "../../layouts/Layout.astro";
+
+export type Releases =
+  RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"];
+
+const { BASE_URL, GITHUB_TOKEN } = import.meta.env;
+
+async function fetchReleases(): Promise<Releases> {
+  const octokit = new Octokit({ auth: GITHUB_TOKEN });
+
+  const allReleases = await octokit.paginate(octokit.rest.repos.listReleases, {
+    owner: GITHUB_OWNER,
+    repo: GITHUB_REPO,
+    per_page: 100,
+  });
+
+  return allReleases;
+}
+
+const releases = (await fetchReleases()).filter(
+  (r) => !r.draft && r.published_at,
+);
+---
+
+<Layout lang="en" title="Version History - Live Background Removal Lite">
+  <Fragment slot="head">
+    <DefineLocalDate />
+    <meta
+      name="description"
+      content="Official release archive for Live Background Removal Lite. Access all past versions, release notes, and download links in one place."
+    />
+  </Fragment>
+
+  <main class="white-box">
+    <h1>Version History</h1>
+    <h2>Live Background Removal Lite</h2>
+    <ul>
+      {
+        releases.map((release) => (
+          <li>
+            <a href={joinURL(BASE_URL, "versions", release.tag_name)}>
+              {release.tag_name} (
+              <local-date data-date={release.published_at} />)
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+</Layout>
+
+<style>
+  ul {
+    max-width: 600px;
+  }
+</style>

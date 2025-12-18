@@ -1,3 +1,18 @@
+import { Octokit } from "@octokit/rest";
+/**
+ * 指定リポジトリのGitHubリリース一覧を取得する
+ * @param owner リポジトリオーナー
+ * @param repo リポジトリ名
+ * @returns リリース情報配列
+ */
+export async function fetchGithubReleases(
+  owner: string,
+  repo: string,
+): Promise<Release[]> {
+  const octokit = new Octokit();
+  const res = await octokit.repos.listReleases({ owner, repo });
+  return res.data as Release[];
+}
 export interface Author {
   login: string;
   id: number;
