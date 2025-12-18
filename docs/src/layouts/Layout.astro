@@ -91,17 +91,13 @@ const { BASE_URL } = import.meta.env;
   }
 
   .download-links {
-    margin-bottom: 3rem;
-  }
-
-  .download-links > div {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
     gap: 20px;
   }
 
-  .download-links > div a {
+  .download-links > a {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -115,7 +111,7 @@ const { BASE_URL } = import.meta.env;
     transition: background-color 0.3s ease;
   }
 
-  .download-links > div a:hover {
+  .download-links > a:hover {
     background-color: var(--color-download-button-active-bg);
   }
 </style>

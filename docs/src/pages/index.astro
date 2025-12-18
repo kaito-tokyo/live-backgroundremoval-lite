@@ -1,157 +1,251 @@
 ---
-import { Octokit } from "@octokit/rest";
-import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
-import { GITHUB_OWNER, GITHUB_REPO } from "../../lib/info.js";
-import DefineLocalDate from "../../components/DefineLocalDate.astro";
-import Layout from "../../layouts/Layout.astro";
+import { joinURL } from "ufo";
+import { Image } from "astro:assets";
 
-interface Props {
-  release: Awaited<
-    ReturnType<Octokit["rest"]["repos"]["getReleaseByTag"]>
-  >["data"];
-}
+import Layout from "../layouts/Layout.astro";
+import { getLatestRelease } from "../lib/github.js";
 
-export async function getStaticPaths(options: GetStaticPathsOptions): Promise<GetStaticPathsResult> {
-  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
-  const allReleases = await octokit.paginate(octokit.rest.repos.listReleases, {
-    owner: GITHUB_OWNER,
-    repo: GITHUB_REPO,
-    per_page: 100,
-  });
-  return allReleases.map((release) => ({
-    params: { version: release.tag_name },
-    props: { release },
-  }));
-}
+import { dependencies, name } from "../../../buildspec.json";
 
-const { release } = Astro.props;
+import demoImage from "../../public/demo.gif";
 
-// アセットの特定
-const windowsZipAsset = release.assets.find((a) => a.name.endsWith("windows-x64.zip"));
-const macosPkgAsset = release.assets.find((a) => a.name.endsWith("macos-universal.pkg"));
-const ubuntuDebAsset = release.assets.find((a) => a.name.endsWith("x86_64-linux-gnu.deb"));
+const githubURL = `https://github.com/kaito-tokyo/${name}`;
 
-// SHA接頭辞削除
-const cleanDigest = (digest: string) => digest.replace(/^sha256:/, '');
-const releaseBody = release.body || "No release notes provided.";
+const { BASE_URL } = import.meta.env;
 
-// JSON-LD
-const schemaData = {
+const release = await getLatestRelease();
+const tagName = release.tag_name;
+
+const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Live Background Removal Lite",
-  "softwareVersion": release.tag_name,
-  "downloadUrl": [
-    windowsZipAsset?.browser_download_url,
-    macosPkgAsset?.browser_download_url,
-    ubuntuDebAsset?.browser_download_url
-  ].filter(Boolean),
-  "releaseNotes": release.html_url
+  name: "Live Background Removal Lite",
+  url: "https://kaito-tokyo.github.io/live-backgroundremoval-lite/",
+  author: {
+    "@type": "Person",
+    name: "Kaito Udagawa",
+    url: "https://github.com/kaito-tokyo",
+  },
+  description:
+    "A high-performance, crash-resistant OBS plugin for real-time background removal without a green screen. Optimized for gaming and low-spec PCs.",
+  applicationCategory: "MultimediaApplication",
+  operatingSystem: "Windows 11, macOS, Ubuntu, Arch Linux, Flatpak",
+  softwareRequirements: `OBS Studio ${dependencies["obs-studio"].version} or later`,
+  fileFormat:
+    "application/x-msdownload, application/octet-stream, application/vnd.debian.binary-package",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+    availability: "https://schema.org/InStock",
+  },
+  featureList: [
+    "Zero-Crash Architecture (Modern C++)",
+    "Smart Hybrid Pipeline (CPU Inference + GPU Post-Processing)",
+    "Gaming-First optimization with negligible GPU load",
+    "No physical green screen required",
+    "Support for Windows, macOS (CoreML), and Linux",
+  ],
+  screenshot:
+    "https://kaito-tokyo.github.io/live-backgroundremoval-lite/demo.gif",
+  softwareVersion: tagName,
 };
 ---
 
 <Layout
   lang="en"
-  title={`Version ${release.tag_name} - Live Background Removal Lite`}
+  title="Live Background Removal Lite"
+  description={structuredData.description}
 >
-  <Fragment slot="head">
-    <DefineLocalDate />
-    <meta name="description" content={`Download version ${release.tag_name}`} />
-    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
-  </Fragment>
+  <script
+    type="application/ld+json"
+    set:html={JSON.stringify(structuredData)}
+  />
 
   <main class="white-box">
-    <article itemscope itemtype="https://schema.org/SoftwareApplication">
-      <header class="version-header">
-        <h1 itemprop="name">Version {release.tag_name}</h1>
-        <a href={release.html_url} target="_blank" rel="noopener noreferrer" class="github-link">
-          View on GitHub ↗
-        </a>
-      </header>
+    <h1>Live Background Removal Lite</h1>
 
-      <section class="downloads-section">
-        <h2>Downloads</h2>
+    <section id="about">
+      <h2>✂️ Remove your bg, Enrich your stream</h2>
+      <p>
+        Live Background Removal Lite is a lightweight and easy-to-use plugin for
+        OBS Studio that allows you to remove the background from your webcam
+        feed without the need for a green screen. It uses advanced AI technology
+        to accurately detect and remove the background, leaving you with a clean
+        and professional look.
+      </p>
+    </section>
 
-        <div class="download-links">
-          <div>
-            {windowsZipAsset && (
-              <a href={windowsZipAsset.browser_download_url} itemprop="downloadUrl">
-                Windows
-              </a>
-            )}
-            {macosPkgAsset && (
-              <a href={macosPkgAsset.browser_download_url} itemprop="downloadUrl">
-                Mac
-              </a>
-            )}
-            {ubuntuDebAsset && (
-              <a href={ubuntuDebAsset.browser_download_url} itemprop="downloadUrl">
-                Ubuntu
-              </a>
-            )}
-          </div>
+    <section class="download-links" id="download-links">
+      <h2>⬇️ Download Latest Release (v{tagName})</h2>
+      <div>
+        <a
+          href={joinURL(
+            githubURL,
+            `releases/download/${tagName}/${name}-${tagName}-windows-x64.zip`,
+          )}
+          title={`Download v${tagName} for Windows (x64)`}>Windows</a
+        >
+
+        <a
+          href={joinURL(
+            githubURL,
+            `releases/download/${tagName}/${name}-${tagName}-macos-universal.pkg`,
+          )}
+          title={`Download v${tagName} for macOS (Universal)`}>Mac</a
+        >
+
+        <a
+          href={joinURL(
+            githubURL,
+            `releases/download/${tagName}/${name}-${tagName}-x86_64-linux-gnu.deb`,
+          )}
+          title={`Download v${tagName} for Ubuntu (deb)`}>Ubuntu</a
+        >
+
+        <a href={joinURL(githubURL, "tree/main/unsupported/arch/#readme")}
+          >Arch Linux</a
+        >
+        <a href={joinURL(githubURL, "tree/main/unsupported/flatpak/#readme")}
+          >Flatpak</a
+        >
+      </div>
+      <nav aria-label="Installing and configuring documentation navigation">
+        <ul>
+          <li>
+            <a
+              href={joinURL(BASE_URL, "install/")}
+              title="Installation Guide of Live Background Removal Lite"
+              >Installation Guide</a
+            >
+          </li>
+          <li>
+            <a
+              href={joinURL(BASE_URL, "usage/")}
+              title="Usage & Configuration of Live Background Removal Lite"
+              >Usage & Configuration</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </section>
+
+    <section id="demo">
+      <h2>📸 Demo</h2>
+      <div class="demo-container">
+        <Image
+          src={demoImage}
+          alt="Split-screen demo showing the plugin removing a cluttered room background in real-time."
+          width="480"
+          class="demo-image"
+        />
+        <p class="demo-caption">
+          <em
+            >The plugin removes a cluttered room background, revealing a gray
+            color source set behind in OBS.</em
+          >
+        </p>
+      </div>
+    </section>
+
+    <hr />
+
+    <section id="features">
+      <h2>For who?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>🎮 Gamers & GPU-Heavy Streamers</h3>
+          <p>
+            Don't sacrifice your in-game FPS for a webcam effect. Unlike other
+            plugins that hog your GPU, this plugin follows a <strong
+              >"Gaming-First" philosophy</strong
+            >. It intelligently offloads AI inference to the CPU, preserving
+            your GPU's headroom for rendering games at maximum performance.
+          </p>
         </div>
 
-        <div class="file-details">
-          <h3>File Information</h3>
-
-          {windowsZipAsset && (
-            <div class="file-item">
-              <div class="platform-label">Windows</div>
-              <div class="file-name">{windowsZipAsset.name}</div>
-              {windowsZipAsset.digest && (
-                <div class="file-hash">
-                  <span class="hash-label">SHA-256:</span>
-                  <code class="hash-code">{cleanDigest(windowsZipAsset.digest)}</code>
-                </div>
-              )}
-            </div>
-          )}
-
-          {macosPkgAsset && (
-            <div class="file-item">
-              <div class="platform-label">Mac</div>
-              <div class="file-name">{macosPkgAsset.name}</div>
-              {macosPkgAsset.digest && (
-                <div class="file-hash">
-                  <span class="hash-label">SHA-256:</span>
-                  <code class="hash-code">{cleanDigest(macosPkgAsset.digest)}</code>
-                </div>
-              )}
-            </div>
-          )}
-
-          {ubuntuDebAsset && (
-            <div class="file-item">
-              <div class="platform-label">Ubuntu</div>
-              <div class="file-name">{ubuntuDebAsset.name}</div>
-              {ubuntuDebAsset.digest && (
-                <div class="file-hash">
-                  <span class="hash-label">SHA-256:</span>
-                  <code class="hash-code">{cleanDigest(ubuntuDebAsset.digest)}</code>
-                </div>
-              )}
-            </div>
-          )}
+        <div class="feature-card">
+          <h3>💻 Laptop & Non-RTX Users</h3>
+          <p>
+            Running OBS on a laptop or without a high-end dedicated GPU? No
+            problem. The AI engine runs on a highly optimized CPU model with <strong
+              >constant low usage</strong
+            >, regardless of whether your camera is 720p or 4K.
+          </p>
         </div>
-      </section>
 
-      <hr />
+        <div class="feature-card">
+          <h3>🛡️ Streamers Seeking Stability</h3>
+          <p>
+            Tired of plugins crashing your OBS mid-stream? Built with a <strong
+              >"Zero-Crash Architecture"</strong
+            > in Modern C++, this plugin is engineered to be crash-resistant and
+            safe, ensuring your stream stays live no matter what.
+          </p>
+        </div>
 
-      <section class="release-notes">
-        <h3>Release Log</h3>
-        <pre itemprop="releaseNotes">{releaseBody}</pre>
-      </section>
-    </article>
+        <div class="feature-card">
+          <h3>✨ Users Who Want "Plug & Play"</h3>
+          <p>
+            No complex parameters or manual tweaking required. Designed with a <strong
+              >"Zero-Configuration"</strong
+            > mindset, the default settings are carefully calibrated to work in 99%
+            of environments instantly.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <hr />
+
+    <section id="ask-anything" style="text-align: center;">
+      <a
+        href={joinURL(BASE_URL, "interactive-help/")}
+        class="ask-anything-button"
+      >
+        <svg
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="button-icon"
+          ><path
+            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+          ></path></svg
+        >
+        <span class="button-text">Ask Anything (Experimental)</span>
+      </a>
+    </section>
+
+    <hr />
+
+    <nav aria-label="Additional resource navigation">
+      <h2>Additional Resources</h2>
+      <ul>
+        <li>
+          <a href={joinURL(BASE_URL, "faq/")}
+            >Frequently Asked Questions (FAQ)</a
+          >
+        </li>
+        <li>
+          <a href={githubURL} target="_blank" rel="noopener noreferrer"
+            >GitHub Repository</a>
+        </li>
+      </ul>
+    </nav>
   </main>
 </Layout>
 
 <style>
-  /* === 1. ダウンロードボタン（いただいたCSSを適用） === */
-  /* 元のCSSセレクタ (.download-links > div) が効くようにHTML構造を合わせています */
-
-  .download-links {
-    margin-bottom: 3rem; /* 下の詳細情報との余白を追加 */
+  h1 {
+    font-weight: 700;
+    text-align: center;
   }
 
   .download-links > div {
@@ -160,129 +254,86 @@ const schemaData = {
     flex-wrap: wrap;
     gap: 20px;
   }
-
   .download-links > div a {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 10px 20px;
-
-    /* 変数が定義されていない場合のフォールバック色 (#007bff) を追加 */
-    background-color: var(--color-download-button-bg, #007bff);
-    color: var(--color-download-button-fg, #fff);
-
+    background-color: #4caf50;
+    color: white;
     text-align: center;
     text-decoration: none;
     font-size: 18px;
     border-radius: 5px;
     transition: background-color 0.3s ease;
   }
-
   .download-links > div a:hover {
-    background-color: var(--color-download-button-active-bg, #0056b3);
+    background-color: #45a049;
   }
 
-
-  /* === ヘッダー周り === */
-  .version-header {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  .github-link {
-    font-size: 0.9rem;
-    color: #666;
-    text-decoration: none;
-  }
-  .github-link:hover {
-    text-decoration: underline;
-  }
-
-  /* === 2. ファイル詳細情報（縦並び） === */
-  .file-details {
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    padding: 1.5rem;
-    border: 1px solid #eee;
-  }
-
-  .file-details h3 {
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    font-size: 1rem;
-    color: #555;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 0.5rem;
-  }
-
-  .file-item {
-    margin-bottom: 1.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px dashed #ddd;
-  }
-  .file-item:last-child {
-    margin-bottom: 0;
-    padding-bottom: 0;
-    border-bottom: none;
-  }
-
-  .platform-label {
-    font-size: 0.85rem;
-    font-weight: bold;
-    color: #888;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-  }
-
-  .file-name {
-    font-family: Consolas, Monaco, monospace;
-    font-weight: bold;
-    color: #333;
-    word-break: break-all;
-    margin-bottom: 8px;
-  }
-
-  .file-hash {
-    font-family: Consolas, Monaco, monospace;
-    font-size: 0.8rem;
-    color: #666;
-    background: #fff;
-    padding: 8px;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
+  .demo-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    flex-direction: column;
     align-items: center;
+    margin: 2em 0;
   }
-
-  .hash-label {
-    font-weight: bold;
-    color: #999;
-    user-select: none;
-  }
-
-  .hash-code {
-    word-break: break-all;
-    user-select: all;
-  }
-
-  /* === ログ === */
-  .release-notes pre {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
+  .demo-image {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     max-width: 100%;
-    background-color: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 6px;
-    font-family: Consolas, monospace;
-    line-height: 1.5;
+    height: auto;
+  }
+  .demo-caption {
+    margin-top: 8px;
+    color: #666;
+    font-size: 90%;
+    text-align: center;
   }
 
-  hr {
-    border: 0;
-    border-top: 1px solid #eee;
-    margin: 3rem 0;
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1rem;
+  }
+  .feature-card {
+    background-color: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  .feature-card h3 {
+    margin-top: 0;
+    font-size: 1.1em;
+  }
+
+  .ask-anything-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1em 2em;
+    font-size: 1.2em;
+    border-radius: 999px;
+    background: var(--color-button-2, #4f8cff);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
+    margin: 1em auto;
+    transition:
+      background-color 0.2s,
+      box-shadow 0.2s;
+    font-weight: bold;
+  }
+  .ask-anything-button:hover,
+  .ask-anything-button:focus {
+    background: var(--color-button-1, #2563eb);
+    box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
+  }
+  .button-icon {
+    margin-right: 0.5em;
+  }
+  .button-text {
+    vertical-align: middle;
   }
 </style>

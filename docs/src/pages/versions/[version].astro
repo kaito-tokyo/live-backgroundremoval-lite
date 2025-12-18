@@ -87,50 +87,74 @@ const schemaData = {
       <section class="downloads-section">
         <h2>Downloads</h2>
 
-        <div class="download-links">
-          <div>
-            {
-              windowsZipAsset && (
+        <ul class="download-links" style="margin-bottom: 1rem;">
+          {
+            windowsZipAsset && (
+              <li>
                 <a
                   href={windowsZipAsset.browser_download_url}
                   itemprop="downloadUrl"
                 >
                   Windows (zip)
                 </a>
-              )
-            }
-            {
-              macosPkgAsset && (
+              </li>
+            )
+          }
+          {
+            macosPkgAsset && (
+              <li>
                 <a
                   href={macosPkgAsset.browser_download_url}
                   itemprop="downloadUrl"
                 >
                   Mac (pkg)
                 </a>
-              )
-            }
-            {
-              ubuntuDebAsset && (
+              </li>
+            )
+          }
+          {
+            ubuntuDebAsset && (
+              <li>
                 <a
                   href={ubuntuDebAsset.browser_download_url}
                   itemprop="downloadUrl"
                 >
                   Ubuntu (deb)
                 </a>
-              )
-            }
-          </div>
+              </li>
+            )
+          }
         </div>
 
+        <div class="download-links" style="margin-bottom: 1rem;">
+          <a
+            href="https://github.com/kaito-tokyohttps://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
+            itemprop="downloadUrl"
+          >
+            Arch Linux (Latest)
+          </a>
+
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak"
+            itemprop="downloadUrl"
+          >
+            Flatpak (Latest)
+          </a>
+        </div>
+      </section>
+
+      <section class="release-notes">
+        <h2>Release notes</h2>
+        <pre itemprop="releaseNotes">{releaseBody}</pre>
+      </section>
+
+      <section>
+        <h2>Additional Information</h2>
         <dl>
           <dt>Publish date</dt>
           <dd>
             <local-date data-date={release.published_at}></local-date>
           </dd>
-        </dl>
-
-        <h3>File Information</h3>
-        <dl>
           {
             windowsZipAsset?.digest && (
               <Fragment>
@@ -161,13 +185,6 @@ const schemaData = {
             )
           }
         </dl>
-      </section>
-
-      <hr />
-
-      <section class="release-notes">
-        <h3>Release notes</h3>
-        <pre itemprop="releaseNotes">{releaseBody}</pre>
       </section>
     </article>
   </main>
