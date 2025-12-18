@@ -37,6 +37,19 @@ export async function getStaticPaths(
 
 const { BASE_URL } = import.meta.env;
 
+function stripMarkdown(markdown: string): string {
+  if (!markdown) return "";
+
+  return markdown
+    .replace(/^#+\s+/gm, "")
+    .replace(/^[\s\-*+]+/gm, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/```/g, "")
+    .replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 const { release } = Astro.props;
 
 const windowsZipAsset = release.assets.find((a) =>
@@ -50,6 +63,12 @@ const ubuntuDebAsset = release.assets.find((a) =>
 );
 
 const releaseBody = release.body || "No release notes provided.";
+
+const baseDescription = `Download version ${release.tag_name} of Live Background Removal Lite.`;
+const cleanBody = stripMarkdown(releaseBody);
+const dynamicDescription = cleanBody
+  ? `${baseDescription} Highlights: ${cleanBody}`.substring(0, 160) + (cleanBody.length > 100 ? "..." : "")
+  : `${baseDescription} Check release notes for details.`;
 
 const supportedOSList = [
   windowsZipAsset ? "Windows 10, Windows 11" : null,
@@ -135,11 +154,11 @@ const schemaData = {
 
 <Layout
   lang="en"
-  title={`Version ${release.tag_name} - Live Background Removal Lite`}
+  title={`Live Background Removal Lite ${release.tag_name} - Download & Release Notes`}
 >
   <Fragment slot="head">
     <DefineLocalDate />
-    <meta name="description" content={`Download version ${release.tag_name}`} />
+    <meta name="description" content={dynamicDescription} />
     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   </Fragment>
 
@@ -163,6 +182,7 @@ const schemaData = {
 
       <section class="downloads-section">
         <h2>Downloads</h2>
+        {release.body_text}
 
         <ul class="download-links" style="margin-bottom: 1rem;">
           {
