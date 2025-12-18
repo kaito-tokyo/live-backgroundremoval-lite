@@ -3,10 +3,11 @@ import { joinURL, withTrailingSlash } from "ufo";
 
 import Layout from "./Layout.astro";
 
-import { GITHUB_URL } from "../lib/info.js";
+import { GITHUB_URL, PRODUCTION_BASE_URL } from "../lib/info.js";
 
 interface Props {
   frontmatter: {
+    pathname: string;
     lang: string;
     title: string;
     description: string;
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const { BASE_URL } = import.meta.env;
-const { lang, title, description } = Astro.props.frontmatter;
+const { pathname, lang, title, description } = Astro.props.frontmatter;
 ---
 
 <Layout lang={lang} title={title}>
@@ -23,7 +24,7 @@ const { lang, title, description } = Astro.props.frontmatter;
       <meta name="description" content={description} />
       <link
         rel="canonical"
-        href={withTrailingSlash(joinURL(BASE_URL, Astro.url.pathname))}
+        href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, pathname))}
       />
     </Fragment>
 

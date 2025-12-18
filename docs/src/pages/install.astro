@@ -4,7 +4,12 @@ import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 
 import Layout from "../layouts/Layout.astro";
 
-import { GITHUB_OWNER, GITHUB_REPO, GITHUB_URL } from "../lib/info.js";
+import {
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  GITHUB_URL,
+  PRODUCTION_BASE_URL,
+} from "../lib/info.js";
 
 export type LatestRelease =
   RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
@@ -43,7 +48,7 @@ const ubuntuDebAsset = release.assets.find((a) =>
     />
     <link
       rel="canonical"
-      href={withTrailingSlash(joinURL(BASE_URL, "install"))}
+      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "install"))}
     />
   </Fragment>
 

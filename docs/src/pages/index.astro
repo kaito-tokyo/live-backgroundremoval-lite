@@ -8,7 +8,12 @@ import GitHubMark from "../../public/github-mark.svg";
 import Layout from "../layouts/Layout.astro";
 import Logo from "../../public/favicon.svg";
 
-import { GITHUB_OWNER, GITHUB_REPO, GITHUB_URL } from "../lib/info.js";
+import {
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  GITHUB_URL,
+  PRODUCTION_BASE_URL,
+} from "../lib/info.js";
 
 import { dependencies } from "../../../buildspec.json";
 
@@ -82,7 +87,7 @@ const structuredData = {
   <Fragment slot="head">
     <DefineLocalDate />
     <meta name="description" content={structuredData.description} />
-    <link rel="canonical" href={withTrailingSlash(BASE_URL)} />
+    <link rel="canonical" href={withTrailingSlash(PRODUCTION_BASE_URL)} />
     <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}
@@ -155,31 +160,31 @@ const structuredData = {
           </a>
         </li>
       </ul>
-      <nav aria-label="Installing and configuring documentation navigation">
-        <ul>
-          <li>
-            <a
-              href={withTrailingSlash(joinURL(BASE_URL, "install"))}
-              title="Installation Guide of Live Background Removal Lite"
-              >Installation Guide</a
-            >
-          </li>
-          <li>
-            <a
-              href={withTrailingSlash(joinURL(BASE_URL, "usage"))}
-              title="Usage & Configuration of Live Background Removal Lite"
-              >Usage & Configuration</a
-            >
-          </li>
-          <li>
-            <a
-              href={withTrailingSlash(joinURL(BASE_URL, "versions"))}
-              title="Version History of Live Background Removal Lite"
-              >Version History</a
-            >
-          </li>
-        </ul>
-      </nav>
+    </section>
+
+    <section id="ask-anything" style="text-align: center;">
+      <a
+        href={joinURL(BASE_URL, "interactive-help/")}
+        class="ask-anything-button"
+      >
+        <svg
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="button-icon"
+          ><path
+            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+          ></path></svg
+        >
+        <span class="button-text">Ask Anything (Experimental)</span>
+      </a>
     </section>
 
     <section id="demo">
@@ -199,6 +204,46 @@ const structuredData = {
         </p>
       </div>
     </section>
+
+    <hr />
+
+    <nav aria-label="Installing and configuring documentation navigation">
+      <ul>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(BASE_URL, "install"))}
+            title="Installation Guide of Live Background Removal Lite"
+            >Installation Guide</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(BASE_URL, "usage"))}
+            title="Usage & Configuration of Live Background Removal Lite"
+            >Usage & Configuration</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(BASE_URL, "versions"))}
+            title="Version History of Live Background Removal Lite"
+            >Version History</a
+          >
+        </li>
+        <li>
+          <a href={withTrailingSlash(joinURL(BASE_URL, "faq"))}
+            >Frequently Asked Questions (FAQ)</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
+          >
+        </li>
+      </ul>
+    </nav>
 
     <hr />
 
@@ -248,53 +293,6 @@ const structuredData = {
       </div>
     </section>
 
-    <hr />
-
-    <section id="ask-anything" style="text-align: center;">
-      <a
-        href={joinURL(BASE_URL, "interactive-help/")}
-        class="ask-anything-button"
-      >
-        <svg
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          width="32"
-          height="32"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="button-icon"
-          ><path
-            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-          ></path></svg
-        >
-        <span class="button-text">Ask Anything (Experimental)</span>
-      </a>
-    </section>
-
-    <hr />
-
-    <nav aria-label="Additional resource navigation">
-      <h2>Additional Resources</h2>
-      <ul>
-        <li>
-          <a href={joinURL(BASE_URL, "faq/")}
-            >Frequently Asked Questions (FAQ)</a
-          >
-        </li>
-        <li>
-          <a
-            href={withTrailingSlash(GITHUB_URL)}
-            target="_blank"
-            rel="noopener noreferrer">GitHub Repository</a
-          >
-        </li>
-      </ul>
-    </nav>
-
     <a
       href={GITHUB_URL}
       target="_blank"
@@ -309,7 +307,7 @@ const structuredData = {
   <style>
     main {
       position: relative;
-      background: linear-gradient(49deg, #fff calc(100% - 110px), #bbb 100%);
+      background: linear-gradient(49deg, #fff calc(100% - 110px), #bbbbcc 100%);
     }
 
     h1 {
@@ -332,7 +330,6 @@ const structuredData = {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 2em 0;
     }
     .demo-image {
       border: 1px solid #ccc;
@@ -398,6 +395,17 @@ const structuredData = {
       position: absolute;
       top: 1.5rem;
       right: 1.5rem;
+      display: block;
+    }
+
+    #github-corner-link::before {
+      content: "";
+      position: absolute;
+
+      top: -1.5rem;
+      right: -1.5rem;
+      bottom: -1.5rem;
+      left: -1.5rem;
     }
   </style>
 </Layout>

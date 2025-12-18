@@ -6,7 +6,7 @@ import Layout from "../layouts/Layout.astro";
 import effectFiltersImage from "../../public/effect-filters.png";
 import basicPropertiesImage from "../../public/basic-properties.png";
 import advancedPropertiesImage from "../../public/advanced-properties.png";
-import { GITHUB_URL } from "../lib/info.js";
+import { GITHUB_URL, PRODUCTION_BASE_URL } from "../lib/info.js";
 
 const { BASE_URL } = import.meta.env;
 
@@ -67,7 +67,7 @@ const structuredData = JSON.stringify({
     />
     <link
       rel="canonical"
-      href={withTrailingSlash(joinURL(BASE_URL, "usage"))}
+      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "usage"))}
     />
     <script
       type="application/ld+json"
