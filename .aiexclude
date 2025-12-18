@@ -4,5 +4,6 @@
 /build_*/
 /data/models/
 /docs/dist/
+/docs/public/
 /vcpkg_installed/
 node_modules/
