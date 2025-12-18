@@ -113,6 +113,41 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 
 3.  Restart OBS Studio after the installation is complete.
 
+## 🔐 Verifying Release Binaries
+
+All official release binaries are cryptographically signed with [GitHub Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds). You can verify that a downloaded binary was built by our official GitHub Actions workflow and hasn't been tampered with.
+
+### Prerequisites
+
+Install the [GitHub CLI](https://cli.github.com/) (`gh`) if you haven't already.
+
+### Verification Steps
+
+After downloading a release binary, verify it using the following command:
+
+```bash
+gh attestation verify <downloaded-file> --owner kaito-tokyo
+```
+
+**Examples:**
+
+- **Windows:**
+  ```bash
+  gh attestation verify live-backgroundremoval-lite-X.Y.Z-windows-x64.zip --owner kaito-tokyo
+  ```
+
+- **macOS:**
+  ```bash
+  gh attestation verify live-backgroundremoval-lite-X.Y.Z-macos-universal.pkg --owner kaito-tokyo
+  ```
+
+- **Linux (Ubuntu):**
+  ```bash
+  gh attestation verify live-backgroundremoval-lite-X.Y.Z-ubuntu-24.04-x86_64.deb --owner kaito-tokyo
+  ```
+
+A successful verification will display a message confirming the artifact's authenticity and showing the workflow that built it.
+
 ## 🚀 Usage
 
 1.  In OBS Studio, right-click on the video source (e.g., your webcam) you want to apply the effect to.
