@@ -1,5 +1,9 @@
 ---
-import { GITHUB_OWNER, GITHUB_REPO } from "../../lib/info.js";
+import {
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  PRODUCTION_BASE_URL,
+} from "../../lib/info.js";
 import { joinURL } from "ufo";
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 
@@ -33,6 +37,36 @@ if (releases.length === 0) {
 
 const latestRelease = releases[0];
 const pastReleases = releases.slice(1);
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+
+  mainEntityOfPage: {
+    "@type": "WebPage",
+    "@id": joinURL(PRODUCTION_BASE_URL, "versions"),
+  },
+  url: joinURL(PRODUCTION_BASE_URL, "versions"),
+
+  name: "Live Background Removal Lite Version History",
+  alternateName: ["Changelog", "Release Notes", "Software Updates"],
+  description:
+    "Archive of all official releases for Live Background Removal Lite.",
+
+  image: joinURL(PRODUCTION_BASE_URL, "screenshot.webp"),
+
+  sameAs: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases`,
+
+  itemListOrder: "https://schema.org/ItemListOrderDescending",
+  numberOfItems: releases.length,
+
+  itemListElement: releases.map((release, index) => ({
+    "@type": "ListItem",
+    position: index + 1,
+    name: `Version ${release.tag_name}`,
+    url: joinURL(PRODUCTION_BASE_URL, "versions", release.tag_name),
+  })),
+};
 ---
 
 <Layout lang="en" title="Version History - Live Background Removal Lite">
@@ -42,6 +76,8 @@ const pastReleases = releases.slice(1);
       name="description"
       content="Official release archive for Live Background Removal Lite. Access all past versions, release notes, and download links in one place."
     />
+    <link rel="canonical" href={joinURL(PRODUCTION_BASE_URL, "versions")} />
+    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   </Fragment>
 
   <main class="white-box">
