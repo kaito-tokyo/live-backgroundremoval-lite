@@ -11,15 +11,15 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.6.0",
-    "@astrojs/svelte": "^7.2.3",
+    "@astrojs/svelte": "^7.2.4",
     "@mlc-ai/web-llm": "^0.2.80",
-    "astro": "^5.16.5",
-    "svelte": "^5.45.8",
+    "astro": "^5.16.6",
+    "svelte": "^5.46.0",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
     "prettier": "^3.7.4",
     "prettier-plugin-astro": "^0.14.1",
-    "prettier-plugin-svelte": "^3.4.0"
+    "prettier-plugin-svelte": "^3.4.1"
   }
 }
