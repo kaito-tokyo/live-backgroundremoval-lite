@@ -50,12 +50,22 @@ const { BASE_URL } = import.meta.env;
       <footer>
         <p>&copy; 2025 Kaito Udagawa</p>
         <p>
-          <a href={joinURL(BASE_URL, "llms.txt")} target="_blank" rel="noopener noreferrer">
+          <a
+            href={joinURL(BASE_URL, "llms.txt")}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             llms.txt
           </a>
         </p>
       </footer>
     </div>
+    <!-- Cloudflare Web Analytics -->
+    <script
+      defer
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "0df4a48356ba406099ae721158ab230b"}'
+    ></script><!-- End Cloudflare Web Analytics -->
   </body>
 </html>
 

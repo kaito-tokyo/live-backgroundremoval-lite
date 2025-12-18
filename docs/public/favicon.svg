@@ -1,7 +1,7 @@
 <svg width="192" height="192" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
     <!-- Define the checkerboard pattern with an offset start point -->
     <defs>
-        <pattern id="checkerboard" x="7.3" y="-4.1" width="25" height="25" patternUnits="userSpaceOnUse">
+        <pattern id="live-backgroundremoval-lite-checkerboard" x="7.3" y="-4.1" width="25" height="25" patternUnits="userSpaceOnUse">
             <!-- White background for the pattern -->
             <rect x="0" y="0" width="25" height="25" fill="#FFFFFF"></rect>
             <!-- Light gray squares to create the checkerboard effect -->
@@ -11,7 +11,7 @@
     </defs>
 
     <!-- Background layer with the checkerboard pattern -->
-    <rect width="100" height="100" fill="url(#checkerboard)"></rect>
+    <rect width="100" height="100" fill="url(#live-backgroundremoval-lite-checkerboard)"></rect>
 
     <!-- Person silhouette layer with a white stroke -->
     <g fill="#87CEEB" stroke="white" stroke-width="2">
