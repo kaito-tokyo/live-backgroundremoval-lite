@@ -78,6 +78,7 @@ const { BASE_URL } = import.meta.env;
     --color-download-button-fg: white;
     --color-alert-bg: #fff3cd;
     --color-alert-fg: #856404;
+    --color-github-black: #24292f;
   }
 
   .white-box {
@@ -103,7 +104,7 @@ const { BASE_URL } = import.meta.env;
     padding: 0;
   }
 
-  .download-links > li > a {
+  ul.download-links > li > a {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -118,7 +119,7 @@ const { BASE_URL } = import.meta.env;
     font-weight: bold;
   }
 
-  .download-links > li > a:hover {
+  ul.download-links > li > a:hover {
     background-color: var(--color-download-button-active-bg);
   }
 
