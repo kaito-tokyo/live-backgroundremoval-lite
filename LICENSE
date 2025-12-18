@@ -32,6 +32,7 @@ used independently under MIT terms:
 - UpdateChecker (src/UpdateChecker/)
 - Memory management utilities (src/Memory/)
 - Logger interfaces (src/Logger/)
+- Documentation files (docs/)
 
 For the full text of the MIT License, see the file:
   LICENSE.MIT
