@@ -4,10 +4,9 @@ import { joinURL } from "ufo";
 interface Props {
   lang: string;
   title: string;
-  description?: string;
 }
 
-const { lang, title, description } = Astro.props;
+const { lang, title } = Astro.props;
 const { BASE_URL } = import.meta.env;
 ---
 
@@ -16,7 +15,6 @@ const { BASE_URL } = import.meta.env;
   <head>
     <meta charset="utf-8" />
     <title>{title}</title>
-    <meta name="description" content={description} />
     <link
       rel="alternate"
       type="text/markdown"
@@ -75,8 +73,8 @@ const { BASE_URL } = import.meta.env;
     --color-bg: #000;
     --color-white-box-bg: #fff;
     --color-box-shadow: #0000001a;
-    --color-download-button-bg: #4caf50;
-    --color-download-button-active-bg: #45a049;
+    --color-download-button-bg: #357a38;
+    --color-download-button-active-bg: #4caf50;
     --color-download-button-fg: white;
     --color-alert-bg: #fff3cd;
     --color-alert-fg: #856404;
@@ -111,12 +109,13 @@ const { BASE_URL } = import.meta.env;
     justify-content: center;
     padding: 10px 20px;
     background-color: var(--color-download-button-bg);
-    color: var(--color-download-button-fg, #fff);
+    color: var(--color-download-button-fg);
     text-align: center;
     text-decoration: none;
     font-size: 18px;
     border-radius: 5px;
     transition: background-color 0.3s ease;
+    font-weight: bold;
   }
 
   .download-links > li > a:hover {
