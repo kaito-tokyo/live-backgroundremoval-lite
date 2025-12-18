@@ -1,28 +1,200 @@
 ---
-import { joinURL } from "ufo";
 import { Octokit } from "@octokit/rest";
+import prettyBytes from "pretty-bytes";
 import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
 
 import { GITHUB_OWNER, GITHUB_REPO } from "../../lib/info.js";
+import DefineLocalDate from "../../components/DefineLocalDate.astro";
+import Layout from "../../layouts/Layout.astro";
+
+interface Props {
+  release: Awaited<
+    ReturnType<Octokit["rest"]["repos"]["getReleaseByTag"]>
+  >["data"];
+}
 
 export async function getStaticPaths(
   options: GetStaticPathsOptions,
 ): Promise<GetStaticPathsResult> {
-  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-
-  const response = await octokit.rest.repos.listReleases({
+  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
+  const allReleases = await octokit.paginate(octokit.rest.repos.listReleases, {
     owner: GITHUB_OWNER,
     repo: GITHUB_REPO,
     per_page: 100,
   });
-
-  return response.data.map((release) => ({
+  return allReleases.map((release) => ({
     params: { version: release.tag_name },
     props: { release },
   }));
 }
 
-const { BASE_URL } = import.meta.env;
+const { release } = Astro.props;
+
+const windowsZipAsset = release.assets.find((a) =>
+  a.name.endsWith("windows-x64.zip"),
+);
+const macosPkgAsset = release.assets.find((a) =>
+  a.name.endsWith("macos-universal.pkg"),
+);
+const ubuntuDebAsset = release.assets.find((a) =>
+  a.name.endsWith("x86_64-linux-gnu.deb"),
+);
+
+const releaseBody = release.body || "No release notes provided.";
+
+const schemaData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Live Background Removal Lite",
+  softwareVersion: release.tag_name,
+  downloadUrl: [
+    windowsZipAsset?.browser_download_url,
+    macosPkgAsset?.browser_download_url,
+    ubuntuDebAsset?.browser_download_url,
+  ].filter(Boolean),
+  releaseNotes: release.html_url,
+};
 ---
 
-<Layout lang="en" title="Live Background Removal Lite" description="" />
+<Layout
+  lang="en"
+  title={`Version ${release.tag_name} - Live Background Removal Lite`}
+>
+  <Fragment slot="head">
+    <DefineLocalDate />
+    <meta name="description" content={`Download version ${release.tag_name}`} />
+    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
+  </Fragment>
+
+  <main class="white-box">
+    <article itemscope itemtype="https://schema.org/SoftwareApplication">
+      <header class="version-header">
+        <h1 itemprop="name">Version {release.tag_name}</h1>
+        <h2>Live Background Removal Lite</h2>
+      </header>
+
+      {
+        release.prerelease && (
+          <aside class="alert-box" aria-label="Version stability warning">
+            <p>
+              <strong>Pre-release:</strong>
+              This version is unstable. Not recommended for use.
+            </p>
+          </aside>
+        )
+      }
+
+      <section class="downloads-section">
+        <h2>Downloads</h2>
+
+        <div class="download-links">
+          <div>
+            {
+              windowsZipAsset && (
+                <a
+                  href={windowsZipAsset.browser_download_url}
+                  itemprop="downloadUrl"
+                >
+                  Windows (zip)
+                </a>
+              )
+            }
+            {
+              macosPkgAsset && (
+                <a
+                  href={macosPkgAsset.browser_download_url}
+                  itemprop="downloadUrl"
+                >
+                  Mac (pkg)
+                </a>
+              )
+            }
+            {
+              ubuntuDebAsset && (
+                <a
+                  href={ubuntuDebAsset.browser_download_url}
+                  itemprop="downloadUrl"
+                >
+                  Ubuntu (deb)
+                </a>
+              )
+            }
+          </div>
+        </div>
+
+        <dl>
+          <dt>Publish date</dt>
+          <dd>
+            <local-date data-date={release.published_at}></local-date>
+          </dd>
+        </dl>
+
+        <h3>File Information</h3>
+        <dl>
+          {
+            windowsZipAsset?.digest && (
+              <Fragment>
+                <dt>{windowsZipAsset.name}</dt>
+                <dd>{prettyBytes(windowsZipAsset.size, { binary: true })}</dd>
+                <dd>{windowsZipAsset.digest}</dd>
+              </Fragment>
+            )
+          }
+
+          {
+            macosPkgAsset?.digest && (
+              <Fragment>
+                <dt>{macosPkgAsset.name}</dt>
+                <dd>{prettyBytes(macosPkgAsset.size, { binary: true })}</dd>
+                <dd>{macosPkgAsset.digest}</dd>
+              </Fragment>
+            )
+          }
+
+          {
+            ubuntuDebAsset?.digest && (
+              <Fragment>
+                <dt>{ubuntuDebAsset.name}</dt>
+                <dd>{prettyBytes(ubuntuDebAsset.size, { binary: true })}</dd>
+                <dd>{ubuntuDebAsset.digest}</dd>
+              </Fragment>
+            )
+          }
+        </dl>
+      </section>
+
+      <hr />
+
+      <section class="release-notes">
+        <h3>Release notes</h3>
+        <pre itemprop="releaseNotes">{releaseBody}</pre>
+      </section>
+    </article>
+  </main>
+</Layout>
+
+<style>
+  .alert-box {
+    background-color: var(--color-alert-bg);
+    color: var(--color-alert-fg);
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+  }
+
+  dt {
+    font-weight: bold;
+  }
+
+  dt,
+  dd {
+    overflow: hidden;
+  }
+
+  .release-notes pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+  }
+</style>

@@ -69,6 +69,11 @@ const { BASE_URL } = import.meta.env;
     --color-bg: #000;
     --color-white-box-bg: #fff;
     --color-box-shadow: #0000001a;
+    --color-download-button-bg: #4caf50;
+    --color-download-button-active-bg: #45a049;
+    --color-download-button-fg: white;
+    --color-alert-bg: #fff3cd;
+    --color-alert-fg: #856404;
   }
 
   main.white-box {
@@ -83,6 +88,35 @@ const { BASE_URL } = import.meta.env;
     box-shadow: 0 4px 8px var(--color-box-shadow);
 
     background-color: var(--color-white-box-bg);
+  }
+
+  .download-links {
+    margin-bottom: 3rem;
+  }
+
+  .download-links > div {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .download-links > div a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background-color: var(--color-download-button-bg);
+    color: var(--color-download-button-fg, #fff);
+    text-align: center;
+    text-decoration: none;
+    font-size: 18px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+
+  .download-links > div a:hover {
+    background-color: var(--color-download-button-active-bg);
   }
 </style>
 

@@ -45,8 +45,9 @@ const releases = (await fetchReleases()).filter(
         releases.map((release) => (
           <li>
             <a href={joinURL(BASE_URL, "versions", release.tag_name)}>
-              {release.tag_name} (
-              <local-date data-date={release.published_at} />)
+              {release.tag_name}
+              {/* prettier-ignore */}
+              (<local-date data-date={release.published_at} />)
             </a>
           </li>
         ))
