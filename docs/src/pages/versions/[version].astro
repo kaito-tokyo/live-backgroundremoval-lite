@@ -42,17 +42,79 @@ const ubuntuDebAsset = release.assets.find((a) =>
 
 const releaseBody = release.body || "No release notes provided.";
 
+const supportedOSList = [
+  windowsZipAsset ? "Windows 10, Windows 11" : null,
+  macosPkgAsset ? "macOS (Apple Silicon & Intel)" : null,
+  ubuntuDebAsset ? "Linux (Ubuntu, Arch, Flatpak)" : null
+].filter(Boolean);
+
+const totalDownloads = release.assets.reduce((acc, asset) => acc + asset.download_count, 0);
+
 const schemaData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "Live Background Removal Lite",
-  softwareVersion: release.tag_name,
-  downloadUrl: [
+  "name": "Live Background Removal Lite",
+  "headline": "High-performance OBS plugin for real-time background removal",
+  "softwareVersion": release.tag_name,
+  "description": "A high-performance, crash-resistant OBS plugin for real-time background removal without a physical green screen. Features a smart CPU/GPU hybrid pipeline to keep gaming performance high.",
+
+  "screenshot": {
+    "@type": "ImageObject",
+    "contentUrl": "https://kaito-tokyo.github.io/live-backgroundremoval-lite/screenshot.webp",
+    "encodingFormat": "image/webp",
+    "caption": "OBS plugin real-time background removal comparison: Original footage (left) vs. Transparent output (right).",
+    "width": "1920",
+    "height": "1080",
+    "description": "A split-screen view of OBS Studio showing the plugin in action. The left side shows the raw camera feed, and the right side demonstrates the background removal effect with a checkerboard pattern."
+  },
+
+  "applicationCategory": "MultimediaApplication",
+  "applicationSubCategory": "OBS Studio Plugin",
+  "operatingSystem": supportedOSList.join(", "),
+  "softwareRequirements": "OBS Studio",
+  "featureList": [
+    "Real-time background removal without green screen",
+    "CPU/GPU Hybrid Pipeline for low resource usage",
+    "Zero-Crash Stability with modern C++ architecture",
+    "Support for Windows, macOS, and Linux"
+  ],
+
+  "downloadUrl": [
     windowsZipAsset?.browser_download_url,
     macosPkgAsset?.browser_download_url,
     ubuntuDebAsset?.browser_download_url,
   ].filter(Boolean),
-  releaseNotes: release.html_url,
+  "fileSize": windowsZipAsset?.size ? prettyBytes(windowsZipAsset.size, { binary: true }) : "10 MiB",
+  "releaseNotes": release.html_url,
+
+  "license": `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/blob/${release.tag_name}/LICENSE`,
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "availability": "https://schema.org/InStock",
+    "seller": {
+      "@type": "Person",
+      "name": "Kaito Udagawa"
+    }
+  },
+
+  "interactionStatistic": {
+    "@type": "InteractionCounter",
+    "interactionType": "https://schema.org/DownloadAction",
+    "userInteractionCount": totalDownloads
+  },
+  "author": {
+    "@type": "Person",
+    "name": "Kaito Udagawa",
+    "url": `https://github.com/${GITHUB_OWNER}`
+  },
+  "datePublished": release.published_at,
+  "dateModified": release.published_at,
+  "sameAs": [
+    `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`
+  ]
 };
 ---
 
@@ -129,7 +191,7 @@ const schemaData = {
         <ul class="download-links" style="margin-bottom: 1rem;">
           <li>
             <a
-              href="https://github.com/kaito-tokyohttps://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
+              href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
               itemprop="downloadUrl"
             >
               Arch Linux (Latest)
