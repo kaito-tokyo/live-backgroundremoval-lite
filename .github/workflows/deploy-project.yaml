@@ -427,6 +427,7 @@ jobs:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}-pdb
 
       - name: Attest build artifacts
+        id: attest
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: |
@@ -438,10 +439,14 @@ jobs:
       - name: Create Draft Release
         shell: bash
         env:
+          ATTESTATION_BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PLUGIN_NAME: ${{ fromJson(steps.metadata.outputs.buildspec).name }}
+          PLUGIN_VERSION: ${{ fromJson(steps.metadata.outputs.buildspec).version }}
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
+
+          jq -c . "$ATTESTATION_BUNDLE_PATH" > "./$PLUGIN_NAME-${PLUGIN_VERSION}-sigstore.jsonl"
 
           gh release delete "$TAG_NAME" --yes || true
 
@@ -453,6 +458,7 @@ jobs:
           gh release create "$TAG_NAME" \
             $PLUGIN_NAME-*.ddeb \
             $PLUGIN_NAME-*.deb \
+            $PLUGIN_NAME-*.jsonl \
             $PLUGIN_NAME-*.pkg \
             $PLUGIN_NAME-*.zip \
             --draft \
