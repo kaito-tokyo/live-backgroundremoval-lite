@@ -4,7 +4,11 @@ import { Octokit } from "@octokit/rest";
 import prettyBytes from "pretty-bytes";
 import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
 
-import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../../lib/info.js";
+import {
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  PRODUCTION_BASE_URL,
+} from "../../lib/info.js";
 import DefineLocalDate from "../../components/DefineLocalDate.astro";
 import Layout from "../../layouts/Layout.astro";
 
@@ -69,9 +73,7 @@ const schemaData = {
 
   screenshot: {
     "@type": "ImageObject",
-    contentUrl: joinURL(PRODUCTION_BASE_URL,
-      "screenshot.webp",
-    ),
+    contentUrl: joinURL(PRODUCTION_BASE_URL, "screenshot.webp"),
     encodingFormat: "image/webp",
     caption:
       "OBS plugin real-time background removal comparison: Original footage (left) vs. Transparent output (right).",
@@ -142,9 +144,9 @@ const schemaData = {
   </Fragment>
 
   <main class="white-box">
-    <article itemscope itemtype="https://schema.org/SoftwareApplication">
+    <article>
       <hgroup class="version-header">
-        <h1 itemprop="name">Version {release.tag_name}</h1>
+        <h1>Version {release.tag_name}</h1>
         <h2>Live Background Removal Lite</h2>
       </hgroup>
 
@@ -166,36 +168,21 @@ const schemaData = {
           {
             windowsZipAsset && (
               <li>
-                <a
-                  href={windowsZipAsset.browser_download_url}
-                  itemprop="downloadUrl"
-                >
-                  Windows (zip)
-                </a>
+                <a href={windowsZipAsset.browser_download_url}>Windows (zip)</a>
               </li>
             )
           }
           {
             macosPkgAsset && (
               <li>
-                <a
-                  href={macosPkgAsset.browser_download_url}
-                  itemprop="downloadUrl"
-                >
-                  Mac (pkg)
-                </a>
+                <a href={macosPkgAsset.browser_download_url}>Mac (pkg)</a>
               </li>
             )
           }
           {
             ubuntuDebAsset && (
               <li>
-                <a
-                  href={ubuntuDebAsset.browser_download_url}
-                  itemprop="downloadUrl"
-                >
-                  Ubuntu (deb)
-                </a>
+                <a href={ubuntuDebAsset.browser_download_url}>Ubuntu (deb)</a>
               </li>
             )
           }
@@ -205,7 +192,6 @@ const schemaData = {
           <li>
             <a
               href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
-              itemprop="downloadUrl"
             >
               Arch Linux (Latest)
             </a>
@@ -214,7 +200,6 @@ const schemaData = {
           <li>
             <a
               href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak"
-              itemprop="downloadUrl"
             >
               Flatpak (Latest)
             </a>
@@ -224,7 +209,7 @@ const schemaData = {
 
       <section class="release-notes">
         <h2>Release notes</h2>
-        <pre itemprop="releaseNotes">{releaseBody}</pre>
+        <pre>{releaseBody}</pre>
       </section>
 
       <section>
