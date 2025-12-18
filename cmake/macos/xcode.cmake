@@ -48,10 +48,11 @@ set(CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY TRUE)
 # Add all libraries to project link phase (lets Xcode handle linking)
 set(CMAKE_XCODE_LINK_BUILD_PHASE_MODE KNOWN_LOCATION)
 
+# -- DISABLED --
 # Enable codesigning with secure timestamp when not in Debug configuration (required for Notarization)
-set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=Release] "--timestamp --deep")
-set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=RelWithDebInfo] "--timestamp --deep")
-set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=MinSizeRel] "--timestamp --deep")
+# set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=Release] "--timestamp")
+# set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=RelWithDebInfo] "--timestamp")
+# set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=MinSizeRel] "--timestamp")
 
 # Enable codesigning with hardened runtime option when not in Debug configuration (required for Notarization)
 set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=Release] YES)
@@ -67,15 +68,21 @@ set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=MinSizeRel]
 # Use Swift version 5.0 by default
 set(CMAKE_XCODE_ATTRIBUTE_SWIFT_VERSION 5.0)
 
-# Use DWARF with separate dSYM files when in Release or MinSizeRel configuration.
-#
-# * Currently overruled by CMake's Xcode generator, requires adding '-g' flag to raw compiler command line for desired
-#   output configuration. Report to KitWare.
-#
-set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=Debug] dwarf)
-set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=RelWithDebInfo] dwarf)
+# -- DISABLED -- Broken settings
+# # Use DWARF with separate dSYM files when in Release or MinSizeRel configuration.
+# #
+# # * Currently overruled by CMake's Xcode generator, requires adding '-g' flag to raw compiler command line for desired
+# #   output configuration. Report to KitWare.
+# #
+# set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=Debug] dwarf)
+# set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=RelWithDebInfo] dwarf)
+# set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=Release] dwarf-with-dsym)
+# set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=MinSizeRel] dwarf-with-dsym)
+
 set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=Release] dwarf-with-dsym)
+set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=RelWithDebInfo] dwarf-with-dsym)
 set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=MinSizeRel] dwarf-with-dsym)
+set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=Debug] dwarf)
 
 # Make all symbols hidden by default (currently overriden by CMake's compiler flags)
 set(CMAKE_XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES)
@@ -168,7 +175,7 @@ endif()
 # Enable color diagnostics
 set(CMAKE_COLOR_DIAGNOSTICS TRUE)
 
-# Enable usage of RPATH in build or install configurations
+# Disable usage of RPATH in build or install configurations
 set(CMAKE_SKIP_RPATH TRUE)
 # Have Xcode set default RPATH entries
 set(CMAKE_XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS "@executable_path/../Frameworks")

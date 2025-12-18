@@ -1,9 +1,8 @@
-.deps/
+.astro/
 .vscode/
-build_*/
-CMakeFiles/
-docs/.astro/
-docs/.vscode/
-docs/dist/
-docs/node_modules/
-vcpkg_installed/
+/.deps/
+/build_*/
+/data/models/
+/docs/dist/
+/vcpkg_installed/
+node_modules/

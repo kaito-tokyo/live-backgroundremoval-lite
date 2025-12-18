@@ -1,53 +1,8 @@
-# Exclude everything
-/*
-
-# Except for default project files
-!/.github
-!/.vscode
-/.vscode/settings.json
-!/build-aux
-!/cmake
-!/data
-!/docs
-!/src
-!/tests
-!/unsupported
-/unsupported/arch/*/*
-!/unsupported/arch/*/PKGBUILD
-/unsupported/flatpak/*
-!/unsupported/flatpak/patches/
-!/unsupported/flatpak/*.xml
-!/unsupported/flatpak/*.json
-!/unsupported/flatpak/README.md
-!/vcpkg-overlay-ports
-!/vcpkg-triplets
-!/vendor
-/vendor/ConvertNcnn/*
-!/vendor/ConvertNcnn/convert.bash
-!.aiexclude
-!.clang-format
-!.gersemirc
-!.gitignore
-!buildspec.json
-!CMakeLists.txt
-!CMakePresets.json
-!CODE_OF_CONDUCT.md
-!CONTRIBUTING.md
-!FAQ.md
-!GEMINI.md
-!LICENSE
-!LICENSE.GPL-3.0-or-later
-!LICENSE.MIT
-!README.md
-!SECURITY.md
-!vcpkg-configuration.json
-!vcpkg.json
-
-# Exclude lock files
-*.lock.json
-
-# Exclude macOS legacy resource forks
+.astro/
 .DS_Store
-
-# Exclude CMake build number cache
-/cmake/.CMakeBuildNumber
+.vscode/
+/.deps/
+/build_*/
+/docs/dist/
+/vcpkg_installed/
+node_modules/

@@ -22,12 +22,12 @@ function(set_target_properties_plugin target)
 
   set_target_properties(${target} PROPERTIES VERSION 0 SOVERSION ${PLUGIN_VERSION})
 
-  install(TARGETS ${target} RUNTIME DESTINATION "${target}/bin/64bit" LIBRARY DESTINATION "${target}/bin/64bit")
+  install(TARGETS ${target} RUNTIME DESTINATION "obs-plugins/64bit" LIBRARY DESTINATION "obs-plugins/64bit")
 
   install(
     FILES "$<TARGET_PDB_FILE:${target}>"
     CONFIGURATIONS RelWithDebInfo Debug Release
-    DESTINATION "${target}/bin/64bit"
+    DESTINATION "obs-plugins/64bit"
     OPTIONAL
   )
 
@@ -75,7 +75,11 @@ function(target_install_resources target)
       source_group("Resources/${relative_path}" FILES "${data_file}")
     endforeach()
 
-    install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/data/" DESTINATION "${target}/data" USE_SOURCE_PERMISSIONS)
+    install(
+      DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/data/"
+      DESTINATION "data/obs-plugins/${target}"
+      USE_SOURCE_PERMISSIONS
+    )
 
     add_custom_command(
       TARGET ${target}
@@ -94,7 +98,7 @@ endfunction()
 function(target_add_resource target resource)
   message(DEBUG "Add resource '${resource}' to target ${target} at destination '${target_destination}'...")
 
-  install(FILES "${resource}" DESTINATION "${target}/data" COMPONENT Runtime)
+  install(FILES "${resource}" DESTINATION "data/obs-plugins/${target}" COMPONENT Runtime)
 
   add_custom_command(
     TARGET ${target}
