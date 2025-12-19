@@ -360,25 +360,49 @@ const schemaData = {
 </Layout>
 
 <script>
-  import { fileVerifiedResultStore } from "../../stores/FileVerifierStore.js";
+  import {
+    fileVerifiedResultStore,
+    type FileVerifierDroppedFileResult,
+  } from "../../stores/FileVerifierStore.js";
 
-  const verifierDropArea = document.getElementById("verifier")!;
-  const verifierResultDialog = document.getElementById(
-    "verifier-dialog",
-  )! as HTMLDialogElement;
-  if (!verifierDropArea) throw new Error("File verifier element not found.");
-  verifierDropArea?.addEventListener("file-verifier-file-dropped", (e) => {
-    const sha256 = Array.from(new Uint8Array(e.detail.sha256Buffer))
+  function uint8ArrayToHex(bytes: Uint8Array): string {
+    return Array.from(bytes)
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
-    fileVerifiedResultStore.set([
-      ...fileVerifiedResultStore.get(),
-      {
-        name: e.detail.name,
-        size: e.detail.size,
-        sha256: sha256,
-      },
-    ]);
+  }
+
+  const verifierDropArea = document.getElementById("verifier");
+  const verifierResultDialog = document.getElementById(
+    "verifier-dialog",
+  ) as HTMLDialogElement;
+
+  if (!verifierDropArea || !verifierResultDialog)
+    throw new Error("File verifier elements not found.");
+
+  verifierDropArea.addEventListener("file-verifier-file-dropped", (e) => {
+    let sha256: string | undefined;
+
+    let newResult: FileVerifierDroppedFileResult = {
+      name: e.detail.name,
+      size: e.detail.size,
+    };
+
+    if ("sha256Buffer" in e.detail) {
+      newResult = {
+        ...newResult,
+        sha256: uint8ArrayToHex(new Uint8Array(e.detail.sha256Buffer)),
+      };
+    } else {
+      newResult = {
+        ...newResult,
+        error: e.detail.error,
+      };
+    }
+
+    const currentResults = fileVerifiedResultStore.get();
+    currentResults.push(newResult);
+    fileVerifiedResultStore.set(currentResults);
+
     verifierResultDialog.showModal();
   });
 </script>
