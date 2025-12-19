@@ -41,6 +41,20 @@ const { BASE_URL } = import.meta.env;
     <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;
+        connect-src 'self' https://cloudflareinsights.com;
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data:;
+        font-src 'self';
+        object-src 'none';
+        base-uri 'none';
+        form-action 'self';
+      "
+    />
     <slot name="head" />
   </head>
   <body>

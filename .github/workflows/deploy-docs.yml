@@ -54,7 +54,24 @@ jobs:
         env:
           SITE: ${{ steps.pages.outputs.origin }}
           BASE: ${{ steps.pages.outputs.base_path }}
-        run: npx astro build --site "$SITE" --base "$BASE"
+        run: |
+          npx astro build --site "$SITE" --base "$BASE"
+          node scripts/add-sri.mjs dist
+          node scripts/generate-provenance.mjs dist provenance.json
+          mv provenance.json dist/provenance.json
+
+      - name: Attest provenance
+        id: attest
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: ${{ env.BUILD_PATH }}/dist/provenance.json
+
+      - name: Copy attestation bundle
+        env:
+          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        shell: bash
+        run: |
+          jq -c . "$BUNDLE_PATH" > "$BUILD_PATH/dist/provenance.attestation.jsonl"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
