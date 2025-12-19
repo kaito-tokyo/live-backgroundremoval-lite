@@ -394,50 +394,62 @@ jobs:
             jq -c . buildspec.json
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
-          echo "ImageVersion=$ImageVersion" >> "$GITHUB_OUTPUT"
 
       - name: Download macOS Installer
         uses: actions/download-artifact@v7
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}
+          path: ${{ runner.temp }}/assets
 
       - name: Download macOS dSYM
         uses: actions/download-artifact@v7
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}-dsym
+          path: ${{ runner.temp }}/assets
 
       - name: Download Ubuntu deb
         uses: actions/download-artifact@v7
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}
+          path: ${{ runner.temp }}/assets
 
       - name: Download Ubuntu ddeb
         uses: actions/download-artifact@v7
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}-dbgsym
+          path: ${{ runner.temp }}/assets
 
       - name: Download Windows Binary
         uses: actions/download-artifact@v7
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}
+          path: ${{ runner.temp }}/assets
 
       - name: Download Windows PDB
         uses: actions/download-artifact@v7
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}-pdb
+          path: ${{ runner.temp }}/assets
+
+      - name: Generate SHA256SUMS
+        shell: bash
+        working-directory: ${{ runner.temp }}/assets
+        env:
+          PLUGIN_NAME: ${{ fromJson(steps.metadata.outputs.buildspec).name }}
+          PLUGIN_VERSION: ${{ fromJson(steps.metadata.outputs.buildspec).version }}
+        run: |
+          sha256sum * | sort > "../$PLUGIN_NAME-$PLUGIN_VERSION-SHA256SUMS.txt"
+          cp "../$PLUGIN_NAME-$PLUGIN_VERSION-SHA256SUMS.txt" ./
 
       - name: Attest build artifacts
         id: attest
         uses: actions/attest-build-provenance@v3
         with:
-          subject-path: |
-            ${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.ddeb
-            ${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.deb
-            ${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.pkg
-            ${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.zip
+          subject-path: ${{ runner.temp }}/assets/*
 
       - name: Create Draft Release
         shell: bash
+        working-directory: ${{ runner.temp }}/assets
         env:
           ATTESTATION_BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -464,11 +476,7 @@ jobs:
           fi
 
           gh release create "$TAG_NAME" \
-            $PLUGIN_NAME-*.ddeb \
-            $PLUGIN_NAME-*.deb \
-            $PLUGIN_NAME-*.jsonl \
-            $PLUGIN_NAME-*.pkg \
-            $PLUGIN_NAME-*.zip \
+            ./* \
             --draft \
             --generate-notes \
             --title "$TAG_NAME" \
