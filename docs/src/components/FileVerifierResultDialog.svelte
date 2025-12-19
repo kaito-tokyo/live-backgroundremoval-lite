@@ -35,7 +35,7 @@
         {#if expectedAsset.size === item.size}
           <dd>✅ File size matched: {item.size} bytes</dd>
         {:else}
-          <dd>❌ File size mismatch:  expected {expectedAsset.size} bytes, got {item.size} bytes</dd>
+          <dd>❌ File size mismatch: expected {expectedAsset.size} bytes, got {item.size} bytes</dd>
         {/if}
       {:else}
         <dt><strong>{item.name}</strong></dt>

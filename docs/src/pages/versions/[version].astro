@@ -357,22 +357,10 @@ const schemaData = {
   </main>
 
   <FileVerifierResultDialog client:load id="verifier-dialog" {releaseAssets} />
-
-  <script
-    type="application/json"
-    id="release-assets-data"
-    set:html={JSON.stringify(releaseAssets)}
-  />
 </Layout>
 
 <script>
   import { fileVerifiedResultStore } from "../../stores/FileVerifierStore.js";
-  import type { FileVerifierReleaseAsset } from "../../components/FileVerifierResultDialog.svelte";
-
-  const releaseAssetsData = document.getElementById("release-assets-data")!;
-  const releaseAssets: FileVerifierReleaseAsset[] = JSON.parse(
-    releaseAssetsData.textContent,
-  );
 
   const verifierDropArea = document.getElementById("verifier")!;
   const verifierResultDialog = document.getElementById(
