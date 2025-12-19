@@ -74,19 +74,36 @@ customElements.define(
           label.classList.remove("active");
           if (!e.dataTransfer) return;
           for (const file of e.dataTransfer.files) {
-            const buffer = await file.arrayBuffer();
-            const sha256Buffer = await crypto.subtle.digest("SHA-256", buffer);
-            this.dispatchEvent(
-              new CustomEvent("file-verifier-file-dropped", {
-                detail: {
-                  name: file.name,
-                  size: file.size,
-                  sha256Buffer: sha256Buffer,
-                },
-                bubbles: true,
-                composed: true,
-              }),
-            );
+            try {
+              const buffer = await file.arrayBuffer();
+              const sha256Buffer = await crypto.subtle.digest(
+                "SHA-256",
+                buffer,
+              );
+              this.dispatchEvent(
+                new CustomEvent("file-verifier-file-dropped", {
+                  detail: {
+                    name: file.name,
+                    size: file.size,
+                    sha256Buffer: sha256Buffer,
+                  },
+                  bubbles: true,
+                  composed: true,
+                }),
+              );
+            } catch (error) {
+              this.dispatchEvent(
+                new CustomEvent("file-verifier-file-dropped", {
+                  detail: {
+                    name: file.name,
+                    size: file.size,
+                    error,
+                  },
+                  bubbles: true,
+                  composed: true,
+                }),
+              );
+            }
           }
         },
         { signal },

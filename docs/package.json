@@ -17,7 +17,6 @@
     "@astrojs/svelte": "^7.2.4",
     "@mlc-ai/web-llm": "^0.2.80",
     "@octokit/rest": "^22.0.1",
-    "@sigstore/verify": "^3.0.0",
     "astro": "^5.16.6",
     "nanostores": "^1.1.0",
     "pretty-bytes": "^7.1.0",
