@@ -93,7 +93,7 @@ customElements.define(
               );
             } catch (error) {
               this.dispatchEvent(
-                new CustomEvent("file-verifier-file-error", {
+                new CustomEvent("file-verifier-file-dropped", {
                   detail: {
                     name: file.name,
                     size: file.size,
