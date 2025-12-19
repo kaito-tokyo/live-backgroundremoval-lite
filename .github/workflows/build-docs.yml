@@ -45,4 +45,8 @@ jobs:
         env:
           SITE: ${{ steps.pages.outputs.origin }}
           BASE: ${{ steps.pages.outputs.base_path }}
-        run: npx astro build --site "$SITE" --base "$BASE"
+        run: |
+          npx astro build --site "$SITE" --base "$BASE"
+          node scripts/add-sri.mjs dist
+          node scripts/generate-provenance.mjs dist provenance.json
+          mv provenance.json dist/provenance.json
