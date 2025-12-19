@@ -10,6 +10,10 @@ import {
   GITHUB_URL,
   PRODUCTION_BASE_URL,
 } from "../../lib/info.js";
+import DefineFileVerifierDropArea from "../../components/DefineFileVerifierDropArea.astro";
+import FileVerifierResultDialog, {
+  type FileVerifierReleaseAsset,
+} from "../../components/FileVerifierResultDialog.svelte";
 import DefineLocalDate from "../../components/DefineLocalDate.astro";
 import Layout from "../../layouts/Layout.astro";
 
@@ -74,6 +78,15 @@ const ubuntuDebAsset = release.assets.find((a) =>
 );
 
 const releaseBody = release.body || "No release notes provided.";
+
+const releaseAssets = release.assets.map(
+  (asset) =>
+    ({
+      name: asset.name,
+      size: asset.size,
+      digest: asset.digest,
+    }) satisfies FileVerifierReleaseAsset,
+);
 
 const baseDescription = `Download version ${release.tag_name} of Live Background Removal Lite.`;
 const cleanBody = stripMarkdown(releaseBody);
@@ -169,6 +182,7 @@ const schemaData = {
   title={`Live Background Removal Lite ${release.tag_name} - Download & Release Notes`}
 >
   <Fragment slot="head">
+    <DefineFileVerifierDropArea />
     <DefineLocalDate />
     <meta name="description" content={dynamicDescription} />
     <link
@@ -264,6 +278,8 @@ const schemaData = {
         </a>
       </div>
 
+      <file-verifier-drop-area id="verifier"></file-verifier-drop-area>
+
       <section class="release-notes">
         <h2>Release notes</h2>
         <pre>{releaseBody}</pre>
@@ -339,7 +355,45 @@ const schemaData = {
       </nav>
     </article>
   </main>
+
+  <FileVerifierResultDialog client:load id="verifier-dialog" {releaseAssets} />
+
+  <script
+    type="application/json"
+    id="release-assets-data"
+    set:html={JSON.stringify(releaseAssets)}
+  />
 </Layout>
+
+<script>
+  import { fileVerifiedResultStore } from "../../stores/FileVerifierStore.js";
+  import type { FileVerifierReleaseAsset } from "../../components/FileVerifierResultDialog.svelte";
+
+  const releaseAssetsData = document.getElementById("release-assets-data")!;
+  const releaseAssets: FileVerifierReleaseAsset[] = JSON.parse(
+    releaseAssetsData.textContent,
+  );
+
+  const verifierDropArea = document.getElementById("verifier")!;
+  const verifierResultDialog = document.getElementById(
+    "verifier-dialog",
+  )! as HTMLDialogElement;
+  if (!verifierDropArea) throw new Error("File verifier element not found.");
+  verifierDropArea?.addEventListener("file-verifier-file-dropped", (e) => {
+    const sha256 = Array.from(new Uint8Array(e.detail.sha256Buffer))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    fileVerifiedResultStore.set([
+      ...fileVerifiedResultStore.get(),
+      {
+        name: e.detail.name,
+        size: e.detail.size,
+        sha256: sha256,
+      },
+    ]);
+    verifierResultDialog.showModal();
+  });
+</script>
 
 <style>
   .version-title-row {
