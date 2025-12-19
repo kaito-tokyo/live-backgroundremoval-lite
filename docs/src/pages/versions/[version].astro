@@ -380,21 +380,18 @@ const schemaData = {
     throw new Error("File verifier elements not found.");
 
   verifierDropArea.addEventListener("file-verifier-file-dropped", (e) => {
-    let sha256: string | undefined;
-
-    let newResult: FileVerifierDroppedFileResult = {
-      name: e.detail.name,
-      size: e.detail.size,
-    };
+    let newResult: FileVerifierDroppedFileResult;
 
     if ("sha256Buffer" in e.detail) {
       newResult = {
-        ...newResult,
+        name: e.detail.name,
+        size: e.detail.size,
         sha256: uint8ArrayToHex(new Uint8Array(e.detail.sha256Buffer)),
       };
     } else {
       newResult = {
-        ...newResult,
+        name: e.detail.name,
+        size: e.detail.size,
         error: e.detail.error,
       };
     }
