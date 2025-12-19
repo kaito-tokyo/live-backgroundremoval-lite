@@ -24,6 +24,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     permissions:
+      attestations: write
       contents: read
       id-token: write
       pages: write
