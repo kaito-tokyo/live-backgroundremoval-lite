@@ -6,7 +6,7 @@ import posthtml from "posthtml";
 console.time("[SRI] Total time");
 
 const args = process.argv.slice(2);
-if (args.length < 2) {
+if (args.length < 1) {
   console.error("Usage: node add-sri.mjs <dist-dir>");
   process.exit(1);
 }
