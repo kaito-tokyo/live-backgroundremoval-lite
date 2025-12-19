@@ -12,7 +12,7 @@ export interface FileVerifierFileDroppedSucceededDetail {
 export interface FileVerifierFileDroppedFailedDetail {
   name: string;
   size: number;
-  error: string;
+  error: unknown;
 }
 
 type FileVerifierFileDroppedDetail =

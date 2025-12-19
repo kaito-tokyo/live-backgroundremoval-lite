@@ -47,7 +47,7 @@
         {/if}
       {:else}
         <dt><strong>{item.name}</strong></dt>
-        <dd>❌ Verification failed: {item.error}</dd>
+        <dd>❌ Verification failed!</dd>
       {/if}
     {:else}
       <dt>No files received.</dt>
