@@ -476,11 +476,7 @@ jobs:
           fi
 
           gh release create "$TAG_NAME" \
-            $PLUGIN_NAME-*.ddeb \
-            $PLUGIN_NAME-*.deb \
-            $PLUGIN_NAME-*.jsonl \
-            $PLUGIN_NAME-*.pkg \
-            $PLUGIN_NAME-*.zip \
+            ./* \
             --draft \
             --generate-notes \
             --title "$TAG_NAME" \
