@@ -22,7 +22,7 @@ sudo dnf install @development-tools ninja-build rpm-build obs-studio-devel qt6-q
    cd live-backgroundremoval-lite
    ```
 
-3. Configure the project:
+2. Configure the project:
    ```bash
    cmake \
     -B build -S . \
@@ -33,29 +33,29 @@ sudo dnf install @development-tools ninja-build rpm-build obs-studio-devel qt6-q
     -GNinja
    ```
 
-4. Build the project:
+3. Build the project:
    ```bash
    cmake --build build
    ```
 
-5. Package the plugin:
+4. Package the plugin:
    ```bash
    cpack --config build/CPackConfig.cmake -G RPM
    ```
 
-6. Install the plugin:
+5. Install the plugin:
    ```bash
    sudo dnf install release/*.rpm
    ```
 
-7. Restart OBS Studio to load the plugin.
+6. Restart OBS Studio to load the plugin.
 
 ## Verifying the Installation
 
 After restarting OBS Studio:
 
 1. Right-click on a video source (e.g., your webcam)
-2. Select **"Filters"** from the context menu
+2. Select **"Effect Filters"** from the context menu
 3. Click the **"+"** button and look for **"Live Background Removal Lite"**
 
 If the plugin appears in the list, the installation was successful!
