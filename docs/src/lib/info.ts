@@ -10,6 +10,6 @@ export async function getAggregateRating() {
     ratingValue: "5.0",
     reviewCount: "1",
     bestRating: "5",
-    worstRating: "5",
+    worstRating: "1",
   };
 }
