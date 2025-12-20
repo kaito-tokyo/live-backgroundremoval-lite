@@ -95,7 +95,15 @@ const { BASE_URL } = import.meta.env;
 
   <Fragment slot="body-bottom">
     <script>
-      import "../components/LBRLBuddy.js";
+      const loadScript = () => {
+        import("../components/LBRLBuddy.js");
+      };
+
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(loadScript);
+      } else {
+        setTimeout(loadScript, 500);
+      }
     </script>
   </Fragment>
 </Layout>

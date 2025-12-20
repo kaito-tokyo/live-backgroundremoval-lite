@@ -1,10 +1,12 @@
-# Building and Installing on Fedora
+# Unsupported Build Instructions for Fedora
 
 ## ⚠️ Important Notice: Manual Build Required
 
-This plugin is not available as a pre-built package for Fedora. Users will need to build and install the plugin from source.
+This plugin is **not officially available as a pre-built package for Fedora**. Users will need to build and install the plugin from source using the instructions provided below.
 
-## Building from Source
+## Building from This Repository (Manual Installation)
+
+If you wish to proceed with building the plugin from these local files, you will need the standard Fedora build tools.
 
 ### Prerequisites
 
@@ -16,39 +18,44 @@ sudo dnf install @development-tools ninja-build rpm-build obs-studio-devel qt6-q
 
 ### Build and Install Steps
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
-   cd live-backgroundremoval-lite
-   ```
+1.  Clone the repository:
 
-2. Configure the project:
-   ```bash
-   cmake \
-    -B build -S . \
-    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    -DCMAKE_INSTALL_PREFIX=/usr \
-    -DUSE_PKGCONFIG=ON \
-    -DBUILD_TESTING=OFF \
-    -GNinja
-   ```
+    ```bash
+    git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
+    cd live-backgroundremoval-lite
+    ```
 
-3. Build the project:
-   ```bash
-   cmake --build build
-   ```
+2.  Configure the project:
 
-4. Package the plugin:
-   ```bash
-   cpack --config build/CPackConfig.cmake -G RPM
-   ```
+    ```bash
+    cmake \
+     -B build -S . \
+     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+     -DCMAKE_INSTALL_PREFIX=/usr \
+     -DUSE_PKGCONFIG=ON \
+     -DBUILD_TESTING=OFF \
+     -GNinja
+    ```
 
-5. Install the plugin:
-   ```bash
-   sudo dnf install release/*.rpm
-   ```
+3.  Build the project:
 
-6. Restart OBS Studio to load the plugin.
+    ```bash
+    cmake --build build
+    ```
+
+4.  Package the plugin:
+
+    ```bash
+    cpack --config build/CPackConfig.cmake -G RPM
+    ```
+
+5.  Install the plugin:
+
+    ```bash
+    sudo dnf install release/*.rpm
+    ```
+
+6.  Restart OBS Studio to load the plugin.
 
 ## Verifying the Installation
 

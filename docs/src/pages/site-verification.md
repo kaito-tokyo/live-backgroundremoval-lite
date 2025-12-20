@@ -99,8 +99,8 @@ You can manually verify the website's integrity using the GitHub CLI.
 #### 1. Download Provenance Files
 
 ```bash
-curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
-curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
+curl -fsS -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
+curl -fsS -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
 ```
 
 #### 2. Verify Attestation
@@ -120,6 +120,7 @@ gh attestation verify provenance.json \
 Download all files listed in the provenance:
 
 ```bash
+rm -rf site
 mkdir -p site
 jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
   .subject[] |
@@ -128,7 +129,7 @@ jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
   "url = \"\($url)\"",
   "output = \"site/\($path)\"",
   "create-dirs"
-' provenance.json | curl -fsS -K -
+' provenance.json | curl -f -K -
 ```
 
 #### 4. Generate Checksums
@@ -162,8 +163,8 @@ Here's a complete script that performs all verification steps:
 set -euo pipefail
 
 echo "==> Downloading provenance files..."
-curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
-curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
+curl -fsS -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
+curl -fsS -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
 
 echo "==> Verifying attestation..."
 gh attestation verify provenance.json \
@@ -180,7 +181,7 @@ jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
   "url = \"\($url)\"",
   "output = \"site/\($path)\"",
   "create-dirs"
-' provenance.json | curl -fsS -K -
+' provenance.json | curl -f -K -
 
 echo "==> Generating checksums..."
 jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
@@ -365,16 +366,16 @@ To verify the website yourself, you can use the following one-liner (requires ba
 
 ```bash
 gh attestation verify \
-  <(curl -fsSL https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json) \
+  <(curl -fsS https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json) \
   --repo kaito-tokyo/live-backgroundremoval-lite \
-  --bundle <(curl -fsSL https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl)
+  --bundle <(curl -fsS https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl)
 ```
 
 Or download the files first (shell-agnostic approach):
 
 ```bash
-curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
-curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
+curl -fsS -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
+curl -fsS -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
 gh attestation verify provenance.json --repo kaito-tokyo/live-backgroundremoval-lite --bundle provenance.attestation.jsonl
 ```
 

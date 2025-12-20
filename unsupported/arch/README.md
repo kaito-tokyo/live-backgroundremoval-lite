@@ -23,26 +23,25 @@ sudo pacman -S --needed base-devel git
 ### Build and Install Steps
 
 1.  Clone the repository:
+
     ```bash
     git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
     cd live-backgroundremoval-lite/unsupported/arch
     ```
 
 2.  Navigate to the directory of the version you want to build.
-
-      * **For a specific release version (stable):**
-        ```bash
-        cd live-backgroundremoval-lite
-        ```
-      * **For the latest development version:**
-        ```bash
-        cd live-backgroundremoval-lite-git
-        ```
+    - **For a specific release version (stable):**
+      ```bash
+      cd live-backgroundremoval-lite
+      ```
+    - **For the latest development version:**
+      ```bash
+      cd live-backgroundremoval-lite-git
+      ```
 
 3.  Use `makepkg` to build and install the package.
-
-      * The `-s` flag installs necessary dependencies from the official repositories.
-      * The `-i` flag installs the package after a successful build.
+    - The `-s` flag installs necessary dependencies from the official repositories.
+    - The `-i` flag installs the package after a successful build.
 
     ```bash
     makepkg -si
