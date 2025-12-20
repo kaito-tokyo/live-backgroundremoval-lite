@@ -29,7 +29,9 @@ function updateCSPDirective(cspString, directiveName, hashes) {
   const hashesString = hashes.map((h) => `'${h}'`).join(" ");
 
   if (!directiveRegex.test(cspString)) {
-    throw new Error(`CSP directive "${directiveName}" not found in CSP string.`);
+    throw new Error(
+      `CSP directive "${directiveName}" not found in CSP string.`,
+    );
   }
 
   return cspString.replace(directiveRegex, `$1 ${hashesString}`);
@@ -59,20 +61,23 @@ const cspHashPlugin = async (tree) => {
   const scriptHashes = await Promise.all(scriptsToHash.map(generateHash));
   const styleHashes = await Promise.all(stylesToHash.map(generateHash));
 
-  tree.match({ tag: "meta", attrs: { "http-equiv": "Content-Security-Policy" } }, (node) => {
-    let csp = node.attrs.content || "";
+  tree.match(
+    { tag: "meta", attrs: { "http-equiv": "Content-Security-Policy" } },
+    (node) => {
+      let csp = node.attrs.content || "";
 
-    if (scriptHashes.length > 0) {
-      csp = updateCSPDirective(csp, "script-src", scriptHashes);
-    }
+      if (scriptHashes.length > 0) {
+        csp = updateCSPDirective(csp, "script-src", scriptHashes);
+      }
 
-    if (styleHashes.length > 0) {
-      csp = updateCSPDirective(csp, "style-src", styleHashes);
-    }
+      if (styleHashes.length > 0) {
+        csp = updateCSPDirective(csp, "style-src", styleHashes);
+      }
 
-    node.attrs.content = csp;
-    return node;
-  });
+      node.attrs.content = csp;
+      return node;
+    },
+  );
 
   return tree;
 };

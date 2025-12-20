@@ -15,8 +15,8 @@ export async function generateCode() {
 export async function calculateLocalDateCspHash() {
   const code = await generateCode();
   const data = new TextEncoder().encode(code);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const base64String = Buffer.from(hashBuffer).toString('base64');
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const base64String = Buffer.from(hashBuffer).toString("base64");
   return `sha256-${base64String}`;
 }
 
