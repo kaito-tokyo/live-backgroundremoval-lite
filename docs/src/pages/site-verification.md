@@ -3,286 +3,361 @@ layout: ../layouts/MarkdownLayout.astro
 pathname: site-verification
 lang: en
 title: Live Background Removal Lite – Site Verification Guide
-description: "Learn how to verify your website with search engines (Google, Bing) and other services for the Live Background Removal Lite documentation site."
+description: "Learn how to verify the integrity and authenticity of the Live Background Removal Lite documentation website using provenance and attestation."
 ---
 
 # Site Verification Guide
 
-This guide explains how to verify ownership of the Live Background Removal Lite documentation website with various search engines and web services.
+This guide explains how to verify the integrity and authenticity of the Live Background Removal Lite documentation website using cryptographic provenance and attestation.
 
 ---
 
 ## What is Site Verification?
 
-Site verification is the process of proving to search engines and web services that you own or control a website. This is typically required to:
+Site verification for this project refers to the process of cryptographically verifying that the deployed website has not been tampered with and originates from the official GitHub repository. This is accomplished through:
 
-- Access webmaster tools and analytics
-- Submit sitemaps to search engines
-- Monitor search performance
-- Identify and fix indexing issues
-- Receive important notifications about your site
+1. **Build Provenance**: A cryptographic record of what was built and how it was built
+2. **Attestation**: A signed statement from GitHub Actions verifying the provenance
+3. **Integrity Verification**: SHA384 checksums of all deployed files
 
----
-
-## Verification Methods
-
-There are several common methods to verify site ownership:
-
-### 1. HTML File Upload
-
-Upload a verification file provided by the service to your website's root directory.
-
-**Steps:**
-
-1. Download the verification file from the service (e.g., `google[VERIFICATION_CODE].html`)
-2. Place the file in the `docs/public/` directory
-3. The file will be accessible at `https://kaito-tokyo.github.io/live-backgroundremoval-lite/google[VERIFICATION_CODE].html`
-4. Verify ownership through the service's interface
-
-### 2. HTML Meta Tag
-
-Add a meta tag to the `<head>` section of your website.
-
-**Steps:**
-
-1. Get the meta tag from the service (e.g., `<meta name="google-site-verification" content="..." />`)
-2. Add it to `docs/src/layouts/Layout.astro` in the `<head>` section (after the viewport meta tag and before the title tag)
-3. Deploy the changes
-4. Verify ownership through the service's interface
-
-**Note:** Meta tags added to `Layout.astro` will be included on all pages of the site, which is appropriate for site-wide verification.
-
-### 3. DNS Record (TXT)
-
-Add a TXT record to your domain's DNS configuration.
-
-**Note:** This method is only available if you control the DNS settings for your custom domain. For GitHub Pages sites using `github.io` domains, this method is not applicable.
+This ensures that the website you're viewing is the authentic, unmodified version built from our official source code.
 
 ---
 
-## Google Search Console Verification
+## Why is This Important?
 
-Google Search Console allows you to monitor and maintain your site's presence in Google Search results.
+Website verification provides several security guarantees:
 
-### Method 1: HTML File Upload
+- **Supply Chain Security**: Ensures the website hasn't been compromised during the build or deployment process
+- **Authenticity**: Confirms the website was built from the official GitHub repository
+- **Integrity**: Verifies that no files have been modified after deployment
+- **Transparency**: Provides a verifiable audit trail of the build process
 
-1. Go to [Google Search Console](https://search.google.com/search-console)
-2. Add your property: `https://kaito-tokyo.github.io/live-backgroundremoval-lite/`
-3. Choose "HTML file upload" as the verification method
-4. Download the verification file
-5. Add the file to `docs/public/` directory
-6. Commit and push the changes
-7. Wait for GitHub Pages to deploy
-8. Click "Verify" in Google Search Console
+---
 
-### Method 2: HTML Meta Tag
+## How It Works
 
-1. Go to [Google Search Console](https://search.google.com/search-console)
-2. Add your property
-3. Choose "HTML tag" as the verification method
-4. Copy the meta tag provided
-5. Edit `docs/src/layouts/Layout.astro`:
+### Build Process
 
-```astro
-<!-- In docs/src/layouts/Layout.astro -->
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width" />
-  <!-- Add Google verification tag here, after viewport and before title -->
-  <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
-  {
-    import.meta.env.PROD && (
-      <meta http-equiv="Content-Security-Policy" content="..." />
-    )
+When the documentation is deployed, the following security measures are automatically applied:
+
+1. **Subresource Integrity (SRI)**: All JavaScript and CSS files are hashed with SHA384
+2. **Content Security Policy (CSP)**: Script hashes are generated and added to the CSP
+3. **Provenance Generation**: A complete manifest of all files with their SHA384 hashes is created
+4. **Attestation**: GitHub Actions signs the provenance using Sigstore
+
+### Deployed Files
+
+Two files are deployed to the website root:
+
+- **`provenance.json`**: Contains the list of all files with their SHA384 hashes and build metadata
+- **`provenance.attestation.jsonl`**: The cryptographic attestation bundle from GitHub Actions
+
+These files can be accessed at:
+
+- https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json
+- https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl
+
+---
+
+## Automated Security Checks
+
+A daily security check workflow (`daily-website-security-check.yaml`) automatically verifies the website's integrity:
+
+### What the Daily Check Does
+
+1. **Downloads provenance files** from the live website
+2. **Verifies attestation** using GitHub's `gh attestation verify` command
+3. **Downloads all website files** listed in the provenance
+4. **Verifies checksums** of all downloaded files against the provenance
+
+This ensures that the deployed website matches what was built and hasn't been tampered with.
+
+### Viewing Security Check Status
+
+You can view the status of the daily security check:
+
+- **Badge**: Displayed on the homepage and in the footer
+- **Workflow runs**: https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml
+
+---
+
+## Manual Verification
+
+You can manually verify the website's integrity using the GitHub CLI.
+
+### Prerequisites
+
+- [GitHub CLI (`gh`)](https://cli.github.com/) installed
+- `curl` and `jq` installed
+
+### Step-by-Step Verification
+
+#### 1. Download Provenance Files
+
+```bash
+curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
+curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
+```
+
+#### 2. Verify Attestation
+
+Verify that the provenance was signed by GitHub Actions:
+
+```bash
+gh attestation verify provenance.json \
+  --repo kaito-tokyo/live-backgroundremoval-lite \
+  --bundle provenance.attestation.jsonl
+```
+
+**Expected output**: A message confirming the attestation is valid and signed by GitHub Actions.
+
+#### 3. Download Website Files
+
+Download all files listed in the provenance:
+
+```bash
+mkdir -p site
+jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
+  .subject[] |
+  .name as $url |
+  ($url | sub($base; "")) as $path |
+  "url = \"\($url)\"",
+  "output = \"site/\($path)\"",
+  "create-dirs"
+' provenance.json | curl -fsS -K -
+```
+
+#### 4. Generate Checksums
+
+Extract the expected checksums from the provenance:
+
+```bash
+jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
+  .subject[] |
+  (.name | sub($base; "")) as $path |
+  "\(.digest.sha384)  site/\($path)"
+' provenance.json > SHA384SUMS.txt
+```
+
+#### 5. Verify Checksums
+
+Verify that all downloaded files match their expected checksums:
+
+```bash
+sha384sum --check --strict SHA384SUMS.txt
+```
+
+**Expected output**: Each file should show "OK" indicating the checksum matches.
+
+### Complete Verification Script
+
+Here's a complete script that performs all verification steps:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+echo "==> Downloading provenance files..."
+curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
+curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
+
+echo "==> Verifying attestation..."
+gh attestation verify provenance.json \
+  --repo kaito-tokyo/live-backgroundremoval-lite \
+  --bundle provenance.attestation.jsonl
+
+echo "==> Downloading website files..."
+rm -rf site
+mkdir -p site
+jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
+  .subject[] |
+  .name as $url |
+  ($url | sub($base; "")) as $path |
+  "url = \"\($url)\"",
+  "output = \"site/\($path)\"",
+  "create-dirs"
+' provenance.json | curl -fsS -K -
+
+echo "==> Generating checksums..."
+jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
+  .subject[] |
+  (.name | sub($base; "")) as $path |
+  "\(.digest.sha384)  site/\($path)"
+' provenance.json > SHA384SUMS.txt
+
+echo "==> Verifying checksums..."
+sha384sum --check --strict SHA384SUMS.txt
+
+echo "==> ✅ Verification successful! The website is authentic and unmodified."
+```
+
+---
+
+## Understanding the Provenance File
+
+The `provenance.json` file contains detailed information about the build:
+
+### Structure
+
+```json
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "subject": [
+    {
+      "name": "https://kaito-tokyo.github.io/live-backgroundremoval-lite/index.html",
+      "digest": {
+        "sha384": "abc123..."
+      },
+      "size": 12345
+    }
+  ],
+  "predicateType": "https://slsa.dev/provenance/v1",
+  "predicate": {
+    "buildDefinition": {
+      "buildType": "https://actions.github.io/buildtypes/workflow/v1",
+      "externalParameters": {
+        "source": {
+          "uri": "https://github.com/kaito-tokyo/live-backgroundremoval-lite",
+          "digest": { "sha1": "commit-sha" }
+        },
+        "workflow": {
+          "ref": "workflow-ref",
+          "runId": "run-id"
+        }
+      },
+      "startedOn": "2024-01-01T00:00:00Z"
+    },
+    "runDetails": {
+      "builder": {
+        "id": "https://github.com/actions/runner/github-hosted"
+      }
+    }
   }
-  <title>{title}</title>
-  <!-- Rest of head content -->
-</head>
+}
 ```
 
-6. Commit, push, and deploy
-7. Click "Verify" in Google Search Console
+### Key Fields
 
----
-
-## Bing Webmaster Tools Verification
-
-Bing Webmaster Tools provides insights and tools for your site's presence in Bing search results.
-
-### Method 1: HTML File Upload
-
-1. Go to [Bing Webmaster Tools](https://www.bing.com/webmasters)
-2. Add your site: `https://kaito-tokyo.github.io/live-backgroundremoval-lite/`
-3. Choose "HTML file upload" verification
-4. Download the BingSiteAuth.xml file
-5. Add the file to `docs/public/` directory
-6. Deploy and verify
-
-### Method 2: HTML Meta Tag
-
-1. Go to [Bing Webmaster Tools](https://www.bing.com/webmasters)
-2. Add your site
-3. Choose "HTML Meta Tag" verification
-4. Copy the meta tag
-5. Add it to `docs/src/layouts/Layout.astro` in the `<head>` section (after the viewport meta tag):
-
-```astro
-<!-- In docs/src/layouts/Layout.astro, in the <head> section -->
-<meta name="msvalidate.01" content="YOUR_VERIFICATION_CODE" />
-```
-
-6. Commit, push, and wait for deployment
-7. Click "Verify" in Bing Webmaster Tools
-
----
-
-## Yandex Webmaster Verification
-
-Yandex is a popular search engine, especially in Russia and Eastern Europe.
-
-### HTML Meta Tag Method
-
-1. Go to [Yandex Webmaster](https://webmaster.yandex.com/)
-2. Add your site
-3. Choose meta tag verification
-4. Add the verification meta tag to `docs/src/layouts/Layout.astro` in the `<head>` section:
-
-```astro
-<!-- In docs/src/layouts/Layout.astro, in the <head> section -->
-<meta name="yandex-verification" content="YOUR_VERIFICATION_CODE" />
-```
-
-5. Commit, push, and wait for deployment
-6. Click "Verify" in Yandex Webmaster
-
----
-
-## GitHub Pages Specific Considerations
-
-Since this site is hosted on GitHub Pages, there are some important considerations:
-
-### Deployment Process
-
-1. Changes must be committed to the repository
-2. GitHub Actions will build and deploy the site
-3. Wait for the deployment to complete (usually 1-5 minutes)
-4. Verification files or meta tags will then be accessible
-
-### File Location
-
-- HTML verification files go in `docs/public/`
-- Meta tags go in `docs/src/layouts/Layout.astro`
-- Files in `docs/public/` are served at the root URL path
-
-### Automated Sitemap
-
-The site uses `@astrojs/sitemap` integration, which automatically generates a sitemap at:
-
-```
-https://kaito-tokyo.github.io/live-backgroundremoval-lite/sitemap-index.xml
-```
-
-This sitemap is already referenced in `robots.txt` and can be submitted to search engines after verification.
-
----
-
-## Post-Verification Steps
-
-After successfully verifying your site:
-
-### 1. Submit Sitemap
-
-Submit your sitemap to search engines:
-
-- **Google Search Console:** Sitemaps → Add new sitemap → Enter `sitemap-index.xml`
-- **Bing Webmaster Tools:** Sitemaps → Submit Sitemap → Enter full sitemap URL
-
-### 2. Monitor Performance
-
-- Check the "Performance" section in Google Search Console to see search queries and impressions
-- Review the "URL Inspection" tool to ensure pages are being indexed correctly
-
-### 3. Check for Issues
-
-- Review "Coverage" reports to identify any indexing problems
-- Fix any mobile usability issues
-- Address any security issues or manual actions
-
-### 4. Configure Settings
-
-- Set your preferred domain (with or without www, if applicable)
-- Configure crawl rate settings if needed
-- Set up email notifications for critical issues
+- **`subject`**: Array of all files with their URLs, SHA384 hashes, and sizes
+- **`source.uri`**: The GitHub repository URL
+- **`source.digest.sha1`**: The commit SHA that was built
+- **`workflow.ref`**: The workflow file that performed the build
+- **`workflow.runId`**: The specific GitHub Actions run ID
+- **`startedOn`**: Build timestamp
 
 ---
 
 ## Troubleshooting
 
-### Verification Failed
+### Attestation Verification Fails
 
-**Problem:** Verification fails even after adding the file or meta tag.
+**Problem**: `gh attestation verify` command fails.
 
-**Solutions:**
+**Solutions**:
 
-1. Clear your browser cache
-2. Wait for GitHub Pages deployment to complete (check Actions tab on GitHub)
-3. Verify the file/tag is accessible by visiting the URL directly
-4. Check for typos in the verification code
-5. Ensure the file is in the correct location (`docs/public/`)
+1. Ensure you have the latest version of GitHub CLI: `gh version`
+2. Update GitHub CLI if needed: `brew upgrade gh` (macOS) or download from https://cli.github.com
+3. Check that you're using the correct repository name: `kaito-tokyo/live-backgroundremoval-lite`
+4. Verify the attestation bundle file is not corrupted: `jq . provenance.attestation.jsonl`
 
-### File Not Found (404)
+### Checksum Verification Fails
 
-**Problem:** Verification file returns 404 error.
+**Problem**: `sha384sum --check` reports mismatches.
 
-**Solutions:**
+**Solutions**:
 
-1. Ensure the file is in `docs/public/` directory (not a subdirectory)
-2. Check that the file was committed and pushed to the repository
-3. Wait for GitHub Actions to complete the deployment
-4. Verify the build succeeded in the Actions tab
+1. **Cache Issue**: Your browser or CDN may have cached an old version. Wait a few minutes and try again.
+2. **Download Error**: Re-download the files using the curl command.
+3. **Deployment in Progress**: A new deployment might be in progress. Check the [Actions](https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions) page.
 
-### Changes Not Reflecting
+### Cannot Find Provenance Files
 
-**Problem:** Meta tag or file changes are not visible on the live site.
+**Problem**: 404 error when downloading provenance files.
 
-**Solutions:**
+**Solutions**:
 
-1. Check the GitHub Actions workflow status
-2. Clear browser cache and hard refresh (Ctrl+Shift+R or Cmd+Shift+R)
-3. Verify changes were committed to the correct branch (usually `main`)
-4. Wait a few minutes for CDN caches to clear
+1. Check the GitHub Actions deployment workflow has completed successfully
+2. Verify the website is accessible: https://kaito-tokyo.github.io/live-backgroundremoval-lite/
+3. Try accessing the provenance file directly in your browser
 
 ---
 
-## Best Practices
+## Technical Details
 
-1. **Use Multiple Verification Methods:** Consider adding both HTML file and meta tag for redundancy
-2. **Document Verification Codes:** Keep a record of which codes belong to which services
-3. **Regular Monitoring:** Check webmaster tools regularly for issues or opportunities
-4. **Sitemap Updates:** The sitemap is automatically generated, but verify it's complete after adding new pages
-5. **Security:** Treat verification codes as sensitive information; don't share them publicly
+### SLSA Provenance
+
+This project uses [SLSA (Supply chain Levels for Software Artifacts)](https://slsa.dev/) provenance format, which is an industry-standard framework for supply chain security.
+
+### Sigstore Attestation
+
+GitHub Actions uses [Sigstore](https://www.sigstore.dev/) to sign the provenance. Sigstore provides:
+
+- **Transparency**: All signatures are logged in a public transparency log
+- **Ephemeral Keys**: No long-lived signing keys to manage
+- **Certificate-based**: Uses OIDC tokens and X.509 certificates
+
+### SHA384 Hashing
+
+All files are hashed using SHA384 (SHA-2 family, 384 bits), which provides:
+
+- **Strong Security**: Cryptographically secure hash function
+- **Collision Resistance**: Practically impossible to find two files with the same hash
+- **SRI Compatibility**: Supported by modern browsers for Subresource Integrity
 
 ---
 
-## Additional Resources
+## Additional Security Measures
 
-- [Google Search Console Help](https://support.google.com/webmasters)
-- [Bing Webmaster Tools Help](https://www.bing.com/webmasters/help/webmaster-guidelines-30fba23a)
-- [Yandex Webmaster Help](https://yandex.com/support/webmaster/)
-- [GitHub Pages Documentation](https://docs.github.com/en/pages)
-- [Astro Sitemap Integration](https://docs.astro.build/en/guides/integrations-guide/sitemap/)
+Beyond provenance verification, the website implements additional security measures:
+
+### Subresource Integrity (SRI)
+
+All JavaScript and CSS files include `integrity` attributes with SHA384 hashes. Browsers automatically verify these before executing scripts or applying styles.
+
+### Content Security Policy (CSP)
+
+A strict Content Security Policy is enforced, including:
+
+- **Script restrictions**: Only scripts with specific hashes or from trusted CDNs can execute
+- **No inline scripts**: All JavaScript must be in external files with SRI
+- **Trusted Types**: Protection against DOM-based XSS attacks
+
+### HTTPS Only
+
+The website is served exclusively over HTTPS with HSTS (HTTP Strict Transport Security) enabled by GitHub Pages.
+
+---
+
+## Related Resources
+
+- **Daily Security Check Workflow**: [`.github/workflows/daily-website-security-check.yaml`](https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/.github/workflows/daily-website-security-check.yaml)
+- **Deploy Workflow**: [`.github/workflows/deploy-docs.yml`](https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/.github/workflows/deploy-docs.yml)
+- **Provenance Generation Script**: [`docs/scripts/generate-provenance.mjs`](https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/docs/scripts/generate-provenance.mjs)
+- **SLSA Documentation**: https://slsa.dev/
+- **Sigstore Documentation**: https://www.sigstore.dev/
+- **GitHub Attestations**: https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds
 
 ---
 
 ## Summary
 
-Site verification is an essential step for maintaining a healthy web presence. For the Live Background Removal Lite documentation site:
+The Live Background Removal Lite documentation website implements comprehensive supply chain security through:
 
-1. Choose your verification method (HTML file or meta tag)
-2. Add verification assets to the appropriate location
-3. Deploy via GitHub Pages
-4. Complete verification in the respective webmaster tool
-5. Submit your sitemap
-6. Monitor and maintain your site's search presence
+1. **Build provenance** with complete file manifests and SHA384 hashes
+2. **Cryptographic attestation** signed by GitHub Actions via Sigstore
+3. **Daily automated verification** to detect tampering
+4. **Manual verification** capability using standard tools
 
-For questions or issues related to site verification for this project, please open an issue on the [GitHub repository](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues).
+This ensures that users can trust the documentation website is authentic and hasn't been compromised.
+
+To verify the website yourself, simply run:
+
+```bash
+gh attestation verify \
+  <(curl -fsSL https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json) \
+  --repo kaito-tokyo/live-backgroundremoval-lite \
+  --bundle <(curl -fsSL https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl)
+```
+
+For questions or issues related to site verification, please open an issue on the [GitHub repository](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues).
