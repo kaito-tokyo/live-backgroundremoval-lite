@@ -78,6 +78,11 @@ const { BASE_URL } = import.meta.env;
       <slot />
       <footer>
         <p>&copy; 2025 Kaito Udagawa</p>
+        <p id="daily-website-security-check">
+          <a href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml" target="_blank" rel="noopener noreferrer">
+            <img src="https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml/badge.svg" alt="Daily Website Security Check">
+          </a>
+        </p>
         <p>
           <a
             href={joinURL(BASE_URL, "llms.txt")}
@@ -111,15 +116,19 @@ const { BASE_URL } = import.meta.env;
     margin: 0;
   }
 
-  footer {
-    color: #fff;
-  }
-
-  footer p {
-    display: inline-block;
+  footer, footer a {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    color: white;
+    gap: .3rem;
   }
 
   footer a {
-    color: #fff;
+    color: white;
+  }
+
+  p img {
+    vertical-align: middle;
   }
 </style>
