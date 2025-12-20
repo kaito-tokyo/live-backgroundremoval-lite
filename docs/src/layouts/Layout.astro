@@ -32,7 +32,7 @@ const { BASE_URL } = import.meta.env;
             `font-src 'self';`,
             `form-action 'self';`,
             `frame-src 'none';`,
-            `img-src 'self' data:;`,
+            `img-src 'self' data: https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml/badge.svg;`,
             `manifest-src 'self';`,
             `object-src 'none';`,
             `require-trusted-types-for 'script';`,
@@ -79,8 +79,15 @@ const { BASE_URL } = import.meta.env;
       <footer>
         <p>&copy; 2025 Kaito Udagawa</p>
         <p id="daily-website-security-check">
-          <a href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml" target="_blank" rel="noopener noreferrer">
-            <img src="https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml/badge.svg" alt="Daily Website Security Check">
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img
+              src="https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml/badge.svg"
+              alt="Daily Website Security Check"
+            />
           </a>
         </p>
         <p>
@@ -116,12 +123,12 @@ const { BASE_URL } = import.meta.env;
     margin: 0;
   }
 
-  footer, footer a {
+  footer {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     color: white;
-    gap: .3rem;
+    gap: 0.3rem;
   }
 
   footer a {
