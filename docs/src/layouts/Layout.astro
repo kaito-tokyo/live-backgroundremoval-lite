@@ -18,9 +18,13 @@ const { BASE_URL } = import.meta.env;
     <meta
       http-equiv="Content-Security-Policy"
       content={[
-        `base-uri 'none';`,
-        `connect-src 'self' https://cloudflareinsights.com;`,
         `default-src 'self';`,
+
+        `connect-src 'self' https://cloudflareinsights.com;`,
+        `script-src 'self' https://static.cloudflareinsights.com${import.meta.env.PROD ? "" : " 'unsafe-inline' 'unsafe-eval'"};`,
+        `style-src 'self'${additionalCssHashes ?? ""}${import.meta.env.PROD ? "" : " 'unsafe-inline'"};`,
+
+        `base-uri 'none';`,
         `font-src 'self';`,
         `form-action 'self';`,
         `frame-src 'none';`,
@@ -28,8 +32,6 @@ const { BASE_URL } = import.meta.env;
         `manifest-src 'self';`,
         `object-src 'none';`,
         `require-trusted-types-for 'script';`,
-        `script-src 'self' https://static.cloudflareinsights.com${import.meta.env.PROD ? "" : " 'unsafe-inline' 'unsafe-eval'"};`,
-        `style-src 'self'${additionalCssHashes ?? ""}${import.meta.env.PROD ? "" : " 'unsafe-inline'"};`,
         `upgrade-insecure-requests;`,
         `worker-src 'self';`,
       ].join(" ")}
