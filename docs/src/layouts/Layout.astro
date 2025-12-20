@@ -26,6 +26,7 @@ const { BASE_URL } = import.meta.env;
         object-src 'none';
         base-uri 'none';
         form-action 'self';
+        upgrade-insecure-requests;
       `
         .replaceAll(/[\n\s]+/g, " ")
         .trim()}
@@ -57,7 +58,6 @@ const { BASE_URL } = import.meta.env;
     />
     <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
     <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
     <slot name="head" />
   </head>
   <body>
