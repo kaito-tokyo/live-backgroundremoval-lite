@@ -170,7 +170,7 @@ gersemi -i path/to/CMakeLists.txt
 
 ### Review Process
 
-- The maintainer (@umireon) reviews issues approximately once per week
+- The maintainer (@umireon) reviews issues and pull requests regularly, typically about once per week, though response times may vary depending on availability
 - Be patient and respectful during the review process
 - If you don't receive a response within a reasonable time, feel free to ping `@umireon`
 
