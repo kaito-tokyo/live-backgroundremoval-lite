@@ -1,11 +1,7 @@
 ---
 import { joinURL, withTrailingSlash } from "ufo";
-import { Image } from "astro:assets";
 
 import Layout from "../layouts/Layout.astro";
-import effectFiltersImage from "../../public/effect-filters.png";
-import basicPropertiesImage from "../../public/basic-properties.png";
-import advancedPropertiesImage from "../../public/advanced-properties.png";
 import { GITHUB_URL, PRODUCTION_BASE_URL } from "../lib/info.js";
 
 const { BASE_URL } = import.meta.env;
@@ -79,9 +75,12 @@ const structuredData = JSON.stringify({
 
     <section id="adding-filter">
       <h2>Adding the Filter</h2>
-      <Image
-        src={effectFiltersImage}
+      <img
+        src={joinURL(BASE_URL, "effect-filters.webp")}
         alt="Screenshot of the OBS Studio Filters window, showing the selection of 'Live Background Removal Lite' from the Effect Filters list."
+        width="1552"
+        height="1032"
+        fetchpriority="high"
       />
       <ol>
         <li>
@@ -108,9 +107,11 @@ const structuredData = JSON.stringify({
 
     <section id="basic-properties">
       <h2>Basic Properties</h2>
-      <Image
-        src={basicPropertiesImage}
+      <img
+        src={joinURL(BASE_URL, "basic-properties.webp")}
         alt="Screenshot of the Basic Properties panel showing Plugin Status, Debug Window toggle, and Motion Intensity settings."
+        width="1386"
+        height="654"
       />
       <ul>
         <li>
@@ -180,9 +181,11 @@ const structuredData = JSON.stringify({
 
     <section id="advanced-properties">
       <h2>Advanced Properties</h2>
-      <Image
-        src={advancedPropertiesImage}
+      <img
+        src={joinURL(BASE_URL, "advanced-properties.webp")}
         alt="Advanced Properties panel with the 'Advanced Settings' checkbox enabled, displaying sliders for Threads, Guided Filter Eps, Mask Gamma, and Mask Bounds."
+        width="1388"
+        height="616"
       />
       <p>
         To modify the extended configurations, you must enable the <strong
@@ -257,5 +260,6 @@ const structuredData = JSON.stringify({
   main img {
     width: 100%;
     height: auto;
+    background: #21232e;
   }
 </style>
