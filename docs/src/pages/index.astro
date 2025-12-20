@@ -113,11 +113,18 @@ const structuredData = {
 
     <section id="latest-downloads">
       <h2>
-        ⬇️ Download Latest {release.tag_name} (<local-date
-          data-date={release.published_at}
-          ><time datetime={release.published_at}>{release.published_at}</time
-          ></local-date
-        >)
+        ⬇️ Download Latest {release.tag_name}
+        {
+          [
+            "(",
+            <local-date data-date={release.published_at}>
+              <time datetime={release.published_at}>
+                {release.published_at}
+              </time>
+            </local-date>,
+            ")",
+          ]
+        }
       </h2>
       <ul class="download-links">
         {
