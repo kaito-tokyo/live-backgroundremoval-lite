@@ -364,51 +364,53 @@ const schemaData = {
     id="verifier-dialog"
     data-release-assets={JSON.stringify(releaseAssets)}
   ></file-verifier-result-dialog>
+
+  <Fragment slot="body-bottom">
+    <script>
+      import { FileVerifierResultDialog } from "../../components/FileVerifierResultDialog"; // 前回のクラス定義をimport
+
+      customElements.define(
+        "file-verifier-result-dialog",
+        FileVerifierResultDialog,
+      );
+
+      function uint8ArrayToHex(bytes: Uint8Array): string {
+        return Array.from(bytes)
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+      }
+
+      const verifierDropArea = document.getElementById("verifier");
+
+      const verifierResultDialog = document.getElementById(
+        "verifier-dialog",
+      ) as FileVerifierResultDialog;
+
+      if (!verifierDropArea || !verifierResultDialog)
+        throw new Error("File verifier elements not found.");
+
+      verifierDropArea.addEventListener("file-verifier-file-dropped", (e) => {
+        const { name, size, sha256Buffer } = e.detail;
+        verifierResultDialog.addResult({
+          name,
+          size,
+          sha256: uint8ArrayToHex(new Uint8Array(sha256Buffer)),
+        });
+        verifierResultDialog.showModal();
+      });
+
+      verifierDropArea.addEventListener("file-verifier-error", (e) => {
+        const { name, size, error } = e.detail;
+        verifierResultDialog.addResult({
+          name,
+          size,
+          error,
+        });
+        verifierResultDialog.showModal();
+      });
+    </script>
+  </Fragment>
 </Layout>
-
-<script>
-  import { FileVerifierResultDialog } from "../../components/FileVerifierResultDialog"; // 前回のクラス定義をimport
-
-  customElements.define(
-    "file-verifier-result-dialog",
-    FileVerifierResultDialog,
-  );
-
-  function uint8ArrayToHex(bytes: Uint8Array): string {
-    return Array.from(bytes)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  }
-
-  const verifierDropArea = document.getElementById("verifier");
-
-  const verifierResultDialog = document.getElementById(
-    "verifier-dialog",
-  ) as FileVerifierResultDialog;
-
-  if (!verifierDropArea || !verifierResultDialog)
-    throw new Error("File verifier elements not found.");
-
-  verifierDropArea.addEventListener("file-verifier-file-dropped", (e) => {
-    const { name, size, sha256Buffer } = e.detail;
-    verifierResultDialog.addResult({
-      name,
-      size,
-      sha256: uint8ArrayToHex(new Uint8Array(sha256Buffer)),
-    });
-    verifierResultDialog.showModal();
-  });
-
-  verifierDropArea.addEventListener("file-verifier-error", (e) => {
-    const { name, size, error } = e.detail;
-    verifierResultDialog.addResult({
-      name,
-      size,
-      error,
-    });
-    verifierResultDialog.showModal();
-  });
-</script>
 
 <style is:global>
   main {

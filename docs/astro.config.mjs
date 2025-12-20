@@ -8,4 +8,7 @@ import sitemap from "@astrojs/sitemap";
 // https://astro.build/config
 export default defineConfig({
   integrations: [svelte(), sitemap()],
+  build: {
+    assets: "assets",
+  }
 });
