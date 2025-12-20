@@ -11,7 +11,6 @@ if (args.length < 2) {
 }
 
 const [distDir, outputFile] = args;
-const EXPIRATION_DAYS = 90;
 const PRODUCTION_BASE_URL =
   "https://kaito-tokyo.github.io/live-backgroundremoval-lite";
 
@@ -42,8 +41,6 @@ try {
   const runId = process.env.GITHUB_RUN_ID || "manual";
 
   const now = new Date();
-  const expiresDate = new Date(now);
-  expiresDate.setDate(expiresDate.getDate() + EXPIRATION_DAYS);
 
   const subjects = fs
     .readdirSync(distDir, { recursive: true, withFileTypes: true })
@@ -85,9 +82,6 @@ try {
       runDetails: {
         builder: {
           id: "https://github.com/actions/runner/github-hosted",
-        },
-        metadata: {
-          expiresOn: expiresDate.toISOString(),
         },
       },
     },
