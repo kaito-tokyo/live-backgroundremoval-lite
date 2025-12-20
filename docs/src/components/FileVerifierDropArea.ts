@@ -1,5 +1,5 @@
 class FileVerifierDropAreaElement extends HTMLElement {
-  l: HTMLLabelElement;
+  l!: HTMLLabelElement;
   c?: AbortController;
 
   static sheet = new CSSStyleSheet();
