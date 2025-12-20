@@ -68,6 +68,8 @@ If you discover a security vulnerability, please follow the instructions in our 
    ctest --preset macos --rerun-failed --output-on-failure
    ```
 
+> **Note**: The `macos` preset includes testing by default. For production builds without tests, use the `macos-ci` preset.
+
 ### Testing the Plugin with OBS
 
 After building, you can test the plugin with OBS Studio:
@@ -85,6 +87,8 @@ After building, you can test the plugin with OBS Studio:
    ```
 
 3. Launch OBS Studio and test your changes.
+
+> **Note**: You only need to run `cmake --preset macos` again if you've made CMake-related changes. Otherwise, just rebuild with `cmake --build --preset macos`.
 
 ### Building on Other Platforms
 
