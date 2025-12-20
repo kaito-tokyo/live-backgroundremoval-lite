@@ -125,14 +125,14 @@ To remove the plugin:
 
 **System-wide installation:**
 ```bash
-sudo rm -rf /usr/lib64/obs-plugins/live-backgroundremoval-lite.so
+sudo rm -f /usr/lib64/obs-plugins/live-backgroundremoval-lite.so
 sudo rm -rf /usr/share/obs/obs-plugins/live-backgroundremoval-lite/
 ```
 
 **User-local installation:**
 ```bash
-rm -rf ~/.config/obs-studio/plugins/live-backgroundremoval-lite.so
-rm -rf ~/.config/obs-studio/plugins/live-backgroundremoval-lite/
+rm -f ~/.config/obs-studio/plugins/lib/obs-plugins/live-backgroundremoval-lite.so
+rm -rf ~/.config/obs-studio/plugins/share/obs/obs-plugins/live-backgroundremoval-lite/
 ```
 
 ## Community Contributions
