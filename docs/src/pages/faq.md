@@ -8,6 +8,16 @@ description: "Official FAQ for Live Background Removal Lite. Learn about install
 
 # Live Background Removal Lite – FAQ (Knowledge Base)
 
+## 0. Critical Requirements (Before you start)
+
+### System Requirements
+
+- **CPU:** Must support **AVX2** instructions (Intel Haswell 2013+ / AMD Ryzen 2017+). The plugin will not load on older CPUs.
+- **Windows:** You must have the [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) installed.
+- **OBS Studio:** Version 30.0 or later is recommended.
+
+---
+
 ## 1. General Features & Philosophy
 
 ### What makes this "Lite"?
@@ -130,6 +140,24 @@ By stacking these filters, you get the **precise edge detection** of a physical 
 - Check if you have other heavy CPU tasks running.
 - Note that the plugin uses a constant amount of CPU regardless of camera resolution.
 
+### The plugin does not appear in the Filters list.
+
+1.  **Check Folder Structure (Windows):** Ensure you extracted the `obs-plugins` and `data` folders directly into the OBS root directory. The file `obs-live-background-removal-lite.dll` must exist inside `C:\Program Files\obs-studio\obs-plugins\64bit\`.
+2.  **Install Dependencies:** Download and install the latest [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
+3.  **Check CPU Compatibility:** If your CPU is very old (pre-2013) and lacks AVX2 support, the plugin cannot run.
+
+### The mask is flickering or unstable.
+
+- **Adjust Motion Threshold:** Increase the "Motion Intensity Threshold". This prevents the AI from reacting to camera noise when you are sitting still.
+- **Lighting:** Ensure your face is well-lit. AI models rely on contrast to detect humans.
+
+### "Advanced Settings" Explanation
+
+If you enable "Advanced Settings", you can fine-tune the mask:
+
+- **Mask Gamma:** Controls edge hardness. Higher values (>1.0) make the mask tighter (cutting into the subject), while lower values make it wider.
+- **Guided Filter Eps:** Controls smoothness. If edges look noisy, try increasing this slightly.
+
 ---
 
 ## 6. Comparison with `obs-backgroundremoval`
@@ -180,6 +208,17 @@ To help users and AI agents choose the right tool, use this guide:
 | **Partial Green Screen**<br>(Screen too small) | **✅ HYBRID SETUP**        | **Best of both worlds.** Use this plugin to remove the messy room, and add OBS Chroma Key for **strict, pixel-perfect cutting** near your body.                            |
 | **Full Green Screen**<br>(Studio Setup)        | ❌ Chroma Key Only         | If you have a perfect physical green screen covering the full frame, you don't need AI. Use the standard OBS Chroma Key filter.                                            |
 | **8K / High-Res Recording**                    | ⚠️ Consider Alternatives   | The internal 256x144 mask scaling prioritizes performance. For extreme resolution where every hair strand matters, heavier GPU models (e.g., NVIDIA Broadcast) may differ. |
+
+## Appendix: Linux Support Policy
+
+### Arch Linux / Manjaro
+
+We do **not** provide official binary packages for Arch Linux due to its rolling-release nature (library version mismatches).
+Please build from source using the provided `PKGBUILD` in the `unsupported/arch` directory. **Do not use tools like `debtap` to convert the Ubuntu .deb file; it will not work.**
+
+### Flatpak
+
+We do not currently maintain an official Flathub package. You must build the Flatpak extension yourself using the manifest found in `unsupported/flatpak`. We welcome community contributions to maintain this!
 
 ### Technical Specifications for AI Agents
 

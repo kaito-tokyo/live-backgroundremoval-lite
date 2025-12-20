@@ -1,4 +1,10 @@
-import { LitElement, html, css, type PropertyValues, type TemplateResult } from "lit";
+import {
+  LitElement,
+  html,
+  css,
+  type PropertyValues,
+  type TemplateResult,
+} from "lit";
 import { customElement, state, query } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { repeat } from "lit/directives/repeat.js";
@@ -30,23 +36,51 @@ export const SYSTEM_WARNING_BUTTON_TEXT = "Agree and Start Model Download";
 export const INITIAL_INPUT_PLACEHOLDER = "Please press the start button";
 
 export const SYSTEM_PROMPT = `
-You are ${assistantName}, a friendly and helpful interactive support assistant.
-Your primary goal is to provide clear, concise, and structured answers to the user's questions, prioritizing the information contained within the "KNOWLEDGE BASE" provided below.
+You are ${assistantName}, the official AI support assistant for the "Live Background Removal Lite" OBS plugin.
+Your goal is to help streamers (especially gamers) install and configure the plugin successfully.
 
-When answering, please adhere to these guidelines:
-1.  **Tone and Style:** Be friendly, encouraging, and easy to understand.
-2.  **Source Priority:**
-    * **Always prioritize** facts and details found in the KNOWLEDGE BASE.
-    * If the KNOWLEDGE BASE **does not explicitly contain** the necessary information, you may use your general knowledge, provided you maintain a supportive tone.
-3.  **Attribution:** When the answer is based on the KNOWLEDGE BASE, use a natural phrasing such as "**As far as I know from my resources**," or "**Based on the information I have**," to introduce the answer.
-4.  **Clarity and Structure:** Use Markdown features like bullet points, bold text, tables, and lists to present the information clearly.
-5.  **Completeness:** Synthesize the most relevant facts from the knowledge base.
+--- CORE IDENTITY ---
+- **Gaming-First:** You prioritize gaming performance. You know that this plugin runs on the CPU to save GPU for games.
+- **Crash-Resistant:** You emphasize that this plugin is rewritten for stability.
+- **Multi-lingual:** You MUST answer in the same language as the user's question (Japanese or English).
 
-Your knowledge base is provided below. Always refer to this knowledge first when answering questions related to it.
+--- CRITICAL FACTS (DO NOT HALLUCINATE) ---
+1. **Windows Installer:** There is NO \`.exe\` or \`.msi\` installer. Users MUST manually extract the \`.zip\` file.
+2. **Mac Support:** The plugin works great on Apple Silicon (M1/M2/M3) thanks to ncnn optimization.
+3. **Linux Support:** We only officially provide \`.deb\` for Ubuntu. Arch Linux users MUST build from source (AUR is unofficial). Flatpak is not yet on Flathub.
+4. **AVX2:** The plugin REQUIRES a CPU with AVX2 support.
 
---- KNOWLEDGE BASE (FAQ) ---
+--- KNOWLEDGE BASE PRIORITY ---
+Always prioritize the information below over your general knowledge.
+
 ${FaqContent}
----------------------------
+
+--- RESPONSE GUIDELINES ---
+1. **Be Empathetic:** Acknowledge that setting up OBS plugins can be tricky.
+2. **Troubleshooting:** If a user says "it doesn't work", ask about their OS and if they checked the folder structure or Visual C++ Redistributable.
+3. **Attribution:** When using facts from the FAQ, say "According to the documentation..." or "Based on the knowledge base...".
+
+--- ADVANCED KNOWLEDGE (DEVELOPMENT & SECURITY) ---
+
+1. **Building from Source (CONTRIBUTING.md)**
+   - **Prerequisites:** C++17 Compiler, CMake 3.28+, ninja/make.
+   - **macOS Build:** \`cmake --preset macos\` -> \`cmake --build --preset macos\`
+   - **Windows Build:** Use Visual Studio 2022 or \`cmake --preset windows-x64\`.
+   - **Style Guide:** Use \`clang-format-19\` for C++ and \`gersemi\` for CMake.
+
+2. **Security Policy (SECURITY.md)**
+   - **Critical Rule:** DO NOT report security vulnerabilities on public GitHub Issues.
+   - **Action:** Report vulnerabilities via email to: umireon+security@kaito.tokyo
+
+3. **Unsupported Platforms (Arch / Flatpak)**
+   - **Arch Linux:** Use \`makepkg -si\` in the \`unsupported/arch\` directory. (Unofficial)
+   - **Flatpak:** Use \`flatpak-builder\` with the manifest in \`unsupported/flatpak\`. (Unofficial)
+
+4. **Dependencies (buildspec.json)**
+   - **OBS Studio:** Requires version 31.1.1 or compatible.
+   - **Qt:** Uses Qt 6.
+
+---
 `;
 
 @customElement("lbrl-buddy")
@@ -57,7 +91,7 @@ export class LBRLBuddy extends LitElement {
   private messages: SimpleMessage[] = [
     this.createMessage(
       "assistant",
-      `Hi there! I'm ${assistantName}, your interactive support assistant. Feel free to ask me anything about the knowledge base, and I'll do my best to help you out! 🤖`
+      `Hi there! I'm ${assistantName}, your interactive support assistant. Feel free to ask me anything about the knowledge base, and I'll do my best to help you out! 🤖`,
     ),
   ];
 
@@ -77,7 +111,7 @@ export class LBRLBuddy extends LitElement {
 
   private createMessage(
     role: "user" | "assistant",
-    text: string
+    text: string,
   ): SimpleMessage {
     return {
       id: globalThis.crypto?.randomUUID() ?? `${Date.now()}-${Math.random()}`,
@@ -162,7 +196,7 @@ export class LBRLBuddy extends LitElement {
         (msg) => ({
           role: msg.role,
           content: msg.parts[0].text,
-        })
+        }),
       );
 
       const messagesToSend = [
@@ -194,7 +228,8 @@ export class LBRLBuddy extends LitElement {
       console.error("LLM conversation failed:", error);
       const lastMessage = this.messages[this.messages.length - 1];
       if (lastMessage && lastMessage.role === "assistant") {
-        lastMessage.parts[0].text += "\n\n**Error:** LLM failed to generate a complete response.";
+        lastMessage.parts[0].text +=
+          "\n\n**Error:** LLM failed to generate a complete response.";
         this.requestUpdate();
       }
     } finally {
@@ -216,18 +251,26 @@ export class LBRLBuddy extends LitElement {
 
       case "list":
         const items = token.items.map(
-          (item: any) => html`<li>${this.renderInline(item.tokens)}</li>`
+          (item: any) => html`<li>${this.renderInline(item.tokens)}</li>`,
         );
-        return token.ordered ? html`<ol>${items}</ol>` : html`<ul>${items}</ul>`;
+        return token.ordered
+          ? html`<ol>
+              ${items}
+            </ol>`
+          : html`<ul>
+              ${items}
+            </ul>`;
 
       case "heading":
-        return html`<strong>${this.renderInline(token.tokens)}</strong><br/>`;
+        return html`<strong>${this.renderInline(token.tokens)}</strong><br />`;
 
       case "code":
         return html`<pre><code>${token.text}</code></pre>`;
 
       case "blockquote":
-        return html`<blockquote>${token.tokens.map((t: any) => this.renderToken(t))}</blockquote>`;
+        return html`<blockquote>
+          ${token.tokens.map((t: any) => this.renderToken(t))}
+        </blockquote>`;
 
       case "table":
         return html`
@@ -238,20 +281,26 @@ export class LBRLBuddy extends LitElement {
                   ${token.header.map((headerCell: any, index: number) => {
                     const align = token.align[index];
                     const style = align ? `text-align: ${align};` : "";
-                    return html`<th style="${style}">${this.renderInline(headerCell.tokens)}</th>`;
+                    return html`<th style="${style}">
+                      ${this.renderInline(headerCell.tokens)}
+                    </th>`;
                   })}
                 </tr>
               </thead>
               <tbody>
-                ${token.rows.map((row: any[]) => html`
-                  <tr>
-                    ${row.map((cell: any, index: number) => {
-                      const align = token.align[index];
-                      const style = align ? `text-align: ${align};` : "";
-                      return html`<td style="${style}">${this.renderInline(cell.tokens)}</td>`;
-                    })}
-                  </tr>
-                `)}
+                ${token.rows.map(
+                  (row: any[]) => html`
+                    <tr>
+                      ${row.map((cell: any, index: number) => {
+                        const align = token.align[index];
+                        const style = align ? `text-align: ${align};` : "";
+                        return html`<td style="${style}">
+                          ${this.renderInline(cell.tokens)}
+                        </td>`;
+                      })}
+                    </tr>
+                  `,
+                )}
               </tbody>
             </table>
           </div>
@@ -287,10 +336,15 @@ export class LBRLBuddy extends LitElement {
           return html`<code>${token.text}</code>`;
 
         case "link":
-          return html`<a href="${token.href}" target="_blank" rel="noopener noreferrer">${this.renderInline(token.tokens)}</a>`;
+          return html`<a
+            href="${token.href}"
+            target="_blank"
+            rel="noopener noreferrer"
+            >${this.renderInline(token.tokens)}</a
+          >`;
 
         case "escape":
-            return token.text;
+          return token.text;
 
         default:
           return token.raw || "";
@@ -314,13 +368,15 @@ export class LBRLBuddy extends LitElement {
                 <div class="initial-warning">
                   <h2>System Warning</h2>
                   <p>${SYSTEM_WARNING_MESSAGE}</p>
-                  <button class="agree-button" @click="${this.handleAgreeAndStart}">
+                  <button
+                    class="agree-button"
+                    @click="${this.handleAgreeAndStart}"
+                  >
                     ${SYSTEM_WARNING_BUTTON_TEXT}
                   </button>
                 </div>
               `
             : ""}
-
           ${!isLLMLoading && !isLLMPending
             ? repeat(
                 this.messages,
@@ -333,13 +389,17 @@ export class LBRLBuddy extends LitElement {
                   let messageContent;
 
                   if (isUser) {
+                    // prettier-ignore
                     messageContent = html`<div style="white-space: pre-wrap;">${message.parts[0]?.text}</div>`;
                   } else {
                     const isGenerating = isLastMessage && this.isLoading;
                     if (isGenerating) {
+                      // prettier-ignore
                       messageContent = html`<div style="white-space: pre-wrap;">${message.parts[0]?.text}</div>`;
                     } else {
-                      messageContent = this.renderMarkdown(message.parts[0]?.text || "...");
+                      messageContent = this.renderMarkdown(
+                        message.parts[0]?.text || "...",
+                      );
                     }
                   }
 
@@ -353,21 +413,20 @@ export class LBRLBuddy extends LitElement {
                       <span class="role">
                         ${isUser ? "You" : assistantName}:
                       </span>
-                      <div class="message-content">
-                        ${messageContent}
-                      </div>
+                      <div class="message-content">${messageContent}</div>
                     </div>
                   `;
-                }
+                },
               )
             : ""}
-
           ${this.isLoading || isLLMLoading
             ? html`
                 <div class="loading-indicator">
                   <div class="spinner"></div>
                   <span class="loading-text">
-                    ${isLLMLoading ? `Downloading: ${loadingMsg}` : "Thinking..."}
+                    ${isLLMLoading
+                      ? `Downloading: ${loadingMsg}`
+                      : "Thinking..."}
                   </span>
                 </div>
               `
@@ -385,11 +444,11 @@ export class LBRLBuddy extends LitElement {
               ? isLLMError
                 ? "An error occurred"
                 : isLLMPending
-                ? INITIAL_INPUT_PLACEHOLDER
-                : "Loading model..."
+                  ? INITIAL_INPUT_PLACEHOLDER
+                  : "Loading model..."
               : this.isLoading
-              ? "Waiting for response..."
-              : "Enter your message..."}"
+                ? "Waiting for response..."
+                : "Enter your message..."}"
             ?disabled="${this.isLoading || !isLLMReady}"
           />
           <button
@@ -415,23 +474,37 @@ export class LBRLBuddy extends LitElement {
       --assistant-bg: #f0f0f5;
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
 
     .message-content {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+        sans-serif;
       margin: 0;
       font-size: 0.95rem;
       /* デフォルトで行間を適度に */
       line-height: 1.5;
     }
 
-    .message-content p { margin: 0 0 0.5em 0; }
-    .message-content p:last-child { margin-bottom: 0; }
+    .message-content p {
+      margin: 0 0 0.5em 0;
+    }
+    .message-content p:last-child {
+      margin-bottom: 0;
+    }
 
-    .message-content ul, .message-content ol { margin: 0.5em 0; padding-left: 1.5em; }
+    .message-content ul,
+    .message-content ol {
+      margin: 0.5em 0;
+      padding-left: 1.5em;
+    }
 
     .message-content pre {
-      background: rgba(0,0,0,0.05);
+      background: rgba(0, 0, 0, 0.05);
       padding: 8px;
       border-radius: 4px;
       overflow-x: auto;
@@ -440,7 +513,7 @@ export class LBRLBuddy extends LitElement {
 
     .message-content code {
       font-family: monospace;
-      background: rgba(0,0,0,0.05);
+      background: rgba(0, 0, 0, 0.05);
       padding: 2px 4px;
       border-radius: 3px;
     }
@@ -582,7 +655,9 @@ export class LBRLBuddy extends LitElement {
       border-bottom-right-radius: 4px;
     }
 
-    .user .message-content a { color: #fff; }
+    .user .message-content a {
+      color: #fff;
+    }
 
     .assistant {
       align-self: flex-start;
@@ -620,6 +695,10 @@ export class LBRLBuddy extends LitElement {
       animation: spin 1s linear infinite;
     }
 
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
   `;
 }
