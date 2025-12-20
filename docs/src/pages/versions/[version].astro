@@ -10,7 +10,9 @@ import {
   GITHUB_URL,
   PRODUCTION_BASE_URL,
 } from "../../lib/info.js";
-import DefineFileVerifierDropArea from "../../components/DefineFileVerifierDropArea.astro";
+import DefineFileVerifierDropArea, {
+  calculateFileVerifierDropAreaInlineCssHash,
+} from "../../components/DefineFileVerifierDropArea.astro";
 import FileVerifierResultDialog, {
   type FileVerifierReleaseAsset,
 } from "../../components/FileVerifierResultDialog.svelte";
@@ -180,6 +182,7 @@ const schemaData = {
 <Layout
   lang="en"
   title={`Live Background Removal Lite ${release.tag_name} - Download & Release Notes`}
+  additionalCssHashes={await calculateFileVerifierDropAreaInlineCssHash()}
 >
   <Fragment slot="head">
     <DefineFileVerifierDropArea />
@@ -223,7 +226,7 @@ const schemaData = {
         <h2>Downloads</h2>
         {release.body_text}
 
-        <ul class="download-links" style="margin-bottom: 1rem;">
+        <ul class="download-links">
           {
             windowsZipAsset && (
               <li>
@@ -247,7 +250,7 @@ const schemaData = {
           }
         </ul>
 
-        <ul class="download-links" style="margin-bottom: 1rem;">
+        <ul class="download-links">
           <li>
             <a
               href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
@@ -433,6 +436,10 @@ const schemaData = {
     color: var(--color-alert-fg);
     padding: 0.5rem 1rem;
     border-radius: 1rem;
+  }
+
+  .download-links {
+    margin-bottom: 1rem;
   }
 
   dt {

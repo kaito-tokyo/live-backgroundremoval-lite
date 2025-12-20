@@ -54,7 +54,13 @@
     {/each}
   </dl>
 
-  <form method="dialog" style="text-align: right;">
+  <form method="dialog">
     <button>Close</button>
   </form>
 </dialog>
+
+<style>
+  form {
+    text-align: right;
+  }
+</style>
