@@ -119,9 +119,7 @@ const runId = GITHUB_RUN_ID ?? "undefined";
         </div>
         <div>
           Commit: <a
-            href={revision === "undefined" ||
-            !revision ||
-            revision.trim() === ""
+            href={revision === "undefined"
               ? "#"
               : `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/commit/${revision}`}
             target="_blank"
