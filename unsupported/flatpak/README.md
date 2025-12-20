@@ -47,10 +47,9 @@ If you wish to proceed with building the plugin from these local files, you will
     ```
 
 2.  Use `flatpak-builder` to build and install the plugin.
-
-      * The `--user` flag installs the plugin for the current user.
-      * The `--install` flag installs the plugin after a successful build.
-      * `build-dir` is a temporary directory for the build process.
+    - The `--user` flag installs the plugin for the current user.
+    - The `--install` flag installs the plugin after a successful build.
+    - `build-dir` is a temporary directory for the build process.
 
     ```bash
     flatpak-builder --user --install --force-clean build-dir com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.json
