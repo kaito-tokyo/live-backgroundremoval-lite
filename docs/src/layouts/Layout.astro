@@ -25,7 +25,7 @@ const { BASE_URL } = import.meta.env;
             `default-src 'self';`,
 
             `connect-src 'self' https://cloudflareinsights.com;`,
-            `script-src 'self' https://static.cloudflareinsights.com/beacon.min.js;`,
+            `script-src 'self' https://static.cloudflareinsights.com;`,
             `style-src 'self'${additionalCssHashes ?? ""};`,
 
             `base-uri 'none';`,
