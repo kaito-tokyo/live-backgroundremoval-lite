@@ -1,6 +1,9 @@
 ---
 import { joinURL } from "ufo";
+import { GITHUB_OWNER, GITHUB_REPO } from "../lib/info";
 import "../styles/global.css";
+
+const { BASE_URL, GITHUB_SHA, GITHUB_RUN_ID } = import.meta.env;
 
 interface Props {
   lang: string;
@@ -17,7 +20,10 @@ const {
   additionalCspScriptSrc,
   trustedTypes,
 } = Astro.props;
-const { BASE_URL } = import.meta.env;
+
+const revision = GITHUB_SHA ?? "undefined";
+const shortRevision = GITHUB_SHA?.substring(0, 7) ?? "undefined";
+const runId = GITHUB_RUN_ID ?? "undefined";
 ---
 
 <!doctype html>
@@ -81,6 +87,10 @@ const { BASE_URL } = import.meta.env;
     />
     <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
 
+    <meta name="revision" content={revision} />
+    <meta name="github-repo" content={`${GITHUB_OWNER}/${GITHUB_REPO}`} />
+    <meta name="github-build-id" content={runId} />
+
     <slot name="head-bottom" />
   </head>
   <body>
@@ -103,6 +113,7 @@ const { BASE_URL } = import.meta.env;
             rel="noopener noreferrer">llms.txt</a
           >
         </div>
+        <div>Commit: <a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/commit/${GITHUB_SHA}`} target="_blank" rel="noopener noreferrer">{shortRevision}</a></div>
         <div>&copy; 2025 Kaito Udagawa</div>
       </footer>
     </div>
