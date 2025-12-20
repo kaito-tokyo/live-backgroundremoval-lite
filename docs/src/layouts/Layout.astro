@@ -21,12 +21,9 @@ const {
   trustedTypes,
 } = Astro.props;
 
-const revision =
-  GITHUB_SHA && GITHUB_SHA.trim() !== "" ? GITHUB_SHA : "undefined";
-const shortRevision =
-  GITHUB_SHA && GITHUB_SHA.trim() !== ""
-    ? GITHUB_SHA.substring(0, 7)
-    : "undefined";
+const isValidSha = GITHUB_SHA && GITHUB_SHA.trim() !== "";
+const revision = isValidSha ? GITHUB_SHA : "undefined";
+const shortRevision = isValidSha ? GITHUB_SHA.substring(0, 7) : "undefined";
 const runId = GITHUB_RUN_ID ?? "undefined";
 ---
 
