@@ -15,7 +15,7 @@ export type LLMState =
 
 export const llmStore = atom<LLMState>({ status: "pending" });
 
-const DEFAULT_MODEL_ID = "Qwen2.5-7B-Instruct-q4f16_1-MLC";
+const DEFAULT_MODEL_ID = "Hermes-3-Llama-3.2-3B-q4f16_1-MLC";
 
 export const startLLMInitialization = async (
   modelId: string = DEFAULT_MODEL_ID,
