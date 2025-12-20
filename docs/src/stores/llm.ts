@@ -37,9 +37,13 @@ export const startLLMInitialization = async (
   };
 
   try {
-    const engine: MLCEngineInterface = await CreateMLCEngine(modelId, {
-      initProgressCallback,
-    });
+    const engine: MLCEngineInterface = await CreateMLCEngine(
+      modelId,
+      {
+        initProgressCallback,
+      },
+      { context_window_size: 8192 },
+    );
 
     llmStore.set({ status: "ready", chat: engine });
   } catch (error) {
