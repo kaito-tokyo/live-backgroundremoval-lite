@@ -465,7 +465,7 @@ jobs:
           fi
 
           if [ ! -s "$ASSETS_DIR/$OUTPUT_BUNDLE" ]; then
-            echo "Error: Attestation bundle '$OUTPUT_BUNDLE' was not created or is empty." >&2
+            echo "Error: Attestation bundle '$ASSETS_DIR/$OUTPUT_BUNDLE' was not created or is empty." >&2
             exit 1
           fi
           gh release delete "$TAG_NAME" --yes || true
