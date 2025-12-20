@@ -58,6 +58,7 @@ jobs:
         run: |
           npx astro build --site "$SITE" --base "$BASE"
           node scripts/add-sri.mjs dist
+          node scripts/add-csp-hashes.mjs dist
           node scripts/generate-provenance.mjs dist provenance.json
           mv provenance.json dist/provenance.json
 

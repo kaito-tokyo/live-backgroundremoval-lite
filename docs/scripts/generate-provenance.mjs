@@ -1,8 +1,8 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
-import { execSync } from 'node:child_process';
-import process from 'node:process';
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
+import { execSync } from "node:child_process";
+import process from "node:process";
 
 const args = process.argv.slice(2);
 if (args.length < 2) {
@@ -14,7 +14,7 @@ const [distDir, outputFile] = args;
 const EXPIRATION_DAYS = 90;
 
 function deepSort(value) {
-  if (value === null || typeof value !== 'object') {
+  if (value === null || typeof value !== "object") {
     return value;
   }
 
@@ -31,8 +31,11 @@ function deepSort(value) {
 }
 
 try {
-  const commitSha = process.env.GITHUB_SHA || execSync('git rev-parse HEAD').toString().trim();
-  const repoUri = process.env.GITHUB_REPOSITORY ? `https://github.com/${process.env.GITHUB_REPOSITORY}` : "local";
+  const commitSha =
+    process.env.GITHUB_SHA || execSync("git rev-parse HEAD").toString().trim();
+  const repoUri = process.env.GITHUB_REPOSITORY
+    ? `https://github.com/${process.env.GITHUB_REPOSITORY}`
+    : "local";
   const workflowRef = process.env.GITHUB_WORKFLOW_REF || "local-manual-build";
   const runId = process.env.GITHUB_RUN_ID || "manual";
 
@@ -40,18 +43,19 @@ try {
   const expiresDate = new Date(now);
   expiresDate.setDate(expiresDate.getDate() + EXPIRATION_DAYS);
 
-  const subjects = fs.readdirSync(distDir, { recursive: true, withFileTypes: true })
-    .filter(dirent => dirent.isFile())
-    .map(dirent => {
+  const subjects = fs
+    .readdirSync(distDir, { recursive: true, withFileTypes: true })
+    .filter((dirent) => dirent.isFile())
+    .map((dirent) => {
       const fullPath = path.join(dirent.parentPath, dirent.name);
       const buffer = fs.readFileSync(fullPath);
-      const hash = crypto.createHash('sha384').update(buffer).digest('hex');
+      const hash = crypto.createHash("sha384").update(buffer).digest("hex");
       const size = Buffer.byteLength(buffer);
 
       return {
-        name: path.relative(distDir, fullPath).replace(/\\/g, '/'),
+        name: path.relative(distDir, fullPath).replace(/\\/g, "/"),
         digest: { sha384: hash },
-        size: size
+        size: size,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -66,29 +70,28 @@ try {
         externalParameters: {
           source: {
             uri: repoUri,
-            digest: { sha1: commitSha }
+            digest: { sha1: commitSha },
           },
           workflow: {
             ref: workflowRef,
-            runId: runId
-          }
+            runId: runId,
+          },
         },
         startedOn: now.toISOString(),
       },
       runDetails: {
         builder: {
-          id: "https://github.com/actions/runner/github-hosted"
+          id: "https://github.com/actions/runner/github-hosted",
         },
         metadata: {
-          expiresOn: expiresDate.toISOString()
-        }
-      }
-    }
+          expiresOn: expiresDate.toISOString(),
+        },
+      },
+    },
   };
 
   const sortedManifest = deepSort(manifestRaw);
   fs.writeFileSync(outputFile, JSON.stringify(sortedManifest, null, 2));
-
 } catch (error) {
   console.error(`Generation Failed: ${error.message}`);
   process.exit(1);

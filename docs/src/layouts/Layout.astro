@@ -1,5 +1,6 @@
 ---
 import { joinURL } from "ufo";
+import "../styles/global.css";
 
 interface Props {
   lang: string;
@@ -13,6 +14,22 @@ const { BASE_URL } = import.meta.env;
 <!doctype html>
 <html lang={lang}>
   <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content={`
+        default-src 'self';
+        script-src 'self' https://static.cloudflareinsights.com${import.meta.env.PROD ? "" : " 'unsafe-inline'"};
+        connect-src 'self' https://cloudflareinsights.com;
+        style-src 'self'${import.meta.env.PROD ? "" : " 'unsafe-inline'"};
+        img-src 'self' data:;
+        font-src 'self';
+        object-src 'none';
+        base-uri 'none';
+        form-action 'self';
+      `
+        .replaceAll(/[\n\s]+/g, " ")
+        .trim()}
+    />
     <meta charset="utf-8" />
     <title>{title}</title>
     <link
@@ -41,20 +58,6 @@ const { BASE_URL } = import.meta.env;
     <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self';
-        script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;
-        connect-src 'self' https://cloudflareinsights.com;
-        style-src 'self' 'unsafe-inline';
-        img-src 'self' data:;
-        font-src 'self';
-        object-src 'none';
-        base-uri 'none';
-        form-action 'self';
-      "
-    />
     <slot name="head" />
   </head>
   <body>
@@ -81,78 +84,6 @@ const { BASE_URL } = import.meta.env;
     ></script><!-- End Cloudflare Web Analytics -->
   </body>
 </html>
-
-<style is:global>
-  :root {
-    --color-bg: #000;
-    --color-white-box-bg: #fff;
-    --color-box-shadow: #0000001a;
-    --color-download-button-bg: #357a38;
-    --color-download-button-active-bg: #4caf50;
-    --color-download-button-fg: white;
-    --color-alert-bg: #fff3cd;
-    --color-alert-fg: #856404;
-    --color-github-black: #24292f;
-  }
-
-  .white-box {
-    max-width: 800px;
-    width: 100%;
-    margin: 1rem auto;
-    padding: 2rem;
-    box-sizing: border-box;
-    overflow: visible;
-
-    border-radius: 8px;
-    box-shadow: 0 4px 8px var(--color-box-shadow);
-
-    background-color: var(--color-white-box-bg);
-  }
-
-  ul.download-links {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 20px;
-    list-style: none;
-    padding: 0;
-  }
-
-  ul.download-links > li > a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 20px;
-    background-color: var(--color-download-button-bg);
-    color: var(--color-download-button-fg);
-    text-align: center;
-    text-decoration: none;
-    font-size: 18px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-    font-weight: bold;
-  }
-
-  ul.download-links > li > a:hover {
-    background-color: var(--color-download-button-active-bg);
-  }
-
-  .page-nav {
-    & > ul {
-      padding: 0;
-      list-style: none;
-      margin: 0;
-    }
-
-    & > ul > li {
-      display: inline;
-    }
-
-    & > ul > li:not(:last-child)::after {
-      content: " | " / "";
-    }
-  }
-</style>
 
 <style>
   body {
