@@ -257,7 +257,11 @@ The `provenance.json` file contains detailed information about the build:
 **Solutions**:
 
 1. Ensure you have the latest version of GitHub CLI: `gh version`
-2. Update GitHub CLI if needed: `brew upgrade gh` (macOS) or download from https://cli.github.com
+2. Update GitHub CLI if needed:
+   - **macOS**: `brew upgrade gh`
+   - **Ubuntu/Debian**: `sudo apt update && sudo apt upgrade gh`
+   - **Windows**: `winget upgrade GitHub.cli`
+   - **Or download from**: https://cli.github.com
 3. Check that you're using the correct repository name: `kaito-tokyo/live-backgroundremoval-lite`
 4. Verify the attestation bundle file is not corrupted: `jq . provenance.attestation.jsonl`
 
@@ -351,13 +355,21 @@ The Live Background Removal Lite documentation website implements comprehensive 
 
 This ensures that users can trust the documentation website is authentic and hasn't been compromised.
 
-To verify the website yourself, simply run:
+To verify the website yourself, you can use the following one-liner (requires bash):
 
 ```bash
 gh attestation verify \
   <(curl -fsSL https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json) \
   --repo kaito-tokyo/live-backgroundremoval-lite \
   --bundle <(curl -fsSL https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl)
+```
+
+Or download the files first (works in any shell):
+
+```bash
+curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
+curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
+gh attestation verify provenance.json --repo kaito-tokyo/live-backgroundremoval-lite --bundle provenance.attestation.jsonl
 ```
 
 For questions or issues related to site verification, please open an issue on the [GitHub repository](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues).
