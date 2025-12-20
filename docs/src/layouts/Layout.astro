@@ -5,10 +5,12 @@ import "../styles/global.css";
 interface Props {
   lang: string;
   title: string;
+  additionalCspConnectSrc?: string;
+  additionalCspScriptSrc?: string;
   trustedTypes?: string[];
 }
 
-const { lang, title, trustedTypes } = Astro.props;
+const { lang, title, additionalCspConnectSrc, additionalCspScriptSrc, trustedTypes } = Astro.props;
 const { BASE_URL } = import.meta.env;
 ---
 
@@ -18,15 +20,15 @@ const { BASE_URL } = import.meta.env;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     {
-      import.meta.env.PROD && (
+      !import.meta.env.PROD && (
         <meta
           http-equiv="Content-Security-Policy"
           content={[
             `default-src 'self';`,
 
-            `connect-src 'self' https://cloudflareinsights.com;`,
+            `connect-src 'self' https://cloudflareinsights.com${additionalCspConnectSrc ?? ""};`,
             `img-src 'self' data: https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml/badge.svg;`,
-            `script-src 'self' https://static.cloudflareinsights.com;`,
+            `script-src 'self' https://static.cloudflareinsights.com${additionalCspScriptSrc ?? ""};`,
             `style-src 'self';`,
 
             `require-trusted-types-for 'script';`,

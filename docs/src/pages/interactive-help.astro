@@ -2,9 +2,7 @@
 import { joinURL, withTrailingSlash } from "ufo";
 
 import Layout from "../layouts/Layout.astro";
-import { GITHUB_URL } from "../lib/info.js";
-
-import "../components/LBRLBuddy.ts";
+import { GITHUB_URL, PRODUCTION_BASE_URL } from "../lib/info.js";
 
 const { BASE_URL } = import.meta.env;
 ---
@@ -12,16 +10,29 @@ const { BASE_URL } = import.meta.env;
 <Layout
   lang="en"
   title="Interactive Help for OBS Background Removal"
+  additionalCspConnectSrc=" https://huggingface.co/mlc-ai/ https://raw.githubusercontent.com/mlc-ai/ https://cas-bridge.xethub.hf.co/"
+  additionalCspScriptSrc=" 'wasm-unsafe-eval'"
   trustedTypes={["lit-html"]}
 >
-  <Fragment slot="head">
+  <Fragment slot="head-info">
     <meta
       name="description"
       content="Get instant help for Live Background Removal Lite securely. This experimental AI chatbot runs 100% locally in your browser—no data is sent to servers."
     />
+    <link
+      rel="canonical"
+      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "interactive-help"))}
+    />
+  </Fragment>
+
+  <Fragment slot="head-bottom">
+    <script>
+      import '../components/LBRLBuddy.js';
+    </script>
   </Fragment>
 
   <main class="white-box">
+    <lbrl-buddy></lbrl-buddy>
 
     <div class="disclaimer-note">
       <p>
