@@ -34,9 +34,9 @@ Upload a verification file provided by the service to your website's root direct
 
 **Steps:**
 
-1. Download the verification file from the service (e.g., `google1234567890abcdef.html`)
+1. Download the verification file from the service (e.g., `google[VERIFICATION_CODE].html`)
 2. Place the file in the `docs/public/` directory
-3. The file will be accessible at `https://kaito-tokyo.github.io/live-backgroundremoval-lite/google1234567890abcdef.html`
+3. The file will be accessible at `https://kaito-tokyo.github.io/live-backgroundremoval-lite/google[VERIFICATION_CODE].html`
 4. Verify ownership through the service's interface
 
 ### 2. HTML Meta Tag
@@ -46,9 +46,11 @@ Add a meta tag to the `<head>` section of your website.
 **Steps:**
 
 1. Get the meta tag from the service (e.g., `<meta name="google-site-verification" content="..." />`)
-2. Add it to `docs/src/layouts/Layout.astro` in the `<head>` section
+2. Add it to `docs/src/layouts/Layout.astro` in the `<head>` section (after the viewport meta tag and before the title tag)
 3. Deploy the changes
 4. Verify ownership through the service's interface
+
+**Note:** Meta tags added to `Layout.astro` will be included on all pages of the site, which is appropriate for site-wide verification.
 
 ### 3. DNS Record (TXT)
 
@@ -82,11 +84,18 @@ Google Search Console allows you to monitor and maintain your site's presence in
 5. Edit `docs/src/layouts/Layout.astro`:
 
 ```astro
+<!-- In docs/src/layouts/Layout.astro -->
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width" />
-  <!-- Add Google verification tag here -->
+  <!-- Add Google verification tag here, after viewport and before title -->
   <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE" />
+  {
+    import.meta.env.PROD && (
+      <meta http-equiv="Content-Security-Policy" content="..." />
+    )
+  }
+  <title>{title}</title>
   <!-- Rest of head content -->
 </head>
 ```
@@ -115,13 +124,15 @@ Bing Webmaster Tools provides insights and tools for your site's presence in Bin
 2. Add your site
 3. Choose "HTML Meta Tag" verification
 4. Copy the meta tag
-5. Add it to `docs/src/layouts/Layout.astro` in the `<head>` section:
+5. Add it to `docs/src/layouts/Layout.astro` in the `<head>` section (after the viewport meta tag):
 
 ```astro
+<!-- In docs/src/layouts/Layout.astro, in the <head> section -->
 <meta name="msvalidate.01" content="YOUR_VERIFICATION_CODE" />
 ```
 
-6. Deploy and verify
+6. Commit, push, and wait for deployment
+7. Click "Verify" in Bing Webmaster Tools
 
 ---
 
@@ -134,13 +145,15 @@ Yandex is a popular search engine, especially in Russia and Eastern Europe.
 1. Go to [Yandex Webmaster](https://webmaster.yandex.com/)
 2. Add your site
 3. Choose meta tag verification
-4. Add the verification meta tag to `docs/src/layouts/Layout.astro`:
+4. Add the verification meta tag to `docs/src/layouts/Layout.astro` in the `<head>` section:
 
 ```astro
+<!-- In docs/src/layouts/Layout.astro, in the <head> section -->
 <meta name="yandex-verification" content="YOUR_VERIFICATION_CODE" />
 ```
 
-5. Deploy and verify
+5. Commit, push, and wait for deployment
+6. Click "Verify" in Yandex Webmaster
 
 ---
 
