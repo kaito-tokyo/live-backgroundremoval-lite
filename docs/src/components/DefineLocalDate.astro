@@ -3,11 +3,24 @@ import { transform } from "esbuild";
 
 import LocalDateRaw from "./LocalDate.ts?raw";
 
-const { code } = await transform(LocalDateRaw, {
-  loader: "ts",
-  minify: true,
-  target: "esnext",
-});
+export async function generateCode() {
+  const { code } = await transform(LocalDateRaw, {
+    loader: "ts",
+    minify: true,
+    target: "esnext",
+  });
+  return code;
+}
+
+export async function calculateLocalDateCspHash() {
+  const code = await generateCode();
+  const data = new TextEncoder().encode(code);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const base64String = Buffer.from(hashBuffer).toString('base64');
+  return `sha256-${base64String}`;
+}
+
+const code = await generateCode();
 ---
 
 <script is:inline set:html={code} />

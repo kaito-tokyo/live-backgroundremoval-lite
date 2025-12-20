@@ -10,11 +10,11 @@ import {
   GITHUB_URL,
   PRODUCTION_BASE_URL,
 } from "../../lib/info.js";
-import DefineFileVerifierDropArea from "../../components/DefineFileVerifierDropArea.astro";
+import DefineFileVerifierDropArea, { calculateFileVerifierDropAreaCspHash } from "../../components/DefineFileVerifierDropArea.astro";
 import FileVerifierResultDialog, {
   type FileVerifierReleaseAsset,
 } from "../../components/FileVerifierResultDialog.svelte";
-import DefineLocalDate from "../../components/DefineLocalDate.astro";
+import DefineLocalDate, { calculateLocalDateCspHash } from "../../components/DefineLocalDate.astro";
 import Layout from "../../layouts/Layout.astro";
 
 import GitHubMarkWhite from "../../../public/github-mark-white.svg";
