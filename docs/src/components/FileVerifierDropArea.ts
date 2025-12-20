@@ -8,40 +8,46 @@ customElements.define(
       super();
       this.attachShadow({ mode: "open" });
 
-      this.shadowRoot!.innerHTML = /*html*/ `
-        <label>
-          <div>Drag &amp; Drop file(s) here to verify</div>
-          <div>No data will be sent to the Internet</div>
-        </label>
+      const style = document.createElement("style");
+      style.textContent = /*css*/ `
+        :host {
+          display: block;
+        }
 
-        <style>
-          :host {
-            display: block;
+        label {
+          height: 7rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-direction: column;
+          border: 2px dashed #ccc;
+          border-radius: 20px;
+          transition: transform .05s;
+
+          * {
+            pointer-events: none;
           }
+        }
 
-          label {
-            height: 7rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            border: 2px dashed #ccc;
-            border-radius: 20px;
-            transition: transform .05s;
-
-            * {
-              pointer-events: none;
-            }
-          }
-
-          .active {
-            border-color: #2196F3;
-            transform: scale(1.02);
-          }
-        </style>
+        .active {
+          border-color: #2196F3;
+          transform: scale(1.02);
+        }
       `;
 
-      this.l = this.shadowRoot!.children.item(0) as HTMLLabelElement;
+      const label = document.createElement("label");
+
+      const div1 = document.createElement("div");
+      div1.textContent = "Drag & Drop file(s) here to verify";
+
+      const div2 = document.createElement("div");
+      div2.textContent = "No data will be sent to the Internet";
+
+      label.append(div1, div2);
+
+      this.shadowRoot!.append(label, style);
+
+      this.l = label;
     }
 
     connectedCallback() {

@@ -116,7 +116,7 @@ const structuredData = {
           ></local-date
         >)
       </h2>
-      <ul class="download-links" style="margin-bottom: 1rem;">
+      <ul class="download-links">
         {
           windowsZipAsset && (
             <li>
@@ -140,7 +140,7 @@ const structuredData = {
         }
       </ul>
 
-      <ul class="download-links" style="margin-bottom: 1rem;">
+      <ul class="download-links">
         <li>
           <a
             href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
@@ -159,7 +159,7 @@ const structuredData = {
       </ul>
     </section>
 
-    <section id="ask-anything" style="text-align: center;">
+    <section id="ask-anything">
       <a
         href={joinURL(BASE_URL, "interactive-help/")}
         class="ask-anything-button"
@@ -336,6 +336,10 @@ const structuredData = {
       flex-shrink: 0;
     }
 
+    .download-links {
+      margin-bottom: 1rem;
+    }
+
     .demo-container {
       display: flex;
       flex-direction: column;
@@ -374,6 +378,10 @@ const structuredData = {
     .feature-card h3 {
       margin-top: 0;
       font-size: 1.1em;
+    }
+
+    #ask-anything {
+      text-align: center;
     }
 
     .ask-anything-button {

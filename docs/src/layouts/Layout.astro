@@ -5,9 +5,10 @@ import "../styles/global.css";
 interface Props {
   lang: string;
   title: string;
+  additionalCssHashes?: string;
 }
 
-const { lang, title } = Astro.props;
+const { lang, title, additionalCssHashes } = Astro.props;
 const { BASE_URL } = import.meta.env;
 ---
 
@@ -20,12 +21,14 @@ const { BASE_URL } = import.meta.env;
         default-src 'self';
         script-src 'self' https://static.cloudflareinsights.com${import.meta.env.PROD ? "" : " 'unsafe-inline'"};
         connect-src 'self' https://cloudflareinsights.com;
-        style-src 'self'${import.meta.env.PROD ? "" : " 'unsafe-inline'"};
+        style-src 'self'${additionalCssHashes ?? ""}${import.meta.env.PROD ? "" : " 'unsafe-inline'"};
         img-src 'self' data:;
         font-src 'self';
         object-src 'none';
         base-uri 'none';
         form-action 'self';
+        upgrade-insecure-requests;
+        require-trusted-types-for 'script';
       `
         .replaceAll(/[\n\s]+/g, " ")
         .trim()}
@@ -57,7 +60,6 @@ const { BASE_URL } = import.meta.env;
     />
     <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
     <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
     <slot name="head" />
   </head>
   <body>
