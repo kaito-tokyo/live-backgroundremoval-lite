@@ -43,6 +43,9 @@ export class LBRLBuddy extends LitElement {
   @query('#messages-end')
   private messagesEnd?: HTMLDivElement;
 
+  @query('.message-list')
+  private messageList?: HTMLDivElement;
+
   // メッセージ作成ヘルパー
   private createMessage(role: "user" | "assistant", text: string): SimpleMessage {
     return {
@@ -55,7 +58,12 @@ export class LBRLBuddy extends LitElement {
 
   updated(changedProperties: PropertyValues) {
     if (changedProperties.has('messages') || changedProperties.has('isLoading')) {
-      this.messagesEnd?.scrollIntoView({ behavior: "smooth" });
+      if (this.messageList) {
+        this.messageList.scrollTo({
+          top: this.messageList.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
     }
   }
 
@@ -155,15 +163,6 @@ ${FaqContent}
     const loadingMsg = isLLMLoading ? state.message : "";
 
     return html`
-      <div style="background:#333; color:#fff; padding:10px; font-family:monospace; font-size:12px;">
-        <p>DEBUG INFO:</p>
-        <ul>
-          <li>Input Text: "${this.input}"</li>
-          <li>Input Disabled?: ${this.isLoading || !isLLMReady}</li>
-          <li>LLM Status: ${state.status}</li>
-        </ul>
-      </div>
-
       <div class="chat-container">
         <div class="message-list">
 
