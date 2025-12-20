@@ -1,6 +1,6 @@
 # Maintainer: Kaito Udagawa <umireon at kaito dot tokyo>
 pkgname=live-backgroundremoval-lite
-pkgver=2.8.1
+pkgver=3.1.0
 pkgrel=1
 pkgdesc='Live Background Removal Lite for OBS Studio'
 arch=('x86_64')
@@ -10,7 +10,7 @@ depends=('obs-studio' 'curl' 'fmt' 'ncnn' 'opencv')
 makedepends=('git' 'cmake' 'ninja')
 conflicts=("${pkgname}-git" "${pkgname}-git-debug")
 source=("${pkgname}-${pkgver}.tar.gz::https://github.com/kaito-tokyo/$pkgname/archive/refs/tags/$pkgver.tar.gz")
-sha256sums=('2b5f7827915ab4603f62880f4ef5aa64170f2ea26985167621c7d3115b10e6ef')
+sha256sums=('4aca5c69c1a6b0dd50373f38d857be70fed0d0e39f60b77b6359be37cc79913b')
 
 build() {
   cd "${pkgname}-${pkgver}"
