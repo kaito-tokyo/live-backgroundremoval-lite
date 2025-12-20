@@ -12,6 +12,7 @@ import {
   GITHUB_REPO,
   GITHUB_URL,
   PRODUCTION_BASE_URL,
+  getAggregateRating,
 } from "../lib/info.js";
 
 import { dependencies } from "../../../buildspec.json";
@@ -44,6 +45,8 @@ const ubuntuDebAsset = release.assets.find((a) =>
   a.name.endsWith("x86_64-linux-gnu.deb"),
 );
 
+const aggregateRating = await getAggregateRating();
+
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -67,6 +70,7 @@ const structuredData = {
     priceCurrency: "USD",
     availability: "https://schema.org/InStock",
   },
+  aggregateRating,
   featureList: [
     "Zero-Crash Architecture (Modern C++)",
     "Smart Hybrid Pipeline (CPU Inference + GPU Post-Processing)",
@@ -87,6 +91,7 @@ const structuredData = {
   </Fragment>
 
   <Fragment slot="head-bottom">
+    <link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
     <DefineLocalDate />
     <script
       type="application/ld+json"
@@ -103,11 +108,11 @@ const structuredData = {
     <section id="about">
       <h2>✂️ Remove your bg, Enrich your stream</h2>
       <p>
-        Live Background Removal Lite is a lightweight and easy-to-use plugin for
-        OBS Studio that allows you to remove the background from your webcam
-        feed without the need for a green screen. It uses advanced AI technology
-        to accurately detect and remove the background, leaving you with a clean
-        and professional look.
+        Live Background Removal Lite is a free, open-source, lightweight and
+        easy-to-use plugin for OBS Studio that allows you to remove the
+        background from your webcam feed without the need for a green screen. It
+        uses advanced AI technology to accurately detect and remove the
+        background, leaving you with a clean and professional look.
       </p>
     </section>
 
@@ -167,6 +172,14 @@ const structuredData = {
           </a>
         </li>
       </ul>
+
+      <p id="rating">
+        ⭐️ Rated {aggregateRating.ratingValue} / 5 ({aggregateRating.reviewCount} {aggregateRating.reviewCount === "1" ? "review" : "reviews"}) on <a
+          href="https://obsproject.com/forum/resources/live-background-removal-lite.2226/"
+          target="_blank"
+          rel="noopener noreferrer">OBS Forums</a
+        >
+      </p>
     </section>
 
     <section id="ask-anything">
@@ -349,6 +362,11 @@ const structuredData = {
         margin-bottom: 1rem;
       }
 
+      #rating {
+        text-align: center;
+        font-style: italic;
+      }
+
       .demo-container {
         display: flex;
         flex-direction: column;
@@ -357,13 +375,7 @@ const structuredData = {
       .demo-container video {
         max-width: 100%;
         height: auto;
-      }
-      .demo-image {
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        max-width: 100%;
-        height: auto;
+        background: #e0e0e0;
       }
       .demo-caption {
         margin-top: 8px;
@@ -404,7 +416,6 @@ const structuredData = {
         color: #fff;
         text-decoration: none;
         box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
-        margin: 1em auto;
         transition:
           background-color 0.2s,
           box-shadow 0.2s;
