@@ -51,7 +51,10 @@ try {
       const hash = crypto.createHash("sha384").update(buffer).digest("hex");
       const size = Buffer.byteLength(buffer);
 
-      const relativePath = path.relative(distDir, fullPath).split(path.sep).join('/');
+      const relativePath = path
+        .relative(distDir, fullPath)
+        .split(path.sep)
+        .join("/");
       return {
         name: `${PRODUCTION_BASE_URL}/${relativePath}`,
         digest: { sha384: hash },
