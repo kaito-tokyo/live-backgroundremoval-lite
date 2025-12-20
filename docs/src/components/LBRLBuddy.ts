@@ -389,15 +389,13 @@ export class LBRLBuddy extends LitElement {
                   let messageContent;
 
                   if (isUser) {
-                    messageContent = html`<div style="white-space: pre-wrap;">
-                      ${message.parts[0]?.text}
-                    </div>`;
+                    // prettier-ignore
+                    messageContent = html`<div style="white-space: pre-wrap;">${message.parts[0]?.text}</div>`;
                   } else {
                     const isGenerating = isLastMessage && this.isLoading;
                     if (isGenerating) {
-                      messageContent = html`<div style="white-space: pre-wrap;">
-                        ${message.parts[0]?.text}
-                      </div>`;
+                      // prettier-ignore
+                      messageContent = html`<div style="white-space: pre-wrap;">${message.parts[0]?.text}</div>`;
                     } else {
                       messageContent = this.renderMarkdown(
                         message.parts[0]?.text || "...",
