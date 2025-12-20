@@ -107,7 +107,7 @@ After building, you can test the plugin with OBS Studio:
 
 - **C/C++ files**: Format with `clang-format-19` after any modification
 - **CMake files**: Format with `gersemi` after any modification
-- **Configuration**: Follow the rules defined in `.clang-format` and `.editorconfig`
+- **Configuration**: Formatting rules are defined in `.clang-format` (C/C++) and `.gersemirc` (CMake); general editor settings (indentation, line endings, etc.) are defined in `.editorconfig`
 
 To format your code:
 
