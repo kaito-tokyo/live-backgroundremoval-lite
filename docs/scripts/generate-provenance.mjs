@@ -12,6 +12,8 @@ if (args.length < 2) {
 
 const [distDir, outputFile] = args;
 const EXPIRATION_DAYS = 90;
+const PRODUCTION_BASE_URL =
+  "https://kaito-tokyo.github.io/live-backgroundremoval-lite";
 
 function deepSort(value) {
   if (value === null || typeof value !== "object") {
@@ -52,8 +54,9 @@ try {
       const hash = crypto.createHash("sha384").update(buffer).digest("hex");
       const size = Buffer.byteLength(buffer);
 
+      const relativePath = path.relative(distDir, fullPath).split(path.sep).join('/');
       return {
-        name: path.relative(distDir, fullPath).replace(/\\/g, "/"),
+        name: `${PRODUCTION_BASE_URL}/${relativePath}`,
         digest: { sha384: hash },
         size: size,
       };
