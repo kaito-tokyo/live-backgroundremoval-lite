@@ -3,25 +3,22 @@ import { transform } from "esbuild";
 
 import FileVerifierDropAreaRaw from "./FileVerifierDropArea.ts?raw";
 
-export interface FileVerifierFileDroppedSucceededDetail {
+export interface FileVerifierFileDroppedDetail {
   name: string;
   size: number;
   sha256Buffer: ArrayBuffer;
 }
 
-export interface FileVerifierFileDroppedFailedDetail {
+export interface FileVerifierErrorDetail {
   name: string;
   size: number;
   error: unknown;
 }
 
-type FileVerifierFileDroppedDetail =
-  | FileVerifierFileDroppedSucceededDetail
-  | FileVerifierFileDroppedFailedDetail;
-
 declare global {
   interface HTMLElementEventMap {
     "file-verifier-file-dropped": CustomEvent<FileVerifierFileDroppedDetail>;
+    "file-verifier-error": CustomEvent<FileVerifierErrorDetail>;
   }
 }
 

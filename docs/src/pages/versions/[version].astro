@@ -13,11 +13,9 @@ import {
 import DefineFileVerifierDropArea, {
   calculateFileVerifierDropAreaInlineCssHash,
 } from "../../components/DefineFileVerifierDropArea.astro";
-import FileVerifierResultDialog, {
-  type FileVerifierReleaseAsset,
-} from "../../components/FileVerifierResultDialog.svelte";
 import DefineLocalDate from "../../components/DefineLocalDate.astro";
 import Layout from "../../layouts/Layout.astro";
+import type { FileVerifierReleaseAsset } from "../../components/FileVerifierResultDialog.js";
 
 import GitHubMarkWhite from "../../../public/github-mark-white.svg";
 
@@ -362,14 +360,19 @@ const schemaData = {
     </article>
   </main>
 
-  <FileVerifierResultDialog client:load id="verifier-dialog" {releaseAssets} />
+  <file-verifier-result-dialog
+    id="verifier-dialog"
+    data-release-assets={JSON.stringify(releaseAssets)}
+  ></file-verifier-result-dialog>
 </Layout>
 
 <script>
-  import {
-    fileVerifiedResultStore,
-    type FileVerifierDroppedFileResult,
-  } from "../../stores/FileVerifierStore.js";
+  import { FileVerifierResultDialog } from "../../components/FileVerifierResultDialog"; // 前回のクラス定義をimport
+
+  customElements.define(
+    "file-verifier-result-dialog",
+    FileVerifierResultDialog,
+  );
 
   function uint8ArrayToHex(bytes: Uint8Array): string {
     return Array.from(bytes)
@@ -378,34 +381,31 @@ const schemaData = {
   }
 
   const verifierDropArea = document.getElementById("verifier");
+
   const verifierResultDialog = document.getElementById(
     "verifier-dialog",
-  ) as HTMLDialogElement;
+  ) as FileVerifierResultDialog;
 
   if (!verifierDropArea || !verifierResultDialog)
     throw new Error("File verifier elements not found.");
 
   verifierDropArea.addEventListener("file-verifier-file-dropped", (e) => {
-    let newResult: FileVerifierDroppedFileResult;
+    const { name, size, sha256Buffer } = e.detail;
+    verifierResultDialog.addResult({
+      name,
+      size,
+      sha256: uint8ArrayToHex(new Uint8Array(sha256Buffer)),
+    });
+    verifierResultDialog.showModal();
+  });
 
-    if ("sha256Buffer" in e.detail) {
-      newResult = {
-        name: e.detail.name,
-        size: e.detail.size,
-        sha256: uint8ArrayToHex(new Uint8Array(e.detail.sha256Buffer)),
-      };
-    } else {
-      newResult = {
-        name: e.detail.name,
-        size: e.detail.size,
-        error: e.detail.error,
-      };
-    }
-
-    const currentResults = fileVerifiedResultStore.get();
-    currentResults.push(newResult);
-    fileVerifiedResultStore.set(currentResults);
-
+  verifierDropArea.addEventListener("file-verifier-error", (e) => {
+    const { name, size, error } = e.detail;
+    verifierResultDialog.addResult({
+      name,
+      size,
+      error,
+    });
     verifierResultDialog.showModal();
   });
 </script>

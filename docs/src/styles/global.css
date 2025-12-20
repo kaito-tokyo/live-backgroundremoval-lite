@@ -11,8 +11,7 @@
 }
 
 .white-box {
-  max-width: 800px;
-  width: 100%;
+  width: min(800px, 100% - 2rem);
   margin: 1rem auto;
   padding: 2rem;
   box-sizing: border-box;

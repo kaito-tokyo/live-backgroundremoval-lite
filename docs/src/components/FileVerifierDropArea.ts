@@ -81,6 +81,7 @@ customElements.define(
           if (!e.dataTransfer) return;
           for (const file of e.dataTransfer.files) {
             try {
+              throw new Error("Test error"); // --- IGNORE ---
               const buffer = await file.arrayBuffer();
               const sha256Buffer = await crypto.subtle.digest(
                 "SHA-256",
@@ -99,7 +100,7 @@ customElements.define(
               );
             } catch (error) {
               this.dispatchEvent(
-                new CustomEvent("file-verifier-file-dropped", {
+                new CustomEvent("file-verifier-error", {
                   detail: {
                     name: file.name,
                     size: file.size,
