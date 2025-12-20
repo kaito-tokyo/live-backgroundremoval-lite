@@ -81,7 +81,6 @@ customElements.define(
           if (!e.dataTransfer) return;
           for (const file of e.dataTransfer.files) {
             try {
-              throw new Error("Test error"); // --- IGNORE ---
               const buffer = await file.arrayBuffer();
               const sha256Buffer = await crypto.subtle.digest(
                 "SHA-256",
