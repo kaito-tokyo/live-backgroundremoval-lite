@@ -77,8 +77,11 @@ This ensures that the deployed website matches what was built and hasn't been ta
 
 You can view the status of the daily security check:
 
-- **Badge**: Displayed on the homepage and in the footer
+- **Badge**: A green badge with "passing" indicates successful verification. A red badge with "failing" indicates a problem. The badge is displayed on the homepage and in the footer, and links to the workflow runs.
 - **Workflow runs**: https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml
+  - Green checkmark (✓) = successful verification
+  - Red X (✗) = verification failed
+  - Yellow dot = workflow in progress
 
 ---
 
@@ -273,7 +276,10 @@ The `provenance.json` file contains detailed information about the build:
 
 1. **Cache Issue**: Your browser or CDN may have cached an old version. Wait a few minutes and try again.
 2. **Download Error**: Re-download the files using the curl command.
-3. **Deployment in Progress**: A new deployment might be in progress. Check the [Actions](https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions) page.
+3. **Deployment in Progress**: A new deployment might be in progress. Check the [Actions page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/deploy-docs.yml) for running workflows:
+   - Look for workflows with a yellow dot (in progress)
+   - Wait for the workflow to complete (green checkmark)
+   - Then retry your verification
 
 ### Cannot Find Provenance Files
 
