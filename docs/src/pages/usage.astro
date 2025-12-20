@@ -56,7 +56,7 @@ const structuredData = JSON.stringify({
 ---
 
 <Layout lang="en" title="Usage Guide - Live Background Removal Lite">
-  <Fragment slot="head">
+  <Fragment slot="head-info">
     <meta
       name="description"
       content="Comprehensive documentation on how to install, configure, and tune Live Background Removal Lite for OBS Studio."
@@ -65,12 +65,14 @@ const structuredData = JSON.stringify({
       rel="canonical"
       href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "usage"))}
     />
+  </Fragment>
+
+  <Fragment slot="head-bottom">
     <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}
     />
   </Fragment>
-  <script type="application/ld+json" set:html={structuredData} />
 
   <main class="white-box">
     <h1>Usage</h1>

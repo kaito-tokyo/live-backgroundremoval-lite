@@ -184,9 +184,7 @@ const schemaData = {
   title={`Live Background Removal Lite ${release.tag_name} - Download & Release Notes`}
   additionalCssHashes={await calculateFileVerifierDropAreaInlineCssHash()}
 >
-  <Fragment slot="head">
-    <DefineFileVerifierDropArea />
-    <DefineLocalDate />
+  <Fragment slot="head-info">
     <meta name="description" content={dynamicDescription} />
     <link
       rel="canonical"
@@ -194,6 +192,11 @@ const schemaData = {
         joinURL(PRODUCTION_BASE_URL, "versions", release.tag_name),
       )}
     />
+  </Fragment>
+
+  <Fragment slot="head-bottom">
+    <DefineFileVerifierDropArea />
+    <DefineLocalDate />
     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   </Fragment>
 

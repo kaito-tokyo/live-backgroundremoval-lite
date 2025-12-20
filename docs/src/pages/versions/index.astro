@@ -73,8 +73,7 @@ const schemaData = {
 ---
 
 <Layout lang="en" title="Version History - Live Background Removal Lite">
-  <Fragment slot="head">
-    <DefineLocalDate />
+  <Fragment slot="head-info">
     <meta
       name="description"
       content="Official release archive for Live Background Removal Lite. Access all past versions, release notes, and download links in one place."
@@ -83,6 +82,10 @@ const schemaData = {
       rel="canonical"
       href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions"))}
     />
+  </Fragment>
+
+  <Fragment slot="head-bottom">
+    <DefineLocalDate />
     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   </Fragment>
 

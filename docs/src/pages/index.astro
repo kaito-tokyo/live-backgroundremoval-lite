@@ -81,10 +81,13 @@ const structuredData = {
 ---
 
 <Layout lang="en" title="Live Background Removal Lite">
-  <Fragment slot="head">
-    <DefineLocalDate />
+  <Fragment slot="head-info">
     <meta name="description" content={structuredData.description} />
     <link rel="canonical" href={withTrailingSlash(PRODUCTION_BASE_URL)} />
+  </Fragment>
+
+  <Fragment slot="head-bottom">
+    <DefineLocalDate />
     <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}

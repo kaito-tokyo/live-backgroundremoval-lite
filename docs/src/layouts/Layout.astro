@@ -15,6 +15,8 @@ const { BASE_URL } = import.meta.env;
 <!doctype html>
 <html lang={lang}>
   <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
     <meta
       http-equiv="Content-Security-Policy"
       content={[
@@ -36,14 +38,16 @@ const { BASE_URL } = import.meta.env;
         `worker-src 'self';`,
       ].join(" ")}
     />
-    <meta charset="utf-8" />
+
     <title>{title}</title>
+    <slot name="head-info" />
     <link
       rel="alternate"
       type="text/markdown"
       href={joinURL(BASE_URL, "llms.txt")}
       title="LLM Context"
     />
+
     <link
       rel="icon"
       type="image/png"
@@ -62,8 +66,8 @@ const { BASE_URL } = import.meta.env;
       href={joinURL(BASE_URL, "apple-touch-icon.png")}
     />
     <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
-    <meta name="viewport" content="width=device-width" />
-    <slot name="head" />
+
+    <slot name="head-bottom" />
   </head>
   <body>
     <div>
