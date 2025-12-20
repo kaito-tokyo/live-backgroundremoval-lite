@@ -449,8 +449,8 @@ jobs:
 
       - name: Create Draft Release
         shell: bash
-        working-directory: ${{ runner.temp }}/assets
         env:
+          ASSETS_DIR: ${{ runner.temp }}/assets
           ATTESTATION_BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PLUGIN_NAME: ${{ fromJson(steps.metadata.outputs.buildspec).name }}
@@ -458,13 +458,13 @@ jobs:
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
 
-          OUTPUT_BUNDLE="./$PLUGIN_NAME-${PLUGIN_VERSION}-sigstore.jsonl"
-          if ! jq -c . "$ATTESTATION_BUNDLE_PATH" > "$OUTPUT_BUNDLE"; then
+          OUTPUT_BUNDLE="$PLUGIN_NAME-${PLUGIN_VERSION}-sigstore.jsonl"
+          if ! jq -c . "$ATTESTATION_BUNDLE_PATH" > "$ASSETS_DIR/$OUTPUT_BUNDLE"; then
             echo "Error: Failed to create attestation bundle from '$ATTESTATION_BUNDLE_PATH'." >&2
             exit 1
           fi
 
-          if [ ! -s "$OUTPUT_BUNDLE" ]; then
+          if [ ! -s "$ASSETS_DIR/$OUTPUT_BUNDLE" ]; then
             echo "Error: Attestation bundle '$OUTPUT_BUNDLE' was not created or is empty." >&2
             exit 1
           fi
@@ -476,7 +476,7 @@ jobs:
           fi
 
           gh release create "$TAG_NAME" \
-            ./* \
+            "$ASSETS_DIR"/* \
             --draft \
             --generate-notes \
             --title "$TAG_NAME" \
