@@ -1,4 +1,10 @@
-import { LitElement, html, css, type PropertyValues, type TemplateResult } from "lit";
+import {
+  LitElement,
+  html,
+  css,
+  type PropertyValues,
+  type TemplateResult,
+} from "lit";
 import { customElement, state, query } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { repeat } from "lit/directives/repeat.js";
@@ -85,7 +91,7 @@ export class LBRLBuddy extends LitElement {
   private messages: SimpleMessage[] = [
     this.createMessage(
       "assistant",
-      `Hi there! I'm ${assistantName}, your interactive support assistant. Feel free to ask me anything about the knowledge base, and I'll do my best to help you out! 🤖`
+      `Hi there! I'm ${assistantName}, your interactive support assistant. Feel free to ask me anything about the knowledge base, and I'll do my best to help you out! 🤖`,
     ),
   ];
 
@@ -105,7 +111,7 @@ export class LBRLBuddy extends LitElement {
 
   private createMessage(
     role: "user" | "assistant",
-    text: string
+    text: string,
   ): SimpleMessage {
     return {
       id: globalThis.crypto?.randomUUID() ?? `${Date.now()}-${Math.random()}`,
@@ -190,7 +196,7 @@ export class LBRLBuddy extends LitElement {
         (msg) => ({
           role: msg.role,
           content: msg.parts[0].text,
-        })
+        }),
       );
 
       const messagesToSend = [
@@ -222,7 +228,8 @@ export class LBRLBuddy extends LitElement {
       console.error("LLM conversation failed:", error);
       const lastMessage = this.messages[this.messages.length - 1];
       if (lastMessage && lastMessage.role === "assistant") {
-        lastMessage.parts[0].text += "\n\n**Error:** LLM failed to generate a complete response.";
+        lastMessage.parts[0].text +=
+          "\n\n**Error:** LLM failed to generate a complete response.";
         this.requestUpdate();
       }
     } finally {
@@ -244,18 +251,26 @@ export class LBRLBuddy extends LitElement {
 
       case "list":
         const items = token.items.map(
-          (item: any) => html`<li>${this.renderInline(item.tokens)}</li>`
+          (item: any) => html`<li>${this.renderInline(item.tokens)}</li>`,
         );
-        return token.ordered ? html`<ol>${items}</ol>` : html`<ul>${items}</ul>`;
+        return token.ordered
+          ? html`<ol>
+              ${items}
+            </ol>`
+          : html`<ul>
+              ${items}
+            </ul>`;
 
       case "heading":
-        return html`<strong>${this.renderInline(token.tokens)}</strong><br/>`;
+        return html`<strong>${this.renderInline(token.tokens)}</strong><br />`;
 
       case "code":
         return html`<pre><code>${token.text}</code></pre>`;
 
       case "blockquote":
-        return html`<blockquote>${token.tokens.map((t: any) => this.renderToken(t))}</blockquote>`;
+        return html`<blockquote>
+          ${token.tokens.map((t: any) => this.renderToken(t))}
+        </blockquote>`;
 
       case "table":
         return html`
@@ -266,20 +281,26 @@ export class LBRLBuddy extends LitElement {
                   ${token.header.map((headerCell: any, index: number) => {
                     const align = token.align[index];
                     const style = align ? `text-align: ${align};` : "";
-                    return html`<th style="${style}">${this.renderInline(headerCell.tokens)}</th>`;
+                    return html`<th style="${style}">
+                      ${this.renderInline(headerCell.tokens)}
+                    </th>`;
                   })}
                 </tr>
               </thead>
               <tbody>
-                ${token.rows.map((row: any[]) => html`
-                  <tr>
-                    ${row.map((cell: any, index: number) => {
-                      const align = token.align[index];
-                      const style = align ? `text-align: ${align};` : "";
-                      return html`<td style="${style}">${this.renderInline(cell.tokens)}</td>`;
-                    })}
-                  </tr>
-                `)}
+                ${token.rows.map(
+                  (row: any[]) => html`
+                    <tr>
+                      ${row.map((cell: any, index: number) => {
+                        const align = token.align[index];
+                        const style = align ? `text-align: ${align};` : "";
+                        return html`<td style="${style}">
+                          ${this.renderInline(cell.tokens)}
+                        </td>`;
+                      })}
+                    </tr>
+                  `,
+                )}
               </tbody>
             </table>
           </div>
@@ -315,10 +336,15 @@ export class LBRLBuddy extends LitElement {
           return html`<code>${token.text}</code>`;
 
         case "link":
-          return html`<a href="${token.href}" target="_blank" rel="noopener noreferrer">${this.renderInline(token.tokens)}</a>`;
+          return html`<a
+            href="${token.href}"
+            target="_blank"
+            rel="noopener noreferrer"
+            >${this.renderInline(token.tokens)}</a
+          >`;
 
         case "escape":
-            return token.text;
+          return token.text;
 
         default:
           return token.raw || "";
@@ -342,13 +368,15 @@ export class LBRLBuddy extends LitElement {
                 <div class="initial-warning">
                   <h2>System Warning</h2>
                   <p>${SYSTEM_WARNING_MESSAGE}</p>
-                  <button class="agree-button" @click="${this.handleAgreeAndStart}">
+                  <button
+                    class="agree-button"
+                    @click="${this.handleAgreeAndStart}"
+                  >
                     ${SYSTEM_WARNING_BUTTON_TEXT}
                   </button>
                 </div>
               `
             : ""}
-
           ${!isLLMLoading && !isLLMPending
             ? repeat(
                 this.messages,
@@ -361,13 +389,19 @@ export class LBRLBuddy extends LitElement {
                   let messageContent;
 
                   if (isUser) {
-                    messageContent = html`<div style="white-space: pre-wrap;">${message.parts[0]?.text}</div>`;
+                    messageContent = html`<div style="white-space: pre-wrap;">
+                      ${message.parts[0]?.text}
+                    </div>`;
                   } else {
                     const isGenerating = isLastMessage && this.isLoading;
                     if (isGenerating) {
-                      messageContent = html`<div style="white-space: pre-wrap;">${message.parts[0]?.text}</div>`;
+                      messageContent = html`<div style="white-space: pre-wrap;">
+                        ${message.parts[0]?.text}
+                      </div>`;
                     } else {
-                      messageContent = this.renderMarkdown(message.parts[0]?.text || "...");
+                      messageContent = this.renderMarkdown(
+                        message.parts[0]?.text || "...",
+                      );
                     }
                   }
 
@@ -381,21 +415,20 @@ export class LBRLBuddy extends LitElement {
                       <span class="role">
                         ${isUser ? "You" : assistantName}:
                       </span>
-                      <div class="message-content">
-                        ${messageContent}
-                      </div>
+                      <div class="message-content">${messageContent}</div>
                     </div>
                   `;
-                }
+                },
               )
             : ""}
-
           ${this.isLoading || isLLMLoading
             ? html`
                 <div class="loading-indicator">
                   <div class="spinner"></div>
                   <span class="loading-text">
-                    ${isLLMLoading ? `Downloading: ${loadingMsg}` : "Thinking..."}
+                    ${isLLMLoading
+                      ? `Downloading: ${loadingMsg}`
+                      : "Thinking..."}
                   </span>
                 </div>
               `
@@ -413,11 +446,11 @@ export class LBRLBuddy extends LitElement {
               ? isLLMError
                 ? "An error occurred"
                 : isLLMPending
-                ? INITIAL_INPUT_PLACEHOLDER
-                : "Loading model..."
+                  ? INITIAL_INPUT_PLACEHOLDER
+                  : "Loading model..."
               : this.isLoading
-              ? "Waiting for response..."
-              : "Enter your message..."}"
+                ? "Waiting for response..."
+                : "Enter your message..."}"
             ?disabled="${this.isLoading || !isLLMReady}"
           />
           <button
@@ -443,23 +476,37 @@ export class LBRLBuddy extends LitElement {
       --assistant-bg: #f0f0f5;
     }
 
-    *, *::before, *::after { box-sizing: border-box; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
 
     .message-content {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+        sans-serif;
       margin: 0;
       font-size: 0.95rem;
       /* デフォルトで行間を適度に */
       line-height: 1.5;
     }
 
-    .message-content p { margin: 0 0 0.5em 0; }
-    .message-content p:last-child { margin-bottom: 0; }
+    .message-content p {
+      margin: 0 0 0.5em 0;
+    }
+    .message-content p:last-child {
+      margin-bottom: 0;
+    }
 
-    .message-content ul, .message-content ol { margin: 0.5em 0; padding-left: 1.5em; }
+    .message-content ul,
+    .message-content ol {
+      margin: 0.5em 0;
+      padding-left: 1.5em;
+    }
 
     .message-content pre {
-      background: rgba(0,0,0,0.05);
+      background: rgba(0, 0, 0, 0.05);
       padding: 8px;
       border-radius: 4px;
       overflow-x: auto;
@@ -468,7 +515,7 @@ export class LBRLBuddy extends LitElement {
 
     .message-content code {
       font-family: monospace;
-      background: rgba(0,0,0,0.05);
+      background: rgba(0, 0, 0, 0.05);
       padding: 2px 4px;
       border-radius: 3px;
     }
@@ -610,7 +657,9 @@ export class LBRLBuddy extends LitElement {
       border-bottom-right-radius: 4px;
     }
 
-    .user .message-content a { color: #fff; }
+    .user .message-content a {
+      color: #fff;
+    }
 
     .assistant {
       align-self: flex-start;
@@ -648,6 +697,10 @@ export class LBRLBuddy extends LitElement {
       animation: spin 1s linear infinite;
     }
 
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
   `;
 }

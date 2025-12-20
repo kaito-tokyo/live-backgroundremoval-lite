@@ -3,7 +3,11 @@ import { joinURL, withTrailingSlash } from "ufo";
 
 import Layout from "../layouts/Layout.astro";
 import { GITHUB_URL, PRODUCTION_BASE_URL } from "../lib/info.js";
-import { SYSTEM_WARNING_MESSAGE, SYSTEM_WARNING_BUTTON_TEXT, INITIAL_INPUT_PLACEHOLDER } from "../components/LBRLBuddy.js";
+import {
+  SYSTEM_WARNING_MESSAGE,
+  SYSTEM_WARNING_BUTTON_TEXT,
+  INITIAL_INPUT_PLACEHOLDER,
+} from "../components/LBRLBuddy.js";
 
 const { BASE_URL } = import.meta.env;
 ---
@@ -39,11 +43,7 @@ const { BASE_URL } = import.meta.env;
           </div>
         </div>
         <form>
-          <input
-            type="text"
-            placeholder={INITIAL_INPUT_PLACEHOLDER}
-            disabled
-          />
+          <input type="text" placeholder={INITIAL_INPUT_PLACEHOLDER} disabled />
           <button type="submit" disabled>Waiting</button>
         </form>
       </div>
@@ -102,90 +102,90 @@ const { BASE_URL } = import.meta.env;
     --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
-    .chat-container {
+  .chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    height: 80dvh;
+    border: var(--border);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    width: 100%;
+    background-color: var(--background-color);
+
+    .message-list {
       display: flex;
       flex-direction: column;
-      height: 80vh;
-      height: 80dvh;
-      border: var(--border);
-      border-radius: var(--border-radius);
-      overflow: hidden;
-      width: 100%;
-      background-color: var(--background-color);
-
-      .message-list {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 15px;
-        scroll-behavior: auto;
-      }
-
-      button {
-        padding: 10px 15px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-weight: 500;
-        transition: opacity 0.2s;
-      }
-
-      button[type="submit"] {
-        background-color: var(--primary-color);
-        color: white;
-      }
-
-      button:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-      }
-
-      form {
-        display: flex;
-        gap: 10px;
-        padding: 10px;
-        border-top: var(--border);
-        background-color: #fff;
-      }
-
-      input[type="text"] {
-        flex-grow: 1;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        outline: none;
-        font-size: 16px;
-      }
-
-      input[type="text"]:focus {
-        border-color: var(--primary-color);
-      }
-
-      .initial-warning {
-        border-radius: var(--border-radius);
-        box-shadow: var(--box-shadow);
-        overflow-wrap: anywhere;
-        padding: 15px;
-        background-color: #fff3cd;
-        color: #856404;
-        margin-bottom: 10px;
-      }
-
-      .initial-warning h2 {
-        font-size: 1rem;
-        font-weight: bold;
-        margin-top: 0;
-      }
-
-      .agree-button {
-        background-color: #28a745;
-        color: white;
-        width: 100%;
-        margin-top: 10px;
-      }
+      gap: 16px;
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 15px;
+      scroll-behavior: auto;
     }
+
+    button {
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: opacity 0.2s;
+    }
+
+    button[type="submit"] {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    form {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      border-top: var(--border);
+      background-color: #fff;
+    }
+
+    input[type="text"] {
+      flex-grow: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      outline: none;
+      font-size: 16px;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary-color);
+    }
+
+    .initial-warning {
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow-wrap: anywhere;
+      padding: 15px;
+      background-color: #fff3cd;
+      color: #856404;
+      margin-bottom: 10px;
+    }
+
+    .initial-warning h2 {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-top: 0;
+    }
+
+    .agree-button {
+      background-color: #28a745;
+      color: white;
+      width: 100%;
+      margin-top: 10px;
+    }
+  }
 
   .model-attribution {
     font-style: italic;
