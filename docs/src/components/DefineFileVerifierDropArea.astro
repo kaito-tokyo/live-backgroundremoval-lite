@@ -73,22 +73,6 @@ export async function generateCode() {
   return mangleClassNames(code);
 }
 
-export async function calculateFileVerifierDropAreaInlineCssHash() {
-  const hashes = await Promise.all(
-    [...FileVerifierDropAreaRaw.matchAll(/\/\*css\*\/\s*`([\s\S]*?)`/g)].map(
-      async (match) => {
-        const code = mangleClassNames(aggressiveMinify(match[1]));
-        const data = new TextEncoder().encode(code);
-        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-        const base64String = Buffer.from(hashBuffer).toString("base64");
-        return ` 'sha256-${base64String}'`;
-      },
-    ),
-  );
-
-  return hashes.join("");
-}
-
 const code = await generateCode();
 ---
 

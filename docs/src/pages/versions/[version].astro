@@ -10,9 +10,7 @@ import {
   GITHUB_URL,
   PRODUCTION_BASE_URL,
 } from "../../lib/info.js";
-import DefineFileVerifierDropArea, {
-  calculateFileVerifierDropAreaInlineCssHash,
-} from "../../components/DefineFileVerifierDropArea.astro";
+import DefineFileVerifierDropArea from "../../components/DefineFileVerifierDropArea.astro";
 import DefineLocalDate from "../../components/DefineLocalDate.astro";
 import Layout from "../../layouts/Layout.astro";
 import type { FileVerifierReleaseAsset } from "../../components/FileVerifierResultDialog.js";
@@ -180,7 +178,6 @@ const schemaData = {
 <Layout
   lang="en"
   title={`Live Background Removal Lite ${release.tag_name} - Download & Release Notes`}
-  additionalCssHashes={await calculateFileVerifierDropAreaInlineCssHash()}
 >
   <Fragment slot="head-info">
     <meta name="description" content={dynamicDescription} />
