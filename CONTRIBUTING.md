@@ -191,7 +191,7 @@ When contributing, please ensure that:
 
 ## Release Process
 
-The release process is handled by the maintainer and is documented in [copilot-instructions.md](.github/copilot-instructions.md). Contributors do not need to manage releases, but you can review the process if you're interested in understanding how new versions are published.
+The release process is handled by the maintainer and is documented in [.github/copilot-instructions.md](.github/copilot-instructions.md). Contributors do not need to manage releases, but you can review the process if you're interested in understanding how new versions are published.
 
 ## Platform-Specific Contributions
 
