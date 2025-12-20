@@ -13,11 +13,9 @@ import {
 import DefineFileVerifierDropArea, {
   calculateFileVerifierDropAreaInlineCssHash,
 } from "../../components/DefineFileVerifierDropArea.astro";
-import FileVerifierResultDialog, {
-  type FileVerifierReleaseAsset,
-} from "../../components/FileVerifierResultDialog.svelte";
 import DefineLocalDate from "../../components/DefineLocalDate.astro";
 import Layout from "../../layouts/Layout.astro";
+import type { FileVerifierReleaseAsset } from "../../components/FileVerifierResultDialog.js";
 
 import GitHubMarkWhite from "../../../public/github-mark-white.svg";
 
@@ -184,9 +182,7 @@ const schemaData = {
   title={`Live Background Removal Lite ${release.tag_name} - Download & Release Notes`}
   additionalCssHashes={await calculateFileVerifierDropAreaInlineCssHash()}
 >
-  <Fragment slot="head">
-    <DefineFileVerifierDropArea />
-    <DefineLocalDate />
+  <Fragment slot="head-info">
     <meta name="description" content={dynamicDescription} />
     <link
       rel="canonical"
@@ -194,6 +190,11 @@ const schemaData = {
         joinURL(PRODUCTION_BASE_URL, "versions", release.tag_name),
       )}
     />
+  </Fragment>
+
+  <Fragment slot="head-bottom">
+    <DefineFileVerifierDropArea />
+    <DefineLocalDate />
     <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
   </Fragment>
 
@@ -359,14 +360,19 @@ const schemaData = {
     </article>
   </main>
 
-  <FileVerifierResultDialog client:load id="verifier-dialog" {releaseAssets} />
+  <file-verifier-result-dialog
+    id="verifier-dialog"
+    data-release-assets={JSON.stringify(releaseAssets)}
+  ></file-verifier-result-dialog>
 </Layout>
 
 <script>
-  import {
-    fileVerifiedResultStore,
-    type FileVerifierDroppedFileResult,
-  } from "../../stores/FileVerifierStore.js";
+  import { FileVerifierResultDialog } from "../../components/FileVerifierResultDialog"; // 前回のクラス定義をimport
+
+  customElements.define(
+    "file-verifier-result-dialog",
+    FileVerifierResultDialog,
+  );
 
   function uint8ArrayToHex(bytes: Uint8Array): string {
     return Array.from(bytes)
@@ -375,106 +381,105 @@ const schemaData = {
   }
 
   const verifierDropArea = document.getElementById("verifier");
+
   const verifierResultDialog = document.getElementById(
     "verifier-dialog",
-  ) as HTMLDialogElement;
+  ) as FileVerifierResultDialog;
 
   if (!verifierDropArea || !verifierResultDialog)
     throw new Error("File verifier elements not found.");
 
   verifierDropArea.addEventListener("file-verifier-file-dropped", (e) => {
-    let newResult: FileVerifierDroppedFileResult;
+    const { name, size, sha256Buffer } = e.detail;
+    verifierResultDialog.addResult({
+      name,
+      size,
+      sha256: uint8ArrayToHex(new Uint8Array(sha256Buffer)),
+    });
+    verifierResultDialog.showModal();
+  });
 
-    if ("sha256Buffer" in e.detail) {
-      newResult = {
-        name: e.detail.name,
-        size: e.detail.size,
-        sha256: uint8ArrayToHex(new Uint8Array(e.detail.sha256Buffer)),
-      };
-    } else {
-      newResult = {
-        name: e.detail.name,
-        size: e.detail.size,
-        error: e.detail.error,
-      };
-    }
-
-    const currentResults = fileVerifiedResultStore.get();
-    currentResults.push(newResult);
-    fileVerifiedResultStore.set(currentResults);
-
+  verifierDropArea.addEventListener("file-verifier-error", (e) => {
+    const { name, size, error } = e.detail;
+    verifierResultDialog.addResult({
+      name,
+      size,
+      error,
+    });
     verifierResultDialog.showModal();
   });
 </script>
 
-<style>
-  .version-title-row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
+<style is:global>
+  main {
+    .version-title-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
 
-  .version-title-row h1 {
-    margin: 0;
-  }
+    .version-title-row h1 {
+      margin: 0;
+    }
 
-  .badge-latest {
-    display: inline-block;
-    padding: 0.25rem 0.6rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    line-height: 1;
-    color: #ffffff;
-    background-color: var(--color-download-button-bg);
-    border-radius: 2em;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
+    .badge-latest {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      line-height: 1;
+      color: #ffffff;
+      background-color: var(--color-download-button-bg);
+      border-radius: 2em;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-  .alert-box {
-    background-color: var(--color-alert-bg);
-    color: var(--color-alert-fg);
-    padding: 0.5rem 1rem;
-    border-radius: 1rem;
-  }
+    .alert-box {
+      background-color: var(--color-alert-bg);
+      color: var(--color-alert-fg);
+      padding: 0.5rem 1rem;
+      border-radius: 1rem;
+    }
 
-  .download-links {
-    margin-bottom: 1rem;
-  }
+    .download-links {
+      margin-bottom: 1rem;
+    }
 
-  dt {
-    font-weight: 600;
-  }
+    dt {
+      font-weight: 600;
+    }
 
-  dd code {
-    word-break: break-all;
-    white-space: pre-wrap;
-  }
+    dd code {
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
 
-  .release-notes pre {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    max-width: 100%;
-    background-color: #f8f9fa;
-    padding: 1.5rem;
-  }
+    .release-notes pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      max-width: 100%;
+      background-color: #f8f9fa;
+      padding: 1.5rem;
+    }
 
-  .github-row {
-    display: flex;
-    justify-content: center;
-    margin: 1rem 0;
-  }
+    .github-row {
+      display: flex;
+      justify-content: center;
+      margin: 1rem 0;
+    }
 
-  .github-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: var(--color-github-black);
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 18px;
+    .github-button {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: var(--color-github-black);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 18px;
+    }
   }
 </style>

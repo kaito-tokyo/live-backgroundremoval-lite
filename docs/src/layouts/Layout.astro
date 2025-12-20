@@ -15,32 +15,43 @@ const { BASE_URL } = import.meta.env;
 <!doctype html>
 <html lang={lang}>
   <head>
-    <meta
-      http-equiv="Content-Security-Policy"
-      content={`
-        default-src 'self';
-        script-src 'self' https://static.cloudflareinsights.com${import.meta.env.PROD ? "" : " 'unsafe-inline'"};
-        connect-src 'self' https://cloudflareinsights.com;
-        style-src 'self'${additionalCssHashes ?? ""}${import.meta.env.PROD ? "" : " 'unsafe-inline'"};
-        img-src 'self' data:;
-        font-src 'self';
-        object-src 'none';
-        base-uri 'none';
-        form-action 'self';
-        upgrade-insecure-requests;
-        require-trusted-types-for 'script';
-      `
-        .replaceAll(/[\n\s]+/g, " ")
-        .trim()}
-    />
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    {
+      import.meta.env.PROD && (
+        <meta
+          http-equiv="Content-Security-Policy"
+          content={[
+            `default-src 'self';`,
+
+            `connect-src 'self' https://cloudflareinsights.com;`,
+            `script-src 'self' https://static.cloudflareinsights.com;`,
+            `style-src 'self'${additionalCssHashes ?? ""};`,
+
+            `base-uri 'none';`,
+            `font-src 'self';`,
+            `form-action 'self';`,
+            `frame-src 'none';`,
+            `img-src 'self' data:;`,
+            `manifest-src 'self';`,
+            `object-src 'none';`,
+            `require-trusted-types-for 'script';`,
+            `upgrade-insecure-requests;`,
+            `worker-src 'self';`,
+          ].join(" ")}
+        />
+      )
+    }
+
     <title>{title}</title>
+    <slot name="head-info" />
     <link
       rel="alternate"
       type="text/markdown"
       href={joinURL(BASE_URL, "llms.txt")}
       title="LLM Context"
     />
+
     <link
       rel="icon"
       type="image/png"
@@ -59,8 +70,8 @@ const { BASE_URL } = import.meta.env;
       href={joinURL(BASE_URL, "apple-touch-icon.png")}
     />
     <link rel="manifest" href={joinURL(BASE_URL, "site.webmanifest")} />
-    <meta name="viewport" content="width=device-width" />
-    <slot name="head" />
+
+    <slot name="head-bottom" />
   </head>
   <body>
     <div>
@@ -87,7 +98,7 @@ const { BASE_URL } = import.meta.env;
   </body>
 </html>
 
-<style>
+<style is:global>
   body {
     background-color: var(--color-bg);
     display: flex;
