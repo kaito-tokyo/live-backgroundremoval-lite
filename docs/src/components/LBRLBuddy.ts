@@ -80,7 +80,7 @@ ${FaqContent}
    - **OBS Studio:** Requires version 31.1.1 or compatible.
    - **Qt:** Uses Qt 6.
 
----------------------------
+---
 `;
 
 @customElement("lbrl-buddy")
