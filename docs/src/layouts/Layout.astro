@@ -21,9 +21,9 @@ const {
   trustedTypes,
 } = Astro.props;
 
-const revision = GITHUB_SHA ?? "undefined";
-const shortRevision = GITHUB_SHA?.substring(0, 7) ?? "undefined";
-const runId = GITHUB_RUN_ID ?? "undefined";
+const isValidSha = GITHUB_SHA && GITHUB_SHA.trim() !== "";
+const revision = isValidSha ? GITHUB_SHA : "undefined";
+const shortRevision = isValidSha ? GITHUB_SHA.substring(0, 7) : "undefined";
 ---
 
 <!doctype html>
@@ -113,7 +113,15 @@ const runId = GITHUB_RUN_ID ?? "undefined";
             rel="noopener noreferrer">llms.txt</a
           >
         </div>
-        <div>Commit: <a href={revision === 'undefined' ? "#" : `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/commit/${revision}`} target="_blank" rel="noopener noreferrer">{shortRevision}</a></div>
+        <div>
+          Commit: <a
+            href={revision === "undefined"
+              ? "#"
+              : `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/commit/${revision}`}
+            target="_blank"
+            rel="noopener noreferrer">{shortRevision}</a
+          >
+        </div>
         <div>&copy; 2025 Kaito Udagawa</div>
       </footer>
     </div>
