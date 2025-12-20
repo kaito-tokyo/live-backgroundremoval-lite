@@ -4,7 +4,6 @@
 - For empty argument lists, use `()` instead of `(void)`, except within regions marked by `extern "C"`.
 - After modifying C or C++ files, format them with `clang-format-19`.
 - After modifying CMake files, format them with `gersemi`.
-- The OBS team maintains CMake and GitHub Actions files. Do not modify these, except for workflow files starting with `my-`.
 - The default branch is `main`.
 - Ensure each file ends with a single empty newline. Builds will fail if this rule is not followed.
 - Member variables must be suffixed with an underscore (`_`).
