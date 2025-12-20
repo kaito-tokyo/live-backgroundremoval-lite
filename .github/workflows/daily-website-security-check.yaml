@@ -27,11 +27,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
+
           curl --retry 3 -fsS \
             -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json" \
             -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
 
-          gh attestation verify provenance.json \
+          GH_FORCE_TTY="100%" gh attestation verify provenance.json \
             --repo kaito-tokyo/live-backgroundremoval-lite \
             --bundle provenance.attestation.jsonl
 
