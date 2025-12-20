@@ -1,80 +1,65 @@
 // src/stores/llm.ts
-
-import { writable } from "svelte/store";
+import { atom } from "nanostores";
 import {
   CreateMLCEngine,
   type MLCEngineInterface,
   type InitProgressCallback,
-  type InitProgressReport, // Add InitProgressReport for clarity on progress object structure
+  type InitProgressReport,
 } from "@mlc-ai/web-llm";
 
 // LLM execution state type
 export type LLMState =
   | { status: "uninitialized" }
-  | { status: "pending" } // Waiting for user consent to start download
+  | { status: "pending" }
   | { status: "loading"; progress: number; message: string }
-  | { status: "ready"; chat: MLCEngineInterface } // Holds the initialized MLCEngineInterface
+  | { status: "ready"; chat: MLCEngineInterface }
   | { status: "error"; error: string };
 
+// 1. ストアの作成 (初期値: pending)
+export const llmStore = atom<LLMState>({ status: "pending" });
+
+// デフォルトのモデルID
+const DEFAULT_MODEL_ID = "Hermes-3-Llama-3.2-3B-q4f16_1-MLC";
+
 /**
- * Creates a Svelte store to manage the lifecycle and state of the MLCEngine.
- * * @param modelId The ID of the model to load (e.g., 'Llama-3.1-8B-Instruct-q4f16_1-MLC').
- * @returns A store interface with subscribe and initialization methods.
+ * Starts MLCEngine initialization and model downloading.
+ * @param modelId The ID of the model to load.
  */
-const createLLMStore = (modelId: string) => {
-  // Initial state is 'pending', waiting for user consent
-  const { subscribe, set, update } = writable<LLMState>({ status: "pending" });
+export const startLLMInitialization = async (
+  modelId: string = DEFAULT_MODEL_ID,
+) => {
+  // ストアの値を更新 (loading)
+  llmStore.set({
+    status: "loading",
+    progress: 0,
+    message: "Creating MLCEngine...",
+  });
 
-  // Note: For MLCEngine, the 'progress' property in InitProgressReport is typically used
-  // to directly track the overall load progress from 0 to 1.
-
-  /**
-   * Progress callback function to monitor MLCEngine loading and update the Svelte store.
-   */
   const initProgressCallback: InitProgressCallback = (
     progress: InitProgressReport,
   ) => {
-    // Update the state using the progress report data
-    update((state) => ({
-      ...state,
+    // 読み込み状況の更新
+    // 現在の状態を取得したい場合は llmStore.get() を使いますが、
+    // ここでは新しいオブジェクトで上書きするため直接 set します
+    llmStore.set({
       status: "loading",
-      // Use the progress property directly if it's available and represents 0-1 ratio
       progress: progress.progress,
-      // Current download/load message text
       message: progress.text,
-    }));
+    });
   };
 
-  /**
-   * Starts MLCEngine initialization and model downloading after user consent.
-   * This handles the asynchronous loading process.
-   */
-  const startLLMInitialization = async () => {
-    // Set loading state initially
-    set({ status: "loading", progress: 0, message: "Creating MLCEngine..." });
+  try {
+    const engine: MLCEngineInterface = await CreateMLCEngine(modelId, {
+      initProgressCallback,
+    });
 
-    try {
-      // CreateMLCEngine creates and loads the engine with the specified model
-      const engine: MLCEngineInterface = await CreateMLCEngine(modelId, {
-        initProgressCallback,
-      });
-
-      // Set to 'ready' state upon successful initialization
-      set({ status: "ready", chat: engine });
-    } catch (error) {
-      console.error("WebLLM initialization failed:", error);
-      set({
-        status: "error",
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  };
-
-  return {
-    subscribe,
-    startLLMInitialization, // Public method to start initialization
-  };
+    // 完了 (ready)
+    llmStore.set({ status: "ready", chat: engine });
+  } catch (error) {
+    console.error("WebLLM initialization failed:", error);
+    llmStore.set({
+      status: "error",
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
 };
-
-// Initialize the store by passing the default model ID
-export const llmStore = createLLMStore("Hermes-3-Llama-3.2-3B-q4f16_1-MLC");
