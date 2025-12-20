@@ -11,7 +11,7 @@ This plugin is not available as a pre-built package for Fedora. Users will need 
 Install the required build dependencies:
 
 ```bash
-sudo dnf install @development-tools obs-studio-devel qt6-qtbase-private-devel ncnn-devel fmt-devel libcurl-devel
+sudo dnf install @development-tools ninja-build obs-studio-devel qt6-qtbase-private-devel ncnn-devel fmt-devel libcurl-devel
 ```
 
 ### Build and Install Steps
@@ -28,7 +28,6 @@ sudo dnf install @development-tools obs-studio-devel qt6-qtbase-private-devel nc
     -B build -S . \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX=/usr \
-    -DCMAKE_INSTALL_LIBDIR=lib \
     -DUSE_PKGCONFIG=ON \
     -DBUILD_TESTING=OFF \
     -GNinja
@@ -41,7 +40,7 @@ sudo dnf install @development-tools obs-studio-devel qt6-qtbase-private-devel nc
 
 6. Install the plugin:
    ```bash
-   sudo cmake --install build_x86_64 --config RelWithDebInfo
+   sudo cmake --install build --prefix
    ```
 
    Alternatively, for a user-local installation:
