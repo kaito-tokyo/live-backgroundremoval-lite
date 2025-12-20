@@ -50,7 +50,7 @@ const { BASE_URL } = import.meta.env;
     </lbrl-buddy>
 
     <div class="model-attribution">
-      Built with <span>Llama 3.2</span>
+      Built with <a href="https://www.llama.com/" target="_blank" rel="noopener noreferrer">Llama 3.2</a>
     </div>
     <div class="disclaimer-note">
       <p>
@@ -197,12 +197,18 @@ const { BASE_URL } = import.meta.env;
     color: #4b5563;
   }
 
-  .model-attribution span {
+  .model-attribution a {
     background: linear-gradient(135deg, #0068e1 0%, #a745ff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     display: inline-block;
     padding-right: 0.2em;
+    text-decoration: none;
+    transition: opacity 0.2s;
+  }
+
+  .model-attribution a:hover {
+    opacity: 0.8;
   }
 
   .disclaimer-note {
