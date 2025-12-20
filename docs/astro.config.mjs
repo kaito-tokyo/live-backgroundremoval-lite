@@ -10,5 +10,5 @@ export default defineConfig({
   integrations: [svelte(), sitemap()],
   build: {
     assets: "assets",
-  }
+  },
 });
