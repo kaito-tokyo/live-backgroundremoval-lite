@@ -379,4 +379,3 @@ gh attestation verify provenance.json --repo kaito-tokyo/live-backgroundremoval-
 ```
 
 For questions or issues related to site verification, please open an issue on the [GitHub repository](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues).
-
