@@ -355,7 +355,7 @@ The Live Background Removal Lite documentation website implements comprehensive 
 
 This ensures that users can trust the documentation website is authentic and hasn't been compromised.
 
-To verify the website yourself, you can use the following one-liner (requires bash):
+To verify the website yourself, you can use the following one-liner (requires bash for process substitution):
 
 ```bash
 gh attestation verify \
@@ -364,7 +364,7 @@ gh attestation verify \
   --bundle <(curl -fsSL https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl)
 ```
 
-Or download the files first (works in any shell):
+Or download the files first (shell-agnostic approach):
 
 ```bash
 curl -fsSL -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json"
