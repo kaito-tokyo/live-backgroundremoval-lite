@@ -10,6 +10,12 @@
   --color-github-black: #24292f;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 .white-box {
   width: min(800px, 100% - 2rem);
   margin: 1rem auto;

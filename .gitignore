@@ -3,6 +3,7 @@
 .vscode/
 /.deps/
 /build_*/
+/docs/**/*.js
 /docs/dist/
 /vcpkg_installed/
 node_modules/

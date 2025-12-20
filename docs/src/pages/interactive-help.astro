@@ -2,22 +2,52 @@
 import { joinURL, withTrailingSlash } from "ufo";
 
 import Layout from "../layouts/Layout.astro";
-import Chat from "../components/Chat.svelte";
-import { GITHUB_URL } from "../lib/info.js";
+import { GITHUB_URL, PRODUCTION_BASE_URL } from "../lib/info.js";
+import { SYSTEM_WARNING_MESSAGE, SYSTEM_WARNING_BUTTON_TEXT, INITIAL_INPUT_PLACEHOLDER } from "../components/LBRLBuddy.js";
 
 const { BASE_URL } = import.meta.env;
 ---
 
-<Layout lang="en" title="Interactive Help for OBS Background Removal">
-  <Fragment slot="head">
+<Layout
+  lang="en"
+  title="Interactive Help for OBS Background Removal"
+  additionalCspConnectSrc=" https://huggingface.co/mlc-ai/ https://raw.githubusercontent.com/mlc-ai/ https://cas-bridge.xethub.hf.co/"
+  additionalCspScriptSrc=" 'wasm-unsafe-eval'"
+  trustedTypes={["lit-html"]}
+>
+  <Fragment slot="head-info">
     <meta
       name="description"
       content="Get instant help for Live Background Removal Lite securely. This experimental AI chatbot runs 100% locally in your browser—no data is sent to servers."
     />
+    <link
+      rel="canonical"
+      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "interactive-help"))}
+    />
   </Fragment>
 
   <main class="white-box">
-    <Chat client:load />
+    <lbrl-buddy>
+      <div class="chat-container">
+        <div class="message-list">
+          <div class="initial-warning">
+            <h2>System Warning</h2>
+            <p>{SYSTEM_WARNING_MESSAGE}</p>
+            <button class="agree-button" disabled>
+              {SYSTEM_WARNING_BUTTON_TEXT}
+            </button>
+          </div>
+        </div>
+        <form>
+          <input
+            type="text"
+            placeholder={INITIAL_INPUT_PLACEHOLDER}
+            disabled
+          />
+          <button type="submit" disabled>Waiting</button>
+        </form>
+      </div>
+    </lbrl-buddy>
 
     <div class="disclaimer-note">
       <p>
@@ -51,9 +81,109 @@ const { BASE_URL } = import.meta.env;
       </ul>
     </nav>
   </main>
+
+  <Fragment slot="body-bottom">
+    <script>
+      import "../components/LBRLBuddy.js";
+    </script>
+  </Fragment>
 </Layout>
 
-<style>
+<style is:global>
+  lbrl-buddy:not(:defined) {
+    display: block;
+    box-sizing: border-box;
+    --border: 1px solid #ccc;
+    --background-color: #fff;
+    --border-radius: 8px;
+    --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+      height: 80dvh;
+      border: var(--border);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      width: 100%;
+      background-color: var(--background-color);
+
+      .message-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 15px;
+        scroll-behavior: auto;
+      }
+
+      button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: opacity 0.2s;
+      }
+
+      button[type="submit"] {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      form {
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+        border-top: var(--border);
+        background-color: #fff;
+      }
+
+      input[type="text"] {
+        flex-grow: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        outline: none;
+        font-size: 16px;
+      }
+
+      input[type="text"]:focus {
+        border-color: var(--primary-color);
+      }
+
+      .initial-warning {
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow-wrap: anywhere;
+        padding: 15px;
+        background-color: #fff3cd;
+        color: #856404;
+        margin-bottom: 10px;
+      }
+
+      .initial-warning h2 {
+        font-size: 1rem;
+        font-weight: bold;
+        margin-top: 0;
+      }
+
+      .agree-button {
+        background-color: #28a745;
+        color: white;
+        width: 100%;
+        margin-top: 10px;
+      }
+    }
+
   .disclaimer-note {
     max-width: 600px;
     margin: 15px auto 0 auto;
