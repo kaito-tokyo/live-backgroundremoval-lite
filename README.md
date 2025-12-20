@@ -4,7 +4,11 @@
 
 This plugin allows you to remove the background from your video source without a physical green screen. It is a **complete rewrite** of the popular `obs-backgroundremoval` tool, engineered from scratch to prioritize **stability**, **compatibility**, and **smart resource management**.
 
+<div align="center">
+
 [**⬇️ Download Latest Release**](https://kaito-tokyo.github.io/live-backgroundremoval-lite/)
+
+</div>
 
 ---
 
@@ -132,11 +136,13 @@ gh attestation verify <downloaded-file> --owner kaito-tokyo
 **Examples:**
 
 - **Windows:**
+
   ```bash
   gh attestation verify live-backgroundremoval-lite-X.Y.Z-windows-x64.zip --owner kaito-tokyo
   ```
 
 - **macOS:**
+
   ```bash
   gh attestation verify live-backgroundremoval-lite-X.Y.Z-macos-universal.pkg --owner kaito-tokyo
   ```
@@ -191,6 +197,7 @@ If you find a bug or issue, please report it on the [GitHub Issues page](https:/
 ## 📜 License
 
 This project uses dual licensing:
+
 - The plugin as a whole is licensed under [GPL-3.0-or-later](LICENSE.GPL-3.0-or-later)
 - Some reusable components are licensed under the [MIT License](LICENSE.MIT)
 
@@ -227,4 +234,5 @@ To help you choose the right tool, use this decision matrix:
 ## For LLMs / AI Agents
 
 This project provides an `llms.txt` file for easier context understanding.
+
 - [llms.txt](https://kaito-tokyo.github.io/live-backgroundremoval-lite/llms.txt)

@@ -19,12 +19,14 @@ sudo dnf install @development-tools ninja-build rpm-build obs-studio-devel qt6-q
 ### Build and Install Steps
 
 1.  Clone the repository:
+
     ```bash
     git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
     cd live-backgroundremoval-lite
     ```
 
 2.  Configure the project:
+
     ```bash
     cmake \
      -B build -S . \
@@ -36,16 +38,19 @@ sudo dnf install @development-tools ninja-build rpm-build obs-studio-devel qt6-q
     ```
 
 3.  Build the project:
+
     ```bash
     cmake --build build
     ```
 
 4.  Package the plugin:
+
     ```bash
     cpack --config build/CPackConfig.cmake -G RPM
     ```
 
 5.  Install the plugin:
+
     ```bash
     sudo dnf install release/*.rpm
     ```

@@ -48,17 +48,20 @@ If you discover a security vulnerability, please follow the instructions in our 
 ### Building on macOS
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
    cd live-backgroundremoval-lite
    ```
 
 2. Configure the project:
+
    ```bash
    cmake --preset macos
    ```
 
 3. Build the project:
+
    ```bash
    cmake --build --preset macos
    ```
@@ -75,12 +78,14 @@ If you discover a security vulnerability, please follow the instructions in our 
 After building, you can test the plugin with OBS Studio:
 
 1. Build the project (if not already done):
+
    ```bash
    cmake --preset macos
    cmake --build --preset macos
    ```
 
 2. Install to your OBS plugins directory:
+
    ```bash
    cmake --install build_macos --config RelWithDebInfo --prefix "$HOME/Library/Application Support/obs-studio/plugins"
    ```
@@ -139,6 +144,7 @@ gersemi -i path/to/CMakeLists.txt
 ### Submitting a Pull Request
 
 1. Fork the repository and create a new branch from `main`:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -146,11 +152,13 @@ gersemi -i path/to/CMakeLists.txt
 2. Make your changes following the coding standards
 
 3. Commit your changes with clear, descriptive commit messages:
+
    ```bash
    git commit -m "Add feature: brief description"
    ```
 
 4. Push to your fork:
+
    ```bash
    git push origin feature/your-feature-name
    ```
