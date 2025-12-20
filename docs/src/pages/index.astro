@@ -87,6 +87,7 @@ const structuredData = {
   </Fragment>
 
   <Fragment slot="head-bottom">
+    <link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
     <DefineLocalDate />
     <script
       type="application/ld+json"
@@ -357,13 +358,7 @@ const structuredData = {
       .demo-container video {
         max-width: 100%;
         height: auto;
-      }
-      .demo-image {
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        max-width: 100%;
-        height: auto;
+        background: #e0e0e0;
       }
       .demo-caption {
         margin-top: 8px;
