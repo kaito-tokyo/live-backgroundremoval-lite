@@ -1,15 +1,15 @@
-import { LitElement, html, css, type PropertyValues } from 'lit';
-import { customElement, state, query } from 'lit/decorators.js';
-import { classMap } from 'lit/directives/class-map.js';
-import { repeat } from 'lit/directives/repeat.js';
-import { live } from 'lit/directives/live.js';
-import { StoreController } from '@nanostores/lit';
+import { LitElement, html, css, type PropertyValues } from "lit";
+import { customElement, state, query } from "lit/decorators.js";
+import { classMap } from "lit/directives/class-map.js";
+import { repeat } from "lit/directives/repeat.js";
+import { live } from "lit/directives/live.js";
+import { StoreController } from "@nanostores/lit";
 
 // 拡張子 .js を忘れずに
-import { llmStore, startLLMInitialization } from '../stores/llm.js';
+import { llmStore, startLLMInitialization } from "../stores/llm.js";
 
 // ?raw でインポートする場合、env.d.ts での型定義が必要です
-import FaqContent from '../pages/faq.md?raw';
+import FaqContent from "../pages/faq.md?raw";
 import type { ChatCompletionMessageParam } from "@mlc-ai/web-llm";
 
 const assistantName = "BR Lite Buddy";
@@ -21,7 +21,7 @@ type SimpleMessage = {
   metadata?: { createdAt: Date };
 };
 
-@customElement('lbrl-buddy')
+@customElement("lbrl-buddy")
 export class LBRLBuddy extends LitElement {
   private llmState = new StoreController(this, llmStore);
 
@@ -30,8 +30,8 @@ export class LBRLBuddy extends LitElement {
   private messages: SimpleMessage[] = [
     this.createMessage(
       "assistant",
-      `Hi there! I'm ${assistantName}, your interactive support assistant. Feel free to ask me anything about the knowledge base, and I'll do my best to help you out! 🤖`
-    )
+      `Hi there! I'm ${assistantName}, your interactive support assistant. Feel free to ask me anything about the knowledge base, and I'll do my best to help you out! 🤖`,
+    ),
   ];
 
   @state()
@@ -40,14 +40,17 @@ export class LBRLBuddy extends LitElement {
   @state()
   private isLoading: boolean = false;
 
-  @query('#messages-end')
+  @query("#messages-end")
   private messagesEnd?: HTMLDivElement;
 
-  @query('.message-list')
+  @query(".message-list")
   private messageList?: HTMLDivElement;
 
   // メッセージ作成ヘルパー
-  private createMessage(role: "user" | "assistant", text: string): SimpleMessage {
+  private createMessage(
+    role: "user" | "assistant",
+    text: string,
+  ): SimpleMessage {
     return {
       id: Date.now().toString() + "-" + role,
       role,
@@ -57,18 +60,21 @@ export class LBRLBuddy extends LitElement {
   }
 
   updated(changedProperties: PropertyValues) {
-    if (changedProperties.has('messages') || changedProperties.has('isLoading')) {
+    if (
+      changedProperties.has("messages") ||
+      changedProperties.has("isLoading")
+    ) {
       if (this.messageList) {
         this.messageList.scrollTo({
           top: this.messageList.scrollHeight,
-          behavior: 'smooth'
+          behavior: "smooth",
         });
       }
     }
   }
 
   private handleAgreeAndStart() {
-    if (this.llmState.value.status === 'pending') {
+    if (this.llmState.value.status === "pending") {
       startLLMInitialization();
     }
   }
@@ -88,11 +94,14 @@ export class LBRLBuddy extends LitElement {
     const userMessageContent = this.input;
 
     // 配列を新しく生成して代入することでLitの更新をトリガーします
-    this.messages = [...this.messages, this.createMessage("user", userMessageContent)];
+    this.messages = [
+      ...this.messages,
+      this.createMessage("user", userMessageContent),
+    ];
     this.input = "";
 
     if (currentState.status === "ready") {
-       await this.handleWebLLMChat(userMessageContent, currentState.chat);
+      await this.handleWebLLMChat(userMessageContent, currentState.chat);
     }
   }
 
@@ -140,14 +149,20 @@ ${FaqContent}
           assistantResponse += content;
           // 最後のメッセージを更新
           const newMessages = [...this.messages];
-          newMessages[newMessages.length - 1] = this.createMessage("assistant", assistantResponse);
+          newMessages[newMessages.length - 1] = this.createMessage(
+            "assistant",
+            assistantResponse,
+          );
           this.messages = newMessages;
         }
       }
     } catch (error) {
       console.error("LLM conversation failed:", error);
       const newMessages = [...this.messages];
-      newMessages[newMessages.length - 1] = this.createMessage("assistant", "Error: LLM failed to generate a response.");
+      newMessages[newMessages.length - 1] = this.createMessage(
+        "assistant",
+        "Error: LLM failed to generate a response.",
+      );
       this.messages = newMessages;
     } finally {
       this.isLoading = false;
@@ -165,65 +180,85 @@ ${FaqContent}
     return html`
       <div class="chat-container">
         <div class="message-list">
-
-          ${isLLMPending ? html`
-            <div class="initial-warning message-bubble assistant">
-              <span class="role">System Warning:</span>
-              <p>
-                To use this chat feature, you must download the LLM model (a large
-                file of several GBs). This is only required on the first launch, but
-                it may take several minutes to complete (depending on your internet
-                speed).
-              </p>
-              <button class="agree-button" @click="${this.handleAgreeAndStart}">
-                Agree and Start Model Download
-              </button>
-            </div>
-          ` : ''}
-
-          ${!isLLMLoading && !isLLMPending ? repeat(
-            this.messages,
-            (msg) => msg.id,
-            (message) => html`
-              <div class="message-bubble ${classMap({
-                  user: message.role === 'user',
-                  assistant: message.role === 'assistant'
-                })}">
-                <span class="role">
-                  ${message.role === 'user' ? 'You' : assistantName}:
-                </span>
-                <pre class="message-content">${message.parts[0]?.text || "..."}</pre>
-              </div>
-            `
-          ) : ''}
+          ${isLLMPending
+            ? html`
+                <div class="initial-warning">
+                  <span class="role">System Warning</span>
+                  <p>
+                    To use this chat feature, you must download the LLM model (a
+                    large file of several GBs). This is only required on the
+                    first launch, but it may take several minutes to complete
+                    (depending on your internet speed).
+                  </p>
+                  <button
+                    class="agree-button"
+                    @click="${this.handleAgreeAndStart}"
+                  >
+                    Agree and Start Model Download
+                  </button>
+                </div>
+              `
+            : ""}
+          ${!isLLMLoading && !isLLMPending
+            ? repeat(
+                this.messages,
+                (msg) => msg.id,
+                (message) => html`
+                  <div
+                    class="message-bubble ${classMap({
+                      user: message.role === "user",
+                      assistant: message.role === "assistant",
+                    })}"
+                  >
+                    <span class="role">
+                      ${message.role === "user" ? "You" : assistantName}:
+                    </span>
+                    <pre class="message-content">
+${message.parts[0]?.text || "..."}</pre
+                    >
+                  </div>
+                `,
+              )
+            : ""}
 
           <div id="messages-end" class="messages-end"></div>
         </div>
 
-        ${this.isLoading || isLLMLoading ? html`
-          <div class="loading-indicator">
-            <div class="spinner-container">
-              <div><div class="spinner"></div></div>
-              <p class="loading-text">
-                ${isLLMLoading ? `Downloading: ${loadingMsg}` : "Thinking..."}
-              </p>
-            </div>
-          </div>
-        ` : ''}
+        ${this.isLoading || isLLMLoading
+          ? html`
+              <div class="loading-indicator">
+                <div class="spinner-container">
+                  <div><div class="spinner"></div></div>
+                  <p class="loading-text">
+                    ${isLLMLoading
+                      ? `Downloading: ${loadingMsg}`
+                      : "Thinking..."}
+                  </p>
+                </div>
+              </div>
+            `
+          : ""}
 
         <form @submit="${this.handleSubmit}">
           <input
             .value="${live(this.input)}"
             @input="${this.handleInput}"
             type="text"
-            placeholder="${
-              !isLLMReady
-                ? isLLMError ? "An error occurred" : isLLMPending ? "Please press the start button" : "Loading model..."
-                : this.isLoading ? "Waiting for response..." : "Enter your message..."
-            }"
+            placeholder="${!isLLMReady
+              ? isLLMError
+                ? "An error occurred"
+                : isLLMPending
+                  ? "Please press the start button"
+                  : "Loading model..."
+              : this.isLoading
+                ? "Waiting for response..."
+                : "Enter your message..."}"
             ?disabled="${this.isLoading || !isLLMReady}"
           />
-          <button type="submit" ?disabled="${this.isLoading || !this.input.trim() || !isLLMReady}">
+          <button
+            type="submit"
+            ?disabled="${this.isLoading || !this.input.trim() || !isLLMReady}"
+          >
             ${this.isLoading ? "Sending" : !isLLMReady ? "Waiting" : "Send"}
           </button>
         </form>
@@ -234,145 +269,149 @@ ${FaqContent}
   static styles = css`
     :host {
       display: block;
+      box-sizing: border-box;
+      --border: 1px solid #ccc;
+      --background-color: #fff;
+      --border-radius: 8px;
+      --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+
+    * {
+      box-sizing: border-box;
+    }
+
     .chat-container {
       display: flex;
       flex-direction: column;
       height: 80vh;
-      max-width: 600px;
-      margin: 0 auto;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      border: var(--border);
+      border-radius: var(--border-radius);
       overflow: hidden;
-      font-family: sans-serif;
-    }
-    .message-list {
-      flex-grow: 1;
-      padding: 15px;
-      overflow-y: auto;
-      background-color: #f9f9f9;
-    }
-    .message-bubble {
-      margin-bottom: 10px;
-      padding: 8px 12px;
-      border-radius: 18px;
-      max-width: 80%;
-      word-wrap: break-word;
-      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
-    }
-    .message-content {
-      white-space: pre-wrap;
-      font-family: inherit;
-      margin: 0;
-    }
-    .messages-end {
-      height: 0;
-    }
-    .user {
-      align-self: flex-end;
-      background-color: #007aff;
-      color: white;
-      margin-left: auto;
-    }
-    .assistant {
-      align-self: flex-start;
-      background-color: #e5e5ea;
-      color: #000;
-    }
-    .role {
-      font-size: 0.8em;
-      font-weight: bold;
-      display: block;
-      margin-bottom: 3px;
-      opacity: 0.7;
-    }
-    .initial-warning {
-      background-color: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeeba;
-      padding: 15px;
-      border-radius: 8px;
-      max-width: 100%;
-      margin-bottom: 20px;
-    }
-    .initial-warning p {
-      margin-bottom: 10px;
-    }
-    .agree-button {
-      background-color: #28a745;
-      color: white;
-      padding: 10px 15px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 10px;
-      display: block;
       width: 100%;
-      transition: background-color 0.2s;
+
+      .message-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 15px;
+      }
+
+      button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: opacity 0.2s;
+      }
+
+      button[type="submit"] {
+        background-color: #007aff;
+        color: white;
+      }
+
+      button[type="submit"]:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      form {
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+        border-top: var(--border);
+      }
+
+      input[type="text"] {
+        flex-grow: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        outline: none;
+      }
+
+      input[type="text"]:focus {
+        border-color: #007aff;
+      }
+
+      .initial-warning {
+        border-radius: var(--border-radius);
+        box-shadow: var(--box-shadow);
+        overflow-wrap: anywhere;
+        padding: 15px;
+        background-color: #fff3cd;
+        color: #856404;
+      }
+
+      .agree-button {
+        background-color: #28a745;
+        color: white;
+        width: 100%;
+      }
     }
-    .agree-button:hover {
-      background-color: #218838;
-    }
-    .loading-indicator {
-      margin: 5px 15px 10px 15px;
-      padding: 8px 12px;
-      align-self: flex-start;
-      background-color: #e5e5ea;
-      color: #000;
-      border-radius: 18px;
-      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
-      max-width: 50%;
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .spinner-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .spinner {
-      border: 4px solid rgba(0, 0, 0, 0.1);
-      border-left-color: #007bff;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .loading-text {
-      margin: 0;
-      font-size: 0.9em;
-      color: #333;
-    }
-    form {
-      display: flex;
-      padding: 10px;
-      border-top: 1px solid #ccc;
-      background-color: white;
-    }
-    input {
-      flex-grow: 1;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      margin-right: 10px;
-    }
-    button {
-      padding: 10px 15px;
-      background-color: #007aff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    button:disabled {
-      background-color: #999;
-      cursor: not-allowed;
-    }
+
+    // .message-bubble {
+    //   max-width: 80%;
+    //   padding: 8px 12px;
+    //   border-radius: 18px;
+    //   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+    //   /* 長い単語の折り返し設定 (word-wrapの現代版) */
+    //   overflow-wrap: anywhere;
+    // }
+
+    // .message-content {
+    //   white-space: pre-wrap;
+    //   font-family: inherit;
+    //   margin: 0;
+    // }
+
+    // .user {
+    //   align-self: flex-end;
+    //   background-color: #007aff;
+    //   color: white;
+    // }
+
+    // .assistant {
+    //   align-self: flex-start;
+    //   background-color: #e5e5ea;
+    //   color: #000;
+    // }
+
+    // .role {
+    //   font-size: 0.75rem;
+    //   font-weight: bold;
+    //   display: block;
+    //   margin-bottom: 4px;
+    //   opacity: 0.7;
+    // }
+
+    // /* ローディング表示 */
+    // .loading-indicator {
+    //   align-self: flex-start;
+    //   margin: 5px 15px 10px; /* 上 左右 下 */
+    //   padding: 8px 12px;
+    //   background-color: #e5e5ea;
+    //   border-radius: 18px;
+    //   display: inline-flex;
+    //   align-items: center;
+    //   gap: 10px;
+    //   font-size: 0.9em;
+    // }
+
+    // .spinner {
+    //   border: 3px solid rgba(0, 0, 0, 0.1);
+    //   border-left-color: #007bff;
+    //   border-radius: 50%;
+    //   width: 16px;
+    //   height: 16px;
+    //   animation: spin 1s linear infinite;
+    // }
+
+    // @keyframes spin {
+    //   100% { transform: rotate(360deg); }
+    // }
   `;
 }

@@ -25,14 +25,16 @@ const { BASE_URL } = import.meta.env;
     />
   </Fragment>
 
-  <Fragment slot="head-bottom">
-    <script>
-      import '../components/LBRLBuddy.js';
-    </script>
-  </Fragment>
-
   <main class="white-box">
-    <lbrl-buddy></lbrl-buddy>
+    <lbrl-buddy>
+      <div class="placeholder-container">
+        <div class="placeholder-messages"></div>
+        <div class="placeholder-form">
+          <input type="text" disabled placeholder="Loading..." />
+          <button disabled>Send</button>
+        </div>
+      </div>
+    </lbrl-buddy>
 
     <div class="disclaimer-note">
       <p>
@@ -66,9 +68,19 @@ const { BASE_URL } = import.meta.env;
       </ul>
     </nav>
   </main>
+
+  <Fragment slot="body-bottom">
+    <script>
+      import "../components/LBRLBuddy.js";
+    </script>
+  </Fragment>
 </Layout>
 
 <style>
+  lbrl-buddy {
+    margin: 0 1rem;
+  }
+
   .disclaimer-note {
     max-width: 600px;
     margin: 15px auto 0 auto;

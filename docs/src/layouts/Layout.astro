@@ -10,7 +10,13 @@ interface Props {
   trustedTypes?: string[];
 }
 
-const { lang, title, additionalCspConnectSrc, additionalCspScriptSrc, trustedTypes } = Astro.props;
+const {
+  lang,
+  title,
+  additionalCspConnectSrc,
+  additionalCspScriptSrc,
+  trustedTypes,
+} = Astro.props;
 const { BASE_URL } = import.meta.env;
 ---
 
@@ -20,7 +26,7 @@ const { BASE_URL } = import.meta.env;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     {
-      !import.meta.env.PROD && (
+      import.meta.env.PROD && (
         <meta
           http-equiv="Content-Security-Policy"
           content={[
@@ -81,28 +87,23 @@ const { BASE_URL } = import.meta.env;
     <div>
       <slot />
       <footer>
-        <p>&copy; 2025 Kaito Udagawa</p>
-        <p id="daily-website-security-check">
+        <div>
           <a
             href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml"
             target="_blank"
             rel="noopener noreferrer"
-          >
-            <img
+            ><img
               src="https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yaml/badge.svg"
               alt="Daily Website Security Check"
-            />
-          </a>
-        </p>
-        <p>
+            /></a
+          >
           <a
             href={joinURL(BASE_URL, "llms.txt")}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer">llms.txt</a
           >
-            llms.txt
-          </a>
-        </p>
+        </div>
+        <div>&copy; 2025 Kaito Udagawa</div>
       </footer>
     </div>
 
@@ -120,26 +121,23 @@ const { BASE_URL } = import.meta.env;
 <style is:global>
   body {
     background-color: var(--color-bg);
-    display: flex;
-    justify-content: center;
-    align-items: center;
     min-height: 100vh;
     margin: 0;
   }
 
   footer {
+    margin: auto;
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     align-items: center;
-    color: white;
-    gap: 0.3rem;
   }
 
+  footer,
   footer a {
-    color: white;
+    color: #ccc;
   }
 
-  p img {
+  footer img {
     vertical-align: middle;
   }
 </style>
