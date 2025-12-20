@@ -1,0 +1,55 @@
+name: Daily Website Security Check
+
+on:
+  schedule:
+    - cron: "23 11 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  security-check:
+    name: Run Security Check
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    permissions:
+      attestations: read
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Run Security Check
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl --retry 3 -fsS \
+            -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json" \
+            -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
+
+          gh attestation verify provenance.json \
+            --repo kaito-tokyo/live-backgroundremoval-lite \
+            --bundle provenance.attestation.jsonl
+
+          rm -rf site
+          mkdir -p site
+          jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
+            .subject[] |
+            .name as $url |
+            ($url | sub($base; "")) as $path |
+            "url = \"\($url)\"",
+            "output = \"site/\($path)\"",
+            "create-dirs"
+          ' provenance.json | curl --retry 3 -fsS -K -
+
+          jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
+            .subject[] |
+            (.name | sub($base; "")) as $path |
+            "\(.digest.sha384)  site/\($path)"
+          ' provenance.json > SHA384SUMS.txt
+
+          sha384sum --check --strict SHA384SUMS.txt
