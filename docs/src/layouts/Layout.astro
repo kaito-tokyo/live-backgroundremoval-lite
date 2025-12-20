@@ -113,7 +113,7 @@ const runId = GITHUB_RUN_ID ?? "undefined";
             rel="noopener noreferrer">llms.txt</a
           >
         </div>
-        <div>Commit: <a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/commit/${GITHUB_SHA}`} target="_blank" rel="noopener noreferrer">{shortRevision}</a></div>
+        <div>Commit: <a href={revision === 'undefined' ? "#" : `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/commit/${revision}`} target="_blank" rel="noopener noreferrer">{shortRevision}</a></div>
         <div>&copy; 2025 Kaito Udagawa</div>
       </footer>
     </div>
