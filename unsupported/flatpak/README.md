@@ -35,7 +35,7 @@ If you wish to proceed with building the plugin from these local files, you will
 
     ```bash
     sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    sudo flatpak install flathub org.kde.Sdk//6.8 com.obsproject.Studio
+    sudo flatpak install flathub org.freedesktop.Sdk//24.08 com.obsproject.Studio
     ```
 
 ### Build and Install Steps
