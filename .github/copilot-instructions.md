@@ -60,12 +60,3 @@ To initiate a new release, the user will instruct Gemini to start the process (e
 5.  **Finalize Release**:
     - **ACTION**: Provide the releases URL.
     - **INSTRUCTION**: User completes the release on GitHub.
-
-6.  **Update Arch Linux and Flatpak Package Manifests**:
-    - **ACTION**: Run `unsupported/update-packages.sh <new_version>` to update both Arch Linux and Flatpak manifests automatically.
-    - **ACTION**: Review the changes made by the script.
-
-7.  **Create Pull Request for Manifest Updates**:
-    - **ACTION**: Create a new branch named `unsupported/bump-<new_version>`.
-    - **ACTION**: Commit the changes with the message `chore: Update PKGBUILD and Flatpak for <new_version>`.
-    - **ACTION**: Create a single pull request for these changes.
