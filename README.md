@@ -111,6 +111,7 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
       - Download and run the `.pkg` installer.
     - **For Linux:**
       - **Ubuntu:** Download and install the provided `.deb` package.
+      - **Fedora:** Please refer to the instructions in [`unsupported/fedora/`](./unsupported/fedora).
       - **Arch Linux:** Please refer to the instructions in [`unsupported/arch/`](./unsupported/arch).
       - **Flatpak:** Please refer to the instructions in [`unsupported/flatpak/`](./unsupported/flatpak).
       - **Other Distributions:** Users of other distributions will need to build from source. Note: Converting the `.deb` package is known not to work.
