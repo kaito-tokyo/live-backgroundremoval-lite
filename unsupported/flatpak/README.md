@@ -40,10 +40,11 @@ If you wish to proceed with building the plugin from these local files, you will
 
 ### Build and Install Steps
 
-1.  Navigate to the `unsupported/flatpak` directory within this repository.
+1.  Clone the live-plugins-hub repository:
 
     ```bash
-    cd unsupported/flatpak
+    git clone https://github.com/kaito-tokyo/live-plugins-hub.git
+    cd live-plugins-hub/flatpak/live-backgroundremoval-lite
     ```
 
 2.  Use `flatpak-builder` to build and install the plugin.
