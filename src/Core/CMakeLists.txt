@@ -6,16 +6,16 @@ target_link_libraries(
 target_sources(
   ${CMAKE_PROJECT_NAME}_Core
   PRIVATE
-  DebugWindow.cpp
-  DebugWindow.hpp
-  MainEffect.hpp
-  MainPluginContext_c.cpp
-  MainPluginContext.cpp
-  MainPluginContext.h
-  PluginConfig.hpp
-  PluginProperty.hpp
-  RenderingContext.cpp
-  RenderingContext.hpp
+    DebugWindow.cpp
+    DebugWindow.hpp
+    MainEffect.hpp
+    MainPluginContext_c.cpp
+    MainPluginContext.cpp
+    MainPluginContext.h
+    PluginConfig.hpp
+    PluginProperty.hpp
+    RenderingContext.cpp
+    RenderingContext.hpp
 )
 target_compile_options(
   ${CMAKE_PROJECT_NAME}_Core
