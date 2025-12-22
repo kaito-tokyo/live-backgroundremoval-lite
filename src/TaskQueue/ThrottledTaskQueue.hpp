@@ -3,7 +3,7 @@
  * Copyright (c) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This software is licensed under the MIT License.
- * For the full text of the license, see the file "LICENSE.MIT" 
+ * For the full text of the license, see the file "LICENSE.MIT"
  * in the distribution root.
  */
 

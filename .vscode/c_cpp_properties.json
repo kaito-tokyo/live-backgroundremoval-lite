@@ -2,13 +2,22 @@
     "configurations": [
         {
             "name": "Mac",
-            "includePath": ["${workspaceFolder}/**"],
-            "compilerPath": "/usr/bin/clang",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "PLUGIN_NAME=\"[plugin]\"",
+                "PLUGIN_VERSION=\"0.0.0\"",
+                "HAVE_BACKWARD",
+                "DATA_DIR=\".\"",
+                "TESTS_DIR=\".\""
+            ],
+            "compilerPath": "/usr/bin/clang++",
             "cStandard": "c17",
-            "cppStandard": "c++17",
+            "cppStandard": "c++20",
             "intelliSenseMode": "macos-clang-arm64",
             "macFrameworkPath": [
-                "${workspaceFolder}/.deps/obs-deps-qt6-*-universal/lib"
+                "${workspaceFolder}/.deps/obs-deps-qt6-2025-07-11-universal/lib"
             ]
         }
     ],

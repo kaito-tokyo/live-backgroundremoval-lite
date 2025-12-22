@@ -8,7 +8,7 @@
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; for more details see the file 
+ * but WITHOUT ANY WARRANTY; for more details see the file
  * "LICENSE.GPL-3.0-or-later" in the distribution root.
  */
 
