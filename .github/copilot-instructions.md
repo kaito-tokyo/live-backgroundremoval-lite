@@ -1,6 +1,6 @@
 # Development Guideline for Live Background Removal Lite Plugin
 
-- Develop this project using C++17.
+- Develop this project using C++20.
 - For empty argument lists, use `()` instead of `(void)`, except within regions marked by `extern "C"`.
 - After modifying C or C++ files, format them with `clang-format-19`.
 - After modifying CMake files, format them with `gersemi`.
