@@ -1,5 +1,5 @@
 /*
- * UpdateChecker
+ * KaitoTokyo UpdateChecker Library
  * Copyright (c) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This software is licensed under the MIT License.
@@ -15,8 +15,7 @@
 
 #include <curl/curl.h>
 
-namespace KaitoTokyo {
-namespace UpdateChecker {
+namespace KaitoTokyo::UpdateChecker {
 
 inline size_t writeCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
@@ -97,5 +96,4 @@ inline std::string fetchLatestVersion(const std::string &url)
 	return result;
 }
 
-} // namespace UpdateChecker
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::UpdateChecker

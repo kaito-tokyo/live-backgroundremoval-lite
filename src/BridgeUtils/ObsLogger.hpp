@@ -22,8 +22,7 @@
 
 #include <ILogger.hpp>
 
-namespace KaitoTokyo {
-namespace BridgeUtils {
+namespace KaitoTokyo::BridgeUtils {
 
 class ObsLogger final : public Logger::ILogger {
 public:
@@ -74,5 +73,4 @@ private:
 	mutable std::mutex mutex_;
 };
 
-} // namespace BridgeUtils
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::BridgeUtils

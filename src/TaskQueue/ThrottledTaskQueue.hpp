@@ -1,5 +1,5 @@
 /*
- * TaskQueue
+ * KaitoTokyo TaskQueue Library
  * Copyright (c) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This software is licensed under the MIT License.
@@ -23,8 +23,7 @@
 
 #include <ILogger.hpp>
 
-namespace KaitoTokyo {
-namespace TaskQueue {
+namespace KaitoTokyo::TaskQueue {
 
 /**
  * @brief A self-contained thread queue for executing cancellable tasks with a limit.
@@ -212,5 +211,4 @@ private:
 	std::thread worker_;
 };
 
-} // namespace TaskQueue
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::TaskQueue

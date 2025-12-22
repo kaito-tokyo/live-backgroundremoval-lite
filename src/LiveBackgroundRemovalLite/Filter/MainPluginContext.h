@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite
+ * Live Background Removal Lite - Filter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -32,8 +32,7 @@
 #include "PluginProperty.hpp"
 #include "MainEffect.hpp"
 
-namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
 
 class DebugWindow;
 class RenderingContext;
@@ -90,8 +89,7 @@ private:
 	mutable std::mutex debugWindowMutex_;
 };
 
-} // namespace LiveBackgroundRemovalLite
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
 
 extern "C" {
 #endif // __cplusplus

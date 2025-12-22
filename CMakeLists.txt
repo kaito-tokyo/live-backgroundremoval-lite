@@ -99,8 +99,8 @@ endif()
 add_subdirectory(src)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_PROJECT_NAME}_Core)
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.c)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_PROJECT_NAME}_Filter OBS::libobs)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp)
 target_compile_options(
   ${CMAKE_PROJECT_NAME}
   PRIVATE $<$<C_COMPILER_ID:Clang,AppleClang>:-Wno-quoted-include-in-framework-header -Wno-comma>

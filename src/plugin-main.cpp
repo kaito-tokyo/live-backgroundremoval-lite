@@ -14,7 +14,7 @@
 
 #include <obs-module.h>
 
-#include "Core/MainPluginContext.h"
+#include <MainPluginContext.h>
 #include "plugin-support.h"
 
 OBS_DECLARE_MODULE()

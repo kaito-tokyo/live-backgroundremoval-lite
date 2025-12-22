@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite
+ * Live Background Removal Lite - Filter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,8 +23,7 @@
 #include <GsUnique.hpp>
 #include <ObsUnique.hpp>
 
-namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
 
 struct TransformStateGuard {
 	TransformStateGuard()
@@ -433,5 +432,4 @@ public:
 	gs_eparam_t *const floatAlpha_ = nullptr;
 };
 
-} // namespace LiveBackgroundRemovalLite
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter

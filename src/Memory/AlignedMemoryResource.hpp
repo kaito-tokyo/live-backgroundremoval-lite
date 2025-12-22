@@ -15,8 +15,7 @@
 
 #include <memory_resource>
 
-namespace KaitoTokyo {
-namespace Memory {
+namespace KaitoTokyo::Memory {
 
 class AlignedMemoryResource : public std::pmr::memory_resource {
 public:
@@ -63,5 +62,4 @@ private:
 	std::pmr::memory_resource *upstream_;
 };
 
-} // namespace Memory
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::Memory

@@ -9,4 +9,4 @@ add_subdirectory(BridgeUtils)
 
 add_subdirectory(SelfieSegmenter)
 
-add_subdirectory(Core)
+add_subdirectory(LiveBackgroundRemovalLite)
