@@ -97,11 +97,6 @@ else()
   message(FATAL_ERROR "Either USE_PKGCONFIG or VCPKG_TARGET_TRIPLET must be set.")
 endif()
 
-add_library(Logger INTERFACE)
-target_include_directories(Logger INTERFACE ${CMAKE_SOURCE_DIR}/src/Logger)
-target_link_libraries(Logger INTERFACE fmt::fmt)
-target_sources(Logger PRIVATE src/Logger/ILogger.hpp)
-
 add_library(Memory INTERFACE)
 target_include_directories(Memory INTERFACE ${CMAKE_SOURCE_DIR}/src/Memory)
 
