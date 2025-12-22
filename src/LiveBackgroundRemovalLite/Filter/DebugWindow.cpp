@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite
+ * Live Background Removal Lite - Filter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -85,8 +85,7 @@ const std::vector<const char *> r32fSubTextures = {
 
 } // namespace
 
-namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
 
 DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent)
 	: QDialog(parent),
@@ -413,5 +412,4 @@ void DebugWindow::onTextureSelectionChanged(int index)
 	selectedPreviewTextureIndex_.store(index, std::memory_order_release);
 }
 
-} // namespace LiveBackgroundRemovalLite
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter

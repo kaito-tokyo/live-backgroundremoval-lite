@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite
+ * Live Background Removal Lite - Filter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -14,8 +14,7 @@
 
 #pragma once
 
-namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
 
 enum class FilterLevel : int {
 	Default = 0,
@@ -43,5 +42,4 @@ struct PluginProperty {
 	double maskUpperBoundMarginAmpDb = -25.0;
 };
 
-} // namespace LiveBackgroundRemovalLite
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter

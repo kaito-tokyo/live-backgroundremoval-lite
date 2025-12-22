@@ -1,5 +1,5 @@
 /*
- * SelfieSegmenter
+ * KaitoTokyo SelfieSegmenter Library
  * Copyright (c) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This software is licensed under the MIT License.
@@ -27,8 +27,7 @@
 #include "MaskBuffer.hpp"
 #include "ShapeConverter.hpp"
 
-namespace KaitoTokyo {
-namespace SelfieSegmenter {
+namespace KaitoTokyo::SelfieSegmenter {
 
 class NcnnSelfieSegmenter final : public ISelfieSegmenter {
 public:
@@ -98,5 +97,4 @@ private:
 	ncnn::Mat outputMat_;
 };
 
-} // namespace SelfieSegmenter
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::SelfieSegmenter

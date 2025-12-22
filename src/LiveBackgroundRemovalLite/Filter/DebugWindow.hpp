@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite
+ * Live Background Removal Lite - Filter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,8 +25,7 @@
 
 #include <AsyncTextureReader.hpp>
 
-namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
 
 class MainPluginContext;
 
@@ -69,5 +68,4 @@ private:
 	std::vector<std::uint8_t> bufferSubPaddedR8_;
 };
 
-} // namespace LiveBackgroundRemovalLite
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter

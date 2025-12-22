@@ -1,5 +1,5 @@
 /*
- * SelfieSegmenter
+ * KaitoTokyo SelfieSegmenter Library
  * Copyright (c) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This software is licensed under the MIT License.
@@ -18,8 +18,7 @@
 
 #include <AlignedMemoryResource.hpp>
 
-namespace KaitoTokyo {
-namespace SelfieSegmenter {
+namespace KaitoTokyo::SelfieSegmenter {
 
 class MaskBuffer {
 public:
@@ -69,5 +68,4 @@ private:
 	mutable std::mutex bufferMutex_;
 };
 
-} // namespace SelfieSegmenter
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::SelfieSegmenter

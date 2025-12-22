@@ -1,5 +1,5 @@
 /*
- * SelfieSegmenter
+ * KaitoTokyo SelfieSegmenter Library
  * Copyright (c) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This software is licensed under the MIT License.
@@ -29,8 +29,7 @@
 #endif // __ARM_NEON
 #endif // defined(_M_ARM64) || defined(__aarch64__)
 
-namespace KaitoTokyo {
-namespace SelfieSegmenter {
+namespace KaitoTokyo::SelfieSegmenter {
 
 namespace {
 
@@ -634,5 +633,4 @@ void copy_float32_to_r8(std::uint8_t *dst, const float *src, std::size_t pixelCo
 #endif
 }
 
-} // namespace SelfieSegmenter
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::SelfieSegmenter

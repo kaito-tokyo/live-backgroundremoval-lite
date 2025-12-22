@@ -26,8 +26,7 @@
 
 #include "GsUnique.hpp"
 
-namespace KaitoTokyo {
-namespace BridgeUtils {
+namespace KaitoTokyo::BridgeUtils {
 
 /**
  * @brief Internal implementation details for AsyncTextureReader.
@@ -344,5 +343,4 @@ private:
 	std::mutex gpuMutex_;
 };
 
-} // namespace BridgeUtils
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::BridgeUtils

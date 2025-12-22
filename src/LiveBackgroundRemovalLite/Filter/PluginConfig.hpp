@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite
+ * Live Background Removal Lite - Filter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,8 +20,7 @@
 
 #include <ObsUnique.hpp>
 
-namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
 
 struct PluginConfig {
 	std::string latestVersionURL =
@@ -75,5 +74,4 @@ struct PluginConfig {
 	}
 };
 
-} // namespace LiveBackgroundRemovalLite
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter

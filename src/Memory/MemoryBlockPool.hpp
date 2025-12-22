@@ -21,8 +21,7 @@
 
 #include "AlignedMemoryResource.hpp"
 
-namespace KaitoTokyo {
-namespace Memory {
+namespace KaitoTokyo::Memory {
 
 /**
  * @class MemoryBlockPool
@@ -144,5 +143,4 @@ private:
 	mutable std::mutex poolMutex_;
 };
 
-} // namespace Memory
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::Memory

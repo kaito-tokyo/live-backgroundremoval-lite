@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite
+ * Live Background Removal Lite - Filter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,8 +33,7 @@
 using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
 
-namespace KaitoTokyo {
-namespace LiveBackgroundRemovalLite {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
 
 MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *source,
 				     std::shared_future<std::string> latestVersionFuture, const ILogger &logger)
@@ -396,5 +395,4 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 	return renderingContext;
 }
 
-} // namespace LiveBackgroundRemovalLite
-} // namespace KaitoTokyo
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
