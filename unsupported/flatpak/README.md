@@ -44,7 +44,7 @@ If you wish to proceed with building the plugin from these local files, you will
 
     ```bash
     git clone https://github.com/kaito-tokyo/live-plugins-hub.git
-    cd live-plugins-hub/flatpak/live-backgroundremoval-lite
+    cd live-plugins-hub/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite
     ```
 
 2.  Use `flatpak-builder` to build and install the plugin.
