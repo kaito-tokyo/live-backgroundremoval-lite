@@ -45,8 +45,8 @@ template<typename PromiseType> struct SymmetricTransfer {
 	std::coroutine_handle<> await_suspend(std::coroutine_handle<PromiseType> h) noexcept
 	{
 		auto &promise = h.promise();
-		if (promise.continuation_) {
-			return promise.continuation_;
+		if (promise.continuation) {
+			return promise.continuation;
 		}
 		return std::noop_coroutine();
 	}
@@ -86,14 +86,14 @@ using TaskStoragePtr = std::unique_ptr<void, TaskStorageReleaser>;
  *
  * @warning **LIFETIME CONSTRAINT**
  * The `TaskStorage` instance **MUST outlive** any `Task` allocated from it.
- * The `Task` holds a `TaskStoragePtr` which refers back to the `used_` flag inside this storage.
+ * The `Task` holds a `TaskStoragePtr` which refers back to the `used` flag inside this storage.
  * If the storage is destroyed while a Task is still running, it will lead to a dangling pointer access.
  *
  * @tparam Size The size of the buffer in bytes (default: 4096).
  */
 template<std::size_t Size = kDefaultTaskSize> class TaskStorage {
 	alignas(std::max_align_t) char buffer_[Size];
-	bool used_ = false;
+	bool used = false;
 
 public:
 	TaskStorage() = default;
@@ -110,12 +110,12 @@ public:
 	 */
 	TaskStoragePtr allocate(std::size_t n)
 	{
-		if (n > Size || used_) {
+		if (n > Size || used) {
 			return TaskStoragePtr(nullptr, TaskStorageReleaser{nullptr});
 		}
 
-		used_ = true;
-		return TaskStoragePtr(buffer_, TaskStorageReleaser{&used_});
+		used = true;
+		return TaskStoragePtr(buffer_, TaskStorageReleaser{&used});
 	}
 };
 
@@ -177,7 +177,7 @@ template<> struct TaskPromiseBase<void> {
  */
 template<typename T> struct [[nodiscard]] Task {
 	struct promise_type : TaskPromiseBase<T> {
-		std::coroutine_handle<> continuation_ = nullptr;
+		std::coroutine_handle<> continuation = nullptr;
 
 		Task get_return_object() { return Task{std::coroutine_handle<promise_type>::from_promise(*this)}; }
 
@@ -237,45 +237,45 @@ template<typename T> struct [[nodiscard]] Task {
 		}
 	};
 
-	explicit Task(std::coroutine_handle<promise_type> h) : handle_(h) {}
+	explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}
 	~Task()
 	{
-		if (handle_)
-			handle_.destroy();
+		if (handle)
+			handle.destroy();
 	}
 
 	Task(const Task &) = delete;
 	Task &operator=(const Task &) = delete;
-	Task(Task &&other) noexcept : handle_(other.handle_) { other.handle_ = nullptr; }
+	Task(Task &&other) noexcept : handle(other.handle) { other.handle = nullptr; }
 	Task &operator=(Task &&other) noexcept
 	{
 		if (this != &other) {
-			if (handle_)
-				handle_.destroy();
-			handle_ = other.handle_;
-			other.handle_ = nullptr;
+			if (handle)
+				handle.destroy();
+			handle = other.handle;
+			other.handle = nullptr;
 		}
 		return *this;
 	}
 
-	bool await_ready() { return handle_.done(); }
+	bool await_ready() { return handle.done(); }
 
 	std::coroutine_handle<> await_suspend(std::coroutine_handle<> caller)
 	{
-		handle_.promise().continuation_ = caller;
-		return handle_;
+		handle.promise().continuation = caller;
+		return handle;
 	}
 
-	T await_resume() { return handle_.promise().extract_value(); }
+	T await_resume() { return handle.promise().extract_value(); }
 
 	void start()
 	{
-		if (handle_ && !handle_.done())
-			handle_.resume();
+		if (handle && !handle.done())
+			handle.resume();
 	}
 
 private:
-	std::coroutine_handle<promise_type> handle_;
+	std::coroutine_handle<promise_type> handle;
 };
 
 } // namespace KaitoTokyo::Async
