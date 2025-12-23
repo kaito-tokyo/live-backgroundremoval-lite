@@ -109,10 +109,8 @@ Async::Task<void> GlobalContext::fetchLatestVersion(std::allocator_arg_t, TaskSt
 		throw std::runtime_error("InvalidVersionFormat(GlobalContext::fetchLatestVersion)");
 	}
 
-	std::string_view extractedVersion(
-		rawInput.data() + std::distance(rawInput.begin(), matches[1].first),
-		static_cast<std::size_t>(matches[1].length())
-	);
+	std::string_view extractedVersion(rawInput.data() + std::distance(rawInput.begin(), matches[1].first),
+					  static_cast<std::size_t>(matches[1].length()));
 
 	logger->info("Latest version on Internet is {}", extractedVersion);
 
