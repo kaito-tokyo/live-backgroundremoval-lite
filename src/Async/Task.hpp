@@ -22,7 +22,7 @@
  *
  * @brief THE "POWER USER" CONTRACT
  *
- * By using this library, you agree to the following STRICT strict contracts.
+ * By using this library, you agree to the following STRICT contracts.
  * Failure to adhere to these rules will result in `std::terminate`, memory corruption,
  * or undefined behavior.
  *
@@ -32,6 +32,41 @@
  * until the operation completes.
  * 3. **STRICT STORAGE HIERARCHY**: When using `TaskStorage`, the storage object
  * MUST strictly outlive the `Task` created from it.
+ * 4. **ALLOCATOR ARGUMENT REQUIREMENT**:
+ * To enable the custom allocation mechanism, every coroutine function returning
+ * a `Task` MUST accept `std::allocator_arg_t` as the first argument and
+ * a reference to a `TaskAllocator` (e.g., `TaskStorage&`) as the second argument.
+ * Failure to do so will result in a compilation error regarding `operator new`.
+ *
+ * Example:
+ * @code
+ * Task<int> my_coroutine(std::allocator_arg_t, TaskStorage<>& storage, int arg1) {
+ * co_return arg1 * 2;
+ * }
+ * @endcode
+ *
+ * @section STACK_USAGE STACK CONSUMPTION WARNING
+ *
+ * `TaskStorage` reserves a fixed memory block directly inline (Default: 4KB in Release,
+ * 32KB in Debug).
+ *
+ * - **Avoid Recursive Stack Allocation**: Instantiating `TaskStorage` as a local
+ * variable (automatic storage duration) inside a recursive function will rapidly
+ * cause a Stack Overflow due to the cumulative size.
+ * - **Placement Strategy**: Users are strongly encouraged to use `static`,
+ * `thread_local`, or external lifetime management (e.g., as a member of a
+ * heap-allocated object) rather than placing storage on the transient call stack
+ * unless the recursion depth is strictly bounded.
+ *
+ * @section THREAD_SAFETY THREAD SAFETY AND EXECUTION MODEL
+ *
+ * - **Cross-Thread Execution**: It is explicitly permitted for the thread that calls
+ * `Task::start()` to be different from the thread that `co_await`s the result.
+ * The library is designed to allow the task to migrate or be awaited across
+ * thread boundaries, provided that ownership of the `Task` object is correctly managed.
+ * - **Synchronization**: While the `Task` object itself manages the lifecycle,
+ * users must ensure appropriate memory visibility when accessing shared state
+ * outside the task's return value.
  *
  * Use this library only when standard dynamic allocation is unacceptable and
  * you can guarantee the lifetime hierarchy of your objects.
@@ -113,7 +148,7 @@ using TaskStoragePtr = std::unique_ptr<void, TaskStorageReleaser>;
  * will immediately call `std::terminate()`.
  */
 template<std::size_t Size = kDefaultTaskSize> class TaskStorage {
-	enum class State : std::uint64_t { Alive = 0x5441534B4C495645, Dead = 0xDEADDEADDEADDEAD, Uninitialized = 0 };
+	enum class State : std::uint64_t { Alive = 0x5441534B4C495645, Dead = 0xDEADDEADDEADDEAD };
 
 	State magic_ = State::Alive;
 	std::atomic<bool> used_{false};
@@ -125,7 +160,7 @@ public:
 	// Ensure storage is not destroyed while a task is running
 	~TaskStorage()
 	{
-		if (used_) {
+		if (used_.load(std::memory_order_acquire)) {
 			// FATAL: Storage destroyed while Task is still running.
 			std::terminate();
 		}
@@ -150,6 +185,7 @@ public:
 			throw std::logic_error("IllegalReuseError(TaskStorage::allocate)");
 		}
 
+		// This checker will be converted into a function pointer to avoid capturing anything.
 		auto checker = [](void *ptr) {
 			auto *self = static_cast<TaskStorage *>(ptr);
 			if (self->magic_ != State::Alive) {
@@ -319,6 +355,10 @@ struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object
 	 * Calling `start()` DOES NOT detach the task. You must continue to hold the
 	 * `Task` object after calling `start()`. If the `Task` object is destroyed
 	 * immediately after `start()`, the coroutine will be aborted before it finishes.
+	 *
+	 * @warning **SINGLE EXECUTION ONLY**
+	 * This method must be called exactly once. Calling `start()` on a task that
+	 * has already been started (whether running or suspended) is undefined behavior.
 	 */
 	void start()
 	{
