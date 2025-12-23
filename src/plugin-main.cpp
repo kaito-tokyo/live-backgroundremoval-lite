@@ -20,10 +20,17 @@
 
 // #include <MainFilterInfo.hpp>
 
-#include <SharedTask.hpp>
+#include <GlobalContext.hpp>
+#include <ObsLogger.hpp>
 
-// using namespace KaitoTokyo;
-// using namespace KaitoTokyo::LiveBackgroundRemovalLite;
+using namespace KaitoTokyo;
+using namespace KaitoTokyo::LiveBackgroundRemovalLite;
+
+#define PLUGIN_NAME "live-backgroundremoval-lite"
+
+#ifndef PLUGIN_VERSION
+#define PLUGIN_VERSION "0.0.0"
+#endif
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
@@ -43,12 +50,6 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 // 				       .video_render = main_plugin_context_video_render,
 // 				       .filter_video = main_plugin_context_filter_video};
 
-#define PLUGIN_NAME "live-backgroundremoval-lite"
-
-#ifndef PLUGIN_VERSION
-#define PLUGIN_VERSION "0.0.0"
-#endif
-
 // const obs_source_info g_mainFilterInfo_ = {
 // 	.id = "live_backgroundremoval_lite",
 // 	.type = OBS_SOURCE_TYPE_FILTER,
@@ -56,8 +57,17 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 // 	.get_name = MainFilter::getName,
 // };
 
+const char latestVersionUrl[] = "https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
+
+std::shared_ptr<Global::GlobalContext> g_globalContext_;
+
 bool obs_module_load(void)
 {
+	const std::shared_ptr<const Logger::ILogger> logger =
+		std::make_shared<BridgeUtils::ObsLogger>("[" PLUGIN_NAME "]");
+	g_globalContext_ =
+		std::make_shared<Global::GlobalContext>(PLUGIN_NAME, PLUGIN_VERSION, logger, latestVersionUrl);
+
 	// const std::shared_ptr<const Logger::ILogger> logger =
 	// 	std::make_shared<BridgeUtils::ObsLogger>("[" PLUGIN_NAME "] ");
 	// if (MainFilter::loadModule(PLUGIN_NAME, PLUGIN_VERSION, logger)) {
@@ -73,6 +83,7 @@ bool obs_module_load(void)
 
 void obs_module_unload(void)
 {
+	g_globalContext_.reset();
 	// main_plugin_context_module_unload();
 	// blog(LOG_INFO, "[" PLUGIN_NAME "] plugin unloaded");
 }

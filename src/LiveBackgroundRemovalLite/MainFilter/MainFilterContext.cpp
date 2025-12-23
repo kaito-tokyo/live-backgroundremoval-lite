@@ -12,7 +12,7 @@
  * "LICENSE.GPL-3.0-or-later" in the distribution root.
  */
 
-#include "MainPluginContext.h"
+#include "MainFilterContext.hpp"
 
 #include <future>
 #include <stdexcept>
@@ -28,17 +28,15 @@
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
 
-#include "../plugin-support.h"
-
 using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
-MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *source,
-				     std::shared_future<std::string> latestVersionFuture, const ILogger &logger)
+MainFilterContext::MainFilterContext(obs_data_t *settings, obs_source_t *source, std::shared_ptr<Global::GlobalContext> globalContext)
 	: source_{source},
-	  logger_(logger),
+	  globalContext_{globalContext},
+	  logger_(globalContext->logger_),
 	  mainEffect_(logger_, unique_obs_module_file("effects/main.effect")),
 	  latestVersionFuture_(latestVersionFuture),
 	  selfieSegmenterTaskQueue_(logger_, 1)
@@ -46,7 +44,7 @@ MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *source,
 	update(settings);
 }
 
-void MainPluginContext::shutdown() noexcept
+void MainFilterContext::shutdown() noexcept
 {
 	{
 		std::lock_guard<std::mutex> lock(debugWindowMutex_);
@@ -66,21 +64,21 @@ void MainPluginContext::shutdown() noexcept
 	selfieSegmenterTaskQueue_.shutdown();
 }
 
-MainPluginContext::~MainPluginContext() noexcept {}
+MainFilterContext::~MainFilterContext() noexcept {}
 
-std::uint32_t MainPluginContext::getWidth() const noexcept
+std::uint32_t MainFilterContext::getWidth() const noexcept
 {
 	auto renderingContext = getRenderingContext();
 	return renderingContext ? renderingContext->region_.width : 0;
 }
 
-std::uint32_t MainPluginContext::getHeight() const noexcept
+std::uint32_t MainFilterContext::getHeight() const noexcept
 {
 	auto renderingContext = getRenderingContext();
 	return renderingContext ? renderingContext->region_.height : 0;
 }
 
-void MainPluginContext::getDefaults(obs_data_t *data)
+void MainFilterContext::getDefaults(obs_data_t *data)
 {
 	PluginProperty defaultProperty;
 
@@ -102,7 +100,7 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 	obs_data_set_default_double(data, "maskUpperBoundMarginAmpDb", defaultProperty.maskUpperBoundMarginAmpDb);
 }
 
-obs_properties_t *MainPluginContext::getProperties()
+obs_properties_t *MainFilterContext::getProperties()
 {
 	obs_properties_t *props = obs_properties_create();
 
@@ -133,7 +131,7 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
-			auto this_ = static_cast<MainPluginContext *>(data);
+			auto this_ = static_cast<MainFilterContext *>(data);
 			DebugWindow *windowToShow = nullptr;
 
 			{
@@ -218,7 +216,7 @@ obs_properties_t *MainPluginContext::getProperties()
 	return props;
 }
 
-void MainPluginContext::update(obs_data_t *settings)
+void MainFilterContext::update(obs_data_t *settings)
 {
 	bool advancedSettingsEnabled = obs_data_get_bool(settings, "advancedSettings");
 
@@ -275,7 +273,7 @@ void MainPluginContext::update(obs_data_t *settings)
 	}
 }
 
-void MainPluginContext::videoTick(float seconds)
+void MainFilterContext::videoTick(float seconds)
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
@@ -329,7 +327,7 @@ void MainPluginContext::videoTick(float seconds)
 	}
 }
 
-void MainPluginContext::videoRender()
+void MainFilterContext::videoRender()
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
@@ -359,7 +357,7 @@ void MainPluginContext::videoRender()
 	}
 }
 
-obs_source_frame *MainPluginContext::MainFilterVideo(struct obs_source_frame *frame)
+obs_source_frame *MainFilterContext::MainFilterVideo(struct obs_source_frame *frame)
 try {
 	if (obs_source_t *const parent = obs_filter_get_parent(source_)) {
 		if (!obs_source_active(parent) || !obs_source_showing(parent)) {
@@ -380,7 +378,7 @@ try {
 	return frame;
 }
 
-std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std::uint32_t targetWidth,
+std::shared_ptr<RenderingContext> MainFilterContext::createRenderingContext(std::uint32_t targetWidth,
 									    std::uint32_t targetHeight)
 {
 	PluginConfig pluginConfig(PluginConfig::load(logger_));

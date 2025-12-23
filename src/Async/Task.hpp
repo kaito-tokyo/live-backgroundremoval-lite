@@ -191,11 +191,13 @@ public:
 	{
 		if (n > Size) {
 			used_.store(false, std::memory_order_release);
-			throw std::length_error("InsufficientCapacityError(TaskStorage::allocate):" + std::to_string(n) + "/" + std::to_string(Size));
+			throw std::length_error("InsufficientCapacityError(TaskStorage::allocate):" +
+						std::to_string(n) + "/" + std::to_string(Size));
 		}
 
 		bool expected = false;
-		if (!used_.compare_exchange_strong(expected, true, std::memory_order_acquire, std::memory_order_relaxed)) {
+		if (!used_.compare_exchange_strong(expected, true, std::memory_order_acquire,
+						   std::memory_order_relaxed)) {
 			throw std::logic_error("IllegalReuseError(TaskStorage::allocate)");
 		}
 

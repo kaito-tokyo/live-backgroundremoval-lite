@@ -96,11 +96,16 @@ else()
   message(FATAL_ERROR "Either USE_PKGCONFIG or VCPKG_TARGET_TRIPLET must be set.")
 endif()
 
+if(APPLE)
+  set(JTHREAD_LIBRARIES jthread::jthread)
+  add_subdirectory(vendor/josuttis-jthread)
+endif()
+
 add_subdirectory(src)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE)
 # target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_PROJECT_NAME}_Filter OBS::libobs)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs Async)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs BridgeUtils ${CMAKE_PROJECT_NAME}_Global)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp)
 target_compile_options(
   ${CMAKE_PROJECT_NAME}

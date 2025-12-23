@@ -18,8 +18,6 @@
 
 #include <obs.h>
 
-#ifdef __cplusplus
-
 #include <atomic>
 #include <future>
 #include <memory>
@@ -29,6 +27,8 @@
 
 #include <ThrottledTaskQueue.hpp>
 
+#include <GlobalContext.hpp>
+
 #include "PluginProperty.hpp"
 #include "MainEffect.hpp"
 
@@ -37,18 +37,17 @@ namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 class DebugWindow;
 class RenderingContext;
 
-class MainPluginContext : public std::enable_shared_from_this<MainPluginContext> {
+class MainFilterContext : public std::enable_shared_from_this<MainFilterContext> {
 public:
-	MainPluginContext(obs_data_t *settings, obs_source_t *source,
-			  std::shared_future<std::string> latestVersionFuture, const Logger::ILogger &logger);
+	MainFilterContext(obs_data_t *settings, obs_source_t *source, std::shared_ptr<Global::GlobalContext> globalContext);
 
 	void shutdown() noexcept;
-	~MainPluginContext() noexcept;
+	~MainFilterContext() noexcept;
 
-	MainPluginContext(const MainPluginContext &) = delete;
-	MainPluginContext &operator=(const MainPluginContext &) = delete;
-	MainPluginContext(MainPluginContext &&) = delete;
-	MainPluginContext &operator=(MainPluginContext &&) = delete;
+	MainFilterContext(const MainFilterContext &) = delete;
+	MainFilterContext &operator=(const MainFilterContext &) = delete;
+	MainFilterContext(MainFilterContext &&) = delete;
+	MainFilterContext &operator=(MainFilterContext &&) = delete;
 
 	uint32_t getWidth() const noexcept;
 	uint32_t getHeight() const noexcept;
@@ -75,8 +74,11 @@ private:
 	void applyPluginProperty(const std::shared_ptr<RenderingContext> &_renderingContext);
 
 	obs_source_t *const source_;
-	const Logger::ILogger &logger_;
-	std::shared_future<std::string> latestVersionFuture_;
+	const std::shared_future<Global::GlobalContext> globalContext_;
+
+	const std::shared_ptr<const Logger::ILogger> logger_;
+
+
 	const MainEffect mainEffect_;
 	TaskQueue::ThrottledTaskQueue selfieSegmenterTaskQueue_;
 
@@ -90,29 +92,3 @@ private:
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
-
-extern "C" {
-#endif // __cplusplus
-
-bool main_plugin_context_module_load(void);
-void main_plugin_context_module_unload(void);
-
-const char *main_plugin_context_get_name(void *type_data);
-void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source);
-void main_plugin_context_destroy(void *data);
-uint32_t main_plugin_context_get_width(void *data);
-uint32_t main_plugin_context_get_height(void *data);
-void main_plugin_context_get_defaults(obs_data_t *data);
-obs_properties_t *main_plugin_context_get_properties(void *data);
-void main_plugin_context_update(void *data, obs_data_t *settings);
-void main_plugin_context_activate(void *data);
-void main_plugin_context_deactivate(void *data);
-void main_plugin_context_show(void *data);
-void main_plugin_context_hide(void *data);
-void main_plugin_context_video_tick(void *data, float seconds);
-void main_plugin_context_video_render(void *data, gs_effect_t *effect);
-struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs_source_frame *frame);
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
