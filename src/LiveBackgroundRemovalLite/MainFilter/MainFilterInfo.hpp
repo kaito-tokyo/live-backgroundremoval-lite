@@ -38,11 +38,8 @@ std::string g_pluginName;
 std::string g_pluginVersion;
 std::shared_ptr<const Logger::ILogger> g_logger_ = nullptr;
 
-inline bool loadModule(
-	std::string pluginName,
-	std::string pluginVersion,
-	std::shared_ptr<const Logger::ILogger> logger
-) noexcept
+inline bool loadModule(std::string pluginName, std::string pluginVersion,
+		       std::shared_ptr<const Logger::ILogger> logger) noexcept
 {
 	g_pluginName = std::move(pluginName);
 	g_pluginVersion = std::move(pluginVersion);
