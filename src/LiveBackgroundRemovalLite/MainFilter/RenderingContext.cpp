@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite - Filter Module
+ * Live Background Removal Lite - MainFilter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,7 +22,7 @@ using namespace KaitoTokyo::Memory;
 using namespace KaitoTokyo::SelfieSegmenter;
 using namespace KaitoTokyo::TaskQueue;
 
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 namespace {
 
@@ -310,7 +310,7 @@ void RenderingContext::videoRender()
 	}
 }
 
-obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
+obs_source_frame *RenderingContext::MainFilterVideo(obs_source_frame *frame)
 {
 	if (lastFrameTimestamp_ != frame->timestamp) {
 		lastFrameTimestamp_ = frame->timestamp;
@@ -358,4 +358,4 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 	logger_.info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
 }
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

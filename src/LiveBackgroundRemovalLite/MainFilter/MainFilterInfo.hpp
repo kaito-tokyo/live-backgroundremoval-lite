@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite - Filter Module
+ * Live Background Removal Lite - MainFilter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -14,13 +14,14 @@
 
 #include "MainPluginContext.h"
 
-#include <stdexcept>
+#include <exception>
+#include <memory>
 
 #include <obs-module.h>
 
 #include <GsUnique.hpp>
 #include <NullLogger.hpp>
-#include <ObsLogger.hpp>
+#include <ILogger.hpp>
 
 #include <UpdateChecker.hpp>
 
@@ -30,89 +31,47 @@
 
 using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
-using namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter;
 
-namespace {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
-inline const ILogger &loggerInstance() noexcept
+std::string g_pluginName;
+std::string g_pluginVersion;
+std::shared_ptr<const Logger::ILogger> g_logger_ = nullptr;
+
+inline bool loadModule(
+	std::string pluginName,
+	std::string pluginVersion,
+	std::shared_ptr<const Logger::ILogger> logger
+) noexcept
 {
-	try {
-		static const ObsLogger instance("[" PLUGIN_NAME "] ");
-		return instance;
-	} catch (const std::exception &e) {
-		fprintf(stderr, "Failed to create logger instance: %s\n", e.what());
-	} catch (...) {
-		fprintf(stderr, "Failed to create logger instance: unknown error\n");
-	}
-
-	static const NullLogger nullInstance;
-	return nullInstance;
-}
-
-inline std::shared_future<std::string> &latestVersionFutureInstance() noexcept
-{
-	const ILogger &logger = loggerInstance();
-
-	try {
-		static std::shared_future<std::string> instance =
-			std::async(std::launch::async, [&logger] {
-				PluginConfig pluginConfig(PluginConfig::load(logger));
-				return KaitoTokyo::UpdateChecker::fetchLatestVersion(pluginConfig.latestVersionURL);
-			}).share();
-
-		return instance;
-	} catch (const std::exception &e) {
-		logger.logException(e, "Failed to create latest version future instance");
-	} catch (...) {
-		logger.error("Failed to create latest version future instance: unknown error");
-	}
-
-	static std::shared_future<std::string> failedInstance;
-	return failedInstance;
-}
-
-} // namespace
-
-bool main_plugin_context_module_load()
-{
-	curl_global_init(CURL_GLOBAL_DEFAULT);
-
-	const ILogger &logger = loggerInstance();
-	if (logger.isInvalid()) {
-		fprintf(stderr, "Logger instance is invalid\n");
-		return false;
-	}
-
-	latestVersionFutureInstance();
-
+	g_pluginName = std::move(pluginName);
+	g_pluginVersion = std::move(pluginVersion);
+	g_logger_ = std::move(logger);
 	return true;
 }
 
-void main_plugin_context_module_unload()
+inline void unloadModule() noexcept
 {
-	GraphicsContextGuard graphicsContextGuard;
-	GsUnique::drain();
-	curl_global_cleanup();
+	g_logger_.reset();
 }
 
-const char *main_plugin_context_get_name(void *)
+inline const char *getName(void *)
 {
 	return obs_module_text("pluginName");
 }
 
-void *main_plugin_context_create(obs_data_t *settings, obs_source_t *source)
+void *create(obs_data_t *settings, obs_source_t *source)
 {
-	const ILogger &logger = loggerInstance();
-	auto latestVersionFuture = latestVersionFutureInstance();
+	const auto logger = g_logger_;
 	GraphicsContextGuard graphicsContextGuard;
 	try {
 		auto self = std::make_shared<MainPluginContext>(settings, source, latestVersionFuture, logger);
 		return new std::shared_ptr<MainPluginContext>(self);
 	} catch (const std::exception &e) {
-		logger.logException(e, "Failed to create main plugin context");
+		logger->logException(e, "Failed to create main plugin context");
 		return nullptr;
 	} catch (...) {
-		logger.error("Failed to create main plugin context: unknown error");
+		logger->error("Failed to create main plugin context: unknown error");
 		return nullptr;
 	}
 }
@@ -315,3 +274,5 @@ struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs
 
 	return frame;
 }
+
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

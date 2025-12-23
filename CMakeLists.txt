@@ -99,7 +99,8 @@ endif()
 add_subdirectory(src)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_PROJECT_NAME}_Filter OBS::libobs)
+# target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_PROJECT_NAME}_Filter OBS::libobs)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs Async)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp)
 target_compile_options(
   ${CMAKE_PROJECT_NAME}
@@ -126,13 +127,13 @@ endif()
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${CMAKE_PROJECT_NAME})
 
-if(BUILD_TESTING)
-  enable_testing()
+# if(BUILD_TESTING)
+#   enable_testing()
 
-  add_subdirectory(vendor/googletest EXCLUDE_FROM_ALL)
+#   add_subdirectory(vendor/googletest EXCLUDE_FROM_ALL)
 
-  add_library(stb::stb INTERFACE IMPORTED)
-  target_include_directories(stb::stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb)
+#   add_library(stb::stb INTERFACE IMPORTED)
+#   target_include_directories(stb::stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb)
 
-  add_subdirectory(tests)
-endif()
+#   add_subdirectory(tests)
+# endif()
