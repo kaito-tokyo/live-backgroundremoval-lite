@@ -19,6 +19,12 @@
 
 namespace KaitoTokyo::Async {
 
+#ifdef NDEBUG
+constexpr std::size_t kDefaultTaskSize = 4096;
+#else
+constexpr std::size_t kDefaultTaskSize = 32768;
+#endif
+
 // -----------------------------------------------------------------------------
 // SymmetricTransfer
 // -----------------------------------------------------------------------------
@@ -85,7 +91,7 @@ using TaskStoragePtr = std::unique_ptr<void, TaskStorageReleaser>;
  *
  * @tparam Size The size of the buffer in bytes (default: 4096).
  */
-template<std::size_t Size = 4096> class TaskStorage {
+template<std::size_t Size = kDefaultTaskSize> class TaskStorage {
 	alignas(std::max_align_t) char buffer_[Size];
 	bool used_ = false;
 
@@ -188,7 +194,6 @@ template<typename T> struct [[nodiscard]] Task {
 		template<typename Alloc, typename... Args>
 		static void *operator new(std::size_t size, std::allocator_arg_t, Alloc &alloc, Args &&...)
 		{
-#ifdef NDEBUG
 			// 1. Calculate header size and alignment padding
 			constexpr std::size_t alignment = alignof(std::max_align_t);
 			std::size_t header_size = sizeof(TaskStoragePtr);
@@ -213,17 +218,12 @@ template<typename T> struct [[nodiscard]] Task {
 
 			// 4. Return the pointer offset by the padded header size
 			return static_cast<char *>(raw_ptr) + offset;
-#else
-			(void)alloc;
-			return ::operator new(size);
-#endif
 		}
 
 		static void *operator new(std::size_t) = delete;
 
 		static void operator delete(void *ptr, std::size_t)
 		{
-#ifdef NDEBUG
 			// 1. Re-calculate offset to find the start of the allocated block
 			constexpr std::size_t alignment = alignof(std::max_align_t);
 			std::size_t header_size = sizeof(TaskStoragePtr);
@@ -234,9 +234,6 @@ template<typename T> struct [[nodiscard]] Task {
 			// 2. Destruct the TaskStoragePtr to release the storage slot
 			auto *stored_ptr = reinterpret_cast<TaskStoragePtr *>(raw_ptr);
 			stored_ptr->~TaskStoragePtr();
-#else
-			::operator delete(ptr);
-#endif
 		}
 	};
 

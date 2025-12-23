@@ -12,6 +12,7 @@
 #include <atomic>
 #include <cassert>
 #include <coroutine>
+#include <cstddef>
 #include <exception>
 #include <memory>
 #include <new>
@@ -19,6 +20,12 @@
 #include <variant>
 
 namespace KaitoTokyo::Async {
+
+#ifdef NDEBUG
+constexpr std::size_t kDefaultSharedTaskSize = 4096;
+#else
+constexpr std::size_t kDefaultSharedTaskSize = 32768;
+#endif
 
 // -----------------------------------------------------------------------------
 // Common Definitions
@@ -45,9 +52,9 @@ struct SharedTaskAwaiterNode {
  * **the user is responsible for maintaining the `std::shared_ptr` to this context** while the task is active or being awaited.
  *
  * @tparam T The type of the result produced by the task.
- * @tparam MemorySize The size (in bytes) of the internal buffer allocated for the coroutine frame. This is a non-type template parameter.
+ * @tparam Size The size (in bytes) of the internal buffer allocated for the coroutine frame. This is a non-type template parameter.
  */
-template<typename T, std::size_t MemorySize = 4096> struct SharedTaskContext {
+template<typename T, std::size_t Size = kDefaultSharedTaskSize> struct SharedTaskContext {
 	using value_type = T;
 
 	// --- State ---
@@ -59,7 +66,7 @@ template<typename T, std::size_t MemorySize = 4096> struct SharedTaskContext {
 	std::coroutine_handle<> handle = nullptr;
 
 	// --- Memory Buffer ---
-	alignas(std::max_align_t) char buffer[MemorySize];
+	alignas(std::max_align_t) char buffer[Size];
 	bool used = false;
 
 	SharedTaskContext() = default;
@@ -112,7 +119,7 @@ template<typename T, std::size_t MemorySize = 4096> struct SharedTaskContext {
 
 	void *allocate_frame(std::size_t size)
 	{
-		if (size > MemorySize || used)
+		if (size > Size || used)
 			throw std::bad_alloc();
 		used = true;
 		return buffer;
@@ -120,13 +127,13 @@ template<typename T, std::size_t MemorySize = 4096> struct SharedTaskContext {
 };
 
 // Specialization for void
-template<std::size_t MemorySize> struct SharedTaskContext<void, MemorySize> {
+template<std::size_t Size> struct SharedTaskContext<void, Size> {
 	using value_type = void;
 	std::variant<std::monostate, std::monostate, std::exception_ptr> result;
 	std::atomic<SharedTaskAwaiterNode *> waiters_head{nullptr};
 	static inline SharedTaskAwaiterNode kFinishedNode = {};
 	std::coroutine_handle<> handle = nullptr;
-	alignas(std::max_align_t) char buffer[MemorySize];
+	alignas(std::max_align_t) char buffer[Size];
 	bool used = false;
 
 	SharedTaskContext() = default;
@@ -176,7 +183,7 @@ template<std::size_t MemorySize> struct SharedTaskContext<void, MemorySize> {
 
 	void *allocate_frame(std::size_t size)
 	{
-		if (size > MemorySize || used)
+		if (size > Size || used)
 			throw std::bad_alloc();
 		used = true;
 		return buffer;
@@ -360,20 +367,11 @@ template<typename T, typename Context> struct SharedTaskPromise : SharedTaskProm
 	static void *operator new(std::size_t size, std::allocator_arg_t, const std::shared_ptr<Context> &context,
 				  Args &&...)
 	{
-#ifdef NDEBUG
 		return context->allocate_frame(size);
-#else
-		return ::operator new(size);
-#endif
 	}
 
-	static void operator delete(void *ptr, std::size_t)
+	static void operator delete(void *, std::size_t)
 	{
-#ifdef NDEBUG
-		(void)ptr;
-#else
-		delete ptr;
-#endif
 	}
 };
 
