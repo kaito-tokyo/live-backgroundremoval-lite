@@ -2,7 +2,7 @@ add_library(${CMAKE_PROJECT_NAME}_MainFilter STATIC)
 target_include_directories(${CMAKE_PROJECT_NAME}_MainFilter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}_MainFilter
-  PUBLIC OBS::libobs OBS::obs-frontend-api Qt6::Core Qt6::Widgets BridgeUtils SelfieSegmenter UpdateChecker TaskQueue ${CMAKE_PROJECT_NAME}_Global
+  PUBLIC OBS::libobs OBS::obs-frontend-api Qt6::Core Qt6::Widgets BridgeUtils SelfieSegmenter TaskQueue ${CMAKE_PROJECT_NAME}_Global
 )
 target_sources(
   ${CMAKE_PROJECT_NAME}_MainFilter

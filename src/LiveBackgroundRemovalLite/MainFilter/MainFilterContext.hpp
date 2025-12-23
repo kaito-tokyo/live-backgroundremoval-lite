@@ -75,7 +75,7 @@ private:
 	void applyPluginProperty(const std::shared_ptr<RenderingContext> &_renderingContext);
 
 	obs_source_t *const source_;
-	const std::shared_future<Global::GlobalContext> globalContext_;
+	const std::shared_ptr<Global::GlobalContext> globalContext_;
 
 	const std::shared_ptr<const Logger::ILogger> logger_;
 

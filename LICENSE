@@ -29,7 +29,6 @@ The following components are licensed under the MIT License and may be
 used independently under MIT terms:
 - TaskQueue (src/TaskQueue/)
 - SelfieSegmenter (src/SelfieSegmenter/)
-- UpdateChecker (src/UpdateChecker/)
 - Memory management utilities (src/Memory/)
 - Logger interfaces (src/Logger/)
 - Documentation files (docs/)
