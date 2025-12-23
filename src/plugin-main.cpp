@@ -14,6 +14,8 @@
 
 #include <memory>
 
+#include <curl/curl.h>
+
 #include <obs-module.h>
 
 #include <GlobalContext.hpp>
@@ -38,6 +40,8 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
 bool obs_module_load(void)
 {
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+
 	const std::shared_ptr<const Logger::ILogger> logger =
 		std::make_shared<BridgeUtils::ObsLogger>("[" PLUGIN_NAME "]");
 
@@ -58,5 +62,6 @@ void obs_module_unload(void)
 	const auto logger = g_globalContext_->logger_;
 	MainFilter::unloadModule();
 	g_globalContext_.reset();
+	curl_global_cleanup();
 	logger->info("plugin unloaded");
 }
