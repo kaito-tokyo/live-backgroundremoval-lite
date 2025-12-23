@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite - Filter Module
+ * Live Background Removal Lite - MainFilter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -12,7 +12,7 @@
  * "LICENSE.GPL-3.0-or-later" in the distribution root.
  */
 
-#include "MainPluginContext.h"
+#include "MainFilterContext.hpp"
 
 #include <future>
 #include <stdexcept>
@@ -28,25 +28,23 @@
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
 
-#include "../plugin-support.h"
-
 using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
 
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
-MainPluginContext::MainPluginContext(obs_data_t *settings, obs_source_t *source,
-				     std::shared_future<std::string> latestVersionFuture, const ILogger &logger)
+MainFilterContext::MainFilterContext(obs_data_t *settings, obs_source_t *source,
+				     std::shared_ptr<Global::GlobalContext> globalContext)
 	: source_{source},
-	  logger_(logger),
+	  globalContext_{std::move(globalContext)},
+	  logger_(globalContext_->logger_),
 	  mainEffect_(logger_, unique_obs_module_file("effects/main.effect")),
-	  latestVersionFuture_(latestVersionFuture),
 	  selfieSegmenterTaskQueue_(logger_, 1)
 {
 	update(settings);
 }
 
-void MainPluginContext::shutdown() noexcept
+void MainFilterContext::shutdown() noexcept
 {
 	{
 		std::lock_guard<std::mutex> lock(debugWindowMutex_);
@@ -66,21 +64,21 @@ void MainPluginContext::shutdown() noexcept
 	selfieSegmenterTaskQueue_.shutdown();
 }
 
-MainPluginContext::~MainPluginContext() noexcept {}
+MainFilterContext::~MainFilterContext() noexcept {}
 
-std::uint32_t MainPluginContext::getWidth() const noexcept
+std::uint32_t MainFilterContext::getWidth() const noexcept
 {
 	auto renderingContext = getRenderingContext();
 	return renderingContext ? renderingContext->region_.width : 0;
 }
 
-std::uint32_t MainPluginContext::getHeight() const noexcept
+std::uint32_t MainFilterContext::getHeight() const noexcept
 {
 	auto renderingContext = getRenderingContext();
 	return renderingContext ? renderingContext->region_.height : 0;
 }
 
-void MainPluginContext::getDefaults(obs_data_t *data)
+void MainFilterContext::getDefaults(obs_data_t *data)
 {
 	PluginProperty defaultProperty;
 
@@ -102,30 +100,25 @@ void MainPluginContext::getDefaults(obs_data_t *data)
 	obs_data_set_default_double(data, "maskUpperBoundMarginAmpDb", defaultProperty.maskUpperBoundMarginAmpDb);
 }
 
-obs_properties_t *MainPluginContext::getProperties()
+obs_properties_t *MainFilterContext::getProperties()
 {
 	obs_properties_t *props = obs_properties_create();
 
 	// Update notifier
 	const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
 	try {
-		if (latestVersionFuture_.valid()) {
-			if (latestVersionFuture_.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
-				const std::string latestVersion = latestVersionFuture_.get();
-				logger_.info("CurrentVersion: {}, Latest version: {}", PLUGIN_VERSION, latestVersion);
-				if (latestVersion == PLUGIN_VERSION) {
-					updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
-				} else {
-					updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
-				}
+		std::string latestVersion = globalContext_->getLatestVersion();
+		if (!latestVersion.empty()) {
+			if (latestVersion == globalContext_->pluginVersion_) {
+				updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
 			} else {
-				updateAvailableText = obs_module_text("updateCheckerChecking");
+				updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
 			}
 		}
 	} catch (const std::exception &e) {
-		logger_.error("Failed to check for updates: {}", e.what());
+		logger_->error("Failed to check for updates: {}", e.what());
 	} catch (...) {
-		logger_.error("Failed to check for updates: unknown error");
+		logger_->error("Failed to check for updates: unknown error");
 	}
 	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
@@ -133,7 +126,7 @@ obs_properties_t *MainPluginContext::getProperties()
 	obs_properties_add_button2(
 		props, "showDebugWindow", obs_module_text("showDebugWindow"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
-			auto this_ = static_cast<MainPluginContext *>(data);
+			auto this_ = static_cast<MainFilterContext *>(data);
 			DebugWindow *windowToShow = nullptr;
 
 			{
@@ -218,7 +211,7 @@ obs_properties_t *MainPluginContext::getProperties()
 	return props;
 }
 
-void MainPluginContext::update(obs_data_t *settings)
+void MainFilterContext::update(obs_data_t *settings)
 {
 	bool advancedSettingsEnabled = obs_data_get_bool(settings, "advancedSettings");
 
@@ -275,20 +268,20 @@ void MainPluginContext::update(obs_data_t *settings)
 	}
 }
 
-void MainPluginContext::videoTick(float seconds)
+void MainFilterContext::videoTick(float seconds)
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
-		logger_.debug("No parent source found, skipping video tick");
+		logger_->debug("No parent source found, skipping video tick");
 		return;
 	} else if (!obs_source_active(parent)) {
-		logger_.debug("Parent source is not active, skipping video tick");
+		logger_->debug("Parent source is not active, skipping video tick");
 		return;
 	}
 
 	obs_source_t *const target = obs_filter_get_target(source_);
 	if (!target) {
-		logger_.debug("No target source found, skipping video tick");
+		logger_->debug("No target source found, skipping video tick");
 		return;
 	}
 
@@ -300,7 +293,7 @@ void MainPluginContext::videoTick(float seconds)
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
 
 		if (targetWidth == 0 || targetHeight == 0) {
-			logger_.debug(
+			logger_->debug(
 				"Target source has zero width or height, skipping video tick and destroying rendering context");
 			renderingContext_.reset();
 			return;
@@ -308,7 +301,7 @@ void MainPluginContext::videoTick(float seconds)
 
 		const std::uint32_t minSize = 2 * static_cast<std::uint32_t>(pluginProperty_.subsamplingRate);
 		if (targetWidth < minSize || targetHeight < minSize) {
-			logger_.debug(
+			logger_->debug(
 				"Target source is too small for the current subsampling rate, skipping video tick and destroying rendering context");
 			renderingContext_.reset();
 			return;
@@ -329,19 +322,19 @@ void MainPluginContext::videoTick(float seconds)
 	}
 }
 
-void MainPluginContext::videoRender()
+void MainFilterContext::videoRender()
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
-		logger_.debug("No parent source found, skipping video render");
+		logger_->debug("No parent source found, skipping video render");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	} else if (!obs_source_active(parent)) {
-		logger_.debug("Parent source is not active, skipping video render");
+		logger_->debug("Parent source is not active, skipping video render");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	} else if (!obs_source_showing(parent)) {
-		logger_.debug("Parent source is not showing, skipping video render");
+		logger_->debug("Parent source is not showing, skipping video render");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	}
@@ -359,7 +352,7 @@ void MainPluginContext::videoRender()
 	}
 }
 
-obs_source_frame *MainPluginContext::filterVideo(struct obs_source_frame *frame)
+obs_source_frame *MainFilterContext::filterVideo(struct obs_source_frame *frame)
 try {
 	if (obs_source_t *const parent = obs_filter_get_parent(source_)) {
 		if (!obs_source_active(parent) || !obs_source_showing(parent)) {
@@ -373,14 +366,14 @@ try {
 		return frame;
 	}
 } catch (const std::exception &e) {
-	logger_.error("Failed to create rendering context: {}", e.what());
+	logger_->error("Failed to create rendering context: {}", e.what());
 	return frame;
 } catch (...) {
-	logger_.error("Failed to create rendering context: unknown error");
+	logger_->error("Failed to create rendering context: unknown error");
 	return frame;
 }
 
-std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std::uint32_t targetWidth,
+std::shared_ptr<RenderingContext> MainFilterContext::createRenderingContext(std::uint32_t targetWidth,
 									    std::uint32_t targetHeight)
 {
 	PluginConfig pluginConfig(PluginConfig::load(logger_));
@@ -395,4 +388,4 @@ std::shared_ptr<RenderingContext> MainPluginContext::createRenderingContext(std:
 	return renderingContext;
 }
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

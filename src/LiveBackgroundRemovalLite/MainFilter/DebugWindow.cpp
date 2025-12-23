@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite - Filter Module
+ * Live Background Removal Lite - MainFilter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,10 +24,8 @@
 
 #include <AsyncTextureReader.hpp>
 
-#include "MainPluginContext.h"
+#include "MainFilterContext.hpp"
 #include "RenderingContext.hpp"
-
-#include "../plugin-support.h"
 
 using namespace KaitoTokyo::BridgeUtils;
 
@@ -85,11 +83,12 @@ const std::vector<const char *> r32fSubTextures = {
 
 } // namespace
 
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
-DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent)
+DebugWindow::DebugWindow(std::weak_ptr<MainFilterContext> weakMainFilterContext, QWidget *parent)
 	: QDialog(parent),
-	  weakMainPluginContext_(std::move(weakMainPluginContext)),
+	  weakMainFilterContext_(std::move(weakMainFilterContext)),
+	  logger_(weakMainFilterContext_.lock()->getLogger()),
 	  layout_(new QVBoxLayout(this)),
 	  previewTextureSelector_(new QComboBox(this)),
 	  previewImageLabel_(new QLabel(this)),
@@ -117,23 +116,23 @@ DebugWindow::DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext,
 
 void DebugWindow::videoRender()
 {
-	auto mainPluginContext = weakMainPluginContext_.lock();
+	auto mainPluginContext = weakMainFilterContext_.lock();
 	if (!mainPluginContext) {
-		blog(LOG_WARNING, "[" PLUGIN_NAME "] DebugWindow::videoRender: MainPluginContext is null");
+		logger_->warn("DebugWindow::videoRender: MainPluginContext is null");
 		return;
 	}
 
-	auto &logger = mainPluginContext->getLogger();
+	auto logger = mainPluginContext->getLogger();
 
 	auto renderingContext = mainPluginContext->getRenderingContext();
 	if (!renderingContext) {
-		logger.warn("DebugWindow::videoRender: RenderingContext is null");
+		logger->warn("DebugWindow::videoRender: RenderingContext is null");
 		return;
 	}
 
 	auto selectedPreviewTextureIndex = selectedPreviewTextureIndex_.load(std::memory_order_acquire);
 	if (selectedPreviewTextureIndex >= static_cast<int>(textureNames.size())) {
-		logger.warn("DebugWindow::videoRender: selectedPreviewTextureIndex out of bounds");
+		logger->warn("DebugWindow::videoRender: selectedPreviewTextureIndex out of bounds");
 		return;
 	}
 	auto selectedPreviewTextureName = textureNames[selectedPreviewTextureIndex];
@@ -194,8 +193,8 @@ void DebugWindow::videoRender()
 			currentReader = r8Reader_;
 			currentTexture = renderingContext->r8TimeAveragedMasks_[1].get();
 		} else {
-			logger.warn("DebugWindow::videoRender: Unknown texture selected: {}",
-				    selectedPreviewTextureName);
+			logger->warn("DebugWindow::videoRender: Unknown texture selected: {}",
+				     selectedPreviewTextureName);
 			return;
 		}
 	}
@@ -213,17 +212,17 @@ inline bool checkIfReaderNeedsRecreation(const std::shared_ptr<AsyncTextureReade
 
 void DebugWindow::updatePreview()
 {
-	auto mainPluginContext = weakMainPluginContext_.lock();
+	auto mainPluginContext = weakMainFilterContext_.lock();
 	if (!mainPluginContext) {
-		blog(LOG_WARNING, "[" PLUGIN_NAME "] DebugWindow::updatePreview: MainPluginContext is null");
+		logger_->warn("DebugWindow::updatePreview: MainPluginContext is null");
 		return;
 	}
 
-	auto &logger = mainPluginContext->getLogger();
+	auto logger = mainPluginContext->getLogger();
 
 	auto renderingContext = mainPluginContext->getRenderingContext();
 	if (!renderingContext) {
-		logger.warn("DebugWindow::updatePreview: RenderingContext is null");
+		logger->warn("DebugWindow::updatePreview: RenderingContext is null");
 		return;
 	}
 
@@ -392,7 +391,7 @@ void DebugWindow::updatePreview()
 				       r32fSubPaddedReader->getHeight(), QImage::Format_Grayscale8);
 		}
 	} catch (const std::exception &e) {
-		mainPluginContext->getLogger().error("Failed to sync and update preview: {}", e.what());
+		mainPluginContext->getLogger()->error("Failed to sync and update preview: {}", e.what());
 		return;
 	}
 
@@ -412,4 +411,4 @@ void DebugWindow::onTextureSelectionChanged(int index)
 	selectedPreviewTextureIndex_.store(index, std::memory_order_release);
 }
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

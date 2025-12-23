@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite - Filter Module
+ * Live Background Removal Lite - MainFilter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 #include <GsUnique.hpp>
 #include <ObsUnique.hpp>
 
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 struct TransformStateGuard {
 	TransformStateGuard()
@@ -102,7 +102,7 @@ private:
 		gs_eparam_t *param = gs_effect_get_param_by_name(gsEffect_.get(), name);
 
 		if (!param) {
-			logger_.error("Effect parameter {} not found", name);
+			logger_->error("Effect parameter {} not found", name);
 			throw std::runtime_error("Effect parameter not found");
 		}
 
@@ -110,8 +110,8 @@ private:
 	}
 
 public:
-	MainEffect(const Logger::ILogger &logger, const BridgeUtils::unique_bfree_char_t &effectPath)
-		: logger_(logger),
+	MainEffect(std::shared_ptr<const Logger::ILogger> logger, const BridgeUtils::unique_bfree_char_t &effectPath)
+		: logger_(std::move(logger)),
 		  gsEffect_(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
 		  textureImage_(getEffectParam("image")),
 		  floatTexelWidth_(getEffectParam("texelWidth")),
@@ -139,7 +139,7 @@ public:
 
 		obs_source_t *target = obs_filter_get_target(source);
 		if (target == nullptr) {
-			logger_.error("Failed to get target source for drawing");
+			logger_->error("Failed to get target source for drawing");
 			return;
 		}
 
@@ -413,7 +413,7 @@ public:
 		}
 	}
 
-	const Logger::ILogger &logger_;
+	const std::shared_ptr<const Logger::ILogger> logger_;
 	const BridgeUtils::unique_gs_effect_t gsEffect_ = nullptr;
 
 	gs_eparam_t *const textureImage_ = nullptr;
@@ -432,4 +432,4 @@ public:
 	gs_eparam_t *const floatAlpha_ = nullptr;
 };
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

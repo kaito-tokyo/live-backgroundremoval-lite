@@ -12,43 +12,56 @@
  * "LICENSE.GPL-3.0-or-later" in the distribution root.
  */
 
+#include <memory>
+
+#include <curl/curl.h>
+
 #include <obs-module.h>
 
-#include <MainPluginContext.h>
-#include "plugin-support.h"
+#include <GlobalContext.hpp>
+#include <MainFilterInfo.hpp>
+#include <ObsLogger.hpp>
+
+using namespace KaitoTokyo;
+using namespace KaitoTokyo::LiveBackgroundRemovalLite;
+
+#define PLUGIN_NAME "live-backgroundremoval-lite"
+
+#ifndef PLUGIN_VERSION
+#define PLUGIN_VERSION "0.0.0"
+#endif
+
+const char latestVersionUrl[] = "https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
+
+std::shared_ptr<Global::GlobalContext> g_globalContext_;
 
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
-struct obs_source_info main_plugin_context = {.id = "live_backgroundremoval_lite",
-					      .type = OBS_SOURCE_TYPE_FILTER,
-					      .output_flags = OBS_SOURCE_VIDEO,
-					      .get_name = main_plugin_context_get_name,
-					      .create = main_plugin_context_create,
-					      .destroy = main_plugin_context_destroy,
-					      .get_width = main_plugin_context_get_width,
-					      .get_height = main_plugin_context_get_height,
-					      .get_defaults = main_plugin_context_get_defaults,
-					      .get_properties = main_plugin_context_get_properties,
-					      .update = main_plugin_context_update,
-					      .video_tick = main_plugin_context_video_tick,
-					      .video_render = main_plugin_context_video_render,
-					      .filter_video = main_plugin_context_filter_video};
-
 bool obs_module_load(void)
 {
-	obs_register_source(&main_plugin_context);
-	if (main_plugin_context_module_load()) {
-		blog(LOG_INFO, "[" PLUGIN_NAME "] plugin loaded successfully (version " PLUGIN_VERSION ")");
-		return true;
-	} else {
-		blog(LOG_ERROR, "[" PLUGIN_NAME "] Failed to load plugin");
+	curl_global_init(CURL_GLOBAL_DEFAULT);
+
+	const std::shared_ptr<const Logger::ILogger> logger =
+		std::make_shared<BridgeUtils::ObsLogger>("[" PLUGIN_NAME "]");
+
+	g_globalContext_ =
+		std::make_shared<Global::GlobalContext>(PLUGIN_NAME, PLUGIN_VERSION, logger, latestVersionUrl);
+
+	if (!MainFilter::loadModule(g_globalContext_)) {
+		logger->error("failed to load plugin");
 		return false;
 	}
+
+	logger->info("plugin loaded successfully (version {})", PLUGIN_VERSION);
+	return true;
 }
 
 void obs_module_unload(void)
 {
-	main_plugin_context_module_unload();
-	blog(LOG_INFO, "[" PLUGIN_NAME "] plugin unloaded");
+	const auto logger = g_globalContext_->logger_;
+	MainFilter::unloadModule();
+	g_globalContext_.reset();
+	curl_global_cleanup();
+	logger->info("plugin unloaded");
 }

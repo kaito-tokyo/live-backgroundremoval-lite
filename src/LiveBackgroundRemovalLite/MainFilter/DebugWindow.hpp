@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite - Filter Module
+ * Live Background Removal Lite - MainFilter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -24,10 +24,11 @@
 #include <QVBoxLayout>
 
 #include <AsyncTextureReader.hpp>
+#include <ILogger.hpp>
 
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
-class MainPluginContext;
+class MainFilterContext;
 
 class DebugWindow : public QDialog {
 	Q_OBJECT
@@ -35,7 +36,7 @@ public:
 	constexpr static int kPreviewWidth = 640;
 	constexpr static int kPreviewHeight = 480;
 
-	DebugWindow(std::weak_ptr<MainPluginContext> weakMainPluginContext, QWidget *parent = nullptr);
+	DebugWindow(std::weak_ptr<MainFilterContext> weakMainFilterContext, QWidget *parent = nullptr);
 
 	void videoRender();
 
@@ -44,7 +45,8 @@ private slots:
 	void onTextureSelectionChanged(int index);
 
 private:
-	std::weak_ptr<MainPluginContext> weakMainPluginContext_;
+	std::weak_ptr<MainFilterContext> weakMainFilterContext_;
+	std::shared_ptr<const Logger::ILogger> logger_;
 
 	QVBoxLayout *layout_;
 	QComboBox *previewTextureSelector_;
@@ -68,4 +70,4 @@ private:
 	std::vector<std::uint8_t> bufferSubPaddedR8_;
 };
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

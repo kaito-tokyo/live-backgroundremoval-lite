@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite - Filter Module
+ * Live Background Removal Lite - MainFilter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,7 +40,7 @@
 #include "PluginConfig.hpp"
 #include "PluginProperty.hpp"
 
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 struct RenderingContextRegion {
 	std::uint32_t x;
@@ -64,10 +64,10 @@ private:
 									     std::uint32_t height) const;
 
 public:
-	RenderingContext(obs_source_t *const source, const Logger::ILogger &logger, const MainEffect &mainEffect,
-			 TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
-			 const std::uint32_t subsamplingRate, const std::uint32_t width, const std::uint32_t height,
-			 const int numThreads);
+	RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
+			 const MainEffect &mainEffect, TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
+			 const PluginConfig &pluginConfig, const std::uint32_t subsamplingRate,
+			 const std::uint32_t width, const std::uint32_t height, const int numThreads);
 	~RenderingContext() noexcept;
 
 	void videoTick(float seconds);
@@ -81,7 +81,7 @@ public:
 
 private:
 	obs_source_t *const source_;
-	const Logger::ILogger &logger_;
+	const std::shared_ptr<const Logger::ILogger> logger_;
 	const MainEffect &mainEffect_;
 	TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue_;
 	const PluginConfig pluginConfig_;
@@ -152,4 +152,4 @@ private:
 	vec4 blackColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
 };
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

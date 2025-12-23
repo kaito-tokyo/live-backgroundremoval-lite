@@ -55,8 +55,8 @@ public:
      * @param logger The logger to use for internal messages.
      * @param maxQueueSize The maximum number of tasks the queue can hold. Must be at least 1.
      */
-	ThrottledTaskQueue(const Logger::ILogger &logger, std::size_t maxQueueSize)
-		: logger_(logger),
+	ThrottledTaskQueue(std::shared_ptr<const Logger::ILogger> logger, std::size_t maxQueueSize)
+		: logger_(std::move(logger)),
 		  maxQueueSize_(maxQueueSize > 0 ? maxQueueSize
 						 : throw std::invalid_argument("maxQueueSize must be greater than 0")),
 		  worker_(&ThrottledTaskQueue::workerLoop, this)
@@ -142,9 +142,9 @@ private:
 			try {
 				queuedTaskOpt->first();
 			} catch (const std::exception &e) {
-				logger_.error("ThrottledTaskQueue: Task threw an exception: {}", e.what());
+				logger_->error("ThrottledTaskQueue: Task threw an exception: {}", e.what());
 			} catch (...) {
-				logger_.error("ThrottledTaskQueue: Task threw an unknown exception.");
+				logger_->error("ThrottledTaskQueue: Task threw an unknown exception.");
 			}
 
 			{
@@ -201,7 +201,7 @@ private:
 		cond_.notify_all();
 	}
 
-	const Logger::ILogger &logger_;
+	const std::shared_ptr<const Logger::ILogger> logger_;
 	const std::size_t maxQueueSize_;
 	std::mutex mutex_;
 	std::condition_variable cond_;

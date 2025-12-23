@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite - Filter Module
+ * Live Background Removal Lite - MainFilter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,13 +16,7 @@
 
 #include <NcnnSelfieSegmenter.hpp>
 
-using namespace KaitoTokyo::BridgeUtils;
-using namespace KaitoTokyo::Logger;
-using namespace KaitoTokyo::Memory;
-using namespace KaitoTokyo::SelfieSegmenter;
-using namespace KaitoTokyo::TaskQueue;
-
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 namespace {
 
@@ -46,7 +40,8 @@ BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t wid
 							       enum gs_color_format color_format,
 							       std::uint32_t flags) const noexcept
 {
-	unique_gs_texture_t texture = make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
+	BridgeUtils::unique_gs_texture_t texture =
+		BridgeUtils::make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
 	if ((flags & GS_RENDER_TARGET) == GS_RENDER_TARGET) {
 		TextureRenderGuard renderTargetGuard(texture);
 		vec4 clearColor{0.0f, 0.0f, 0.0f, 1.0f};
@@ -55,18 +50,17 @@ BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t wid
 		// Dynamic textures should be initialized to zero
 		std::vector<std::uint8_t> zeroData(
 			static_cast<std::size_t>(width) * static_cast<std::size_t>(height) *
-				static_cast<std::size_t>(AsyncTextureReader::getBytesPerPixel(color_format)),
+				static_cast<std::size_t>(
+					BridgeUtils::AsyncTextureReader::getBytesPerPixel(color_format)),
 			0);
 		gs_texture_set_image(texture.get(), zeroData.data(),
-				     width * AsyncTextureReader::getBytesPerPixel(color_format), 0);
+				     width * BridgeUtils::AsyncTextureReader::getBytesPerPixel(color_format), 0);
 	}
 	return texture;
 }
 
 RenderingContextRegion RenderingContext::getMaskRoiPosition() const noexcept
 {
-	using namespace KaitoTokyo::LiveBackgroundRemovalLite;
-
 	std::uint32_t selfieSegmenterWidth = static_cast<std::uint32_t>(selfieSegmenter_->getWidth());
 	std::uint32_t selfieSegmenterHeight = static_cast<std::uint32_t>(selfieSegmenter_->getHeight());
 
@@ -82,10 +76,10 @@ RenderingContextRegion RenderingContext::getMaskRoiPosition() const noexcept
 	return {offsetX, offsetY, scaledWidth, scaledHeight};
 }
 
-std::vector<unique_gs_texture_t> RenderingContext::createReductionPyramid(std::uint32_t width,
-									  std::uint32_t height) const
+std::vector<BridgeUtils::unique_gs_texture_t> RenderingContext::createReductionPyramid(std::uint32_t width,
+										       std::uint32_t height) const
 {
-	std::vector<unique_gs_texture_t> pyramid;
+	std::vector<BridgeUtils::unique_gs_texture_t> pyramid;
 
 	std::uint32_t currentWidth = width;
 	std::uint32_t currentHeight = height;
@@ -100,21 +94,23 @@ std::vector<unique_gs_texture_t> RenderingContext::createReductionPyramid(std::u
 	return pyramid;
 }
 
-RenderingContext::RenderingContext(obs_source_t *const source, const ILogger &logger, const MainEffect &mainEffect,
-				   ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
-				   const std::uint32_t subsamplingRate, const std::uint32_t width,
-				   const std::uint32_t height, const int numThreads)
+RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
+				   const MainEffect &mainEffect,
+				   TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
+				   const PluginConfig &pluginConfig, const std::uint32_t subsamplingRate,
+				   const std::uint32_t width, const std::uint32_t height, const int numThreads)
 	: source_(source),
-	  logger_(logger),
+	  logger_(std::move(logger)),
 	  mainEffect_(mainEffect),
 	  selfieSegmenterTaskQueue_(selfieSegmenterTaskQueue),
 	  pluginConfig_(pluginConfig),
 	  subsamplingRate_(subsamplingRate),
 	  numThreads_(numThreads),
-	  selfieSegmenter_(std::make_unique<NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
-								 pluginConfig.selfieSegmenterBinPath.c_str(),
-								 numThreads)),
-	  selfieSegmenterMemoryBlockPool_(MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),
+	  selfieSegmenter_(std::make_unique<SelfieSegmenter::NcnnSelfieSegmenter>(
+		  pluginConfig.selfieSegmenterParamPath.c_str(), pluginConfig.selfieSegmenterBinPath.c_str(),
+		  numThreads)),
+	  selfieSegmenterMemoryBlockPool_(
+		  Memory::MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),
 	  region_{0, 0, width, height},
 	  subRegion_{0, 0,
 		     region_.width / subsamplingRate >= 2
@@ -209,7 +205,7 @@ void RenderingContext::videoRender()
 		try {
 			bgrxSegmenterInputReader_.sync();
 		} catch (const std::exception &e) {
-			logger_.error("Failed to sync texture reader: {}", e.what());
+			logger_->error("Failed to sync texture reader: {}", e.what());
 		}
 	}
 
@@ -239,7 +235,7 @@ void RenderingContext::videoRender()
 	}
 
 	if (processingFrame && filterLevel >= FilterLevel::GuidedFilter) {
-		const unique_gs_texture_t &currentSubLuma = r32fSubLumas_[currentSubLumaIndex_];
+		const BridgeUtils::unique_gs_texture_t &currentSubLuma = r32fSubLumas_[currentSubLumaIndex_];
 		mainEffect_.resampleByNearestR8(r32fSubGFSource_, r8SegmentationMask_);
 
 		mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, currentSubLuma, r32fSubGFIntermediate_);
@@ -286,7 +282,7 @@ void RenderingContext::videoRender()
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 		auto segmenterInputBuffer = selfieSegmenterMemoryBlockPool_->acquire();
 		if (!segmenterInputBuffer) {
-			logger_.error("Failed to acquire memory block for segmenter input");
+			logger_->error("Failed to acquire memory block for segmenter input");
 			return;
 		}
 
@@ -295,7 +291,7 @@ void RenderingContext::videoRender()
 
 		selfieSegmenterTaskQueue_.push(
 			[weakSelf = weak_from_this(), segmenterInputBuffer = std::move(segmenterInputBuffer)](
-				const ThrottledTaskQueue::CancellationToken &token) {
+				const TaskQueue::ThrottledTaskQueue::CancellationToken &token) {
 				if (auto self = weakSelf.lock()) {
 					if (token->load()) {
 						return;
@@ -324,38 +320,38 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 	FilterLevel newFilterLevel;
 	if (pluginProperty.filterLevel == FilterLevel::Default) {
 		newFilterLevel = FilterLevel::TimeAveragedFilter;
-		logger_.info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
+		logger_->info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
 	} else {
 		newFilterLevel = pluginProperty.filterLevel;
-		logger_.info("Filter level set to {}", static_cast<int>(newFilterLevel));
+		logger_->info("Filter level set to {}", static_cast<int>(newFilterLevel));
 	}
 	filterLevel_.store(newFilterLevel, std::memory_order_release);
 
 	float newMotionIntensityThreshold =
 		static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
 	motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_release);
-	logger_.info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
+	logger_->info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
 
 	float newGuidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
 	guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_release);
-	logger_.info("Guided filter epsilon set to {}", newGuidedFilterEps);
+	logger_->info("Guided filter epsilon set to {}", newGuidedFilterEps);
 
 	float newTimeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
 	timeAveragedFilteringAlpha_.store(newTimeAveragedFilteringAlpha, std::memory_order_release);
-	logger_.info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
+	logger_->info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
 
 	float newMaskGamma = static_cast<float>(pluginProperty.maskGamma);
 	maskGamma_.store(newMaskGamma, std::memory_order_release);
-	logger_.info("Mask gamma set to {}", newMaskGamma);
+	logger_->info("Mask gamma set to {}", newMaskGamma);
 
 	float newMaskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
 	maskLowerBound_.store(newMaskLowerBound, std::memory_order_release);
-	logger_.info("Mask lower bound set to {}", newMaskLowerBound);
+	logger_->info("Mask lower bound set to {}", newMaskLowerBound);
 
 	float newMaskUpperBoundMargin =
 		static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
 	maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_release);
-	logger_.info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
+	logger_->info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
 }
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

@@ -1,5 +1,5 @@
 /*
- * Live Background Removal Lite - Filter Module
+ * Live Background Removal Lite - MainFilter Module
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,7 +20,7 @@
 
 #include <ObsUnique.hpp>
 
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 struct PluginConfig {
 	std::string latestVersionURL =
@@ -34,7 +34,7 @@ struct PluginConfig {
 		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin")
 			.get();
 
-	static PluginConfig load(const Logger::ILogger &logger)
+	static PluginConfig load(std::shared_ptr<const Logger::ILogger> logger)
 	{
 		using namespace KaitoTokyo::BridgeUtils;
 
@@ -42,7 +42,7 @@ struct PluginConfig {
 		try {
 			configPath = unique_obs_module_config_path("PluginConfig.json");
 		} catch (const std::exception &e) {
-			logger.warn("Failed to get config path: {}", e.what());
+			logger->warn("Failed to get config path: {}", e.what());
 			return PluginConfig();
 		}
 
@@ -51,22 +51,22 @@ struct PluginConfig {
 		PluginConfig pluginConfig;
 
 		if (!data) {
-			logger.info("No config file found, using default configuration");
+			logger->info("No config file found, using default configuration");
 			return pluginConfig;
 		}
 
 		if (const char *str = obs_data_get_string(data.get(), "latestVersionURL")) {
-			logger.info("Loaded latestVersionURL from config: {}", str);
+			logger->info("Loaded latestVersionURL from config: {}", str);
 			pluginConfig.latestVersionURL = str;
 		}
 
 		if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterParamPath")) {
-			logger.info("Loaded selfieSegmenterParamPath from config: {}", str);
+			logger->info("Loaded selfieSegmenterParamPath from config: {}", str);
 			pluginConfig.selfieSegmenterParamPath = str;
 		}
 
 		if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterBinPath")) {
-			logger.info("Loaded selfieSegmenterBinPath from config: {}", str);
+			logger->info("Loaded selfieSegmenterBinPath from config: {}", str);
 			pluginConfig.selfieSegmenterBinPath = str;
 		}
 
@@ -74,4 +74,4 @@ struct PluginConfig {
 	}
 };
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
