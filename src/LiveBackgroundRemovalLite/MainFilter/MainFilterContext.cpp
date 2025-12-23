@@ -1,9 +1,5 @@
 /*
-<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/MainFilterContext.cpp
  * Live Background Removal Lite - MainFilter Module
-========
- * Live Background Removal Lite - Filter Module
->>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/MainPluginContext.cpp
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -35,11 +31,7 @@
 using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::BridgeUtils;
 
-<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/MainFilterContext.cpp
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
-========
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
->>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/MainPluginContext.cpp
 
 MainFilterContext::MainFilterContext(obs_data_t *settings, obs_source_t *source,
 				     std::shared_ptr<Global::GlobalContext> globalContext)
@@ -396,8 +388,4 @@ std::shared_ptr<RenderingContext> MainFilterContext::createRenderingContext(std:
 	return renderingContext;
 }
 
-<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/MainFilterContext.cpp
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
-========
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
->>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/MainPluginContext.cpp

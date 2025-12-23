@@ -1,9 +1,5 @@
 /*
-<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/RenderingContext.cpp
  * Live Background Removal Lite - MainFilter Module
-========
- * Live Background Removal Lite - Filter Module
->>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/RenderingContext.cpp
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,17 +16,7 @@
 
 #include <NcnnSelfieSegmenter.hpp>
 
-<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/RenderingContext.cpp
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
-========
-using namespace KaitoTokyo::BridgeUtils;
-using namespace KaitoTokyo::Logger;
-using namespace KaitoTokyo::Memory;
-using namespace KaitoTokyo::SelfieSegmenter;
-using namespace KaitoTokyo::TaskQueue;
-
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
->>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/RenderingContext.cpp
 
 namespace {
 
@@ -368,8 +354,4 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 	logger_->info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
 }
 
-<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/RenderingContext.cpp
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
-========
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
->>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/RenderingContext.cpp

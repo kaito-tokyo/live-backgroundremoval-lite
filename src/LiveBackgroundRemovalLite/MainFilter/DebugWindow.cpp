@@ -1,9 +1,5 @@
 /*
-<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/DebugWindow.cpp
  * Live Background Removal Lite - MainFilter Module
-========
- * Live Background Removal Lite - Filter Module
->>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/DebugWindow.cpp
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -87,11 +83,7 @@ const std::vector<const char *> r32fSubTextures = {
 
 } // namespace
 
-<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/DebugWindow.cpp
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
-========
-namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
->>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/DebugWindow.cpp
 
 DebugWindow::DebugWindow(std::weak_ptr<MainFilterContext> weakMainFilterContext, QWidget *parent)
 	: QDialog(parent),
@@ -419,8 +411,4 @@ void DebugWindow::onTextureSelectionChanged(int index)
 	selectedPreviewTextureIndex_.store(index, std::memory_order_release);
 }
 
-<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/DebugWindow.cpp
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
-========
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
->>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/DebugWindow.cpp
