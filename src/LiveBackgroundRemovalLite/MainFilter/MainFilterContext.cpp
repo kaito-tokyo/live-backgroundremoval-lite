@@ -37,7 +37,7 @@ MainFilterContext::MainFilterContext(obs_data_t *settings, obs_source_t *source,
 				     std::shared_ptr<Global::GlobalContext> globalContext)
 	: source_{source},
 	  globalContext_{std::move(globalContext)},
-	  logger_(globalContext->logger_),
+	  logger_(globalContext_->logger_),
 	  mainEffect_(logger_, unique_obs_module_file("effects/main.effect")),
 	  selfieSegmenterTaskQueue_(logger_, 1)
 {

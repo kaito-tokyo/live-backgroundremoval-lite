@@ -40,7 +40,8 @@ BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t wid
 							       enum gs_color_format color_format,
 							       std::uint32_t flags) const noexcept
 {
-	BridgeUtils::unique_gs_texture_t texture = BridgeUtils::make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
+	BridgeUtils::unique_gs_texture_t texture =
+		BridgeUtils::make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
 	if ((flags & GS_RENDER_TARGET) == GS_RENDER_TARGET) {
 		TextureRenderGuard renderTargetGuard(texture);
 		vec4 clearColor{0.0f, 0.0f, 0.0f, 1.0f};
@@ -49,7 +50,8 @@ BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t wid
 		// Dynamic textures should be initialized to zero
 		std::vector<std::uint8_t> zeroData(
 			static_cast<std::size_t>(width) * static_cast<std::size_t>(height) *
-				static_cast<std::size_t>(BridgeUtils::AsyncTextureReader::getBytesPerPixel(color_format)),
+				static_cast<std::size_t>(
+					BridgeUtils::AsyncTextureReader::getBytesPerPixel(color_format)),
 			0);
 		gs_texture_set_image(texture.get(), zeroData.data(),
 				     width * BridgeUtils::AsyncTextureReader::getBytesPerPixel(color_format), 0);
@@ -75,7 +77,7 @@ RenderingContextRegion RenderingContext::getMaskRoiPosition() const noexcept
 }
 
 std::vector<BridgeUtils::unique_gs_texture_t> RenderingContext::createReductionPyramid(std::uint32_t width,
-									  std::uint32_t height) const
+										       std::uint32_t height) const
 {
 	std::vector<BridgeUtils::unique_gs_texture_t> pyramid;
 
@@ -92,10 +94,11 @@ std::vector<BridgeUtils::unique_gs_texture_t> RenderingContext::createReductionP
 	return pyramid;
 }
 
-RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger, const MainEffect &mainEffect,
-				   TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue, const PluginConfig &pluginConfig,
-				   const std::uint32_t subsamplingRate, const std::uint32_t width,
-				   const std::uint32_t height, const int numThreads)
+RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
+				   const MainEffect &mainEffect,
+				   TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
+				   const PluginConfig &pluginConfig, const std::uint32_t subsamplingRate,
+				   const std::uint32_t width, const std::uint32_t height, const int numThreads)
 	: source_(source),
 	  logger_(std::move(logger)),
 	  mainEffect_(mainEffect),
@@ -103,10 +106,11 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  pluginConfig_(pluginConfig),
 	  subsamplingRate_(subsamplingRate),
 	  numThreads_(numThreads),
-	  selfieSegmenter_(std::make_unique<SelfieSegmenter::NcnnSelfieSegmenter>(pluginConfig.selfieSegmenterParamPath.c_str(),
-								 pluginConfig.selfieSegmenterBinPath.c_str(),
-								 numThreads)),
-	  selfieSegmenterMemoryBlockPool_(Memory::MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),
+	  selfieSegmenter_(std::make_unique<SelfieSegmenter::NcnnSelfieSegmenter>(
+		  pluginConfig.selfieSegmenterParamPath.c_str(), pluginConfig.selfieSegmenterBinPath.c_str(),
+		  numThreads)),
+	  selfieSegmenterMemoryBlockPool_(
+		  Memory::MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),
 	  region_{0, 0, width, height},
 	  subRegion_{0, 0,
 		     region_.width / subsamplingRate >= 2

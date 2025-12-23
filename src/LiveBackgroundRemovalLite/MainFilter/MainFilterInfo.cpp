@@ -241,7 +241,7 @@ void videoRender(void *data, gs_effect_t *) noexcept
 	}
 }
 
-struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs_source_frame *frame) noexcept
+struct obs_source_frame *filterVideo(void *data, struct obs_source_frame *frame) noexcept
 {
 	const auto logger = g_globalContext_->logger_;
 

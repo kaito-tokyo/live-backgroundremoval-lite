@@ -131,13 +131,13 @@ endif()
 
 set_target_properties_plugin(${CMAKE_PROJECT_NAME} PROPERTIES OUTPUT_NAME ${CMAKE_PROJECT_NAME})
 
-# if(BUILD_TESTING)
-#   enable_testing()
+if(BUILD_TESTING)
+  enable_testing()
 
-#   add_subdirectory(vendor/googletest EXCLUDE_FROM_ALL)
+  add_subdirectory(vendor/googletest EXCLUDE_FROM_ALL)
 
-#   add_library(stb::stb INTERFACE IMPORTED)
-#   target_include_directories(stb::stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb)
+  add_library(stb::stb INTERFACE IMPORTED)
+  target_include_directories(stb::stb INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb)
 
-#   add_subdirectory(tests)
-# endif()
+  add_subdirectory(tests)
+endif()

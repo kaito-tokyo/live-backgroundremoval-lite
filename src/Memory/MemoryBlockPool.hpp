@@ -62,8 +62,9 @@ public:
 	 *
 	 * @return A std::shared_ptr to the newly created MemoryBlockPool.
 	 */
-	static std::shared_ptr<MemoryBlockPool> create(std::shared_ptr<const Logger::ILogger> logger, std::size_t blockSize,
-						       std::size_t alignment = 32, std::size_t maxSize = 32)
+	static std::shared_ptr<MemoryBlockPool> create(std::shared_ptr<const Logger::ILogger> logger,
+						       std::size_t blockSize, std::size_t alignment = 32,
+						       std::size_t maxSize = 32)
 	{
 		if (blockSize == 0) {
 			throw std::invalid_argument("blockSize must be greater than 0");
@@ -126,8 +127,8 @@ public:
 	std::size_t getPixelCount() const noexcept { return blockSize_; }
 
 private:
-	MemoryBlockPool(const std::shared_ptr<const Logger::ILogger> logger, std::size_t blockSize, std::size_t alignment,
-			std::size_t maxSize)
+	MemoryBlockPool(const std::shared_ptr<const Logger::ILogger> logger, std::size_t blockSize,
+			std::size_t alignment, std::size_t maxSize)
 		: logger_(std::move(logger)),
 		  blockSize_(blockSize),
 		  memoryResource_(alignment),
