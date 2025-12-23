@@ -16,11 +16,8 @@
 
 #include <obs-module.h>
 
-// #include <ObsLogger.hpp>
-
-// #include <MainFilterInfo.hpp>
-
 #include <GlobalContext.hpp>
+#include <MainFilterInfo.hpp>
 #include <ObsLogger.hpp>
 
 using namespace KaitoTokyo;
@@ -32,58 +29,34 @@ using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 #define PLUGIN_VERSION "0.0.0"
 #endif
 
-OBS_DECLARE_MODULE()
-OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
-
-// obs_source_info main_plugin_context = {.id = "live_backgroundremoval_lite",
-// 				       .type = OBS_SOURCE_TYPE_FILTER,
-// 				       .output_flags = OBS_SOURCE_VIDEO,
-// 				       .get_name = main_plugin_context_get_name,
-// 				       .create = main_plugin_context_create,
-// 				       .destroy = main_plugin_context_destroy,
-// 				       .get_width = main_plugin_context_get_width,
-// 				       .get_height = main_plugin_context_get_height,
-// 				       .get_defaults = main_plugin_context_get_defaults,
-// 				       .get_properties = main_plugin_context_get_properties,
-// 				       .update = main_plugin_context_update,
-// 				       .video_tick = main_plugin_context_video_tick,
-// 				       .video_render = main_plugin_context_video_render,
-// 				       .filter_video = main_plugin_context_filter_video};
-
-// const obs_source_info g_mainFilterInfo_ = {
-// 	.id = "live_backgroundremoval_lite",
-// 	.type = OBS_SOURCE_TYPE_FILTER,
-// 	.output_flags = OBS_SOURCE_VIDEO,
-// 	.get_name = MainFilter::getName,
-// };
-
 const char latestVersionUrl[] = "https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
 
 std::shared_ptr<Global::GlobalContext> g_globalContext_;
+
+OBS_DECLARE_MODULE()
+OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
 bool obs_module_load(void)
 {
 	const std::shared_ptr<const Logger::ILogger> logger =
 		std::make_shared<BridgeUtils::ObsLogger>("[" PLUGIN_NAME "]");
+
 	g_globalContext_ =
 		std::make_shared<Global::GlobalContext>(PLUGIN_NAME, PLUGIN_VERSION, logger, latestVersionUrl);
 
-	// const std::shared_ptr<const Logger::ILogger> logger =
-	// 	std::make_shared<BridgeUtils::ObsLogger>("[" PLUGIN_NAME "] ");
-	// if (MainFilter::loadModule(PLUGIN_NAME, PLUGIN_VERSION, logger)) {
-	// 	obs_register_source(&g_mainFilterInfo_);
-	// } else {
-	// 	logger->error("failed to load plugin");
-	// 	return false;
-	// }
+	if (!MainFilter::loadModule(g_globalContext_)) {
+		logger->error("failed to load plugin");
+		return false;
+	}
 
-	// logger->info("plugin loaded successfully (version {})", PLUGIN_VERSION);
+	logger->info("plugin loaded successfully (version {})", PLUGIN_VERSION);
 	return true;
 }
 
 void obs_module_unload(void)
 {
+	const auto logger = g_globalContext_->logger_;
+	MainFilter::unloadModule();
 	g_globalContext_.reset();
-	// main_plugin_context_module_unload();
-	// blog(LOG_INFO, "[" PLUGIN_NAME "] plugin unloaded");
+	logger->info("plugin unloaded");
 }

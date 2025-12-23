@@ -39,7 +39,8 @@ class RenderingContext;
 
 class MainFilterContext : public std::enable_shared_from_this<MainFilterContext> {
 public:
-	MainFilterContext(obs_data_t *settings, obs_source_t *source, std::shared_ptr<Global::GlobalContext> globalContext);
+	MainFilterContext(obs_data_t *settings, obs_source_t *source,
+			  std::shared_ptr<Global::GlobalContext> globalContext);
 
 	void shutdown() noexcept;
 	~MainFilterContext() noexcept;
@@ -61,7 +62,7 @@ public:
 	void videoRender();
 	obs_source_frame *filterVideo(obs_source_frame *frame);
 
-	const Logger::ILogger &getLogger() const noexcept { return logger_; }
+	const std::shared_ptr<const Logger::ILogger> getLogger() const noexcept { return logger_; }
 
 	std::shared_ptr<RenderingContext> getRenderingContext() const noexcept
 	{
@@ -77,7 +78,6 @@ private:
 	const std::shared_future<Global::GlobalContext> globalContext_;
 
 	const std::shared_ptr<const Logger::ILogger> logger_;
-
 
 	const MainEffect mainEffect_;
 	TaskQueue::ThrottledTaskQueue selfieSegmenterTaskQueue_;

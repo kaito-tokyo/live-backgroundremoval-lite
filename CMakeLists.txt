@@ -104,8 +104,7 @@ endif()
 add_subdirectory(src)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE)
-# target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_PROJECT_NAME}_Filter OBS::libobs)
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs BridgeUtils ${CMAKE_PROJECT_NAME}_Global)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE OBS::libobs BridgeUtils ${CMAKE_PROJECT_NAME}_Global ${CMAKE_PROJECT_NAME}_MainFilter)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp)
 target_compile_options(
   ${CMAKE_PROJECT_NAME}

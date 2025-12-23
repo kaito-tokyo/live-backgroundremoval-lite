@@ -24,10 +24,8 @@
 
 #include <AsyncTextureReader.hpp>
 
-#include "MainPluginContext.h"
+#include "MainFilterContext.hpp"
 #include "RenderingContext.hpp"
-
-#include "../plugin-support.h"
 
 using namespace KaitoTokyo::BridgeUtils;
 

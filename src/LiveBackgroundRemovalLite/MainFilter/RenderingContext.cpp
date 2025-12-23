@@ -310,7 +310,7 @@ void RenderingContext::videoRender()
 	}
 }
 
-obs_source_frame *RenderingContext::MainFilterVideo(obs_source_frame *frame)
+obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
 {
 	if (lastFrameTimestamp_ != frame->timestamp) {
 		lastFrameTimestamp_ = frame->timestamp;

@@ -33,7 +33,8 @@ using namespace KaitoTokyo::BridgeUtils;
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
-MainFilterContext::MainFilterContext(obs_data_t *settings, obs_source_t *source, std::shared_ptr<Global::GlobalContext> globalContext)
+MainFilterContext::MainFilterContext(obs_data_t *settings, obs_source_t *source,
+				     std::shared_ptr<Global::GlobalContext> globalContext)
 	: source_{source},
 	  globalContext_{globalContext},
 	  logger_(globalContext->logger_),
@@ -357,7 +358,7 @@ void MainFilterContext::videoRender()
 	}
 }
 
-obs_source_frame *MainFilterContext::MainFilterVideo(struct obs_source_frame *frame)
+obs_source_frame *MainFilterContext::filterVideo(struct obs_source_frame *frame)
 try {
 	if (obs_source_t *const parent = obs_filter_get_parent(source_)) {
 		if (!obs_source_active(parent) || !obs_source_showing(parent)) {

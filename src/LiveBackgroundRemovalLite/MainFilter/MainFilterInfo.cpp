@@ -30,9 +30,25 @@ namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 std::shared_ptr<Global::GlobalContext> g_globalContext_ = nullptr;
 
+obs_source_info g_mainFilterInfo = {.id = "live_backgroundremoval_lite",
+				    .type = OBS_SOURCE_TYPE_FILTER,
+				    .output_flags = OBS_SOURCE_VIDEO,
+				    .get_name = MainFilter::getName,
+				    .create = MainFilter::create,
+				    .destroy = MainFilter::destroy,
+				    .get_width = MainFilter::getWidth,
+				    .get_height = MainFilter::getHeight,
+				    .get_defaults = MainFilter::getDefaults,
+				    .get_properties = MainFilter::getProperties,
+				    .update = MainFilter::update,
+				    .video_tick = MainFilter::videoTick,
+				    .video_render = MainFilter::videoRender,
+				    .filter_video = MainFilter::filterVideo};
+
 bool loadModule(std::shared_ptr<Global::GlobalContext> globalContext) noexcept
 {
 	g_globalContext_ = std::move(globalContext);
+	obs_register_source(&g_mainFilterInfo);
 	return true;
 }
 
@@ -176,7 +192,7 @@ void update(void *data, obs_data_t *settings) noexcept
 	}
 }
 
-void videoTick(void *data, float seconds)
+void videoTick(void *data, float seconds) noexcept
 {
 	const auto logger = g_globalContext_->logger_;
 
@@ -200,7 +216,7 @@ void videoTick(void *data, float seconds)
 	}
 }
 
-void videoRender(void *data, gs_effect_t *)
+void videoRender(void *data, gs_effect_t *) noexcept
 {
 	const auto logger = g_globalContext_->logger_;
 
@@ -225,7 +241,7 @@ void videoRender(void *data, gs_effect_t *)
 	}
 }
 
-struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs_source_frame *frame)
+struct obs_source_frame *main_plugin_context_filter_video(void *data, struct obs_source_frame *frame) noexcept
 {
 	const auto logger = g_globalContext_->logger_;
 
