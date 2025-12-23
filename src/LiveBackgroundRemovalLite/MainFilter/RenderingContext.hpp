@@ -1,5 +1,9 @@
 /*
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/RenderingContext.hpp
  * Live Background Removal Lite - MainFilter Module
+========
+ * Live Background Removal Lite - Filter Module
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/RenderingContext.hpp
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -40,7 +44,11 @@
 #include "PluginConfig.hpp"
 #include "PluginProperty.hpp"
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/RenderingContext.hpp
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
+========
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/RenderingContext.hpp
 
 struct RenderingContextRegion {
 	std::uint32_t x;
@@ -152,4 +160,8 @@ private:
 	vec4 blackColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
 };
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/RenderingContext.hpp
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
+========
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/RenderingContext.hpp

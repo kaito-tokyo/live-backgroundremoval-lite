@@ -1,5 +1,9 @@
 /*
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/MainEffect.hpp
  * Live Background Removal Lite - MainFilter Module
+========
+ * Live Background Removal Lite - Filter Module
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/MainEffect.hpp
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -23,7 +27,11 @@
 #include <GsUnique.hpp>
 #include <ObsUnique.hpp>
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/MainEffect.hpp
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
+========
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/MainEffect.hpp
 
 struct TransformStateGuard {
 	TransformStateGuard()
@@ -432,4 +440,8 @@ public:
 	gs_eparam_t *const floatAlpha_ = nullptr;
 };
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/MainEffect.hpp
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
+========
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/MainEffect.hpp

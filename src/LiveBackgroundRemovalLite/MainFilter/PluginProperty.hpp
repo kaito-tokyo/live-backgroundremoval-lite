@@ -1,5 +1,9 @@
 /*
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/PluginProperty.hpp
  * Live Background Removal Lite - MainFilter Module
+========
+ * Live Background Removal Lite - Filter Module
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/PluginProperty.hpp
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -14,7 +18,11 @@
 
 #pragma once
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/PluginProperty.hpp
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
+========
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/PluginProperty.hpp
 
 enum class FilterLevel : int {
 	Default = 0,
@@ -42,4 +50,8 @@ struct PluginProperty {
 	double maskUpperBoundMarginAmpDb = -25.0;
 };
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/PluginProperty.hpp
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
+========
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/PluginProperty.hpp

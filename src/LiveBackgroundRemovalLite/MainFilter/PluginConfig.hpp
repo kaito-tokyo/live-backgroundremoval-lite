@@ -1,5 +1,9 @@
 /*
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/PluginConfig.hpp
  * Live Background Removal Lite - MainFilter Module
+========
+ * Live Background Removal Lite - Filter Module
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/PluginConfig.hpp
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -20,7 +24,11 @@
 
 #include <ObsUnique.hpp>
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/PluginConfig.hpp
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
+========
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/PluginConfig.hpp
 
 struct PluginConfig {
 	std::string latestVersionURL =
@@ -74,4 +82,8 @@ struct PluginConfig {
 	}
 };
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/PluginConfig.hpp
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
+========
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/PluginConfig.hpp

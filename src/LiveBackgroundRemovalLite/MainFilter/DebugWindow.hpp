@@ -1,5 +1,9 @@
 /*
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/DebugWindow.hpp
  * Live Background Removal Lite - MainFilter Module
+========
+ * Live Background Removal Lite - Filter Module
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/DebugWindow.hpp
  * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,7 +30,11 @@
 #include <AsyncTextureReader.hpp>
 #include <ILogger.hpp>
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/DebugWindow.hpp
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
+========
+namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter {
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/DebugWindow.hpp
 
 class MainFilterContext;
 
@@ -70,4 +78,8 @@ private:
 	std::vector<std::uint8_t> bufferSubPaddedR8_;
 };
 
+<<<<<<<< HEAD:src/LiveBackgroundRemovalLite/MainFilter/DebugWindow.hpp
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
+========
+} // namespace KaitoTokyo::LiveBackgroundRemovalLite::Filter
+>>>>>>>> main:src/LiveBackgroundRemovalLite/Filter/DebugWindow.hpp
