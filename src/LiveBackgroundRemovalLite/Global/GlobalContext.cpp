@@ -64,7 +64,7 @@ std::string GlobalContext::getLatestVersion() const
 	return latestVersion_;
 }
 
-Async::Task<void> GlobalContext::fetchLatestVersion(std::allocator_arg_t, TaskStorage &storage, GlobalContext *self)
+Async::Task<void> GlobalContext::fetchLatestVersion(std::allocator_arg_t, TaskStorage &, GlobalContext *self)
 {
 	std::shared_ptr<const Logger::ILogger> logger = self->logger_;
 
