@@ -9,13 +9,44 @@
 
 #pragma once
 
-#include <cassert>
+/**
+ * =============================================================================
+ * KAITOTOKYO ASYNC LIBRARY - INTERNAL API DOCUMENTATION
+ * =============================================================================
+ *
+ * @section WARNING CRITICAL USAGE WARNING
+ *
+ * This library provides a zero-overhead, allocation-aware coroutine mechanism
+ * designed for precise memory control. Unlike general-purpose async libraries,
+ * it DOES NOT manage lifecycles automatically via reference counting.
+ *
+ * @brief THE "POWER USER" CONTRACT
+ *
+ * By using this library, you agree to the following STRICT strict contracts.
+ * Failure to adhere to these rules will result in `std::terminate`, memory corruption,
+ * or undefined behavior.
+ *
+ * 1. **EXPLICIT OWNERSHIP**: The `Task` object uniquely owns the coroutine frame.
+ * 2. **NO FIRE-AND-FORGET**: If a `Task` object goes out of scope, the coroutine
+ * is immediately destroyed (cancelled). You MUST keep the `Task` object alive
+ * until the operation completes.
+ * 3. **STRICT STORAGE HIERARCHY**: When using `TaskStorage`, the storage object
+ * MUST strictly outlive the `Task` created from it.
+ *
+ * Use this library only when standard dynamic allocation is unacceptable and
+ * you can guarantee the lifetime hierarchy of your objects.
+ * =============================================================================
+ */
+
+#include <atomic>
 #include <concepts>
 #include <coroutine>
 #include <cstddef>
 #include <exception>
 #include <memory>
 #include <new>
+#include <stdexcept>
+#include <string>
 #include <utility>
 #include <variant>
 
@@ -31,16 +62,6 @@ constexpr std::size_t kDefaultTaskSize = 32768;
 // SymmetricTransfer
 // -----------------------------------------------------------------------------
 
-/**
- * @brief Helper for Symmetric Transfer to prevent stack overflow.
- *
- * @details
- * Instead of recursively resuming the continuation (which consumes stack space),
- * this awaitable returns the continuation handle to the caller/resumer.
- * This allows the compiler to perform a tail call optimization (symmetric transfer).
- *
- * @tparam PromiseType The promise type of the coroutine.
- */
 template<typename PromiseType> struct SymmetricTransfer {
 	bool await_ready() noexcept { return false; }
 
@@ -57,153 +78,166 @@ template<typename PromiseType> struct SymmetricTransfer {
 };
 
 // -----------------------------------------------------------------------------
-// Concepts
-// -----------------------------------------------------------------------------
-
-/**
- * @brief Defines the requirements for an allocator used with Task's custom operator new.
- *
- * @details
- * This concept specifies that an allocator must provide an `allocate` method that:
- * 1. Accepts a `std::size_t` representing the required size.
- * 2. Returns a `TaskStoragePtr` (or a type convertible to it).
- *
- * This ensures that the allocated memory is wrapped in a RAII object (TaskStoragePtr)
- * to manage the "used" state of the storage slot correctly.
- */
-template<typename T> concept TaskAllocator = requires(T & a, std::size_t n)
-{
-	// allocate(n) を呼び出すことができ、その戻り値は TaskStoragePtr に変換可能でなければならない
-	{
-		a.allocate(n)
-	} -> std::convertible_to<TaskStoragePtr>;
-};
-
-// -----------------------------------------------------------------------------
 // TaskStorage
 // -----------------------------------------------------------------------------
 
-/**
- * @brief Functor to release the used flag in TaskStorage.
- */
 struct TaskStorageReleaser {
-	bool *usedFlagPtr;
+	using CheckerFunc = void (*)(void *storage_ptr);
+
+	void *storage_ptr;
+	CheckerFunc checker;
 
 	void operator()(void *) const
 	{
-		if (usedFlagPtr) {
-			*usedFlagPtr = false;
+		if (storage_ptr && checker) {
+			checker(storage_ptr);
 		}
 	}
 };
 
-/**
- * @brief A unique_ptr that manages the "used" state of a TaskStorage slot.
- */
 using TaskStoragePtr = std::unique_ptr<void, TaskStorageReleaser>;
 
 /**
- * @brief A fixed-size memory storage for a single Task.
+ * @brief A fixed-size memory storage block for a single Task.
  *
  * @details
- * This class provides a pre-allocated buffer to store a coroutine frame, avoiding dynamic heap allocation.
- * It manages a simple "used" flag to ensure only one task occupies the buffer at a time.
+ * This class provides deterministic memory placement for a coroutine frame.
+ * It is intended for scenarios where heap allocation is too slow or non-deterministic.
  *
- * @warning **LIFETIME CONSTRAINT**
- * The `TaskStorage` instance **MUST outlive** any `Task` allocated from it.
- * The `Task` holds a `TaskStoragePtr` which refers back to the `used` flag inside this storage.
- * If the storage is destroyed while a Task is still running, it will lead to a dangling pointer access.
+ * @warning **CRITICAL LIFETIME CONSTRAINT**
+ * The `TaskStorage` instance MUST outlive any `Task` (coroutine) allocated from it.
  *
- * @tparam Size The size of the buffer in bytes (default: 4096).
+ * @note **FATAL ERROR BEHAVIOR**
+ * If the `TaskStorage` destructor is called while the memory is still marked as
+ * `used_` (i.e., the associated Task is still alive/running), the program
+ * will immediately call `std::terminate()`.
  */
 template<std::size_t Size = kDefaultTaskSize> class TaskStorage {
-	alignas(std::max_align_t) char buffer_[Size];
-	bool used = false;
+	enum class State : std::uint64_t { Alive = 0x5441534B4C495645, Dead = 0xDEADDEADDEADDEAD, Uninitialized = 0 };
+
+	State magic_ = State::Alive;
+	std::atomic<bool> used_{false};
+	alignas(std::max_align_t) std::byte buffer_[Size];
 
 public:
 	TaskStorage() = default;
-	~TaskStorage() { assert(!used_ && "TaskStorage destroyed while Task is still running!"); };
+
+	// Ensure storage is not destroyed while a task is running
+	~TaskStorage()
+	{
+		if (used_) {
+			// FATAL: Storage destroyed while Task is still running.
+			std::terminate();
+		}
+		magic_ = State::Dead;
+	};
 
 	TaskStorage(const TaskStorage &) = delete;
 	TaskStorage &operator=(const TaskStorage &) = delete;
 	TaskStorage(TaskStorage &&) = delete;
 	TaskStorage &operator=(TaskStorage &&) = delete;
 
-	/**
-	 * @brief Allocates the buffer for a task if available.
-	 *
-	 * @param n Required size in bytes.
-	 * @return A `TaskStoragePtr` managing the buffer ownership, or an empty ptr if unavailable/too small.
-	 */
 	[[nodiscard("Ignoring allocate() result causes immediate deallocation")]]
 	TaskStoragePtr allocate(std::size_t n)
 	{
-		if (n > Size || used) {
-			return TaskStoragePtr(nullptr, TaskStorageReleaser{nullptr});
+		if (n > Size) {
+			used_.store(false, std::memory_order_release);
+			throw std::length_error("InsufficientCapacityError(TaskStorage::allocate):" + std::to_string(n) + "/" + std::to_string(Size));
 		}
 
-		used = true;
-		return TaskStoragePtr(buffer_, TaskStorageReleaser{&used});
+		bool expected = false;
+		if (!used_.compare_exchange_strong(expected, true, std::memory_order_acquire, std::memory_order_relaxed)) {
+			throw std::logic_error("IllegalReuseError(TaskStorage::allocate)");
+		}
+
+		auto checker = [](void *ptr) {
+			auto *self = static_cast<TaskStorage *>(ptr);
+			if (self->magic_ != State::Alive) {
+				// FATAL: Use-after-free detected. Storage was destroyed before the Task.
+				std::terminate();
+			}
+			self->used_.store(false, std::memory_order_release);
+		};
+
+		return TaskStoragePtr(buffer_, TaskStorageReleaser{this, checker});
 	}
+};
+
+// -----------------------------------------------------------------------------
+// Concepts
+// -----------------------------------------------------------------------------
+
+template<typename T> concept TaskAllocator = requires(T & a, std::size_t n)
+{
+	{
+		a.allocate(n)
+	} -> std::convertible_to<TaskStoragePtr>;
 };
 
 // -----------------------------------------------------------------------------
 // Task
 // -----------------------------------------------------------------------------
 
-/**
- * @brief Base class for TaskPromise handling result values or exceptions.
- */
 template<typename T> struct TaskPromiseBase {
+	// Index 0: std::monostate (Running/Not Ready)
+	// Index 1: T (Result Value)
+	// Index 2: std::exception_ptr (Error)
 	std::variant<std::monostate, T, std::exception_ptr> result_;
 
 	void return_value(T v) { result_.template emplace<1>(std::move(v)); }
-
 	void unhandled_exception() { result_.template emplace<2>(std::current_exception()); }
 
 	T extract_value()
 	{
 		if (result_.index() == 2) {
 			std::rethrow_exception(std::get<2>(result_));
+		} else if (result_.index() == 0) {
+			throw std::logic_error("Task result is not ready. Do not await a running task.");
 		}
 		return std::move(std::get<1>(result_));
 	}
 };
 
-/**
- * @brief Specialization of TaskPromiseBase for void.
- */
 template<> struct TaskPromiseBase<void> {
-	std::variant<std::monostate, std::exception_ptr> result_;
+	// Index 0: std::monostate (Running/Not Ready)
+	// Index 1: std::monostate (Done/Void Result) - used_ as a flag for completion
+	// Index 2: std::exception_ptr (Error)
+	std::variant<std::monostate, std::monostate, std::exception_ptr> result_;
 
-	void return_void() {}
+	TaskPromiseBase() : result_(std::in_place_index<0>) {}
 
-	void unhandled_exception() { result_.template emplace<1>(std::current_exception()); }
+	void return_void() { result_.template emplace<1>(); }
+	void unhandled_exception() { result_.template emplace<2>(std::current_exception()); }
 
 	void extract_value()
 	{
-		if (result_.index() == 1) {
-			std::rethrow_exception(std::get<1>(result_));
+		if (result_.index() == 2) {
+			std::rethrow_exception(std::get<2>(result_));
+		} else if (result_.index() == 0) {
+			throw std::logic_error("Task result is not ready. Do not await a running task.");
 		}
+		// Index 1 means success (void), simply return.
 	}
 };
 
 /**
- * @brief A coroutine task with unique ownership and custom allocation support.
+ * @brief A unique-ownership coroutine task.
  *
  * @details
- * - **Unique Ownership**: Unlike `SharedTask`, this task is move-only and owns the coroutine handle.
- * - **Custom Allocation**: It uses `TaskStorage` (via `operator new` overload) to allocate the coroutine frame
- * on a provided buffer, minimizing heap usage.
- * - **Symmetric Transfer**: Uses symmetric transfer for tail-call optimization in `await_suspend`.
+ * This class implements a strict RAII (Resource Acquisition Is Initialization) model
+ * for coroutines. It does not support shared ownership or detachment.
  *
- * @note
- * The `Task` manages the lifetime of the allocated `TaskStorage` slot by embedding a `TaskStoragePtr`
- * directly into the allocated memory block (header).
+ * @warning **FIRE-AND-FORGET PROHIBITED**
+ * You MUST store the returned `Task` object. If the `Task` object is destroyed
+ * (e.g., goes out of scope) while the coroutine is suspended, the coroutine
+ * frame is immediately destroyed and execution is cancelled.
  *
- * @tparam T The return type of the task.
+ * @warning **NO AUTOMATIC START**
+ * Tasks are lazy. They do not start executing until you explicitly call `.start()`
+ * or `co_await` them.
  */
-template<typename T> struct [[nodiscard("Ignoring a Task destroys the coroutine immediately")]] Task {
+template<typename T>
+struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object to keep the coroutine alive.")]] Task {
 	struct promise_type : TaskPromiseBase<T> {
 		std::coroutine_handle<> continuation = nullptr;
 
@@ -212,60 +246,42 @@ template<typename T> struct [[nodiscard("Ignoring a Task destroys the coroutine 
 		std::suspend_always initial_suspend() { return {}; }
 		auto final_suspend() noexcept { return SymmetricTransfer<promise_type>{}; }
 
-		/**
-		 * @brief Custom operator new to allocate coroutine frame from TaskStorage.
-		 * * @details
-		 * It expects a `TaskStorage` compatible allocator to be passed as an argument.
-		 * It allocates extra space to embed the `TaskStoragePtr` (RAII object) at the beginning of the block.
-		 * The offset for the coroutine frame is calculated to ensure proper alignment (`max_align_t`).
-		 */
 		template<TaskAllocator Alloc, typename... Args>
 		static void *operator new(std::size_t size, std::allocator_arg_t, Alloc &alloc, Args &&...)
 		{
-			// 1. Calculate header size and alignment padding
 			constexpr std::size_t alignment = alignof(std::max_align_t);
 			std::size_t header_size = sizeof(TaskStoragePtr);
-
-			// Round up header_size to the next multiple of alignment
 			std::size_t offset = (header_size + alignment - 1) & ~(alignment - 1);
-
 			std::size_t total_size = size + offset;
 
-			// 2. Allocate memory from the provided allocator (TaskStorage)
 			auto ptr = alloc.allocate(total_size);
 
 			if (!ptr) {
-				throw std::bad_alloc();
+				throw std::logic_error("AllocateError(Task::promise_type::operator new)");
 			}
 
 			void *raw_ptr = ptr.get();
-
-			// 3. Construct the TaskStoragePtr (RAII) in the header region
-			// This keeps the storage slot "used" as long as this memory block exists.
 			new (raw_ptr) TaskStoragePtr(std::move(ptr));
-
-			// 4. Return the pointer offset by the padded header size
-			return static_cast<char *>(raw_ptr) + offset;
+			return static_cast<std::byte *>(raw_ptr) + offset;
 		}
 
 		static void *operator new(std::size_t) = delete;
 
 		static void operator delete(void *ptr, std::size_t)
 		{
-			// 1. Re-calculate offset to find the start of the allocated block
 			constexpr std::size_t alignment = alignof(std::max_align_t);
 			std::size_t header_size = sizeof(TaskStoragePtr);
 			std::size_t offset = (header_size + alignment - 1) & ~(alignment - 1);
 
-			char *raw_ptr = static_cast<char *>(ptr) - offset;
-
-			// 2. Destruct the TaskStoragePtr to release the storage slot
+			std::byte *raw_ptr = static_cast<std::byte *>(ptr) - offset;
 			auto *stored_ptr = reinterpret_cast<TaskStoragePtr *>(raw_ptr);
 			stored_ptr->~TaskStoragePtr();
 		}
 	};
 
 	explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}
+
+	// Destructor enforces strict lifecycle management.
 	~Task()
 	{
 		if (handle)
@@ -296,6 +312,14 @@ template<typename T> struct [[nodiscard("Ignoring a Task destroys the coroutine 
 
 	T await_resume() { return handle.promise().extract_value(); }
 
+	/**
+	 * @brief Kicks off the root task execution.
+	 *
+	 * @warning **LIFETIME HAZARD**
+	 * Calling `start()` DOES NOT detach the task. You must continue to hold the
+	 * `Task` object after calling `start()`. If the `Task` object is destroyed
+	 * immediately after `start()`, the coroutine will be aborted before it finishes.
+	 */
 	void start()
 	{
 		if (handle && !handle.done())
