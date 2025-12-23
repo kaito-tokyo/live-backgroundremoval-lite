@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <cassert>
+#include <concepts>
 #include <coroutine>
 #include <cstddef>
 #include <exception>
@@ -55,6 +57,29 @@ template<typename PromiseType> struct SymmetricTransfer {
 };
 
 // -----------------------------------------------------------------------------
+// Concepts
+// -----------------------------------------------------------------------------
+
+/**
+ * @brief Defines the requirements for an allocator used with Task's custom operator new.
+ *
+ * @details
+ * This concept specifies that an allocator must provide an `allocate` method that:
+ * 1. Accepts a `std::size_t` representing the required size.
+ * 2. Returns a `TaskStoragePtr` (or a type convertible to it).
+ *
+ * This ensures that the allocated memory is wrapped in a RAII object (TaskStoragePtr)
+ * to manage the "used" state of the storage slot correctly.
+ */
+template<typename T> concept TaskAllocator = requires(T & a, std::size_t n)
+{
+	// allocate(n) を呼び出すことができ、その戻り値は TaskStoragePtr に変換可能でなければならない
+	{
+		a.allocate(n)
+	} -> std::convertible_to<TaskStoragePtr>;
+};
+
+// -----------------------------------------------------------------------------
 // TaskStorage
 // -----------------------------------------------------------------------------
 
@@ -97,10 +122,12 @@ template<std::size_t Size = kDefaultTaskSize> class TaskStorage {
 
 public:
 	TaskStorage() = default;
-	~TaskStorage() = default;
+	~TaskStorage() { assert(!used_ && "TaskStorage destroyed while Task is still running!"); };
 
 	TaskStorage(const TaskStorage &) = delete;
 	TaskStorage &operator=(const TaskStorage &) = delete;
+	TaskStorage(TaskStorage &&) = delete;
+	TaskStorage &operator=(TaskStorage &&) = delete;
 
 	/**
 	 * @brief Allocates the buffer for a task if available.
@@ -108,6 +135,7 @@ public:
 	 * @param n Required size in bytes.
 	 * @return A `TaskStoragePtr` managing the buffer ownership, or an empty ptr if unavailable/too small.
 	 */
+	[[nodiscard("Ignoring allocate() result causes immediate deallocation")]]
 	TaskStoragePtr allocate(std::size_t n)
 	{
 		if (n > Size || used) {
@@ -175,7 +203,7 @@ template<> struct TaskPromiseBase<void> {
  *
  * @tparam T The return type of the task.
  */
-template<typename T> struct [[nodiscard]] Task {
+template<typename T> struct [[nodiscard("Ignoring a Task destroys the coroutine immediately")]] Task {
 	struct promise_type : TaskPromiseBase<T> {
 		std::coroutine_handle<> continuation = nullptr;
 
@@ -191,7 +219,7 @@ template<typename T> struct [[nodiscard]] Task {
 		 * It allocates extra space to embed the `TaskStoragePtr` (RAII object) at the beginning of the block.
 		 * The offset for the coroutine frame is calculated to ensure proper alignment (`max_align_t`).
 		 */
-		template<typename Alloc, typename... Args>
+		template<TaskAllocator Alloc, typename... Args>
 		static void *operator new(std::size_t size, std::allocator_arg_t, Alloc &alloc, Args &&...)
 		{
 			// 1. Calculate header size and alignment padding
@@ -258,7 +286,7 @@ template<typename T> struct [[nodiscard]] Task {
 		return *this;
 	}
 
-	bool await_ready() { return handle.done(); }
+	[[nodiscard]] bool await_ready() { return handle.done(); }
 
 	std::coroutine_handle<> await_suspend(std::coroutine_handle<> caller)
 	{

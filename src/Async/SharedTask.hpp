@@ -370,9 +370,7 @@ template<typename T, typename Context> struct SharedTaskPromise : SharedTaskProm
 		return context->allocate_frame(size);
 	}
 
-	static void operator delete(void *, std::size_t)
-	{
-	}
+	static void operator delete(void *, std::size_t) {}
 };
 
 } // namespace KaitoTokyo::Async
