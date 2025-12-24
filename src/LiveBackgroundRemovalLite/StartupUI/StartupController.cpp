@@ -212,7 +212,6 @@ void StartupController::showFirstRunDialog()
 
     // Close Button
     QPushButton *closeBtn = new QPushButton(QObject::tr("Close"), dialog);
-    closeBtn->setCursor(Qt::PointingHandCursor);
     closeBtn->setDefault(true);
     closeBtn->setMinimumWidth(100);
     closeBtn->setMinimumHeight(36);
