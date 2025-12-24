@@ -28,6 +28,7 @@
 #include <QUrl>
 #include <QDebug>
 #include <QDesktopServices>
+#include <QPainter>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::StartupUI {
 
@@ -54,115 +55,160 @@ void StartupController::showFirstRunDialog()
 
 	QDialog dialog(parent);
 	dialog.setWindowTitle("Live Background Removal Lite - インストール完了");
-	dialog.resize(500, 380); // 横幅を少し広めに
+	dialog.resize(500, 420); // コンテンツが増えたので縦を少し余裕を持たせる
 
 	// メインのレイアウト（縦並び）
 	QVBoxLayout *mainLayout = new QVBoxLayout(&dialog);
-	mainLayout->setContentsMargins(25, 25, 25, 25);
-	mainLayout->setSpacing(15);
+	mainLayout->setContentsMargins(30, 30, 30, 30); // 余白を少しリッチに
+	mainLayout->setSpacing(20);
 
 	// ==========================================
-	// 1. ヘッダー部分（ロゴ + タイトル）の作成
+	// 1. ヘッダー部分
 	// ==========================================
 	QHBoxLayout *headerLayout = new QHBoxLayout();
-	headerLayout->setSpacing(20); // ロゴと文字の間隔
+	headerLayout->setSpacing(20);
 
-	// (A) 左側のロゴアイコン
+	// (A) 左側のロゴアイコン（角丸処理）
 	QLabel *iconLabel = new QLabel(&dialog);
-	// 正方形のアイコン画像を指定してください
-	QPixmap pixmap(":/live-backgroundremoval-lite/logo-512.png");
+	QPixmap srcPixmap(":/live-backgroundremoval-lite/logo-512.png");
 
-	if (!pixmap.isNull()) {
-		// アイコンサイズにリサイズ（例: 64x64）
-		iconLabel->setPixmap(pixmap.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+	if (!srcPixmap.isNull()) {
+		QPixmap resizedPixmap = srcPixmap.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+		QPixmap roundedPixmap(resizedPixmap.size());
+		roundedPixmap.fill(Qt::transparent);
+
+		QPainter painter(&roundedPixmap);
+		painter.setRenderHint(QPainter::Antialiasing, true);
+		painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
+
+		QPainterPath path;
+		path.addRoundedRect(roundedPixmap.rect(), 18, 18); // 丸みを少し強く(18)
+		painter.setClipPath(path);
+		painter.drawPixmap(0, 0, resizedPixmap);
+
+		iconLabel->setPixmap(roundedPixmap);
 	}
-	// ロゴの縦位置を上揃えではなく中央揃えにする
 	iconLabel->setAlignment(Qt::AlignCenter);
-
 	headerLayout->addWidget(iconLabel);
 
-	// ---------------------------------------------------------
-	// (B) 右側のタイトル・バージョン情報エリア（縦並び）
-	// ---------------------------------------------------------
+	// (B) 右側のタイトル・バージョン情報エリア
 	QVBoxLayout *titleAreaLayout = new QVBoxLayout();
-	titleAreaLayout->setSpacing(5);                                  // タイトルとバージョンの間隔
-	titleAreaLayout->setAlignment(Qt::AlignVCenter | Qt::AlignLeft); // 垂直中央・左寄せ
+	titleAreaLayout->setSpacing(2);
+	titleAreaLayout->setAlignment(Qt::AlignVCenter | Qt::AlignLeft);
 
-	// --- 1. タイトル ---
+	// タイトル
 	QLabel *titleLabel = new QLabel("Live Background Removal Lite", &dialog);
-	// OBSのテーマを上書きして大きく表示
-	titleLabel->setStyleSheet("font-size: 26pt; font-weight: bold;");
+	// OBSのスタイルを上書きして大きく表示
+	titleLabel->setStyleSheet("font-size: 24pt; font-weight: bold; margin-bottom: 4px;");
+	titleLabel->setWordWrap(true);
 	titleAreaLayout->addWidget(titleLabel);
 
-	// --- 2. バージョン情報 ---
-	// 文字列の取得と整形
+	// サブタイトル行（バージョン + 公式サイトリンク）
+	QHBoxLayout *subtitleLayout = new QHBoxLayout();
+	subtitleLayout->setSpacing(15);
+	subtitleLayout->setAlignment(Qt::AlignLeft);
+
 	QString currentVer = QString::fromStdString(globalContext_->pluginVersion_);
 	QString latestVer = QString::fromStdString(globalContext_->getLatestVersion());
 
-	QString versionText = QString("Version: %1").arg(currentVer);
-
-	// 最新バージョンが取得できていて、かつ現在と違う場合のみ表示するなど
+	QString versionText = QString("v%1").arg(currentVer);
 	if (!latestVer.isEmpty()) {
-		versionText += QString("  /  Latest: %1").arg(latestVer);
+		versionText += QString(" (Latest: %1)").arg(latestVer);
 	}
 
 	QLabel *versionLabel = new QLabel(versionText, &dialog);
-	// 少し小さく、グレーにして目立ちすぎないようにする
-	versionLabel->setStyleSheet("font-size: 11pt; color: #888888;");
-	titleAreaLayout->addWidget(versionLabel);
+	versionLabel->setStyleSheet("font-size: 10pt; color: #888888;");
+	subtitleLayout->addWidget(versionLabel);
 
-	// 作成したタイトルエリアをヘッダーレイアウトに追加
-	// addWidget ではなく addLayout を使う点に注意してください
+	// 公式サイトリンク
+	QLabel *linkLabel = new QLabel(
+		"<a href='https://kaito-tokyo.github.io/live-backgroundremoval-lite/' style='color: #66aaff; text-decoration: none;'>"
+		"公式サイト / 最新版"
+		"</a>",
+		&dialog);
+	linkLabel->setOpenExternalLinks(true);
+	linkLabel->setTextFormat(Qt::RichText);
+	linkLabel->setStyleSheet("font-size: 10pt;");
+	subtitleLayout->addWidget(linkLabel);
+
+	subtitleLayout->addStretch();
+	titleAreaLayout->addLayout(subtitleLayout);
 	headerLayout->addLayout(titleAreaLayout);
 
-	// ヘッダーレイアウトをメインレイアウトに追加
 	mainLayout->addLayout(headerLayout);
 
-	// 区切り線（お好みで）
+	// 区切り線
 	QFrame *line = new QFrame();
 	line->setFrameShape(QFrame::HLine);
 	line->setFrameShadow(QFrame::Sunken);
 	mainLayout->addWidget(line);
 
 	// ==========================================
-	// 2. 説明テキストエリア
+	// 2. 説明テキストエリア（ワクワク感 ＆ レビュー誘導）
 	// ==========================================
 	QLabel *textLabel = new QLabel(&dialog);
 	textLabel->setWordWrap(true);
 	textLabel->setTextFormat(Qt::RichText);
 	textLabel->setOpenExternalLinks(true);
 
-	textLabel->setText(
-		"<p>インストールありがとうございます！正常に読み込まれました。</p>"
-		"<p><b>【使い方】</b></p>"
-		"<ol style='line-height: 140%;'>"
-		"<li>映像ソースを右クリック ＞ <b>「フィルタ」</b></li>"
-		"<li>左下の <b>[ + ]</b> から <b>「Live Background Removal Lite」</b>を追加</li>"
-		"</ol>"
-		"<p style='color: #888; font-size: 11px;'>詳しい情報は <a href='https://kaito-tokyo.github.io/live-backgroundremoval-lite/'>公式サイト</a> をご覧ください。</p>");
+	QString usageUrl = "https://kaito-tokyo.github.io/live-backgroundremoval-lite/usage/";
+	// 実際のフォーラムURL
+	QString forumUrl = "https://obsproject.com/forum/resources/live-background-removal-lite.2226/";
+
+	textLabel->setText("<p style='font-size: 13px; margin-bottom: 5px;'>"
+			   "インストールありがとうございます！🎉<br>"
+			   "これで、<b>グリーンバックなしで</b>あなたの部屋がスタジオに変わります。<br>"
+			   "没入感のある配信を作る準備は完了です。</p>"
+
+			   "<hr style='background-color: #444; height: 1px; border: none;'>"
+
+			   "<p><b>【さっそく使ってみよう】</b></p>"
+			   "<ol style='line-height: 140%; margin-top: 0px; margin-bottom: 10px;'>"
+			   "<li>映像ソースを右クリック ＞ <b>「フィルタ」</b></li>"
+			   "<li><b>[ + ]</b> から <b>「Live Background Removal Lite」</b>を追加</li>"
+			   "</ol>"
+
+			   "<p style='margin-bottom: 10px;'>"
+			   "<b>✨ もっとキレイに抜きたい？</b><br>"
+			   "プロ級に仕上げる調整のコツは <a href='" +
+			   usageUrl +
+			   "' style='color: #66aaff; text-decoration: none;'>"
+			   "公式サイトのガイド</a> をご覧ください。</p>"
+
+			   "<hr style='background-color: #444; height: 1px; border: none;'>"
+
+			   "<p style='font-size: 12px; color: #ccc; margin-top: 5px;'>"
+			   "このプラグインは個人で開発しています。<br>"
+			   "もし気に入っていただけたら、<b>フォーラムで星（★★★★★）</b>を頂けると<br>"
+			   "開発者が泣いて喜びますし、次のアップデートへの爆速燃料になります！🚀<br>"
+			   "<div style='margin-top: 8px; font-size: 13px;'>"
+			   "<a href='" +
+			   forumUrl +
+			   "' style='color: #ffb74d; text-decoration: none; font-weight: bold;'>"
+			   "▶ ここをクリックしてレビューで応援する"
+			   "</a></div></p>");
 	mainLayout->addWidget(textLabel);
 
-	// 下に寄せるためのスペース
+	// バネを入れてテキストを上に詰める
 	mainLayout->addStretch();
 
 	// ==========================================
-	// 3. フッターボタン（フォーラム ＆ 閉じる）
+	// 3. フッター（閉じるボタンのみ）
 	// ==========================================
 	QHBoxLayout *btnLayout = new QHBoxLayout();
 
-	// フォーラムボタン
-	QPushButton *forumBtn = new QPushButton("フォーラムで応援する", &dialog);
-	forumBtn->setCursor(Qt::PointingHandCursor);
-	QObject::connect(forumBtn, &QPushButton::clicked,
-			 []() { QDesktopServices::openUrl(QUrl("https://obsproject.com/forum/resources/xxxx/")); });
-	btnLayout->addWidget(forumBtn);
+	// 【変更点】フォーラムボタンを削除しました
 
-	btnLayout->addStretch(); // ボタン間のスペース
+	// 閉じるボタン（右寄せ）
+	btnLayout->addStretch(); // 左側の余白を埋める
 
-	// 閉じるボタン
 	QPushButton *closeBtn = new QPushButton("閉じる", &dialog);
 	closeBtn->setCursor(Qt::PointingHandCursor);
 	closeBtn->setDefault(true);
+	// ボタンの幅を少し広げて押しやすく
+	closeBtn->setMinimumWidth(120);
+	closeBtn->setMinimumHeight(32);
+
 	QObject::connect(closeBtn, &QPushButton::clicked, &dialog, &QDialog::accept);
 	btnLayout->addWidget(closeBtn);
 
