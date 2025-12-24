@@ -19,7 +19,7 @@
 
 #include <ILogger.hpp>
 
-#include "AlignedMemoryResource.hpp"
+#include "AlignedAllocator.hpp"
 
 namespace KaitoTokyo::Memory {
 
@@ -36,6 +36,8 @@ namespace KaitoTokyo::Memory {
  * even if the pool instance itself is destroyed while blocks are still in use.
  */
 class MemoryBlockPool : public std::enable_shared_from_this<MemoryBlockPool> {
+	using BlockType = std::vector<std::uint8_t, AlignedAllocator<std::uint8_t>>;
+
 public:
 	/**
 	 * @brief A shared pointer to a memory block acquired from the pool.
@@ -44,7 +46,7 @@ public:
 	 * automatically returned to the pool (if the pool still exists and is not full)
 	 * or deallocated.
 	 */
-	using MemoryBlockSharedPtr = std::shared_ptr<std::pmr::vector<std::uint8_t>>;
+	using MemoryBlockSharedPtr = std::shared_ptr<BlockType>;
 
 	/**
 	 * @brief Factory function to create a new MemoryBlockPool instance.
@@ -97,12 +99,12 @@ public:
 	 */
 	MemoryBlockSharedPtr acquire()
 	{
-		std::unique_ptr<std::pmr::vector<std::uint8_t>> block;
+		std::unique_ptr<BlockType> block;
 		{
 			std::lock_guard<std::mutex> lock(poolMutex_);
 			if (pool_.empty()) {
-				block = std::make_unique<std::pmr::vector<std::uint8_t>>(
-					blockSize_, std::pmr::polymorphic_allocator<std::uint8_t>(&memoryResource_));
+				block = std::make_unique<BlockType>(blockSize_,
+								    AlignedAllocator<std::uint8_t>(alignment_));
 			} else {
 				block = std::move(pool_.back());
 				pool_.pop_back();
@@ -111,13 +113,13 @@ public:
 
 		auto *blockPtr = block.get();
 
-		return MemoryBlockSharedPtr(blockPtr, [self = shared_from_this(), block = std::move(block)](
-							      std::pmr::vector<std::uint8_t> *) mutable {
-			std::lock_guard<std::mutex> lock(self->poolMutex_);
-			if (self->pool_.size() < self->maxSize_) {
-				self->pool_.push_back(std::move(block));
-			}
-		});
+		return MemoryBlockSharedPtr(blockPtr,
+					    [self = shared_from_this(), block = std::move(block)](BlockType *) mutable {
+						    std::lock_guard<std::mutex> lock(self->poolMutex_);
+						    if (self->pool_.size() < self->maxSize_) {
+							    self->pool_.push_back(std::move(block));
+						    }
+					    });
 	}
 
 	/**
@@ -131,16 +133,16 @@ private:
 			std::size_t alignment, std::size_t maxSize)
 		: logger_(std::move(logger)),
 		  blockSize_(blockSize),
-		  memoryResource_(alignment),
+		  alignment_(alignment),
 		  maxSize_(maxSize)
 	{
 	}
 
 	const std::shared_ptr<const Logger::ILogger> logger_;
 	std::size_t blockSize_;
-	AlignedMemoryResource memoryResource_;
+	std::size_t alignment_;
 	std::size_t maxSize_;
-	std::vector<std::unique_ptr<std::pmr::vector<std::uint8_t>>> pool_;
+	std::vector<std::unique_ptr<BlockType>> pool_;
 	mutable std::mutex poolMutex_;
 };
 
