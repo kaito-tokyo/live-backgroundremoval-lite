@@ -37,6 +37,9 @@ public:
 	using value_type = T;
 
 	explicit AlignedAllocator(std::size_t alignment) noexcept : alignment_(alignment) {}
+	if (alignment < alignof(std::max_align_t) || (alignment & (alignment - 1)) != 0) {
+		throw std::invalid_argument("Alignment must be a power of two and at least alignof(std::max_align_t)");
+	}
 
 	template<class U> AlignedAllocator(const AlignedAllocator<U> &other) noexcept : alignment_(other.alignment()) {}
 
