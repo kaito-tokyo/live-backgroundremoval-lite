@@ -16,7 +16,6 @@
 
 #include <QCoreApplication>
 #include <QTranslator>
-#include <QtResource>
 
 #include <curl/curl.h>
 
