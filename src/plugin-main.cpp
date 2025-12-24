@@ -14,6 +14,8 @@
 
 #include <memory>
 
+#include <QtResource>
+
 #include <curl/curl.h>
 
 #include <obs-module.h>
@@ -40,8 +42,17 @@ std::shared_ptr<StartupUI::StartupController> g_startupController_;
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
+void handleFrontendEvent(enum obs_frontend_event event, void *)
+{
+	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
+		g_startupController_->showFirstRunDialog();
+	}
+}
+
 bool obs_module_load(void)
 {
+	Q_INIT_RESOURCE(resources);
+
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	const std::shared_ptr<const Logger::ILogger> logger =
@@ -50,16 +61,14 @@ bool obs_module_load(void)
 	g_globalContext_ =
 		std::make_shared<Global::GlobalContext>(PLUGIN_NAME, PLUGIN_VERSION, logger, latestVersionUrl);
 
-	g_startupController_ = std::make_shared<StartupUI::StartupController>();
-
-	// if (g_startupController_->checkIfFirstRunCertainly()) {
-	g_startupController_->showFirstRunDialog();
-	// }
+	g_startupController_ = std::make_shared<StartupUI::StartupController>(g_globalContext_);
 
 	if (!MainFilter::loadModule(g_globalContext_)) {
 		logger->error("failed to load plugin");
 		return false;
 	}
+
+	obs_frontend_add_event_callback(handleFrontendEvent, nullptr);
 
 	logger->info("plugin loaded successfully (version {})", PLUGIN_VERSION);
 	return true;

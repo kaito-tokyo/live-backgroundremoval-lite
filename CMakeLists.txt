@@ -57,7 +57,7 @@ endif()
 
 find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
+find_package(Qt6 REQUIRED COMPONENTS SvgWidgets Widgets Core)
 
 if(VCPKG_TARGET_TRIPLET)
   list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
@@ -106,9 +106,14 @@ add_subdirectory(src)
 add_library(${CMAKE_PROJECT_NAME} MODULE)
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PRIVATE CURL::libcurl OBS::libobs BridgeUtils ${CMAKE_PROJECT_NAME}_Global ${CMAKE_PROJECT_NAME}_MainFilter ${CMAKE_PROJECT_NAME}_StartupUI
+  PRIVATE CURL::libcurl OBS::libobs BridgeUtils ${CMAKE_PROJECT_NAME}_Global ${CMAKE_PROJECT_NAME}_MainFilter ${CMAKE_PROJECT_NAME}_StartupUI Qt6::Core
 )
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp src/resources/resources.qrc)
+set_target_properties(
+  ${CMAKE_PROJECT_NAME}
+  PROPERTIES AUTORCC ON
+)
+target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE PLUGIN_VERSION="${PLUGIN_VERSION}")
 
 if(APPLE)
   target_link_options(

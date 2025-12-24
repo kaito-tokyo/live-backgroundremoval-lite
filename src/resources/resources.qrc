@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="/live-backgroundremoval-lite">
+    <file>logo-512.png</file>
+  </qresource>
+</RCC>

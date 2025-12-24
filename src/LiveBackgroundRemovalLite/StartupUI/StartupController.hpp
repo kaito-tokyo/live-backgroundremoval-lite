@@ -18,15 +18,24 @@
 
 #pragma once
 
+#include <memory>
+
 #include <obs-frontend-api.h>
 #include <util/config-file.h>
+
+#include <GlobalContext.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::StartupUI {
 
 class StartupController {
 public:
+	explicit StartupController(std::shared_ptr<Global::GlobalContext> globalContext);
+
 	bool checkIfFirstRunCertainly();
 	void showFirstRunDialog();
+
+private:
+	std::shared_ptr<Global::GlobalContext> globalContext_;
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::StartupUI
