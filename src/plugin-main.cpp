@@ -101,9 +101,10 @@ void obs_module_unload(void)
 	const std::shared_ptr<const Logger::ILogger> logger = g_globalContext_->logger_;
 	obs_frontend_remove_event_callback(handleFrontendEvent, nullptr);
 	MainFilter::unloadModule();
+	g_startupController_.reset();
 	g_globalContext_.reset();
-	curl_global_cleanup();
 	g_appTranslator_.reset();
+	curl_global_cleanup();
 	Q_CLEANUP_RESOURCE(resources);
 	logger->info("plugin unloaded");
 }
