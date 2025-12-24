@@ -59,9 +59,9 @@ public:
 		using other = AlignedAllocator<U>;
 	};
 
-	explicit AlignedAllocator(std::size_t alignment) noexcept : alignment_(alignment)
+	explicit AlignedAllocator(std::size_t alignment) : alignment_(alignment)
 	{
-		if (alignment < alignof(std::max_align_t) || (alignment & (alignment - 1)) != 0) {
+		if ((alignment & (alignment - 1)) != 0) {
 			throw std::invalid_argument(
 				"Alignment must be a power of two and at least alignof(std::max_align_t)");
 		}
