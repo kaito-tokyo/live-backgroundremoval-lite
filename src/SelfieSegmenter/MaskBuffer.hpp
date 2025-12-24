@@ -16,19 +16,20 @@
 #include <mutex>
 #include <vector>
 
-#include <AlignedMemoryResource.hpp>
+#include <AlignedAllocator.hpp>
 
 namespace KaitoTokyo::SelfieSegmenter {
 
 class MaskBuffer {
+	using BlockType = std::vector<std::uint8_t, Memory::AlignedAllocator<std::uint8_t>>;
+
 public:
 	constexpr static std::size_t kAlignment = 32;
 
 	explicit MaskBuffer(std::size_t size)
-		: memoryResource_(kAlignment),
-		  buffers_{std::pmr::vector<std::uint8_t>(size, 0, {&memoryResource_}),
-			   std::pmr::vector<std::uint8_t>(size, 0, {&memoryResource_}),
-			   std::pmr::vector<std::uint8_t>(size, 0, {&memoryResource_})}
+		: buffers_{BlockType(size, 0, Memory::AlignedAllocator<std::uint8_t>(kAlignment)),
+			   BlockType(size, 0, Memory::AlignedAllocator<std::uint8_t>(kAlignment)),
+			   BlockType(size, 0, Memory::AlignedAllocator<std::uint8_t>(kAlignment))}
 	{
 	}
 
@@ -58,9 +59,7 @@ public:
 	MaskBuffer &operator=(MaskBuffer &&) = delete;
 
 private:
-	Memory::AlignedMemoryResource memoryResource_;
-
-	std::array<std::pmr::vector<std::uint8_t>, 3> buffers_;
+	std::array<BlockType, 3> buffers_;
 	mutable std::size_t readerIndex_ = 0;
 	std::size_t writerIndex_ = 1;
 	mutable std::atomic<std::size_t> freshIndex_ = 2;
