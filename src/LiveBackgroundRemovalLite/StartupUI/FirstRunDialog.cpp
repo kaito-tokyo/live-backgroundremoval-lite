@@ -198,6 +198,6 @@ FirstRunDialog::FirstRunDialog(std::shared_ptr<Global::GlobalContext> globalCont
 	footerLayout->addWidget(closeBtn, 0, Qt::AlignBottom);
 
 	mainLayout->addLayout(footerLayout);
-};
+}
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::StartupUI

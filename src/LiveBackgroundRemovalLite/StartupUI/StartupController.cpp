@@ -18,16 +18,7 @@
 
 #include "StartupController.hpp"
 
-#include <QDialog>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
 #include <QMainWindow>
-#include <QLabel>
-#include <QPixmap>
-#include <QUrl>
-#include <QFrame>
-#include <QPalette>
 
 #include "FirstRunDialog.hpp"
 
@@ -43,11 +34,16 @@ const QString URL_FORUM = "https://obsproject.com/forum/resources/live-backgroun
 } // namespace
 
 StartupController::StartupController(std::shared_ptr<Global::GlobalContext> globalContext)
-	: globalContext_(std::move(globalContext)) {};
+	: globalContext_(std::move(globalContext))
+{
+}
 
 bool StartupController::checkIfFirstRunCertainly()
 {
 	config_t *config = obs_frontend_get_user_config();
+	if (!config)
+		return false;
+
 	config_set_default_bool(config, "live_backgroundremoval_lite", "has_run_before", false);
 
 	if (config_get_bool(config, "live_backgroundremoval_lite", "has_run_before"))
@@ -59,9 +55,10 @@ bool StartupController::checkIfFirstRunCertainly()
 
 void StartupController::showFirstRunDialog()
 {
-	QMainWindow *parent = (QMainWindow *)obs_frontend_get_main_window();
-	FirstRunDialog *dialog = new FirstRunDialog(globalContext_, parent);
-	dialog->show();
+	if (QMainWindow *parent = static_cast<QMainWindow *>(obs_frontend_get_main_window())) {
+		FirstRunDialog *dialog = new FirstRunDialog(globalContext_, parent);
+		dialog->show();
+	}
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::StartupUI

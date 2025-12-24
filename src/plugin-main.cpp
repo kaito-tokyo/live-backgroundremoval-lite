@@ -51,7 +51,7 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 void handleFrontendEvent(enum obs_frontend_event event, void *)
 {
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
-		if (g_startupController_->checkIfFirstRunCertainly()) {
+		if (g_startupController_ && g_startupController_->checkIfFirstRunCertainly()) {
 			g_startupController_->showFirstRunDialog();
 		}
 	}
@@ -98,10 +98,13 @@ bool obs_module_load(void)
 
 void obs_module_unload(void)
 {
-	const auto logger = g_globalContext_->logger_;
+	const std::shared_ptr<const Logger::ILogger> logger = g_globalContext_->logger_;
+	obs_frontend_remove_event_callback(handleFrontendEvent, nullptr);
 	MainFilter::unloadModule();
+	g_startupController_.reset();
 	g_globalContext_.reset();
-	curl_global_cleanup();
 	g_appTranslator_.reset();
+	curl_global_cleanup();
+	Q_CLEANUP_RESOURCE(resources);
 	logger->info("plugin unloaded");
 }
