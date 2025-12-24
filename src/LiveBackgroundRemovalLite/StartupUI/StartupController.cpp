@@ -28,7 +28,6 @@
 #include <QUrl>
 #include <QDebug>
 #include <QDesktopServices>
-#include <QPainter>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::StartupUI {
 
@@ -55,10 +54,11 @@ void StartupController::showFirstRunDialog()
 
 	QDialog dialog(parent);
 	dialog.setWindowTitle("Live Background Removal Lite - インストール完了");
-	dialog.resize(500, 420); // コンテンツが増えたので縦を少し余裕を持たせる
+	dialog.setWindowFlags(dialog.windowFlags() | Qt::WindowCloseButtonHint | Qt::MSWindowsFixedSizeDialogHint);
 
 	// メインのレイアウト（縦並び）
 	QVBoxLayout *mainLayout = new QVBoxLayout(&dialog);
+	mainLayout->setSizeConstraint(QLayout::SetFixedSize);
 	mainLayout->setContentsMargins(30, 30, 30, 30); // 余白を少しリッチに
 	mainLayout->setSpacing(20);
 
@@ -72,22 +72,7 @@ void StartupController::showFirstRunDialog()
 	QLabel *iconLabel = new QLabel(&dialog);
 	QPixmap srcPixmap(":/live-backgroundremoval-lite/logo-512.png");
 
-	if (!srcPixmap.isNull()) {
-		QPixmap resizedPixmap = srcPixmap.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-		QPixmap roundedPixmap(resizedPixmap.size());
-		roundedPixmap.fill(Qt::transparent);
-
-		QPainter painter(&roundedPixmap);
-		painter.setRenderHint(QPainter::Antialiasing, true);
-		painter.setRenderHint(QPainter::SmoothPixmapTransform, true);
-
-		QPainterPath path;
-		path.addRoundedRect(roundedPixmap.rect(), 18, 18); // 丸みを少し強く(18)
-		painter.setClipPath(path);
-		painter.drawPixmap(0, 0, resizedPixmap);
-
-		iconLabel->setPixmap(roundedPixmap);
-	}
+	iconLabel->setPixmap(srcPixmap.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation));
 	iconLabel->setAlignment(Qt::AlignCenter);
 	headerLayout->addWidget(iconLabel);
 
@@ -100,7 +85,7 @@ void StartupController::showFirstRunDialog()
 	QLabel *titleLabel = new QLabel("Live Background Removal Lite", &dialog);
 	// OBSのスタイルを上書きして大きく表示
 	titleLabel->setStyleSheet("font-size: 24pt; font-weight: bold; margin-bottom: 4px;");
-	titleLabel->setWordWrap(true);
+	titleLabel->setWordWrap(false);
 	titleAreaLayout->addWidget(titleLabel);
 
 	// サブタイトル行（バージョン + 公式サイトリンク）
@@ -191,28 +176,6 @@ void StartupController::showFirstRunDialog()
 
 	// バネを入れてテキストを上に詰める
 	mainLayout->addStretch();
-
-	// ==========================================
-	// 3. フッター（閉じるボタンのみ）
-	// ==========================================
-	QHBoxLayout *btnLayout = new QHBoxLayout();
-
-	// 【変更点】フォーラムボタンを削除しました
-
-	// 閉じるボタン（右寄せ）
-	btnLayout->addStretch(); // 左側の余白を埋める
-
-	QPushButton *closeBtn = new QPushButton("閉じる", &dialog);
-	closeBtn->setCursor(Qt::PointingHandCursor);
-	closeBtn->setDefault(true);
-	// ボタンの幅を少し広げて押しやすく
-	closeBtn->setMinimumWidth(120);
-	closeBtn->setMinimumHeight(32);
-
-	QObject::connect(closeBtn, &QPushButton::clicked, &dialog, &QDialog::accept);
-	btnLayout->addWidget(closeBtn);
-
-	mainLayout->addLayout(btnLayout);
 
 	dialog.exec();
 }
