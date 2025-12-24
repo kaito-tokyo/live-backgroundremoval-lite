@@ -98,7 +98,7 @@ bool obs_module_load(void)
 
 void obs_module_unload(void)
 {
-	const auto logger = g_globalContext_->logger_;
+	const std::shared_ptr<const Logger::ILogger> logger = g_globalContext_->logger_;
 	obs_frontend_remove_event_callback(handleFrontendEvent, nullptr);
 	MainFilter::unloadModule();
 	g_globalContext_.reset();
