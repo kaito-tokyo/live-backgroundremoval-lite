@@ -1,6 +1,6 @@
 /*
- * KaitoTokyo Async Library
- * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
+ * KaitoTokyo Memory Library
+ * Copyright (c) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,18 +24,40 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 #include <limits>
 #include <new>
 #include <stdexcept>
-#include <utility>
 
 namespace KaitoTokyo::Memory {
 
+/**
+ * @brief STL-compatible allocator that performs aligned allocations.
+ *
+ * This allocator can be used with standard containers (for example
+ * `std::vector<T, AlignedAllocator<T>>`) when a specific alignment is
+ * required for the stored objects.
+ *
+ * The alignment value is provided at construction time and stored in the
+ * allocator instance; all allocations performed by this allocator use the
+ * same alignment.
+ *
+ * @tparam T The value type to allocate.
+ *
+ * @note The caller is responsible for choosing an alignment that is supported
+ *       by the platform and compatible with `T`. In practice this usually
+ *       means:
+ *       - the alignment is a non-zero power of two, and
+ *       - the alignment is greater than or equal to `alignof(T)`.
+ *       Passing an unsupported alignment may result in `std::bad_alloc` or
+ *       undefined behavior.
+ */
 template<typename T> class AlignedAllocator {
 public:
 	using value_type = T;
 
+	template<class U> struct rebind {
+		using other = AlignedAllocator<U>;
+	};
 	explicit AlignedAllocator(std::size_t alignment) noexcept : alignment_(alignment) {}
 	if (alignment < alignof(std::max_align_t) || (alignment & (alignment - 1)) != 0) {
 		throw std::invalid_argument("Alignment must be a power of two and at least alignof(std::max_align_t)");
@@ -58,9 +80,9 @@ public:
 
 	std::size_t alignment() const noexcept { return alignment_; }
 
-	bool operator==(const AlignedAllocator &other) const noexcept { return alignment_ == other.alignment_; }
+	template<typename U> bool operator==(const AlignedAllocator<U> &other) const noexcept { return alignment_ == other.alignment(); }
 
-	bool operator!=(const AlignedAllocator &other) const noexcept { return !(*this == other); }
+	template<typename U> bool operator!=(const AlignedAllocator<U> &other) const noexcept { return !(*this == other); }
 
 private:
 	std::size_t alignment_;
