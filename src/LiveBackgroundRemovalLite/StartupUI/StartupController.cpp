@@ -133,7 +133,7 @@ void StartupController::showFirstRunDialog()
 
     // リンクテキストを翻訳対応
     QString linkText = QObject::tr("Official Site / Latest");
-    subtitleHtml += QString("<a href='%1' style='font-size: 10pt; color: %2; text-decoration: none;'>%3</a>")
+    subtitleHtml += QString("<a href='%1' style='font-size: 10pt; color: %2;'>%3</a>")
                     .arg(URL_OFFICIAL, colLink, linkText);
 
     QLabel *subtitleLabel = new QLabel(subtitleHtml, dialog);
@@ -165,14 +165,14 @@ void StartupController::showFirstRunDialog()
         "You are ready to create immersive streams."
         "</p>"
         "<hr style='background-color: %1; height: 1px; border: none;'>"
-        "<p><b>[Quick Start]</b></p>"
+        "<p style='font-size: 18px;'><b>[Quick Start]</b></p>"
         "<ol style='line-height: 140%; margin-top: 0px; margin-bottom: 10px;'>"
         "<li>Right-click your video source > <b>\"Filters\"</b></li>"
-        "<li>Click <b>[ + ]</b> and add <b>\"Live Background Removal Lite\"</b></li>"
+        "<li>Click <b>[ + ]</b> under Effect Filters and add <b>\"Live Background Removal Lite\"</b></li>"
         "</ol>"
         "<p style='margin-bottom: 5px;'>"
         "<b>✨ Want better results?</b><br>"
-        "Check the <a href='%2' style='color: %3; text-decoration: none;'>Official Guide</a> for pro tips."
+        "Check the <a href='%2' style='color: %3;'>Official Guide</a> for pro tips."
         "</p>"
     ).arg(colSubText, URL_USAGE, colLink);
 
