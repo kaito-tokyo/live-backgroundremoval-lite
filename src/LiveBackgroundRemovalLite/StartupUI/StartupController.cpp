@@ -34,7 +34,9 @@ const QString URL_FORUM = "https://obsproject.com/forum/resources/live-backgroun
 } // namespace
 
 StartupController::StartupController(std::shared_ptr<Global::GlobalContext> globalContext)
-	: globalContext_(std::move(globalContext)) {}
+	: globalContext_(std::move(globalContext))
+{
+}
 
 bool StartupController::checkIfFirstRunCertainly()
 {
