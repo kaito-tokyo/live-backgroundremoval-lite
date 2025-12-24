@@ -16,16 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#pragma once
+
 #include <QDialog>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QMainWindow>
-#include <QLabel>
-#include <QPixmap>
-#include <QUrl>
-#include <QFrame>
-#include <QPalette>
+#include <QWidget>
 
 #include <util/config-file.h>
 
