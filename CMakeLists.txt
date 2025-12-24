@@ -106,17 +106,18 @@ add_subdirectory(src)
 add_library(${CMAKE_PROJECT_NAME} MODULE)
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
-  PRIVATE CURL::libcurl OBS::libobs BridgeUtils ${CMAKE_PROJECT_NAME}_Global ${CMAKE_PROJECT_NAME}_MainFilter
+  PRIVATE
+    CURL::libcurl
+    OBS::libobs
+    BridgeUtils
+    ${CMAKE_PROJECT_NAME}_Global
+    ${CMAKE_PROJECT_NAME}_MainFilter
+    ${CMAKE_PROJECT_NAME}_StartupUI
+    Qt6::Core
 )
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp)
-target_compile_options(
-  ${CMAKE_PROJECT_NAME}
-  PRIVATE $<$<C_COMPILER_ID:Clang,AppleClang>:-Wno-quoted-include-in-framework-header -Wno-comma>
-)
-set_target_properties(
-  ${CMAKE_PROJECT_NAME}
-  PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC ON
-)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp src/resources/resources.qrc)
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES AUTORCC ON)
+target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE PLUGIN_VERSION="${PLUGIN_VERSION}")
 
 if(APPLE)
   target_link_options(
