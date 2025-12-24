@@ -58,9 +58,13 @@ public:
 	template<class U> struct rebind {
 		using other = AlignedAllocator<U>;
 	};
-	explicit AlignedAllocator(std::size_t alignment) noexcept : alignment_(alignment) {}
-	if (alignment < alignof(std::max_align_t) || (alignment & (alignment - 1)) != 0) {
-		throw std::invalid_argument("Alignment must be a power of two and at least alignof(std::max_align_t)");
+
+	explicit AlignedAllocator(std::size_t alignment) noexcept : alignment_(alignment)
+	{
+		if (alignment < alignof(std::max_align_t) || (alignment & (alignment - 1)) != 0) {
+			throw std::invalid_argument(
+				"Alignment must be a power of two and at least alignof(std::max_align_t)");
+		}
 	}
 
 	template<class U> AlignedAllocator(const AlignedAllocator<U> &other) noexcept : alignment_(other.alignment()) {}
@@ -80,9 +84,15 @@ public:
 
 	std::size_t alignment() const noexcept { return alignment_; }
 
-	template<typename U> bool operator==(const AlignedAllocator<U> &other) const noexcept { return alignment_ == other.alignment(); }
+	template<typename U> bool operator==(const AlignedAllocator<U> &other) const noexcept
+	{
+		return alignment_ == other.alignment();
+	}
 
-	template<typename U> bool operator!=(const AlignedAllocator<U> &other) const noexcept { return !(*this == other); }
+	template<typename U> bool operator!=(const AlignedAllocator<U> &other) const noexcept
+	{
+		return !(*this == other);
+	}
 
 private:
 	std::size_t alignment_;
