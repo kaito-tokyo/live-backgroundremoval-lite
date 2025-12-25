@@ -54,8 +54,8 @@ GlobalContext::GlobalContext(const char *pluginName, const char *pluginVersion,
 	  pluginVersion_(pluginVersion),
 	  logger_(std::move(logger)),
 	  latestVersionUrl_(latestVersionUrl),
-	  fetchLatestVersionTask_(fetchLatestVersion(std::allocator_arg, fetchLatestVersionTaskStorage_, this)),
-	  pluginConfig_(std::move(pluginConfig))
+	  pluginConfig_(std::move(pluginConfig)),
+	  fetchLatestVersionTask_(fetchLatestVersion(std::allocator_arg, fetchLatestVersionTaskStorage_, this))
 {
 	if (!pluginConfig_->disableAutoCheckForUpdate) {
 		fetchLatestVersionTask_.start();
