@@ -23,8 +23,11 @@ namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 struct PluginConfig {
 	std::string selfieSegmenterParamPath;
 	std::string selfieSegmenterBinPath;
+	bool disableAutoCheckForUpdate = false;
 
 	static PluginConfig load(std::shared_ptr<const Logger::ILogger> logger);
+
+	static void setDisableAutoCheckForUpdate(bool disabled);
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

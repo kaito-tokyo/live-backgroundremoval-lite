@@ -14,6 +14,9 @@
 
 #include "PluginConfig.hpp"
 
+#include <filesystem>
+#include <fstream>
+
 #include <ObsUnique.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
@@ -25,6 +28,12 @@ PluginConfig PluginConfig::load(std::shared_ptr<const Logger::ILogger> logger)
 	BridgeUtils::unique_obs_data_t data(obs_data_create_from_json_file_safe(configPath.get(), ".bak"));
 
 	PluginConfig pluginConfig;
+
+	BridgeUtils::unique_bfree_char_t disableFlagPathRaw =
+		BridgeUtils::unique_obs_module_config_path("PluginConfig_disableAutoCheckForUpdate.txt");
+	if (disableFlagPathRaw) {
+		pluginConfig.disableAutoCheckForUpdate = std::filesystem::exists(disableFlagPathRaw.get());
+	}
 
 	pluginConfig.selfieSegmenterParamPath =
 		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param")
@@ -50,6 +59,20 @@ PluginConfig PluginConfig::load(std::shared_ptr<const Logger::ILogger> logger)
 	}
 
 	return pluginConfig;
+}
+
+void PluginConfig::setDisableAutoCheckForUpdate(bool disabled)
+{
+	BridgeUtils::unique_bfree_char_t configPathRaw =
+		BridgeUtils::unique_obs_module_config_path("PluginConfig.json");
+	const std::filesystem::path path(configPathRaw.get());
+	if (disabled) {
+		if (!std::filesystem::exists(path)) {
+			std::ofstream ofs(path);
+		}
+	} else {
+		std::filesystem::remove(path);
+	}
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global
