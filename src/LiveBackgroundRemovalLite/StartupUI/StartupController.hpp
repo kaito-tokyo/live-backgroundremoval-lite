@@ -32,7 +32,6 @@ public:
 	explicit StartupController(std::shared_ptr<Global::PluginConfig> pluginConfig,
 				   std::shared_ptr<Global::GlobalContext> globalContext);
 
-	bool checkIfFirstRunCertainly();
 	void showFirstRunDialog();
 
 private:
