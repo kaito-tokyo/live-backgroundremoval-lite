@@ -60,7 +60,7 @@ GlobalContext::GlobalContext(const char *pluginName, const char *pluginVersion,
 
 void GlobalContext::checkForUpdates() noexcept
 {
-	if (fetchLatestVersionTask_.has_value()) {
+	if (!pluginConfig_->disableAutoCheckForUpdate) {
 		fetchLatestVersionTask_ = fetchLatestVersion(shared_from_this());
 		fetchLatestVersionTask_->start();
 	}
