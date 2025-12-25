@@ -97,8 +97,9 @@ std::vector<BridgeUtils::unique_gs_texture_t> RenderingContext::createReductionP
 RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
 				   const MainEffect &mainEffect,
 				   TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
-				   const Global::PluginConfig &pluginConfig, const std::uint32_t subsamplingRate,
-				   const std::uint32_t width, const std::uint32_t height, const int numThreads)
+				   std::shared_ptr<Global::PluginConfig> pluginConfig,
+				   const std::uint32_t subsamplingRate, const std::uint32_t width,
+				   const std::uint32_t height, const int numThreads)
 	: source_(source),
 	  logger_(std::move(logger)),
 	  mainEffect_(mainEffect),
@@ -107,7 +108,7 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  subsamplingRate_(subsamplingRate),
 	  numThreads_(numThreads),
 	  selfieSegmenter_(std::make_unique<SelfieSegmenter::NcnnSelfieSegmenter>(
-		  pluginConfig.selfieSegmenterParamPath.c_str(), pluginConfig.selfieSegmenterBinPath.c_str(),
+		  pluginConfig_->selfieSegmenterParamPath.c_str(), pluginConfig_->selfieSegmenterBinPath.c_str(),
 		  numThreads)),
 	  selfieSegmenterMemoryBlockPool_(
 		  Memory::MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),

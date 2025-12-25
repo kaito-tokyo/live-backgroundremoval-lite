@@ -18,6 +18,8 @@
 #include <stdexcept>
 #include <thread>
 
+#include <QMainWindow>
+
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
@@ -212,12 +214,22 @@ obs_properties_t *MainFilterContext::getProperties()
 					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
 
 	// Global config dialog button
-	obs_properties_add_button(props, "openGlobalConfigDialog", obs_module_text("openGlobalConfigDialog"),
-				  [](obs_properties_t *, obs_property_t *, void *) {
-					  Global::GlobalConfigDialog dialog;
-					  dialog.exec();
-					  return false;
-				  });
+	obs_properties_add_button2(
+		props, "openGlobalConfigDialog", obs_module_text("openGlobalConfigDialog"),
+		[](obs_properties_t *, obs_property_t *, void *data) {
+			QMainWindow *mainWindow = static_cast<QMainWindow *>(obs_frontend_get_main_window());
+			if (!mainWindow)
+				return false;
+
+			MainFilterContext *self = static_cast<MainFilterContext *>(data);
+			if (!self)
+				return false;
+
+			Global::PluginConfigDialog dialog(self->pluginConfig_, mainWindow);
+			dialog.exec();
+			return false;
+		},
+		this);
 
 	return props;
 }
