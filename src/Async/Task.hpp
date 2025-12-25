@@ -289,7 +289,7 @@ template<> struct TaskPromiseBase<void> {
  * or `co_await` them.
  */
 template<typename T>
-struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object to keep the coroutine alive.")]] Task {
+struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object to keep the coroutine alive.")]] StackTask {
 	struct promise_type : TaskPromiseBase<T> {
 		std::coroutine_handle<> continuation = nullptr;
 
@@ -329,6 +329,72 @@ struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object
 			auto *stored_ptr = reinterpret_cast<TaskStoragePtr *>(raw_ptr);
 			stored_ptr->~TaskStoragePtr();
 		}
+	};
+
+	explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}
+
+	// Destructor enforces strict lifecycle management.
+	~Task()
+	{
+		if (handle)
+			handle.destroy();
+	}
+
+	Task(const Task &) = delete;
+	Task &operator=(const Task &) = delete;
+	Task(Task &&other) noexcept : handle(other.handle) { other.handle = nullptr; }
+	Task &operator=(Task &&other) noexcept
+	{
+		if (this != &other) {
+			if (handle)
+				handle.destroy();
+			handle = other.handle;
+			other.handle = nullptr;
+		}
+		return *this;
+	}
+
+	[[nodiscard]] bool await_ready() { return handle.done(); }
+
+	std::coroutine_handle<> await_suspend(std::coroutine_handle<> caller)
+	{
+		handle.promise().continuation = caller;
+		return handle;
+	}
+
+	T await_resume() { return handle.promise().extract_value(); }
+
+	/**
+	 * @brief Kicks off the root task execution.
+	 *
+	 * @warning **LIFETIME HAZARD**
+	 * Calling `start()` DOES NOT detach the task. You must continue to hold the
+	 * `Task` object after calling `start()`. If the `Task` object is destroyed
+	 * immediately after `start()`, the coroutine will be aborted before it finishes.
+	 *
+	 * @warning **SINGLE EXECUTION ONLY**
+	 * This method must be called exactly once. Calling `start()` on a task that
+	 * has already been started (whether running or suspended) is undefined behavior.
+	 */
+	void start()
+	{
+		if (handle && !handle.done())
+			handle.resume();
+	}
+
+private:
+	std::coroutine_handle<promise_type> handle;
+};
+
+template<typename T>
+struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object to keep the coroutine alive.")]] Task {
+	struct promise_type : TaskPromiseBase<T> {
+		std::coroutine_handle<> continuation = nullptr;
+
+		Task get_return_object() { return Task{std::coroutine_handle<promise_type>::from_promise(*this)}; }
+
+		std::suspend_always initial_suspend() { return {}; }
+		auto final_suspend() noexcept { return SymmetricTransfer<promise_type>{}; }
 	};
 
 	explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}

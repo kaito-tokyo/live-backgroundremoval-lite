@@ -39,7 +39,7 @@ namespace jthread_ns = josuttis;
 namespace jthread_ns = std;
 #endif
 
-class GlobalContext {
+class GlobalContext : std::enable_shared_from_this<GlobalContext> {
 public:
 	GlobalContext(const char *pluginName, const char *pluginVersion, std::shared_ptr<const Logger::ILogger> logger,
 		      const char *latestVersionUrl, std::shared_ptr<PluginConfig> pluginConfig);
@@ -56,13 +56,12 @@ private:
 
 	const std::shared_ptr<PluginConfig> pluginConfig_;
 
-	TaskStorage fetchLatestVersionTaskStorage_;
 	Async::Task<void> fetchLatestVersionTask_;
 	std::string latestVersion_;
 	mutable std::mutex mutex_;
 
 	jthread_ns::jthread fetchLatestVersionThread_;
-	static Async::Task<void> fetchLatestVersion(std::allocator_arg_t, TaskStorage &storage, GlobalContext *self);
+	static Async::Task<void> fetchLatestVersion(std::shared_ptr<GlobalContext> self);
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global
