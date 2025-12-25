@@ -14,11 +14,14 @@
 
 #include "MainFilterContext.hpp"
 
+#include <exception>
 #include <future>
+#include <regex>
 #include <stdexcept>
 #include <thread>
 
 #include <QThreadPool>
+#include <QMessageBox>
 
 #include <curl/curl.h>
 
@@ -119,7 +122,7 @@ struct ResumeOnGlobalQThreadPool {
 	void await_resume() {}
 };
 
-struct ResumeOnGlobalQThreadPool {
+struct ResumeOnQMainThread {
 	bool await_ready() { return false; }
 
 	void await_suspend(std::coroutine_handle<> h)
@@ -130,63 +133,84 @@ struct ResumeOnGlobalQThreadPool {
 	void await_resume() {}
 };
 
-Async::Task<void> runUpdateChecker(std::allocator_arg_t, Async::TaskStorage<>) {}
+Async::Task<void> runUpdateChecker(std::allocator_arg_t, Async::TaskStorage<> &, MainFilterContext *self, obs_property_t *property)
+{
+	std::shared_ptr<const Logger::ILogger> logger = self->getLogger();
+
+	co_await ResumeOnGlobalQThreadPool{};
+
+	logger->info("Checking for latest version from Internet...");
+	const std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> curl(curl_easy_init(), &curl_easy_cleanup);
+
+	if (!curl) {
+		logger->error("Failed to initialize CURL for fetching latest version");
+		co_return;
+		// throw std::runtime_error("InitError(GlobalContext::fetchLatestVersion)");
+	}
+
+	CurlHelper::CurlVectorWriterBuffer readBuffer;
+
+	curl_easy_setopt(
+		curl.get(), CURLOPT_URL,
+		"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt");
+	curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, CurlHelper::CurlVectorWriter);
+	curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &readBuffer);
+	curl_easy_setopt(curl.get(), CURLOPT_CONNECTTIMEOUT, 10L);
+	curl_easy_setopt(curl.get(), CURLOPT_TIMEOUT, 60L);
+	curl_easy_setopt(curl.get(), CURLOPT_MAXFILESIZE, 100L);
+	curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 1L);
+	curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 2L);
+
+	const CURLcode res = curl_easy_perform(curl.get());
+
+	if (res != CURLE_OK) {
+		// logger->error("Failed to fetch latest version from {}: {}", self->latestVersionUrl_,
+		// 		curl_easy_strerror(res));
+		throw std::runtime_error(fmt::format("NetworkError(GlobalContext::fetchLatestVersion):{}",
+							curl_easy_strerror(res)));
+	}
+
+	std::size_t len = std::min(readBuffer.size(), std::size_t(100));
+	std::string_view rawInput(readBuffer.data(), len);
+
+	static const std::regex extractPattern(
+		R"(^\s*(v?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?:[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)\s*$)");
+
+	std::match_results<std::string_view::const_iterator> matches;
+
+	if (!std::regex_match(rawInput.begin(), rawInput.end(), matches, extractPattern)) {
+		logger->error("Invalid version format received: '{}'", rawInput);
+		throw std::runtime_error("InvalidVersionFormat(GlobalContext::fetchLatestVersion)");
+	}
+
+	std::string_view extractedVersion(rawInput.data() + std::distance(rawInput.begin(), matches[1].first),
+						static_cast<std::size_t>(matches[1].length()));
+
+	logger->info("Latest version on Internet is {}", extractedVersion);
+
+	co_await ResumeOnQMainThread{};
+
+	QMessageBox::information(
+		nullptr, QObject::tr("Live Background Removal Lite"),
+		QObject::tr("Latest version: %1").arg(QString::fromStdString(std::string(extractedVersion))));
+}
 
 } // anonymous namespace
 
-bool MainFilterContext::handleUpdateCheckerClicked(obs_properties_t *props, obs_property_t *property, void *data)
+bool MainFilterContext::handleUpdateCheckerClicked(obs_properties_t *, obs_property_t *property, void *data)
 {
+	obs_property_set_enabled(property, false);
+
 	MainFilterContext *self = static_cast<MainFilterContext *>(data);
-	QThreadPool::globalInstance()->start([logger = self->logger_]() {
-		const std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> curl(curl_easy_init(), &curl_easy_cleanup);
-		if (!curl) {
-			logger->error("Failed to initialize CURL for fetching latest version");
-			throw std::runtime_error("InitError(GlobalContext::fetchLatestVersion)");
-		}
 
-		CurlHelper::CurlVectorWriterBuffer readBuffer;
+	// Unlock previous TaskStorage
+	self->updateCheckerTask_ = std::nullopt;
 
-		curl_easy_setopt(
-			curl.get(), CURLOPT_URL,
-			"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt");
-		curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, CurlHelper::CurlVectorWriter);
-		curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &readBuffer);
-		curl_easy_setopt(curl.get(), CURLOPT_CONNECTTIMEOUT, 10L);
-		curl_easy_setopt(curl.get(), CURLOPT_TIMEOUT, 60L);
-		curl_easy_setopt(curl.get(), CURLOPT_MAXFILESIZE, 100L);
-		curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 1L);
-		curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 2L);
+	self->updateCheckerTaskStorage_ = std::make_unique<UpdateCheckerTaskStorage>();
+	self->updateCheckerTask_ = runUpdateChecker(std::allocator_arg, *self->updateCheckerTaskStorage_, self, property);
+	self->updateCheckerTask_->start();
 
-		const CURLcode res = curl_easy_perform(curl.get());
-
-		if (res != CURLE_OK) {
-			logger->error("Failed to fetch latest version from {}: {}", self->latestVersionUrl_,
-				      curl_easy_strerror(res));
-			throw std::runtime_error(fmt::format("NetworkError(GlobalContext::fetchLatestVersion):{}",
-							     curl_easy_strerror(res)));
-		}
-
-		std::size_t len = std::min(readBuffer.size(), std::size_t(100));
-		std::string_view rawInput(readBuffer.data(), len);
-
-		static const std::regex extractPattern(
-			R"(^\s*(v?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?:[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)\s*$)");
-
-		std::match_results<std::string_view::const_iterator> matches;
-
-		if (!std::regex_match(rawInput.begin(), rawInput.end(), matches, extractPattern)) {
-			logger->error("Invalid version format received: '{}'", rawInput);
-			throw std::runtime_error("InvalidVersionFormat(GlobalContext::fetchLatestVersion)");
-		}
-
-		std::string_view extractedVersion(rawInput.data() + std::distance(rawInput.begin(), matches[1].first),
-						  static_cast<std::size_t>(matches[1].length()));
-
-		logger->info("Latest version on Internet is {}", extractedVersion);
-
-		std::scoped_lock lock(self->mutex_);
-		self->latestVersion_ = extractedVersion;
-	});
+	return false;
 }
 
 obs_properties_t *MainFilterContext::getProperties()
@@ -195,24 +219,6 @@ obs_properties_t *MainFilterContext::getProperties()
 
 	obs_properties_add_button2(props, "updateChecker", obs_module_text("updateCheckerCheckForUpdates"),
 				   handleUpdateCheckerClicked, this);
-
-	// Update notifier
-	const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
-	try {
-		std::string latestVersion = globalContext_->getLatestVersion();
-		if (!latestVersion.empty()) {
-			if (latestVersion == globalContext_->pluginVersion_) {
-				updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
-			} else {
-				updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
-			}
-		}
-	} catch (const std::exception &e) {
-		logger_->error("Failed to check for updates: {}", e.what());
-	} catch (...) {
-		logger_->error("Failed to check for updates: unknown error");
-	}
-	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
 	// Debug button
 	obs_properties_add_button2(

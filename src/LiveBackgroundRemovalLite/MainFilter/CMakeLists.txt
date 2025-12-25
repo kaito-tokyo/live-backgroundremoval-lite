@@ -10,6 +10,7 @@ target_link_libraries(
     BridgeUtils
     SelfieSegmenter
     TaskQueue
+    CurlHelper
     ${CMAKE_PROJECT_NAME}_Global
 )
 target_sources(

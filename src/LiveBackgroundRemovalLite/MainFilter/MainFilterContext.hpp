@@ -14,22 +14,18 @@
 
 #pragma once
 
-#include <stdint.h>
-
-#include <obs.h>
-
 #include <atomic>
+#include <cstdint>
 #include <future>
 #include <memory>
 #include <mutex>
 
 #include <obs.h>
 
-#include <ILogger.hpp>
-
-#include <ThrottledTaskQueue.hpp>
-
 #include <GlobalContext.hpp>
+#include <ILogger.hpp>
+#include <Task.hpp>
+#include <ThrottledTaskQueue.hpp>
 
 #include "PluginProperty.hpp"
 #include "MainEffect.hpp"
@@ -52,8 +48,8 @@ public:
 	MainFilterContext(MainFilterContext &&) = delete;
 	MainFilterContext &operator=(MainFilterContext &&) = delete;
 
-	uint32_t getWidth() const noexcept;
-	uint32_t getHeight() const noexcept;
+	std::uint32_t getWidth() const noexcept;
+	std::uint32_t getHeight() const noexcept;
 
 	static void getDefaults(obs_data_t *data);
 
@@ -91,6 +87,10 @@ private:
 
 	DebugWindow *debugWindow_ = nullptr;
 	mutable std::mutex debugWindowMutex_;
+
+	using UpdateCheckerTaskStorage = Async::TaskStorage<>;
+	std::unique_ptr<UpdateCheckerTaskStorage> updateCheckerTaskStorage_;
+	std::optional<Async::Task<void>> updateCheckerTask_;
 
 	static bool handleUpdateCheckerClicked(obs_properties_t *props, obs_property_t *property, void *data);
 };
