@@ -21,6 +21,7 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
+#include <GlobalConfigDialog.hpp>
 #include <GsUnique.hpp>
 #include <ObsLogger.hpp>
 #include <ObsUnique.hpp>
@@ -207,6 +208,15 @@ obs_properties_t *MainFilterContext::getProperties()
 					obs_module_text("maskLowerBoundAmpDb"), -80.0, -10.0, 0.1);
 	obs_properties_add_float_slider(propsAdvancedSettings, "maskUpperBoundMarginAmpDb",
 					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
+
+	// Global config dialog button
+	obs_properties_add_button(
+		props, "openGlobalConfigDialog", obs_module_text("openGlobalConfigDialog"),
+		[](obs_properties_t *, obs_property_t *, void *) {
+			Global::GlobalConfigDialog dialog;
+			dialog.exec();
+			return false;
+		});
 
 	return props;
 }

@@ -3,6 +3,13 @@ target_include_directories(${CMAKE_PROJECT_NAME}_Global PUBLIC ${CMAKE_CURRENT_S
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}_Global
   PUBLIC ${JTHREAD_LIBRARIES} Async Logger
-  PRIVATE CURL::libcurl CurlHelper
+  PRIVATE Qt6::Widgets Qt6::Core CURL::libcurl CurlHelper
 )
-target_sources(${CMAKE_PROJECT_NAME}_Global PRIVATE GlobalContext.cpp GlobalContext.hpp)
+target_sources(
+  ${CMAKE_PROJECT_NAME}_Global
+  PRIVATE GlobalConfigDialog.cpp GlobalConfigDialog.hpp GlobalContext.cpp GlobalContext.hpp
+)
+set_target_properties(
+  ${CMAKE_PROJECT_NAME}_Global
+  PROPERTIES AUTOMOC ON
+)
