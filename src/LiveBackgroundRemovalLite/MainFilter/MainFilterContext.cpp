@@ -210,13 +210,12 @@ obs_properties_t *MainFilterContext::getProperties()
 					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
 
 	// Global config dialog button
-	obs_properties_add_button(
-		props, "openGlobalConfigDialog", obs_module_text("openGlobalConfigDialog"),
-		[](obs_properties_t *, obs_property_t *, void *) {
-			Global::GlobalConfigDialog dialog;
-			dialog.exec();
-			return false;
-		});
+	obs_properties_add_button(props, "openGlobalConfigDialog", obs_module_text("openGlobalConfigDialog"),
+				  [](obs_properties_t *, obs_property_t *, void *) {
+					  Global::GlobalConfigDialog dialog;
+					  dialog.exec();
+					  return false;
+				  });
 
 	return props;
 }

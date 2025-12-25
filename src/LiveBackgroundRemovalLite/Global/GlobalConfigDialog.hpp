@@ -10,21 +10,21 @@ class QVBoxLayout;
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
 class GlobalConfigDialog : public QDialog {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    explicit GlobalConfigDialog(QWidget* parent = nullptr);
-    ~GlobalConfigDialog() override;
+	explicit GlobalConfigDialog(QWidget *parent = nullptr);
+	~GlobalConfigDialog() override;
 
 private:
-    void setupUi();
-    void loadConfig(); // 設定読み込み
+	void setupUi();
+	void loadConfig(); // 設定読み込み
 
 private slots:
-    void onUpdateCheckToggled(bool checked); // チェック変更時の保存処理
+	void onUpdateCheckToggled(bool checked); // チェック変更時の保存処理
 
 private:
-    QCheckBox* m_checkUpdatesBox = nullptr;
+	QCheckBox *m_checkUpdatesBox = nullptr;
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global
