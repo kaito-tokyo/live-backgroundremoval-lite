@@ -14,17 +14,24 @@
 
 #pragma once
 
-#include <string>
+#include <QDialog>
 
-#include <ILogger.hpp>
+#include "PluginConfig.hpp"
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
-struct PluginConfig {
-	std::string selfieSegmenterParamPath;
-	std::string selfieSegmenterBinPath;
+class PluginConfigDialog : public QDialog {
+	Q_OBJECT
 
-	static PluginConfig load(std::shared_ptr<const Logger::ILogger> logger);
+public:
+	explicit PluginConfigDialog(std::shared_ptr<PluginConfig> pluginConfig, QWidget *parent = nullptr);
+	~PluginConfigDialog() override;
+
+private:
+	void setupUi();
+
+private:
+	const std::shared_ptr<PluginConfig> pluginConfig_;
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

@@ -24,6 +24,7 @@
 #include <GlobalContext.hpp>
 #include <MainFilterInfo.hpp>
 #include <ObsLogger.hpp>
+#include <PluginConfig.hpp>
 #include <StartupController.hpp>
 
 using namespace KaitoTokyo;
@@ -39,6 +40,7 @@ namespace {
 
 const char latestVersionUrl[] = "https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
 
+std::shared_ptr<Global::PluginConfig> g_pluginConfig_;
 std::shared_ptr<Global::GlobalContext> g_globalContext_;
 std::shared_ptr<StartupUI::StartupController> g_startupController_;
 std::unique_ptr<QTranslator> g_appTranslator_;
@@ -80,6 +82,8 @@ bool obs_module_load(void)
 		logger->info("no translation found for locale '{}', using default (en-US)", localeStr.toStdString());
 	}
 
+	g_pluginConfig_ = std::make_shared<Global::PluginConfig>(Global::PluginConfig::load(logger));
+
 	g_globalContext_ =
 		std::make_shared<Global::GlobalContext>(PLUGIN_NAME, PLUGIN_VERSION, logger, latestVersionUrl);
 
@@ -103,6 +107,7 @@ void obs_module_unload(void)
 	MainFilter::unloadModule();
 	g_startupController_.reset();
 	g_globalContext_.reset();
+	g_pluginConfig_.reset();
 	g_appTranslator_.reset();
 	curl_global_cleanup();
 	Q_CLEANUP_RESOURCE(resources);

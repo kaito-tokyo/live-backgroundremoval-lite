@@ -28,6 +28,7 @@
 #include <ThrottledTaskQueue.hpp>
 
 #include <GlobalContext.hpp>
+#include <PluginConfig.hpp>
 
 #include "PluginProperty.hpp"
 #include "MainEffect.hpp"
@@ -40,6 +41,7 @@ class RenderingContext;
 class MainFilterContext : public std::enable_shared_from_this<MainFilterContext> {
 public:
 	MainFilterContext(obs_data_t *settings, obs_source_t *source,
+			  std::shared_ptr<Global::PluginConfig> pluginConfig,
 			  std::shared_ptr<Global::GlobalContext> globalContext);
 
 	void shutdown() noexcept;
@@ -75,6 +77,7 @@ private:
 	void applyPluginProperty(const std::shared_ptr<RenderingContext> &_renderingContext);
 
 	obs_source_t *const source_;
+	const std::shared_ptr<Global::PluginConfig> pluginConfig_;
 	const std::shared_ptr<Global::GlobalContext> globalContext_;
 
 	const std::shared_ptr<const Logger::ILogger> logger_;

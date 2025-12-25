@@ -21,10 +21,10 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
-#include <GlobalConfigDialog.hpp>
 #include <GsUnique.hpp>
 #include <ObsLogger.hpp>
 #include <ObsUnique.hpp>
+#include <PluginConfigDialog.hpp>
 
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
@@ -35,8 +35,10 @@ using namespace KaitoTokyo::BridgeUtils;
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 MainFilterContext::MainFilterContext(obs_data_t *settings, obs_source_t *source,
+				     std::shared_ptr<Global::PluginConfig> pluginConfig,
 				     std::shared_ptr<Global::GlobalContext> globalContext)
 	: source_{source},
+	  pluginConfig_{std::move(pluginConfig)},
 	  globalContext_{std::move(globalContext)},
 	  logger_(globalContext_->logger_),
 	  mainEffect_(logger_, unique_obs_module_file("effects/main.effect")),

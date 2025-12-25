@@ -12,19 +12,29 @@
  * "LICENSE.GPL-3.0-or-later" in the distribution root.
  */
 
-#pragma once
+#include "PluginConfigDialog.hpp"
 
-#include <string>
-
-#include <ILogger.hpp>
+#include <QVBoxLayout>
+#include <QFormLayout>
+#include <QGroupBox>
+#include <QCheckBox>
+#include <QLabel>
+#include <QDialogButtonBox>
+#include <obs-data.h>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
-struct PluginConfig {
-	std::string selfieSegmenterParamPath;
-	std::string selfieSegmenterBinPath;
+PluginConfigDialog::PluginConfigDialog(std::shared_ptr<PluginConfig> pluginConfig, QWidget *parent) : QDialog(parent),
+  pluginConfig_{std::move(pluginConfig)}
+{
+	setupUi();
+}
 
-	static PluginConfig load(std::shared_ptr<const Logger::ILogger> logger);
-};
+PluginConfigDialog::~PluginConfigDialog() = default;
+
+void PluginConfigDialog::setupUi()
+{
+	setWindowTitle(tr("Live Background Removal Lite - Global Settings"));
+}
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global
