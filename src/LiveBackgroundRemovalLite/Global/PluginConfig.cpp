@@ -30,7 +30,7 @@ PluginConfig PluginConfig::load(std::shared_ptr<const Logger::ILogger> logger)
 	PluginConfig pluginConfig;
 
 	BridgeUtils::unique_bfree_char_t disableFlagPathRaw =
-		BridgeUtils::unique_obs_module_config_path("PluginConfig_disableAutoCheckForUpdate.txt");
+		BridgeUtils::unique_obs_module_config_path("PluginConfig_AutoCheckForUpdateDisabled.txt");
 	if (disableFlagPathRaw) {
 		pluginConfig.disableAutoCheckForUpdate = std::filesystem::exists(disableFlagPathRaw.get());
 	}
@@ -61,17 +61,23 @@ PluginConfig PluginConfig::load(std::shared_ptr<const Logger::ILogger> logger)
 	return pluginConfig;
 }
 
-void PluginConfig::setDisableAutoCheckForUpdate(bool disabled)
+void PluginConfig::setAutoCheckForUpdateEnabled()
 {
 	BridgeUtils::unique_bfree_char_t configPathRaw =
-		BridgeUtils::unique_obs_module_config_path("PluginConfig.json");
+		BridgeUtils::unique_obs_module_config_path("PluginConfig_AutoCheckForUpdateDisabled.txt");
 	const std::filesystem::path path(configPathRaw.get());
-	if (disabled) {
-		if (!std::filesystem::exists(path)) {
-			std::ofstream ofs(path);
-		}
-	} else {
-		std::filesystem::remove(path);
+	std::filesystem::remove(path);
+}
+
+void PluginConfig::setAutoCheckForUpdateDisabled()
+{
+	BridgeUtils::unique_bfree_char_t configPathRaw =
+		BridgeUtils::unique_obs_module_config_path("PluginConfig_AutoCheckForUpdateDisabled.txt");
+
+	const std::filesystem::path path(configPathRaw.get());
+	if (!std::filesystem::exists(path)) {
+		std::filesystem::create_directories(path.parent_path());
+		std::ofstream ofs(path);
 	}
 }
 

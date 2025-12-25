@@ -27,7 +27,8 @@ struct PluginConfig {
 
 	static PluginConfig load(std::shared_ptr<const Logger::ILogger> logger);
 
-	static void setDisableAutoCheckForUpdate(bool disabled);
+	static void setAutoCheckForUpdateEnabled();
+	static void setAutoCheckForUpdateDisabled();
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

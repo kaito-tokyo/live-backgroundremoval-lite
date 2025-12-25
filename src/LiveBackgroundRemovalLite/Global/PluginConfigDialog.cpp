@@ -69,7 +69,11 @@ void PluginConfigDialog::setupUi()
 	// OKが押されたときの処理：設定を保存する
 	connect(this, &QDialog::accepted, [this, chkAutoUpdate]() {
 		// ※ PluginConfigクラスに setEnableAutoUpdate() と save() メソッドがあると仮定しています
-		pluginConfig_->setDisableAutoCheckForUpdate(!chkAutoUpdate->isChecked());
+		if (chkAutoUpdate->isChecked()) {
+			PluginConfig::setAutoCheckForUpdateEnabled();
+		} else {
+			PluginConfig::setAutoCheckForUpdateDisabled();
+		}
 	});
 }
 
