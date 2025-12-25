@@ -101,11 +101,17 @@
 
 namespace KaitoTokyo::Async {
 
+#ifdef NDEBUG
+constexpr std::size_t kDefaultTaskSize = 4096;
+#else
+constexpr std::size_t kDefaultTaskSize = 32768;
+#endif
+
 // -----------------------------------------------------------------------------
 // SymmetricTransfer
 // -----------------------------------------------------------------------------
 
-template<typename PromiseType> struct TaskSymmetricTransfer {
+template<typename PromiseType> struct SymmetricTransfer {
 	bool await_ready() noexcept { return false; }
 
 	std::coroutine_handle<> await_suspend(std::coroutine_handle<PromiseType> h) noexcept
@@ -118,6 +124,106 @@ template<typename PromiseType> struct TaskSymmetricTransfer {
 	}
 
 	void await_resume() noexcept {}
+};
+
+// -----------------------------------------------------------------------------
+// TaskStorage
+// -----------------------------------------------------------------------------
+
+struct TaskStorageReleaser {
+	using CheckerFunc = void (*)(void *storage_ptr);
+
+	void *storage_ptr;
+	CheckerFunc checker;
+
+	void operator()(void *) const
+	{
+		if (storage_ptr && checker) {
+			checker(storage_ptr);
+		}
+	}
+};
+
+using TaskStoragePtr = std::unique_ptr<void, TaskStorageReleaser>;
+
+/**
+ * @brief A fixed-size memory storage block for a single Task.
+ *
+ * @details
+ * This class provides deterministic memory placement for a coroutine frame.
+ * It is intended for scenarios where heap allocation is too slow or non-deterministic.
+ *
+ * @warning **CRITICAL LIFETIME CONSTRAINT**
+ * The `TaskStorage` instance MUST outlive any `Task` (coroutine) allocated from it.
+ *
+ * @note **FATAL ERROR BEHAVIOR**
+ * If the `TaskStorage` destructor is called while the memory is still marked as
+ * `used_` (i.e., the associated Task is still alive/running), the program
+ * will immediately call `std::terminate()`.
+ */
+template<std::size_t Size = kDefaultTaskSize> class TaskStorage {
+	enum class State : std::uint64_t { Alive = 0x5441534B4C495645, Dead = 0xDEADDEADDEADDEAD };
+
+	State magic_ = State::Alive;
+	std::atomic<bool> used_{false};
+	alignas(std::max_align_t) std::byte buffer_[Size];
+
+public:
+	TaskStorage() = default;
+
+	// Ensure storage is not destroyed while a task is running
+	~TaskStorage()
+	{
+		if (used_.load(std::memory_order_acquire)) {
+			// FATAL: Storage destroyed while Task is still running.
+			std::terminate();
+		}
+		magic_ = State::Dead;
+	};
+
+	TaskStorage(const TaskStorage &) = delete;
+	TaskStorage &operator=(const TaskStorage &) = delete;
+	TaskStorage(TaskStorage &&) = delete;
+	TaskStorage &operator=(TaskStorage &&) = delete;
+
+	[[nodiscard("Ignoring allocate() result causes immediate deallocation")]]
+	TaskStoragePtr allocate(std::size_t n)
+	{
+		if (n > Size) {
+			used_.store(false, std::memory_order_release);
+			throw std::length_error("InsufficientCapacityError(TaskStorage::allocate):" +
+						std::to_string(n) + "/" + std::to_string(Size));
+		}
+
+		bool expected = false;
+		if (!used_.compare_exchange_strong(expected, true, std::memory_order_acquire,
+						   std::memory_order_relaxed)) {
+			throw std::logic_error("IllegalReuseError(TaskStorage::allocate)");
+		}
+
+		// This checker will be converted into a function pointer to avoid capturing anything.
+		auto checker = [](void *ptr) {
+			auto *self = static_cast<TaskStorage *>(ptr);
+			if (self->magic_ != State::Alive) {
+				// FATAL: Use-after-free detected. Storage was destroyed before the Task.
+				std::terminate();
+			}
+			self->used_.store(false, std::memory_order_release);
+		};
+
+		return TaskStoragePtr(buffer_, TaskStorageReleaser{this, checker});
+	}
+};
+
+// -----------------------------------------------------------------------------
+// Concepts
+// -----------------------------------------------------------------------------
+
+template<typename T> concept TaskAllocator = requires(T & a, std::size_t n)
+{
+	{
+		a.allocate(n)
+	} -> std::convertible_to<TaskStoragePtr>;
 };
 
 // -----------------------------------------------------------------------------
@@ -190,7 +296,39 @@ struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object
 		Task get_return_object() { return Task{std::coroutine_handle<promise_type>::from_promise(*this)}; }
 
 		std::suspend_always initial_suspend() { return {}; }
-		auto final_suspend() noexcept { return TaskSymmetricTransfer<promise_type>{}; }
+		auto final_suspend() noexcept { return SymmetricTransfer<promise_type>{}; }
+
+		template<TaskAllocator Alloc, typename... Args>
+		static void *operator new(std::size_t size, std::allocator_arg_t, Alloc &alloc, Args &&...)
+		{
+			constexpr std::size_t alignment = alignof(std::max_align_t);
+			std::size_t header_size = sizeof(TaskStoragePtr);
+			std::size_t offset = (header_size + alignment - 1) & ~(alignment - 1);
+			std::size_t total_size = size + offset;
+
+			auto ptr = alloc.allocate(total_size);
+
+			if (!ptr) {
+				throw std::logic_error("AllocateError(Task::promise_type::operator new)");
+			}
+
+			void *raw_ptr = ptr.get();
+			new (raw_ptr) TaskStoragePtr(std::move(ptr));
+			return static_cast<std::byte *>(raw_ptr) + offset;
+		}
+
+		static void *operator new(std::size_t) = delete;
+
+		static void operator delete(void *ptr, std::size_t)
+		{
+			constexpr std::size_t alignment = alignof(std::max_align_t);
+			std::size_t header_size = sizeof(TaskStoragePtr);
+			std::size_t offset = (header_size + alignment - 1) & ~(alignment - 1);
+
+			std::byte *raw_ptr = static_cast<std::byte *>(ptr) - offset;
+			auto *stored_ptr = reinterpret_cast<TaskStoragePtr *>(raw_ptr);
+			stored_ptr->~TaskStoragePtr();
+		}
 	};
 
 	explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}

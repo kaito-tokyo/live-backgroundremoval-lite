@@ -20,6 +20,7 @@
 
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 
@@ -39,7 +40,7 @@ namespace jthread_ns = josuttis;
 namespace jthread_ns = std;
 #endif
 
-class GlobalContext {
+class GlobalContext : public std::enable_shared_from_this<GlobalContext> {
 public:
 	GlobalContext(const char *pluginName, const char *pluginVersion, std::shared_ptr<const Logger::ILogger> logger,
 		      const char *latestVersionUrl, std::shared_ptr<PluginConfig> pluginConfig);
@@ -49,20 +50,18 @@ public:
 	const std::shared_ptr<const Logger::ILogger> logger_;
 	const std::string latestVersionUrl_;
 
+	void checkForUpdates() noexcept;
 	std::string getLatestVersion() const;
 
 private:
-	using TaskStorage = Async::TaskStorage<32768>;
-
 	const std::shared_ptr<PluginConfig> pluginConfig_;
 
-	TaskStorage fetchLatestVersionTaskStorage_;
-	Async::Task<void> fetchLatestVersionTask_;
+	std::optional<Async::Task<void>> fetchLatestVersionTask_ = std::nullopt;
 	std::string latestVersion_;
 	mutable std::mutex mutex_;
 
 	jthread_ns::jthread fetchLatestVersionThread_;
-	static Async::Task<void> fetchLatestVersion(std::allocator_arg_t, TaskStorage &storage, GlobalContext *self);
+	static Async::Task<void> fetchLatestVersion(std::shared_ptr<GlobalContext> self);
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

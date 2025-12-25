@@ -87,6 +87,8 @@ bool obs_module_load(void)
 	g_globalContext_ = std::make_shared<Global::GlobalContext>(PLUGIN_NAME, PLUGIN_VERSION, logger,
 								   latestVersionUrl, g_pluginConfig_);
 
+	g_globalContext_->checkForUpdates();
+
 	g_startupController_ = std::make_shared<StartupUI::StartupController>(g_pluginConfig_, g_globalContext_);
 
 	if (!MainFilter::loadModule(g_pluginConfig_, g_globalContext_)) {

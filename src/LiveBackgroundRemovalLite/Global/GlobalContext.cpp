@@ -54,11 +54,15 @@ GlobalContext::GlobalContext(const char *pluginName, const char *pluginVersion,
 	  pluginVersion_(pluginVersion),
 	  logger_(std::move(logger)),
 	  latestVersionUrl_(latestVersionUrl),
-	  pluginConfig_(std::move(pluginConfig)),
-	  fetchLatestVersionTask_(fetchLatestVersion(std::allocator_arg, fetchLatestVersionTaskStorage_, this))
+	  pluginConfig_(std::move(pluginConfig))
+{
+}
+
+void GlobalContext::checkForUpdates() noexcept
 {
 	if (!pluginConfig_->disableAutoCheckForUpdate) {
-		fetchLatestVersionTask_.start();
+		fetchLatestVersionTask_ = fetchLatestVersion(shared_from_this());
+		fetchLatestVersionTask_->start();
 	}
 }
 
@@ -68,7 +72,7 @@ std::string GlobalContext::getLatestVersion() const
 	return latestVersion_;
 }
 
-Async::Task<void> GlobalContext::fetchLatestVersion(std::allocator_arg_t, TaskStorage &, GlobalContext *self)
+Async::Task<void> GlobalContext::fetchLatestVersion(std::shared_ptr<GlobalContext> self)
 {
 	std::shared_ptr<const Logger::ILogger> logger = self->logger_;
 
