@@ -387,10 +387,8 @@ try {
 std::shared_ptr<RenderingContext> MainFilterContext::createRenderingContext(std::uint32_t targetWidth,
 									    std::uint32_t targetHeight)
 {
-	PluginConfig pluginConfig(PluginConfig::load(logger_));
-
 	auto renderingContext = std::make_shared<RenderingContext>(source_, logger_, mainEffect_,
-								   selfieSegmenterTaskQueue_, pluginConfig,
+								   selfieSegmenterTaskQueue_, pluginConfig_,
 								   pluginProperty_.subsamplingRate, targetWidth,
 								   targetHeight, pluginProperty_.numThreads);
 

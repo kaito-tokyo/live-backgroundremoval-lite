@@ -28,6 +28,7 @@
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
+std::shared_ptr<Global::PluginConfig> g_pluginConfig_ = nullptr;
 std::shared_ptr<Global::GlobalContext> g_globalContext_ = nullptr;
 
 obs_source_info g_mainFilterInfo = {.id = "live_backgroundremoval_lite",
@@ -45,8 +46,10 @@ obs_source_info g_mainFilterInfo = {.id = "live_backgroundremoval_lite",
 				    .video_render = MainFilter::videoRender,
 				    .filter_video = MainFilter::filterVideo};
 
-bool loadModule(std::shared_ptr<Global::GlobalContext> globalContext) noexcept
+bool loadModule(std::shared_ptr<Global::PluginConfig> pluginConfig,
+		std::shared_ptr<Global::GlobalContext> globalContext) noexcept
 {
+	g_pluginConfig_ = std::move(pluginConfig);
 	g_globalContext_ = std::move(globalContext);
 	obs_register_source(&g_mainFilterInfo);
 	return true;
@@ -55,6 +58,7 @@ bool loadModule(std::shared_ptr<Global::GlobalContext> globalContext) noexcept
 void unloadModule() noexcept
 {
 	g_globalContext_.reset();
+	g_pluginConfig_.reset();
 }
 
 const char *getName(void *) noexcept
@@ -67,7 +71,7 @@ void *create(obs_data_t *settings, obs_source_t *source) noexcept
 	const auto logger = g_globalContext_->logger_;
 	BridgeUtils::GraphicsContextGuard graphicsContextGuard;
 	try {
-		auto self = std::make_shared<MainFilterContext>(settings, source, g_globalContext_);
+		auto self = std::make_shared<MainFilterContext>(settings, source, g_pluginConfig_, g_globalContext_);
 		return new std::shared_ptr<MainFilterContext>(self);
 	} catch (const std::exception &e) {
 		logger->logException(e, "Failed to create MainFilterContext");

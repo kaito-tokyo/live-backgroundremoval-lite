@@ -89,7 +89,7 @@ bool obs_module_load(void)
 
 	g_startupController_ = std::make_shared<StartupUI::StartupController>(g_globalContext_);
 
-	if (!MainFilter::loadModule(g_globalContext_)) {
+	if (!MainFilter::loadModule(g_pluginConfig_, g_globalContext_)) {
 		logger->error("failed to load plugin");
 		return false;
 	}

@@ -97,7 +97,7 @@ std::vector<BridgeUtils::unique_gs_texture_t> RenderingContext::createReductionP
 RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
 				   const MainEffect &mainEffect,
 				   TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
-				   const PluginConfig &pluginConfig, const std::uint32_t subsamplingRate,
+				   const Global::PluginConfig &pluginConfig, const std::uint32_t subsamplingRate,
 				   const std::uint32_t width, const std::uint32_t height, const int numThreads)
 	: source_(source),
 	  logger_(std::move(logger)),

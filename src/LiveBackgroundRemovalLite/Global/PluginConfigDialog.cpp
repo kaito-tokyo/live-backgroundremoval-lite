@@ -24,8 +24,9 @@
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
-PluginConfigDialog::PluginConfigDialog(std::shared_ptr<PluginConfig> pluginConfig, QWidget *parent) : QDialog(parent),
-  pluginConfig_{std::move(pluginConfig)}
+PluginConfigDialog::PluginConfigDialog(std::shared_ptr<PluginConfig> pluginConfig, QWidget *parent)
+	: QDialog(parent),
+	  pluginConfig_{std::move(pluginConfig)}
 {
 	setupUi();
 }

@@ -22,7 +22,6 @@ target_sources(
     MainFilterContext.hpp
     MainFilterInfo.cpp
     MainFilterInfo.hpp
-    PluginConfig.hpp
     PluginProperty.hpp
     RenderingContext.cpp
     RenderingContext.hpp
