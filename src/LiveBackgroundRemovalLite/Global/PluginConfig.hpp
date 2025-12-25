@@ -15,6 +15,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include <ILogger.hpp>
 
