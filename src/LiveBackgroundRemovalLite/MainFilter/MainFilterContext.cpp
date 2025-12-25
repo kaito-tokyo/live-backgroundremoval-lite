@@ -18,12 +18,15 @@
 #include <stdexcept>
 #include <thread>
 
+#include <QMainWindow>
+
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
 #include <GsUnique.hpp>
 #include <ObsLogger.hpp>
 #include <ObsUnique.hpp>
+#include <PluginConfigDialog.hpp>
 
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
@@ -34,8 +37,10 @@ using namespace KaitoTokyo::BridgeUtils;
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 MainFilterContext::MainFilterContext(obs_data_t *settings, obs_source_t *source,
+				     std::shared_ptr<Global::PluginConfig> pluginConfig,
 				     std::shared_ptr<Global::GlobalContext> globalContext)
 	: source_{source},
+	  pluginConfig_{std::move(pluginConfig)},
 	  globalContext_{std::move(globalContext)},
 	  logger_(globalContext_->logger_),
 	  mainEffect_(logger_, unique_obs_module_file("effects/main.effect")),
@@ -105,22 +110,24 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_properties_t *props = obs_properties_create();
 
 	// Update notifier
-	const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
-	try {
-		std::string latestVersion = globalContext_->getLatestVersion();
-		if (!latestVersion.empty()) {
-			if (latestVersion == globalContext_->pluginVersion_) {
-				updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
-			} else {
-				updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
+	if (!pluginConfig_->disableAutoCheckForUpdate) {
+		const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
+		try {
+			std::string latestVersion = globalContext_->getLatestVersion();
+			if (!latestVersion.empty()) {
+				if (latestVersion == globalContext_->pluginVersion_) {
+					updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
+				} else {
+					updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
+				}
 			}
+		} catch (const std::exception &e) {
+			logger_->error("Failed to check for updates: {}", e.what());
+		} catch (...) {
+			logger_->error("Failed to check for updates: unknown error");
 		}
-	} catch (const std::exception &e) {
-		logger_->error("Failed to check for updates: {}", e.what());
-	} catch (...) {
-		logger_->error("Failed to check for updates: unknown error");
+		obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 	}
-	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
 	// Debug button
 	obs_properties_add_button2(
@@ -207,6 +214,24 @@ obs_properties_t *MainFilterContext::getProperties()
 					obs_module_text("maskLowerBoundAmpDb"), -80.0, -10.0, 0.1);
 	obs_properties_add_float_slider(propsAdvancedSettings, "maskUpperBoundMarginAmpDb",
 					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
+
+	// Global config dialog button
+	obs_properties_add_button2(
+		props, "openGlobalConfigDialog", obs_module_text("openGlobalConfigDialog"),
+		[](obs_properties_t *, obs_property_t *, void *data) {
+			QMainWindow *mainWindow = static_cast<QMainWindow *>(obs_frontend_get_main_window());
+			if (!mainWindow)
+				return false;
+
+			MainFilterContext *self = static_cast<MainFilterContext *>(data);
+			if (!self)
+				return false;
+
+			Global::PluginConfigDialog dialog(self->pluginConfig_, mainWindow);
+			dialog.exec();
+			return false;
+		},
+		this);
 
 	return props;
 }
@@ -376,10 +401,8 @@ try {
 std::shared_ptr<RenderingContext> MainFilterContext::createRenderingContext(std::uint32_t targetWidth,
 									    std::uint32_t targetHeight)
 {
-	PluginConfig pluginConfig(PluginConfig::load(logger_));
-
 	auto renderingContext = std::make_shared<RenderingContext>(source_, logger_, mainEffect_,
-								   selfieSegmenterTaskQueue_, pluginConfig,
+								   selfieSegmenterTaskQueue_, pluginConfig_,
 								   pluginProperty_.subsamplingRate, targetWidth,
 								   targetHeight, pluginProperty_.numThreads);
 

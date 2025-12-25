@@ -66,7 +66,7 @@ private:
 public:
 	RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
 			 const MainEffect &mainEffect, TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
-			 const PluginConfig &pluginConfig, const std::uint32_t subsamplingRate,
+			 std::shared_ptr<Global::PluginConfig> pluginConfig, const std::uint32_t subsamplingRate,
 			 const std::uint32_t width, const std::uint32_t height, const int numThreads);
 	~RenderingContext() noexcept;
 
@@ -84,7 +84,7 @@ private:
 	const std::shared_ptr<const Logger::ILogger> logger_;
 	const MainEffect &mainEffect_;
 	TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue_;
-	const PluginConfig pluginConfig_;
+	const std::shared_ptr<Global::PluginConfig> pluginConfig_;
 
 public:
 	const std::uint32_t subsamplingRate_;

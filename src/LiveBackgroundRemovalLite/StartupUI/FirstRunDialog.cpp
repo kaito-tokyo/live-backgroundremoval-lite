@@ -43,8 +43,10 @@ const QString URL_FORUM = "https://obsproject.com/forum/resources/live-backgroun
 
 } // anonymous namespace
 
-FirstRunDialog::FirstRunDialog(std::shared_ptr<Global::GlobalContext> globalContext, QWidget *parent)
+FirstRunDialog::FirstRunDialog(std::shared_ptr<Global::PluginConfig> pluginConfig,
+			       std::shared_ptr<Global::GlobalContext> globalContext, QWidget *parent)
 	: QDialog(parent),
+	  pluginConfig_(std::move(pluginConfig)),
 	  globalContext_(std::move(globalContext))
 {
 	// ---------------------------------------------------------

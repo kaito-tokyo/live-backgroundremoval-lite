@@ -21,10 +21,12 @@
 #include <obs-module.h>
 
 #include <GlobalContext.hpp>
+#include <PluginConfig.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
-bool loadModule(std::shared_ptr<Global::GlobalContext> globalContext) noexcept;
+bool loadModule(std::shared_ptr<Global::PluginConfig> pluginConfig,
+		std::shared_ptr<Global::GlobalContext> globalContext) noexcept;
 void unloadModule() noexcept;
 
 const char *getName(void *) noexcept;

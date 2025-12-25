@@ -33,30 +33,17 @@ const QString URL_USAGE = "https://kaito-tokyo.github.io/live-backgroundremoval-
 const QString URL_FORUM = "https://obsproject.com/forum/resources/live-background-removal-lite.2226/";
 } // namespace
 
-StartupController::StartupController(std::shared_ptr<Global::GlobalContext> globalContext)
-	: globalContext_(std::move(globalContext))
+StartupController::StartupController(std::shared_ptr<Global::PluginConfig> pluginConfig,
+				     std::shared_ptr<Global::GlobalContext> globalContext)
+	: pluginConfig_(std::move(pluginConfig)),
+	  globalContext_(std::move(globalContext))
 {
-}
-
-bool StartupController::checkIfFirstRunCertainly()
-{
-	config_t *config = obs_frontend_get_user_config();
-	if (!config)
-		return false;
-
-	config_set_default_bool(config, "live_backgroundremoval_lite", "has_run_before", false);
-
-	if (config_get_bool(config, "live_backgroundremoval_lite", "has_run_before"))
-		return false;
-
-	config_set_bool(config, "live_backgroundremoval_lite", "has_run_before", true);
-	return config_save_safe(config, ".tmp", ".bak") == CONFIG_SUCCESS;
 }
 
 void StartupController::showFirstRunDialog()
 {
 	if (QMainWindow *parent = static_cast<QMainWindow *>(obs_frontend_get_main_window())) {
-		FirstRunDialog *dialog = new FirstRunDialog(globalContext_, parent);
+		FirstRunDialog *dialog = new FirstRunDialog(pluginConfig_, globalContext_, parent);
 		dialog->show();
 	}
 }

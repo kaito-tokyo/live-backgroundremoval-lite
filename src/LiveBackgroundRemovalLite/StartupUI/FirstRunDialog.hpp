@@ -30,9 +30,11 @@ namespace KaitoTokyo::LiveBackgroundRemovalLite::StartupUI {
 class FirstRunDialog : public QDialog {
 	Q_OBJECT
 public:
-	FirstRunDialog(std::shared_ptr<Global::GlobalContext> globalContext, QWidget *parent = nullptr);
+	FirstRunDialog(std::shared_ptr<Global::PluginConfig> pluginConfig,
+		       std::shared_ptr<Global::GlobalContext> globalContext, QWidget *parent = nullptr);
 
 private:
+	const std::shared_ptr<Global::PluginConfig> pluginConfig_;
 	const std::shared_ptr<Global::GlobalContext> globalContext_;
 };
 

@@ -48,14 +48,18 @@ struct ResumeOnJThread {
 } // namespace
 
 GlobalContext::GlobalContext(const char *pluginName, const char *pluginVersion,
-			     std::shared_ptr<const Logger::ILogger> logger, const char *latestVersionUrl)
+			     std::shared_ptr<const Logger::ILogger> logger, const char *latestVersionUrl,
+			     std::shared_ptr<PluginConfig> pluginConfig)
 	: pluginName_(pluginName),
 	  pluginVersion_(pluginVersion),
 	  logger_(std::move(logger)),
 	  latestVersionUrl_(latestVersionUrl),
+	  pluginConfig_(std::move(pluginConfig)),
 	  fetchLatestVersionTask_(fetchLatestVersion(std::allocator_arg, fetchLatestVersionTaskStorage_, this))
 {
-	fetchLatestVersionTask_.start();
+	if (!pluginConfig_->disableAutoCheckForUpdate) {
+		fetchLatestVersionTask_.start();
+	}
 }
 
 std::string GlobalContext::getLatestVersion() const
