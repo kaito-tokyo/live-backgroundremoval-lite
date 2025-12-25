@@ -50,6 +50,7 @@ public:
 	const std::shared_ptr<const Logger::ILogger> logger_;
 	const std::string latestVersionUrl_;
 
+	void checkForUpdates() noexcept;
 	std::string getLatestVersion() const;
 
 private:

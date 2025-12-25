@@ -56,7 +56,11 @@ GlobalContext::GlobalContext(const char *pluginName, const char *pluginVersion,
 	  latestVersionUrl_(latestVersionUrl),
 	  pluginConfig_(std::move(pluginConfig))
 {
-	if (!pluginConfig_->disableAutoCheckForUpdate) {
+}
+
+void GlobalContext::checkForUpdates() noexcept
+{
+	if (fetchLatestVersionTask_.has_value()) {
 		fetchLatestVersionTask_ = fetchLatestVersion(shared_from_this());
 		fetchLatestVersionTask_->start();
 	}
