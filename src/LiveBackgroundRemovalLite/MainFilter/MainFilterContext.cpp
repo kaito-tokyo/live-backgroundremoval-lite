@@ -18,12 +18,18 @@
 #include <stdexcept>
 #include <thread>
 
+#include <QThreadPool>
+
+#include <curl/curl.h>
+
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
+#include <CurlVectorWriter.hpp>
 #include <GsUnique.hpp>
 #include <ObsLogger.hpp>
 #include <ObsUnique.hpp>
+#include <Task.hpp>
 
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
@@ -100,9 +106,95 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 	obs_data_set_default_double(data, "maskUpperBoundMarginAmpDb", defaultProperty.maskUpperBoundMarginAmpDb);
 }
 
+namespace {
+
+struct ResumeOnGlobalQThreadPool {
+	bool await_ready() { return false; }
+
+	void await_suspend(std::coroutine_handle<> h)
+	{
+		QThreadPool::globalInstance()->start([h] { h.resume(); });
+	}
+
+	void await_resume() {}
+};
+
+struct ResumeOnGlobalQThreadPool {
+	bool await_ready() { return false; }
+
+	void await_suspend(std::coroutine_handle<> h)
+	{
+		QMetaObject::invokeMethod(QThreadPool::globalInstance(), [h] { h.resume(); }, Qt::QueuedConnection);
+	}
+
+	void await_resume() {}
+};
+
+Async::Task<void> runUpdateChecker(std::allocator_arg_t, Async::TaskStorage<>) {}
+
+} // anonymous namespace
+
+bool MainFilterContext::handleUpdateCheckerClicked(obs_properties_t *props, obs_property_t *property, void *data)
+{
+	MainFilterContext *self = static_cast<MainFilterContext *>(data);
+	QThreadPool::globalInstance()->start([logger = self->logger_]() {
+		const std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> curl(curl_easy_init(), &curl_easy_cleanup);
+		if (!curl) {
+			logger->error("Failed to initialize CURL for fetching latest version");
+			throw std::runtime_error("InitError(GlobalContext::fetchLatestVersion)");
+		}
+
+		CurlHelper::CurlVectorWriterBuffer readBuffer;
+
+		curl_easy_setopt(
+			curl.get(), CURLOPT_URL,
+			"https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt");
+		curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, CurlHelper::CurlVectorWriter);
+		curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &readBuffer);
+		curl_easy_setopt(curl.get(), CURLOPT_CONNECTTIMEOUT, 10L);
+		curl_easy_setopt(curl.get(), CURLOPT_TIMEOUT, 60L);
+		curl_easy_setopt(curl.get(), CURLOPT_MAXFILESIZE, 100L);
+		curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 1L);
+		curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 2L);
+
+		const CURLcode res = curl_easy_perform(curl.get());
+
+		if (res != CURLE_OK) {
+			logger->error("Failed to fetch latest version from {}: {}", self->latestVersionUrl_,
+				      curl_easy_strerror(res));
+			throw std::runtime_error(fmt::format("NetworkError(GlobalContext::fetchLatestVersion):{}",
+							     curl_easy_strerror(res)));
+		}
+
+		std::size_t len = std::min(readBuffer.size(), std::size_t(100));
+		std::string_view rawInput(readBuffer.data(), len);
+
+		static const std::regex extractPattern(
+			R"(^\s*(v?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?:[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)\s*$)");
+
+		std::match_results<std::string_view::const_iterator> matches;
+
+		if (!std::regex_match(rawInput.begin(), rawInput.end(), matches, extractPattern)) {
+			logger->error("Invalid version format received: '{}'", rawInput);
+			throw std::runtime_error("InvalidVersionFormat(GlobalContext::fetchLatestVersion)");
+		}
+
+		std::string_view extractedVersion(rawInput.data() + std::distance(rawInput.begin(), matches[1].first),
+						  static_cast<std::size_t>(matches[1].length()));
+
+		logger->info("Latest version on Internet is {}", extractedVersion);
+
+		std::scoped_lock lock(self->mutex_);
+		self->latestVersion_ = extractedVersion;
+	});
+}
+
 obs_properties_t *MainFilterContext::getProperties()
 {
 	obs_properties_t *props = obs_properties_create();
+
+	obs_properties_add_button2(props, "updateChecker", obs_module_text("updateCheckerCheckForUpdates"),
+				   handleUpdateCheckerClicked, this);
 
 	// Update notifier
 	const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");

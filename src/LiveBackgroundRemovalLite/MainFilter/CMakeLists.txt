@@ -33,5 +33,5 @@ target_compile_options(
 )
 set_target_properties(
   ${CMAKE_PROJECT_NAME}_MainFilter
-  PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC ON
+  PROPERTIES AUTOMOC ON
 )

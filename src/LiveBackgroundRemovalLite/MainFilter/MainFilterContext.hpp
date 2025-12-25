@@ -23,6 +23,8 @@
 #include <memory>
 #include <mutex>
 
+#include <obs.h>
+
 #include <ILogger.hpp>
 
 #include <ThrottledTaskQueue.hpp>
@@ -89,6 +91,8 @@ private:
 
 	DebugWindow *debugWindow_ = nullptr;
 	mutable std::mutex debugWindowMutex_;
+
+	static bool handleUpdateCheckerClicked(obs_properties_t *props, obs_property_t *property, void *data);
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
