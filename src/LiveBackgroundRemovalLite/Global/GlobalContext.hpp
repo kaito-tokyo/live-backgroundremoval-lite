@@ -52,7 +52,7 @@ public:
 	std::string getLatestVersion() const;
 
 private:
-	using TaskStorage = Async::TaskStorage<>;
+	using TaskStorage = Async::TaskStorage<32768>;
 
 	const std::shared_ptr<PluginConfig> pluginConfig_;
 
