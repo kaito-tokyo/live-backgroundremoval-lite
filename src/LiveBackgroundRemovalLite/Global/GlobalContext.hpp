@@ -59,9 +59,9 @@ private:
 	TaskStorage fetchLatestVersionTaskStorage_;
 	Async::Task<void> fetchLatestVersionTask_;
 	std::string latestVersion_;
-	jthread_ns::jthread fetchLatestVersionThread_;
 	mutable std::mutex mutex_;
 
+	jthread_ns::jthread fetchLatestVersionThread_;
 	static Async::Task<void> fetchLatestVersion(std::allocator_arg_t, TaskStorage &storage, GlobalContext *self);
 };
 
