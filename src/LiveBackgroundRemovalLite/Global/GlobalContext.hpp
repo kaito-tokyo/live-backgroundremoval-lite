@@ -39,7 +39,7 @@ namespace jthread_ns = josuttis;
 namespace jthread_ns = std;
 #endif
 
-class GlobalContext : std::enable_shared_from_this<GlobalContext> {
+class GlobalContext : public std::enable_shared_from_this<GlobalContext> {
 public:
 	GlobalContext(const char *pluginName, const char *pluginVersion, std::shared_ptr<const Logger::ILogger> logger,
 		      const char *latestVersionUrl, std::shared_ptr<PluginConfig> pluginConfig);
@@ -54,7 +54,7 @@ public:
 private:
 	const std::shared_ptr<PluginConfig> pluginConfig_;
 
-	Async::Task<void> fetchLatestVersionTask_;
+	std::optional<Async::Task<void>> fetchLatestVersionTask_ = std::nullopt;
 	std::string latestVersion_;
 	mutable std::mutex mutex_;
 

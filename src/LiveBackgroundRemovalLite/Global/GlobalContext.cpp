@@ -54,11 +54,11 @@ GlobalContext::GlobalContext(const char *pluginName, const char *pluginVersion,
 	  pluginVersion_(pluginVersion),
 	  logger_(std::move(logger)),
 	  latestVersionUrl_(latestVersionUrl),
-	  pluginConfig_(std::move(pluginConfig)),
-	  fetchLatestVersionTask_(fetchLatestVersion(shared_from_this()))
+	  pluginConfig_(std::move(pluginConfig))
 {
 	if (!pluginConfig_->disableAutoCheckForUpdate) {
-		fetchLatestVersionTask_.start();
+		fetchLatestVersionTask_ = fetchLatestVersion(shared_from_this());
+		fetchLatestVersionTask_->start();
 	}
 }
 
