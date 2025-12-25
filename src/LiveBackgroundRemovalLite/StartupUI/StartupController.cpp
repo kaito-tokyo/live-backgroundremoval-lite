@@ -43,7 +43,7 @@ StartupController::StartupController(std::shared_ptr<Global::PluginConfig> plugi
 void StartupController::showFirstRunDialog()
 {
 	if (QMainWindow *parent = static_cast<QMainWindow *>(obs_frontend_get_main_window())) {
-		FirstRunDialog *dialog = new FirstRunDialog(globalContext_, parent);
+		FirstRunDialog *dialog = new FirstRunDialog(pluginConfig_, globalContext_, parent);
 		dialog->show();
 	}
 }
