@@ -53,7 +53,7 @@ OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 void handleFrontendEvent(enum obs_frontend_event event, void *)
 {
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
-		if (g_startupController_ && g_startupController_->checkIfFirstRunCertainly()) {
+		if (g_pluginConfig_ && g_startupController_ && g_pluginConfig_->isFirstRun()) {
 			g_startupController_->showFirstRunDialog();
 		}
 	}

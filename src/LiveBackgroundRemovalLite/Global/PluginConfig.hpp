@@ -30,7 +30,7 @@ struct PluginConfig {
 
 	void setAutoCheckForUpdateEnabled();
 	void setAutoCheckForUpdateDisabled();
-	bool setHasFirstRunOccurred();
+	bool isFirstRun();
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

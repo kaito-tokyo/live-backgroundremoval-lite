@@ -89,30 +89,30 @@ void PluginConfig::setAutoCheckForUpdateDisabled()
 	disableAutoCheckForUpdate = true;
 }
 
-bool PluginConfig::setHasFirstRunOccurred()
+bool PluginConfig::isFirstRun()
 {
-        BridgeUtils::unique_bfree_char_t configPathRaw =
-                BridgeUtils::unique_obs_module_config_path("PluginConfig_HasFirstRunOccurred.txt");
+	BridgeUtils::unique_bfree_char_t configPathRaw =
+		BridgeUtils::unique_obs_module_config_path("PluginConfig_HasFirstRunOccurred.txt");
 
-        if (!configPathRaw) {
-                return false;
-        }
+	if (!configPathRaw) {
+		return false;
+	}
 
-        const std::filesystem::path path(configPathRaw.get());
+	const std::filesystem::path path(configPathRaw.get());
 
-        if (std::filesystem::exists(path)) {
-                return true;
-        }
+	if (std::filesystem::exists(path)) {
+		return false;
+	}
 
-        std::error_code ec;
-        std::filesystem::create_directories(path.parent_path(), ec);
-        if (ec) {
-                return false;
-        }
+	std::error_code ec;
+	std::filesystem::create_directories(path.parent_path(), ec);
+	if (ec) {
+		return false;
+	}
 
-        std::ofstream ofs(path);
+	std::ofstream ofs(path);
 
-        return ofs.good();
+	return ofs.good();
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

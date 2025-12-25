@@ -40,22 +40,6 @@ StartupController::StartupController(std::shared_ptr<Global::PluginConfig> plugi
 {
 }
 
-bool StartupController::checkIfFirstRunCertainly()
-{
-	pluginConfig_->setHasFirstRunOccurred();
-	config_t *config = obs_frontend_get_user_config();
-	if (!config)
-		return false;
-
-	config_set_default_bool(config, "live_backgroundremoval_lite", "has_run_before", false);
-
-	if (config_get_bool(config, "live_backgroundremoval_lite", "has_run_before"))
-		return false;
-
-	config_set_bool(config, "live_backgroundremoval_lite", "has_run_before", true);
-	return config_save_safe(config, ".tmp", ".bak") == CONFIG_SUCCESS;
-}
-
 void StartupController::showFirstRunDialog()
 {
 	if (QMainWindow *parent = static_cast<QMainWindow *>(obs_frontend_get_main_window())) {
