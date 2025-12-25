@@ -36,43 +36,33 @@ PluginConfigDialog::~PluginConfigDialog() = default;
 void PluginConfigDialog::setupUi()
 {
 	setWindowTitle(tr("Live Background Removal Lite - Global Settings"));
-	resize(400, 150); // 適度なサイズに設定
+	resize(400, 150);
 
-	// メインレイアウト
 	auto *mainLayout = new QVBoxLayout(this);
 
-	// グループボックス（設定項目をまとめる枠）
 	auto *updatesGroup = new QGroupBox(tr("Updates"), this);
 	auto *updatesLayout = new QVBoxLayout(updatesGroup);
 
-	// チェックボックスの作成
 	auto *chkAutoUpdate = new QCheckBox(tr("Check for updates automatically"), updatesGroup);
 
-	// 現在の設定値を読み込んでチェックボックスに反映
-	// ※ PluginConfigクラスに getEnableAutoUpdate() メソッドがあると仮定しています
 	chkAutoUpdate->setChecked(!pluginConfig_->disableAutoCheckForUpdate);
 
 	updatesLayout->addWidget(chkAutoUpdate);
 	mainLayout->addWidget(updatesGroup);
 
-	// ダイアログの下部にスペースを追加（見た目の調整）
 	mainLayout->addStretch();
 
-	// OK / Cancel ボタン
 	auto *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 	mainLayout->addWidget(buttonBox);
 
-	// ボタンのシグナル接続
 	connect(buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
 
-	// OKが押されたときの処理：設定を保存する
 	connect(this, &QDialog::accepted, [this, chkAutoUpdate]() {
-		// ※ PluginConfigクラスに setEnableAutoUpdate() と save() メソッドがあると仮定しています
 		if (chkAutoUpdate->isChecked()) {
-			PluginConfig::setAutoCheckForUpdateEnabled();
+			pluginConfig_->setAutoCheckForUpdateEnabled();
 		} else {
-			PluginConfig::setAutoCheckForUpdateDisabled();
+			pluginConfig_->setAutoCheckForUpdateDisabled();
 		}
 	});
 }

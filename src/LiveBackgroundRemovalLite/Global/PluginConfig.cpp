@@ -29,6 +29,12 @@ PluginConfig PluginConfig::load(std::shared_ptr<const Logger::ILogger> logger)
 
 	PluginConfig pluginConfig;
 
+	BridgeUtils::unique_bfree_char_t firstRunFlagPathRaw =
+		BridgeUtils::unique_obs_module_config_path("PluginConfig_HasFirstRunOccurred.txt");
+	if (firstRunFlagPathRaw) {
+		pluginConfig.hasFirstRunOccurred = std::filesystem::exists(firstRunFlagPathRaw.get());
+	}
+
 	BridgeUtils::unique_bfree_char_t disableFlagPathRaw =
 		BridgeUtils::unique_obs_module_config_path("PluginConfig_AutoCheckForUpdateDisabled.txt");
 	if (disableFlagPathRaw) {
@@ -67,6 +73,7 @@ void PluginConfig::setAutoCheckForUpdateEnabled()
 		BridgeUtils::unique_obs_module_config_path("PluginConfig_AutoCheckForUpdateDisabled.txt");
 	const std::filesystem::path path(configPathRaw.get());
 	std::filesystem::remove(path);
+	disableAutoCheckForUpdate = false;
 }
 
 void PluginConfig::setAutoCheckForUpdateDisabled()
@@ -79,6 +86,33 @@ void PluginConfig::setAutoCheckForUpdateDisabled()
 		std::filesystem::create_directories(path.parent_path());
 		std::ofstream ofs(path);
 	}
+	disableAutoCheckForUpdate = true;
+}
+
+bool PluginConfig::setHasFirstRunOccurred()
+{
+        BridgeUtils::unique_bfree_char_t configPathRaw =
+                BridgeUtils::unique_obs_module_config_path("PluginConfig_HasFirstRunOccurred.txt");
+
+        if (!configPathRaw) {
+                return false;
+        }
+
+        const std::filesystem::path path(configPathRaw.get());
+
+        if (std::filesystem::exists(path)) {
+                return true;
+        }
+
+        std::error_code ec;
+        std::filesystem::create_directories(path.parent_path(), ec);
+        if (ec) {
+                return false;
+        }
+
+        std::ofstream ofs(path);
+
+        return ofs.good();
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

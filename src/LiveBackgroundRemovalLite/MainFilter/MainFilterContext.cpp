@@ -110,22 +110,24 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_properties_t *props = obs_properties_create();
 
 	// Update notifier
-	const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
-	try {
-		std::string latestVersion = globalContext_->getLatestVersion();
-		if (!latestVersion.empty()) {
-			if (latestVersion == globalContext_->pluginVersion_) {
-				updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
-			} else {
-				updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
+	if (!pluginConfig_->disableAutoCheckForUpdate) {
+		const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
+		try {
+			std::string latestVersion = globalContext_->getLatestVersion();
+			if (!latestVersion.empty()) {
+				if (latestVersion == globalContext_->pluginVersion_) {
+					updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
+				} else {
+					updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
+				}
 			}
+		} catch (const std::exception &e) {
+			logger_->error("Failed to check for updates: {}", e.what());
+		} catch (...) {
+			logger_->error("Failed to check for updates: unknown error");
 		}
-	} catch (const std::exception &e) {
-		logger_->error("Failed to check for updates: {}", e.what());
-	} catch (...) {
-		logger_->error("Failed to check for updates: unknown error");
+		obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 	}
-	obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 
 	// Debug button
 	obs_properties_add_button2(

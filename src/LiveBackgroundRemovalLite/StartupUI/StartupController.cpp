@@ -33,13 +33,16 @@ const QString URL_USAGE = "https://kaito-tokyo.github.io/live-backgroundremoval-
 const QString URL_FORUM = "https://obsproject.com/forum/resources/live-background-removal-lite.2226/";
 } // namespace
 
-StartupController::StartupController(std::shared_ptr<Global::GlobalContext> globalContext)
-	: globalContext_(std::move(globalContext))
+StartupController::StartupController(std::shared_ptr<Global::PluginConfig> pluginConfig,
+				     std::shared_ptr<Global::GlobalContext> globalContext)
+	: pluginConfig_(std::move(pluginConfig)),
+	  globalContext_(std::move(globalContext))
 {
 }
 
 bool StartupController::checkIfFirstRunCertainly()
 {
+	pluginConfig_->setHasFirstRunOccurred();
 	config_t *config = obs_frontend_get_user_config();
 	if (!config)
 		return false;

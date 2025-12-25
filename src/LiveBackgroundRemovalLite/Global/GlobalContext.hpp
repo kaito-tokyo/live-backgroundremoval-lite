@@ -28,6 +28,7 @@
 #endif
 
 #include <ILogger.hpp>
+#include <PluginConfig.hpp>
 #include <Task.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
@@ -41,7 +42,7 @@ namespace jthread_ns = std;
 class GlobalContext {
 public:
 	GlobalContext(const char *pluginName, const char *pluginVersion, std::shared_ptr<const Logger::ILogger> logger,
-		      const char *latestVersionUrl);
+		      const char *latestVersionUrl, std::shared_ptr<PluginConfig> pluginConfig);
 
 	const std::string pluginName_;
 	const std::string pluginVersion_;
@@ -52,6 +53,8 @@ public:
 
 private:
 	using TaskStorage = Async::TaskStorage<>;
+
+	const std::shared_ptr<PluginConfig> pluginConfig_;
 
 	TaskStorage fetchLatestVersionTaskStorage_;
 	Async::Task<void> fetchLatestVersionTask_;
