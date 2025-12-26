@@ -154,13 +154,9 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 
 RenderingContext::~RenderingContext() noexcept {}
 
-void RenderingContext::videoTick(float seconds)
+void RenderingContext::videoTick(float)
 {
-	timeSinceLastProcessFrame_ += seconds;
-	if (timeSinceLastProcessFrame_ >= kMaximumIntervalSecondsBetweenProcessFrames_) {
-		timeSinceLastProcessFrame_ -= kMaximumIntervalSecondsBetweenProcessFrames_;
-		shouldNextVideoRenderProcessFrame_.store(true, std::memory_order_release);
-	}
+	shouldNextVideoRenderProcessFrame_.store(true, std::memory_order_release);
 }
 
 void RenderingContext::videoRender()
@@ -305,15 +301,6 @@ void RenderingContext::videoRender()
 				}
 			});
 	}
-}
-
-obs_source_frame *RenderingContext::filterVideo(obs_source_frame *frame)
-{
-	if (lastFrameTimestamp_ != frame->timestamp) {
-		lastFrameTimestamp_ = frame->timestamp;
-		shouldNextVideoRenderProcessFrame_.store(true, std::memory_order_release);
-	}
-	return frame;
 }
 
 void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)

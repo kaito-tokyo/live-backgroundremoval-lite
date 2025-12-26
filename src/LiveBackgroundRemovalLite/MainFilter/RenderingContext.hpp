@@ -70,9 +70,8 @@ public:
 			 const std::uint32_t width, const std::uint32_t height, const int numThreads);
 	~RenderingContext() noexcept;
 
-	void videoTick(float seconds);
+	void videoTick(float);
 	void videoRender();
-	obs_source_frame *filterVideo(obs_source_frame *frame);
 
 	void applyPluginProperty(const PluginProperty &pluginProperty);
 
@@ -144,9 +143,6 @@ private:
 
 	std::atomic<float> timeAveragedFilteringAlpha_;
 
-	std::uint64_t lastFrameTimestamp_ = 0;
-	float timeSinceLastProcessFrame_ = 0.0f;
-	constexpr static float kMaximumIntervalSecondsBetweenProcessFrames_ = 1.0f;
 	std::atomic<bool> shouldNextVideoRenderProcessFrame_ = true;
 
 	vec4 blackColor_ = {0.0f, 0.0f, 0.0f, 1.0f};

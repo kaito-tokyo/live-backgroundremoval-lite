@@ -377,27 +377,6 @@ void MainFilterContext::videoRender()
 	}
 }
 
-obs_source_frame *MainFilterContext::filterVideo(struct obs_source_frame *frame)
-try {
-	if (obs_source_t *const parent = obs_filter_get_parent(source_)) {
-		if (!obs_source_active(parent) || !obs_source_showing(parent)) {
-			return frame;
-		}
-	}
-
-	if (auto _renderingContext = getRenderingContext()) {
-		return _renderingContext->filterVideo(frame);
-	} else {
-		return frame;
-	}
-} catch (const std::exception &e) {
-	logger_->error("Failed to create rendering context: {}", e.what());
-	return frame;
-} catch (...) {
-	logger_->error("Failed to create rendering context: unknown error");
-	return frame;
-}
-
 std::shared_ptr<RenderingContext> MainFilterContext::createRenderingContext(std::uint32_t targetWidth,
 									    std::uint32_t targetHeight)
 {
