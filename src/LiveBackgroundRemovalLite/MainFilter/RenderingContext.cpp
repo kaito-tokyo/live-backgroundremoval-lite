@@ -18,8 +18,6 @@
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
-constexpr static float kProcessIntervalSeconds = 1.0f / 30.0f;
-
 namespace {
 
 inline std::uint32_t bit_ceil(std::uint32_t x)
