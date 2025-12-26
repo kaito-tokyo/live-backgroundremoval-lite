@@ -37,7 +37,6 @@ public:
 	constexpr static int kPreviewHeight = 480;
 
 	DebugWindow(std::weak_ptr<MainFilterContext> weakMainFilterContext, QWidget *parent = nullptr);
-	virtual ~DebugWindow() override;
 
 	void videoRender();
 
