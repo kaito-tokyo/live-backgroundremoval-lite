@@ -161,7 +161,7 @@ void RenderingContext::videoTick(float)
 
 void RenderingContext::videoRender()
 {
-	const FilterLevel filterLevel = filterLevel_;
+	const FilterLevel filterLevel = filterLevel_.load(std::memory_order_relaxed);
 
 	const float motionIntensityThreshold = motionIntensityThreshold_.load(std::memory_order_relaxed);
 
