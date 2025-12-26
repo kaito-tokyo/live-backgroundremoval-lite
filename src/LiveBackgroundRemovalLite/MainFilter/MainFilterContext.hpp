@@ -62,7 +62,6 @@ public:
 
 	void videoTick(float seconds);
 	void videoRender();
-	obs_source_frame *filterVideo(obs_source_frame *frame);
 
 	const std::shared_ptr<const Logger::ILogger> getLogger() const noexcept { return logger_; }
 

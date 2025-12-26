@@ -39,6 +39,5 @@ obs_properties_t *getProperties(void *data) noexcept;
 void update(void *data, obs_data_t *settings) noexcept;
 void videoTick(void *data, float seconds) noexcept;
 void videoRender(void *data, gs_effect_t *effect) noexcept;
-struct obs_source_frame *filterVideo(void *data, struct obs_source_frame *frame) noexcept;
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

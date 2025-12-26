@@ -33,7 +33,7 @@ std::shared_ptr<Global::GlobalContext> g_globalContext_ = nullptr;
 
 obs_source_info g_mainFilterInfo = {.id = "live_backgroundremoval_lite",
 				    .type = OBS_SOURCE_TYPE_FILTER,
-				    .output_flags = OBS_SOURCE_VIDEO,
+				    .output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW,
 				    .get_name = MainFilter::getName,
 				    .create = MainFilter::create,
 				    .destroy = MainFilter::destroy,
@@ -43,8 +43,7 @@ obs_source_info g_mainFilterInfo = {.id = "live_backgroundremoval_lite",
 				    .get_properties = MainFilter::getProperties,
 				    .update = MainFilter::update,
 				    .video_tick = MainFilter::videoTick,
-				    .video_render = MainFilter::videoRender,
-				    .filter_video = MainFilter::filterVideo};
+				    .video_render = MainFilter::videoRender};
 
 bool loadModule(std::shared_ptr<Global::PluginConfig> pluginConfig,
 		std::shared_ptr<Global::GlobalContext> globalContext) noexcept
@@ -243,37 +242,6 @@ void videoRender(void *data, gs_effect_t *) noexcept
 	} catch (...) {
 		logger->error("Failed to render video in MainFilterContext: unknown error");
 	}
-}
-
-struct obs_source_frame *filterVideo(void *data, struct obs_source_frame *frame) noexcept
-{
-	const auto logger = g_globalContext_->logger_;
-
-	if (!frame) {
-		logger->error("MainFilter::filterVideo called with null frame");
-		return nullptr;
-	}
-
-	if (!data) {
-		logger->error("MainFilter::filterVideo called with null data");
-		return frame;
-	}
-
-	auto self = static_cast<std::shared_ptr<MainFilterContext> *>(data)->get();
-	if (!self) {
-		logger->error("MainFilter::filterVideo called with null MainFilterContext");
-		return frame;
-	}
-
-	try {
-		return self->filterVideo(frame);
-	} catch (const std::exception &e) {
-		logger->logException(e, "Failed to filter video in MainFilterContext");
-	} catch (...) {
-		logger->error("Failed to filter video in MainFilterContext: unknown error");
-	}
-
-	return frame;
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
