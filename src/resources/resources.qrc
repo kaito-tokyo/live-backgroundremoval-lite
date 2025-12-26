@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="/live-backgroundremoval-lite">
     <file>ja_JP.qm</file>
+    <file>ko_KR.qm</file>
     <file>logo-512.png</file>
   </qresource>
 </RCC>
