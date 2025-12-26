@@ -173,7 +173,7 @@ void RenderingContext::videoRender()
 
 	const float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_.load(std::memory_order_relaxed);
 
-	const bool processingFrame = shouldNextVideoRenderProcessFrame_.exchange(false);
+	const bool processingFrame = shouldNextVideoRenderProcessFrame_.exchange(false, std::memory_order_acquire);
 
 	if (processingFrame && filterLevel >= FilterLevel::Passthrough) {
 		mainEffect_.drawSource(bgrxSource_, source_);
@@ -223,12 +223,16 @@ void RenderingContext::videoRender()
 				    static_cast<float>(maskRoi_.x), static_cast<float>(maskRoi_.y));
 	}
 
-	if (processingFrame && hasNewSegmentationMask_.exchange(false) && filterLevel >= FilterLevel::Segmentation) {
-		const std::uint8_t *segmentationMaskData =
-			selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
-		// gs_texture_set_image immediately uploads the data to GPU memory
-		gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
-				     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
+	if (processingFrame && filterLevel >= FilterLevel::Segmentation) {
+		if (hasNewSegmentationMask_.load(std::memory_order_relaxed)) {
+			if (hasNewSegmentationMask_.exchange(false, std::memory_order_acquire)) {
+				const std::uint8_t *segmentationMaskData =
+					selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
+				// gs_texture_set_image immediately uploads the data to GPU memory
+				gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
+						static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
+			}
+		}
 	}
 
 	if (processingFrame && filterLevel >= FilterLevel::GuidedFilter) {
