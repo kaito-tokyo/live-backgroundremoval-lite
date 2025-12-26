@@ -114,6 +114,8 @@ DebugWindow::DebugWindow(std::weak_ptr<MainFilterContext> weakMainFilterContext,
 	updateTimer_->start(1000 / 15);
 }
 
+DebugWindow::~DebugWindow() = default;
+
 void DebugWindow::videoRender()
 {
 	auto mainPluginContext = weakMainFilterContext_.lock();

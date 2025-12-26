@@ -227,10 +227,11 @@ void RenderingContext::videoRender()
 		if (hasNewSegmentationMask_.load(std::memory_order_relaxed)) {
 			if (hasNewSegmentationMask_.exchange(false, std::memory_order_acquire)) {
 				const std::uint8_t *segmentationMaskData =
-					selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
+					selfieSegmenter_->getMask() +
+					(maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
 				// gs_texture_set_image immediately uploads the data to GPU memory
 				gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
-						static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
+						     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
 			}
 		}
 	}
