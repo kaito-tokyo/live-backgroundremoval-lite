@@ -70,7 +70,7 @@ public:
 			 const std::uint32_t width, const std::uint32_t height, const int numThreads);
 	~RenderingContext() noexcept;
 
-	void videoTick(float seconds);
+	void videoTick(float);
 	void videoRender();
 
 	void applyPluginProperty(const PluginProperty &pluginProperty);
