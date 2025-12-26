@@ -305,48 +305,43 @@ void RenderingContext::videoRender()
 
 void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 {
-    FilterLevel newFilterLevel = (pluginProperty.filterLevel == FilterLevel::Default)
-                                     ? FilterLevel::TimeAveragedFilter
-                                     : pluginProperty.filterLevel;
+	FilterLevel newFilterLevel = (pluginProperty.filterLevel == FilterLevel::Default)
+					     ? FilterLevel::TimeAveragedFilter
+					     : pluginProperty.filterLevel;
 
-    float newMotionIntensityThreshold =
-        static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
+	float newMotionIntensityThreshold =
+		static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
 
-    float newGuidedFilterEps =
-        static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
+	float newGuidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
 
-    float newTimeAveragedFilteringAlpha =
-        static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
+	float newTimeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
 
-    float newMaskGamma =
-        static_cast<float>(pluginProperty.maskGamma);
+	float newMaskGamma = static_cast<float>(pluginProperty.maskGamma);
 
-    float newMaskLowerBound =
-        static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
+	float newMaskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
 
-    float newMaskUpperBoundMargin =
-        static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
+	float newMaskUpperBoundMargin =
+		static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
 
-    filterLevel_.store(newFilterLevel, std::memory_order_relaxed);
-    motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_relaxed);
-    guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_relaxed);
-    timeAveragedFilteringAlpha_.store(newTimeAveragedFilteringAlpha, std::memory_order_relaxed);
-    maskGamma_.store(newMaskGamma, std::memory_order_relaxed);
-    maskLowerBound_.store(newMaskLowerBound, std::memory_order_relaxed);
-    maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_relaxed);
+	filterLevel_.store(newFilterLevel, std::memory_order_relaxed);
+	motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_relaxed);
+	guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_relaxed);
+	timeAveragedFilteringAlpha_.store(newTimeAveragedFilteringAlpha, std::memory_order_relaxed);
+	maskGamma_.store(newMaskGamma, std::memory_order_relaxed);
+	maskLowerBound_.store(newMaskLowerBound, std::memory_order_relaxed);
+	maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_relaxed);
 
-
-    if (pluginProperty.filterLevel == FilterLevel::Default) {
-        logger_->info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
-    } else {
-        logger_->info("Filter level set to {}", static_cast<int>(newFilterLevel));
-    }
-    logger_->info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
-    logger_->info("Guided filter epsilon set to {}", newGuidedFilterEps);
-    logger_->info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
-    logger_->info("Mask gamma set to {}", newMaskGamma);
-    logger_->info("Mask lower bound set to {}", newMaskLowerBound);
-    logger_->info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
+	if (pluginProperty.filterLevel == FilterLevel::Default) {
+		logger_->info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
+	} else {
+		logger_->info("Filter level set to {}", static_cast<int>(newFilterLevel));
+	}
+	logger_->info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
+	logger_->info("Guided filter epsilon set to {}", newGuidedFilterEps);
+	logger_->info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
+	logger_->info("Mask gamma set to {}", newMaskGamma);
+	logger_->info("Mask lower bound set to {}", newMaskLowerBound);
+	logger_->info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
