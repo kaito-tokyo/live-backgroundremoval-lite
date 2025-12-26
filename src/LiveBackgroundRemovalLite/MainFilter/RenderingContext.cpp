@@ -161,19 +161,19 @@ void RenderingContext::videoTick(float)
 
 void RenderingContext::videoRender()
 {
-	const FilterLevel filterLevel = filterLevel_;
+	const FilterLevel filterLevel = filterLevel_.load(std::memory_order_relaxed);
 
-	const float motionIntensityThreshold = motionIntensityThreshold_.load(std::memory_order_acquire);
+	const float motionIntensityThreshold = motionIntensityThreshold_.load(std::memory_order_relaxed);
 
-	const float guidedFilterEps = guidedFilterEps_.load(std::memory_order_acquire);
+	const float guidedFilterEps = guidedFilterEps_.load(std::memory_order_relaxed);
 
-	const float maskGamma = maskGamma_.load(std::memory_order_acquire);
-	const float maskLowerBound = maskLowerBound_.load(std::memory_order_acquire);
-	const float maskUpperBoundMargin = maskUpperBoundMargin_.load(std::memory_order_acquire);
+	const float maskGamma = maskGamma_.load(std::memory_order_relaxed);
+	const float maskLowerBound = maskLowerBound_.load(std::memory_order_relaxed);
+	const float maskUpperBoundMargin = maskUpperBoundMargin_.load(std::memory_order_relaxed);
 
-	const float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_.load(std::memory_order_acquire);
+	const float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_.load(std::memory_order_relaxed);
 
-	const bool processingFrame = shouldNextVideoRenderProcessFrame_.exchange(false);
+	const bool processingFrame = shouldNextVideoRenderProcessFrame_.exchange(false, std::memory_order_acquire);
 
 	if (processingFrame && filterLevel >= FilterLevel::Passthrough) {
 		mainEffect_.drawSource(bgrxSource_, source_);
@@ -223,12 +223,17 @@ void RenderingContext::videoRender()
 				    static_cast<float>(maskRoi_.x), static_cast<float>(maskRoi_.y));
 	}
 
-	if (processingFrame && hasNewSegmentationMask_.exchange(false) && filterLevel >= FilterLevel::Segmentation) {
-		const std::uint8_t *segmentationMaskData =
-			selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
-		// gs_texture_set_image immediately uploads the data to GPU memory
-		gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
-				     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
+	if (processingFrame && filterLevel >= FilterLevel::Segmentation) {
+		if (hasNewSegmentationMask_.load(std::memory_order_relaxed)) {
+			if (hasNewSegmentationMask_.exchange(false, std::memory_order_acquire)) {
+				const std::uint8_t *segmentationMaskData =
+					selfieSegmenter_->getMask() +
+					(maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
+				// gs_texture_set_image immediately uploads the data to GPU memory
+				gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
+						     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
+			}
+		}
 	}
 
 	if (processingFrame && filterLevel >= FilterLevel::GuidedFilter) {
@@ -305,40 +310,42 @@ void RenderingContext::videoRender()
 
 void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 {
-	FilterLevel newFilterLevel;
-	if (pluginProperty.filterLevel == FilterLevel::Default) {
-		newFilterLevel = FilterLevel::TimeAveragedFilter;
-		logger_->info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
-	} else {
-		newFilterLevel = pluginProperty.filterLevel;
-		logger_->info("Filter level set to {}", static_cast<int>(newFilterLevel));
-	}
-	filterLevel_.store(newFilterLevel, std::memory_order_release);
+	FilterLevel newFilterLevel = (pluginProperty.filterLevel == FilterLevel::Default)
+					     ? FilterLevel::TimeAveragedFilter
+					     : pluginProperty.filterLevel;
 
 	float newMotionIntensityThreshold =
 		static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
-	motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_release);
-	logger_->info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
 
 	float newGuidedFilterEps = static_cast<float>(std::pow(10.0, pluginProperty.guidedFilterEpsPowDb / 10.0));
-	guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_release);
-	logger_->info("Guided filter epsilon set to {}", newGuidedFilterEps);
 
 	float newTimeAveragedFilteringAlpha = static_cast<float>(pluginProperty.timeAveragedFilteringAlpha);
-	timeAveragedFilteringAlpha_.store(newTimeAveragedFilteringAlpha, std::memory_order_release);
-	logger_->info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
 
 	float newMaskGamma = static_cast<float>(pluginProperty.maskGamma);
-	maskGamma_.store(newMaskGamma, std::memory_order_release);
-	logger_->info("Mask gamma set to {}", newMaskGamma);
 
 	float newMaskLowerBound = static_cast<float>(std::pow(10.0, pluginProperty.maskLowerBoundAmpDb / 20.0));
-	maskLowerBound_.store(newMaskLowerBound, std::memory_order_release);
-	logger_->info("Mask lower bound set to {}", newMaskLowerBound);
 
 	float newMaskUpperBoundMargin =
 		static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
-	maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_release);
+
+	filterLevel_.store(newFilterLevel, std::memory_order_relaxed);
+	motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_relaxed);
+	guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_relaxed);
+	timeAveragedFilteringAlpha_.store(newTimeAveragedFilteringAlpha, std::memory_order_relaxed);
+	maskGamma_.store(newMaskGamma, std::memory_order_relaxed);
+	maskLowerBound_.store(newMaskLowerBound, std::memory_order_relaxed);
+	maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_relaxed);
+
+	if (pluginProperty.filterLevel == FilterLevel::Default) {
+		logger_->info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
+	} else {
+		logger_->info("Filter level set to {}", static_cast<int>(newFilterLevel));
+	}
+	logger_->info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
+	logger_->info("Guided filter epsilon set to {}", newGuidedFilterEps);
+	logger_->info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
+	logger_->info("Mask gamma set to {}", newMaskGamma);
+	logger_->info("Mask lower bound set to {}", newMaskLowerBound);
 	logger_->info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
 }
 
