@@ -131,12 +131,14 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  r32fMeanSquaredMotionReductionPyramid_(
 		  createReductionPyramid(subPaddedRegion_.width, subPaddedRegion_.height)),
 	  r32fReducedMeanSquaredMotionReader_(1, 1, GS_R32F),
+	  segmenterRoi_(region_),
 	  bgrxSegmenterInput_(makeTexture(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
 					  static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX,
 					  GS_RENDER_TARGET)),
 	  bgrxSegmenterInputReader_(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
 				    static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX),
 	  segmenterInputBuffer_(selfieSegmenter_->getPixelCount() * 4),
+	  sourceRoi_(region_),
 	  r8SegmentationMask_(makeTexture(maskRoi_.width, maskRoi_.height, GS_R8, GS_DYNAMIC)),
 	  r32fSubGFIntermediate_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
 	  r32fSubGFSource_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
@@ -170,6 +172,8 @@ void RenderingContext::videoRender()
 	const float maskGamma = maskGamma_.load(std::memory_order_relaxed);
 	const float maskLowerBound = maskLowerBound_.load(std::memory_order_relaxed);
 	const float maskUpperBoundMargin = maskUpperBoundMargin_.load(std::memory_order_relaxed);
+
+	const bool enableCenterFrame = enableCenterFrame_.load(std::memory_order_relaxed);
 
 	const float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_.load(std::memory_order_relaxed);
 
@@ -219,20 +223,105 @@ void RenderingContext::videoRender()
 	if (processingFrame && filterLevel >= FilterLevel::Segmentation && isCurrentMotionIntense) {
 		constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-		mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, maskRoi_.width, maskRoi_.height,
-				    static_cast<float>(maskRoi_.x), static_cast<float>(maskRoi_.y));
+		double widthScale = static_cast<double>(region_.width) / static_cast<double>(segmenterRoi_.width);
+		double heightScale = static_cast<double>(region_.height) / static_cast<double>(segmenterRoi_.height);
+		double scale = std::min(widthScale, heightScale);
+
+		std::uint32_t width = static_cast<std::uint32_t>(selfieSegmenter_->getWidth() * scale);
+		std::uint32_t height = static_cast<std::uint32_t>(selfieSegmenter_->getHeight() * scale);
+
+		float x = -static_cast<float>(segmenterRoi_.x * selfieSegmenter_->getWidth() / region_.width);
+		float y = -static_cast<float>(segmenterRoi_.y * selfieSegmenter_->getHeight() / region_.height);
+
+		mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, width, height, x, y);
 	}
 
 	if (processingFrame && filterLevel >= FilterLevel::Segmentation) {
-		if (hasNewSegmentationMask_.load(std::memory_order_relaxed)) {
-			if (hasNewSegmentationMask_.exchange(false, std::memory_order_acquire)) {
-				const std::uint8_t *segmentationMaskData =
-					selfieSegmenter_->getMask() +
-					(maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
-				// gs_texture_set_image immediately uploads the data to GPU memory
-				gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
-						     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
+		if (hasNewSegmentationMask_.load(std::memory_order_relaxed) &&
+		    hasNewSegmentationMask_.exchange(false, std::memory_order_acquire)) {
+			if (enableCenterFrame) {
+				RenderingContextRegion segmenterOutputBoundingBox{0, 0, 0, 0};
+				const std::uint8_t *segmenterOutputData = selfieSegmenter_->getMask();
+				const int width = static_cast<int>(selfieSegmenter_->getWidth());
+				const int height = static_cast<int>(selfieSegmenter_->getHeight());
+
+				int min_x = width;
+				int max_x = -1;
+				int min_y = height;
+				int max_y = -1;
+
+				bool found = false;
+
+				for (int i = 0; i < height; ++i) {
+					for (int j = 0; j < width; ++j) {
+						std::uint8_t value =
+							segmenterOutputData[static_cast<size_t>(i) *
+										    static_cast<size_t>(width) +
+									    static_cast<size_t>(j)];
+
+						if (value > 200) {
+							if (j < min_x)
+								min_x = j;
+							if (j > max_x)
+								max_x = j;
+							if (i < min_y)
+								min_y = i;
+							if (i > max_y)
+								max_y = i;
+
+							found = true;
+						}
+					}
+				}
+
+				if (found) {
+					segmenterOutputBoundingBox.x = static_cast<std::uint32_t>(min_x);
+					segmenterOutputBoundingBox.y = static_cast<std::uint32_t>(min_y);
+					segmenterOutputBoundingBox.width =
+						static_cast<std::uint32_t>(max_x - min_x + 1);
+					segmenterOutputBoundingBox.height =
+						static_cast<std::uint32_t>(max_y - min_y + 1);
+				}
+
+				auto toUnsignedOrZero = [](auto v) -> unsigned long {
+					using T = decltype(v);
+					return v < static_cast<T>(0) ? 0UL : static_cast<unsigned long>(v);
+				};
+
+				const unsigned long bboxX = toUnsignedOrZero(segmenterOutputBoundingBox.x);
+				const unsigned long bboxY = toUnsignedOrZero(segmenterOutputBoundingBox.y);
+				const unsigned long bboxWidth = toUnsignedOrZero(segmenterOutputBoundingBox.width);
+				const unsigned long bboxHeight = toUnsignedOrZero(segmenterOutputBoundingBox.height);
+
+				sourceRoi_.x = static_cast<std::uint32_t>(
+					bboxX * segmenterRoi_.width / selfieSegmenter_->getWidth() + segmenterRoi_.x);
+				sourceRoi_.y = static_cast<std::uint32_t>(
+					bboxY * segmenterRoi_.height / selfieSegmenter_->getHeight() + segmenterRoi_.y);
+				sourceRoi_.width = static_cast<std::uint32_t>(bboxWidth * segmenterRoi_.width /
+									      selfieSegmenter_->getWidth());
+				sourceRoi_.height = static_cast<std::uint32_t>(bboxHeight * segmenterRoi_.height /
+									       selfieSegmenter_->getHeight());
+				sourceRoi_.y = static_cast<std::uint32_t>(
+					static_cast<std::uint64_t>(segmenterOutputBoundingBox.y) *
+						static_cast<std::uint64_t>(segmenterRoi_.height) /
+						static_cast<std::uint64_t>(selfieSegmenter_->getHeight()) +
+					static_cast<std::uint64_t>(segmenterRoi_.y));
+				sourceRoi_.width = static_cast<std::uint32_t>(
+					static_cast<std::uint64_t>(segmenterOutputBoundingBox.width) *
+					static_cast<std::uint64_t>(segmenterRoi_.width) /
+					static_cast<std::uint64_t>(selfieSegmenter_->getWidth()));
+				sourceRoi_.height = static_cast<std::uint32_t>(
+					static_cast<std::uint64_t>(segmenterOutputBoundingBox.height) *
+					static_cast<std::uint64_t>(segmenterRoi_.height) /
+					static_cast<std::uint64_t>(selfieSegmenter_->getHeight()));
 			}
+
+			const std::uint8_t *segmentationMaskData =
+				selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
+
+			// gs_texture_set_image immediately uploads the data to GPU memory
+			gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
+					     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
 		}
 	}
 
@@ -262,6 +351,22 @@ void RenderingContext::videoRender()
 		currentTimeAveragedMaskIndex_ = nextIndex;
 	}
 
+	if (enableCenterFrame) {
+		gs_matrix_push();
+
+		vec3 translate{
+			-static_cast<float>(sourceRoi_.x) + static_cast<float>(region_.width - sourceRoi_.width) / 2.0f,
+			-static_cast<float>(sourceRoi_.y) + static_cast<float>(region_.height - sourceRoi_.height),
+			0.0f};
+		gs_matrix_translate(&translate);
+
+		float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
+		float heightScale = static_cast<float>(region_.height) / static_cast<float>(sourceRoi_.height);
+		float scaleFactor = std::min(widthScale, heightScale);
+		vec3 scale{scaleFactor, scaleFactor, 1.0f};
+		gs_matrix_scale(&scale);
+	}
+
 	if (filterLevel == FilterLevel::Passthrough) {
 		mainEffect_.directDraw(bgrxSource_);
 	} else if (filterLevel == FilterLevel::Segmentation ||
@@ -275,6 +380,10 @@ void RenderingContext::videoRender()
 						      maskGamma, maskLowerBound, maskUpperBoundMargin);
 	} else {
 		// Draw nothing to prevent unexpected background disclosure
+	}
+
+	if (enableCenterFrame) {
+		gs_matrix_pop();
 	}
 
 	if (processingFrame && filterLevel >= FilterLevel::Segmentation && isCurrentMotionIntense) {
@@ -335,6 +444,7 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 	maskGamma_.store(newMaskGamma, std::memory_order_relaxed);
 	maskLowerBound_.store(newMaskLowerBound, std::memory_order_relaxed);
 	maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_relaxed);
+	enableCenterFrame_.store(pluginProperty.enableCenterFrame, std::memory_order_relaxed);
 
 	if (pluginProperty.filterLevel == FilterLevel::Default) {
 		logger_->info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
@@ -347,6 +457,7 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 	logger_->info("Mask gamma set to {}", newMaskGamma);
 	logger_->info("Mask lower bound set to {}", newMaskLowerBound);
 	logger_->info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
+	logger_->info("Center Frame {}", pluginProperty.enableCenterFrame ? "enabled" : "disabled");
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
