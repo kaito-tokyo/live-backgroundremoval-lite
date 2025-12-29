@@ -243,8 +243,6 @@ void RenderingContext::videoRender()
 			if (enableCenterFrame) {
 				SelfieSegmenter::BoundingBox bb;
 				bb.calculateBoundingBoxFrom256x144(selfieSegmenter_->getMask(), 200);
-				logger_->info("Calculated bounding box: x={}, y={}, w={}, h={}", bb.x, bb.y, bb.width,
-					      bb.height);
 
 				const std::uint64_t bbX = static_cast<std::uint64_t>(bb.x);
 				const std::uint64_t bbY = static_cast<std::uint64_t>(bb.y);
@@ -258,25 +256,23 @@ void RenderingContext::videoRender()
 
 				const std::uint64_t baseW = static_cast<std::uint64_t>(selfieSegmenter_->getWidth());
 				const std::uint64_t baseH = static_cast<std::uint64_t>(selfieSegmenter_->getHeight());
-				if (baseW > 0 && baseH > 0) {
-					// 【修正ポイント】 (分子 + 分母 / 2) / 分母 で四捨五入を行う
 
-					// X座標の計算
+				if (baseW > 0 && baseH > 0) {
 					sourceRoi_.x =
 						static_cast<std::uint32_t>(((bbX * roiW) + (baseW / 2)) / baseW + roiX);
 
-					// Y座標の計算
 					sourceRoi_.y =
 						static_cast<std::uint32_t>(((bbY * roiH) + (baseH / 2)) / baseH + roiY);
 
-					// Widthの計算
 					sourceRoi_.width =
 						static_cast<std::uint32_t>(((bbW * roiW) + (baseW / 2)) / baseW);
 
-					// Heightの計算
 					sourceRoi_.height =
 						static_cast<std::uint32_t>(((bbH * roiH) + (baseH / 2)) / baseH);
 				}
+
+				logger_->info("Setting source ROI to x={}, y={}, width={}, height={}", sourceRoi_.x,
+					      sourceRoi_.y, sourceRoi_.width, sourceRoi_.height);
 			}
 
 			const std::uint8_t *segmentationMaskData =
@@ -317,17 +313,24 @@ void RenderingContext::videoRender()
 	if (enableCenterFrame) {
 		gs_matrix_push();
 
-		vec3 translate{
-			-static_cast<float>(sourceRoi_.x) + static_cast<float>(region_.width - sourceRoi_.width) / 2.0f,
-			-static_cast<float>(sourceRoi_.y) + static_cast<float>(region_.height - sourceRoi_.height),
-			0.0f};
-		gs_matrix_translate(&translate);
-
 		float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
 		float heightScale = static_cast<float>(region_.height) / static_cast<float>(sourceRoi_.height);
 		float scaleFactor = std::min(widthScale, heightScale);
-		vec3 scale{scaleFactor, scaleFactor, 1.0f};
-		gs_matrix_scale(&scale);
+
+		float displayW = static_cast<float>(sourceRoi_.width) * scaleFactor;
+		float displayH = static_cast<float>(sourceRoi_.height) * scaleFactor;
+
+		float offsetX = (static_cast<float>(region_.width) - displayW) / 2.0f;
+		float offsetY = (static_cast<float>(region_.height) - displayH);
+
+		vec3 vecDest{offsetX, offsetY, 0.0f};
+		gs_matrix_translate(&vecDest);
+
+		vec3 vecScale{scaleFactor, scaleFactor, 1.0f};
+		gs_matrix_scale(&vecScale);
+
+		vec3 vecSource{-static_cast<float>(sourceRoi_.x), -static_cast<float>(sourceRoi_.y), 0.0f};
+		gs_matrix_translate(&vecSource);
 	}
 
 	if (filterLevel == FilterLevel::Passthrough) {
