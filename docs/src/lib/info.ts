@@ -8,7 +8,7 @@ export async function getAggregateRating() {
   return {
     "@type": "AggregateRating",
     ratingValue: "5.0",
-    reviewCount: "1",
+    reviewCount: "2",
     bestRating: "5",
     worstRating: "1",
   };
