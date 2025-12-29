@@ -43,25 +43,36 @@ namespace {
 #if defined(_MSC_VER)
 inline int get_first_bit_index(int mask)
 {
+	if (mask == 0)
+		return -1;
+
 	unsigned long index;
 	_BitScanForward(&index, mask);
-	return (int)index;
+	return static_cast<int>(index);
 }
 
 inline int get_last_bit_index(int mask)
 {
+	if (mask == 0)
+		return -1;
+
 	unsigned long index;
 	_BitScanReverse(&index, mask);
-	return (int)index;
+	return static_cast<int>(index);
 }
 #else
 inline int get_first_bit_index(int mask)
 {
+	if (mask == 0)
+		return -1;
+
 	return __builtin_ctz(mask);
 }
 
 inline int get_last_bit_index(int mask)
 {
+	if (mask == 0)
+		return -1;
 	return 31 - __builtin_clz(mask);
 }
 #endif
