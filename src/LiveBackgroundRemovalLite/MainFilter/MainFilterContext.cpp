@@ -18,7 +18,7 @@
 #include <stdexcept>
 #include <thread>
 
-#include <QMainWindow>
+#include <QApplication>
 
 #include <obs-module.h>
 #include <obs-frontend-api.h>
@@ -141,8 +141,7 @@ obs_properties_t *MainFilterContext::getProperties()
 				if (this_->debugWindow_) {
 					windowToShow = this_->debugWindow_;
 				} else {
-					auto parent = static_cast<QWidget *>(obs_frontend_get_main_window());
-					auto newDebugWindow = new DebugWindow(this_->weak_from_this(), parent);
+					auto newDebugWindow = new DebugWindow(this_->weak_from_this(), QApplication::activeWindow());
 
 					newDebugWindow->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -219,15 +218,12 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_properties_add_button2(
 		props, "openGlobalConfigDialog", obs_module_text("openGlobalConfigDialog"),
 		[](obs_properties_t *, obs_property_t *, void *data) {
-			QMainWindow *mainWindow = static_cast<QMainWindow *>(obs_frontend_get_main_window());
-			if (!mainWindow)
-				return false;
-
 			MainFilterContext *self = static_cast<MainFilterContext *>(data);
 			if (!self)
 				return false;
 
-			Global::PluginConfigDialog dialog(self->pluginConfig_, mainWindow);
+			Global::PluginConfigDialog dialog(self->pluginConfig_, QApplication::activeWindow());
+			dialog.setWindowModality(Qt::WindowModal);
 			dialog.exec();
 			return false;
 		},
