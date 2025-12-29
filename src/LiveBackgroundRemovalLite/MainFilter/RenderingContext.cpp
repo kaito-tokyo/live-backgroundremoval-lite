@@ -276,23 +276,47 @@ void RenderingContext::videoRender()
 					std::uint32_t sourceRoiHeight =
 						static_cast<std::uint32_t>(((bbH * roiH) + (baseH / 2)) / baseH);
 
-					// Apply motion compensation: adjust for the difference between previous and current segmenterRoi_
-					std::int64_t deltaX = static_cast<std::int64_t>(segmenterRoi_.x) -
-							      static_cast<std::int64_t>(previousSegmenterRoi_.x);
-					std::int64_t deltaY = static_cast<std::int64_t>(segmenterRoi_.y) -
-							      static_cast<std::int64_t>(previousSegmenterRoi_.y);
+					// Apply motion compensation only if ROI dimensions are consistent
+					// (small size changes indicate stable tracking)
+					const std::int64_t widthDiff =
+						std::abs(static_cast<std::int64_t>(segmenterRoi_.width) -
+							 static_cast<std::int64_t>(previousSegmenterRoi_.width));
+					const std::int64_t heightDiff =
+						std::abs(static_cast<std::int64_t>(segmenterRoi_.height) -
+							 static_cast<std::int64_t>(previousSegmenterRoi_.height));
+					const bool roiDimensionsConsistent = (widthDiff == 0 && heightDiff == 0);
 
-					// Apply the motion compensation
-					std::int64_t compensatedX = static_cast<std::int64_t>(sourceRoiX) + deltaX;
-					std::int64_t compensatedY = static_cast<std::int64_t>(sourceRoiY) + deltaY;
+					if (roiDimensionsConsistent) {
+						// Apply motion compensation: adjust for the difference between previous and current segmenterRoi_
+						std::int64_t deltaX =
+							static_cast<std::int64_t>(segmenterRoi_.x) -
+							static_cast<std::int64_t>(previousSegmenterRoi_.x);
+						std::int64_t deltaY =
+							static_cast<std::int64_t>(segmenterRoi_.y) -
+							static_cast<std::int64_t>(previousSegmenterRoi_.y);
 
-					// Clamp to valid region bounds
-					sourceRoi_.x = static_cast<std::uint32_t>(std::max(
-						std::int64_t(0),
-						std::min(compensatedX, static_cast<std::int64_t>(region_.width))));
-					sourceRoi_.y = static_cast<std::uint32_t>(std::max(
-						std::int64_t(0),
-						std::min(compensatedY, static_cast<std::int64_t>(region_.height))));
+						// Apply the motion compensation
+						std::int64_t compensatedX =
+							static_cast<std::int64_t>(sourceRoiX) + deltaX;
+						std::int64_t compensatedY =
+							static_cast<std::int64_t>(sourceRoiY) + deltaY;
+
+						// Clamp to valid region bounds, ensuring the entire ROI fits within the region
+						const std::int64_t maxX = static_cast<std::int64_t>(region_.width) -
+									  static_cast<std::int64_t>(sourceRoiWidth);
+						const std::int64_t maxY = static_cast<std::int64_t>(region_.height) -
+									  static_cast<std::int64_t>(sourceRoiHeight);
+
+						sourceRoi_.x = static_cast<std::uint32_t>(
+							std::max(std::int64_t(0), std::min(compensatedX, maxX)));
+						sourceRoi_.y = static_cast<std::uint32_t>(
+							std::max(std::int64_t(0), std::min(compensatedY, maxY)));
+					} else {
+						// ROI dimensions changed, don't apply motion compensation
+						sourceRoi_.x = sourceRoiX;
+						sourceRoi_.y = sourceRoiY;
+					}
+
 					sourceRoi_.width = sourceRoiWidth;
 					sourceRoi_.height = sourceRoiHeight;
 				}
