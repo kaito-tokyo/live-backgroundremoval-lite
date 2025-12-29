@@ -243,25 +243,40 @@ void RenderingContext::videoRender()
 			if (enableCenterFrame) {
 				SelfieSegmenter::BoundingBox bb;
 				bb.calculateBoundingBoxFrom256x144(selfieSegmenter_->getMask(), 200);
+				logger_->info("Calculated bounding box: x={}, y={}, w={}, h={}", bb.x, bb.y, bb.width,
+					      bb.height);
 
-				sourceRoi_.x = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.x) *
-						static_cast<std::uint64_t>(segmenterRoi_.width) /
-						static_cast<std::uint64_t>(selfieSegmenter_->getWidth()) +
-					static_cast<std::uint64_t>(segmenterRoi_.x));
-				sourceRoi_.y = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.y) *
-						static_cast<std::uint64_t>(segmenterRoi_.height) /
-						static_cast<std::uint64_t>(selfieSegmenter_->getHeight()) +
-					static_cast<std::uint64_t>(segmenterRoi_.y));
-				sourceRoi_.width = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.width) *
-					static_cast<std::uint64_t>(segmenterRoi_.width) /
-					static_cast<std::uint64_t>(selfieSegmenter_->getWidth()));
-				sourceRoi_.height = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.height) *
-					static_cast<std::uint64_t>(segmenterRoi_.height) /
-					static_cast<std::uint64_t>(selfieSegmenter_->getHeight()));
+				const std::uint64_t bbX = static_cast<std::uint64_t>(bb.x);
+				const std::uint64_t bbY = static_cast<std::uint64_t>(bb.y);
+				const std::uint64_t bbW = static_cast<std::uint64_t>(bb.width);
+				const std::uint64_t bbH = static_cast<std::uint64_t>(bb.height);
+
+				const std::uint64_t roiX = static_cast<std::uint64_t>(segmenterRoi_.x);
+				const std::uint64_t roiY = static_cast<std::uint64_t>(segmenterRoi_.y);
+				const std::uint64_t roiW = static_cast<std::uint64_t>(segmenterRoi_.width);
+				const std::uint64_t roiH = static_cast<std::uint64_t>(segmenterRoi_.height);
+
+				const std::uint64_t baseW = static_cast<std::uint64_t>(selfieSegmenter_->getWidth());
+				const std::uint64_t baseH = static_cast<std::uint64_t>(selfieSegmenter_->getHeight());
+				if (baseW > 0 && baseH > 0) {
+					// 【修正ポイント】 (分子 + 分母 / 2) / 分母 で四捨五入を行う
+
+					// X座標の計算
+					sourceRoi_.x =
+						static_cast<std::uint32_t>(((bbX * roiW) + (baseW / 2)) / baseW + roiX);
+
+					// Y座標の計算
+					sourceRoi_.y =
+						static_cast<std::uint32_t>(((bbY * roiH) + (baseH / 2)) / baseH + roiY);
+
+					// Widthの計算
+					sourceRoi_.width =
+						static_cast<std::uint32_t>(((bbW * roiW) + (baseW / 2)) / baseW);
+
+					// Heightの計算
+					sourceRoi_.height =
+						static_cast<std::uint32_t>(((bbH * roiH) + (baseH / 2)) / baseH);
+				}
 			}
 
 			const std::uint8_t *segmentationMaskData =
