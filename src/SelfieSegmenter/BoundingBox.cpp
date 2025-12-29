@@ -283,6 +283,7 @@ inline bool calculateBoundingBoxAVX2256x144(BoundingBox *boundingBox, const std:
 
 	if (max_x < min_x)
 		return false;
+
 	boundingBox->x = min_x;
 	boundingBox->y = min_y;
 	boundingBox->width = max_x - min_x + 1;
@@ -320,9 +321,8 @@ inline bool calculateBoundingBox(BoundingBox *boundingBox, const std::uint8_t *d
 		}
 	}
 
-	if (max_y == -1) {
+	if (max_y == -1)
 		return false;
-	}
 
 	boundingBox->x = min_x;
 	boundingBox->y = min_y;
@@ -334,19 +334,19 @@ inline bool calculateBoundingBox(BoundingBox *boundingBox, const std::uint8_t *d
 
 } // anonymous namespace
 
-void BoundingBox::calculateBoundingBoxFrom256x144(const std::uint8_t *data, std::uint8_t threshold)
+bool BoundingBox::calculateBoundingBoxFrom256x144(const std::uint8_t *data, std::uint8_t threshold)
 {
 #if defined(__ARM_NEON)
-	calculateBoundingBoxNEON256x144(this, data, threshold);
+	return calculateBoundingBoxNEON256x144(this, data, threshold);
 #elif defined(__AVX2__)
 	const static bool isAVX2Available = checkIfAVX2Available();
 	if (isAVX2Available) {
-		calculateBoundingBoxAVX2256x144(this, data, threshold);
+		return calculateBoundingBoxAVX2256x144(this, data, threshold);
 	} else {
-		calculateBoundingBox(this, data, 256, 144, threshold);
+		return calculateBoundingBox(this, data, 256, 144, threshold);
 	}
 #else
-	calculateBoundingBox(this, data, 256, 144, threshold);
+	return calculateBoundingBox(this, data, 256, 144, threshold);
 #endif
 }
 

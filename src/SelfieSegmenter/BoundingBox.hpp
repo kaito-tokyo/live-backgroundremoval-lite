@@ -28,7 +28,7 @@ struct BoundingBox {
 	std::uint32_t width;
 	std::uint32_t height;
 
-	void calculateBoundingBoxFrom256x144(const std::uint8_t *data, std::uint8_t threshold);
+	bool calculateBoundingBoxFrom256x144(const std::uint8_t *data, std::uint8_t threshold);
 };
 
 } // namespace KaitoTokyo::SelfieSegmenter
