@@ -21,13 +21,13 @@
     <message>
         <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="63"/>
         <source>About Qt</source>
-        <translation type="unfinished"></translation>
+        <translation>Qt 정보</translation>
     </message>
     <message>
         <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="64"/>
         <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="111"/>
         <source>Open Source Licenses</source>
-        <translation type="unfinished"></translation>
+        <translation>오픈 소스 라이선스</translation>
     </message>
 </context>
 <context>
