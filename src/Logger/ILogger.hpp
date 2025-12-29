@@ -99,6 +99,10 @@ private:
 		fmt::basic_memory_buffer<char, 4096> buffer;
 		fmt::vformat_to(std::back_inserter(buffer), fmt, fmt::make_format_args(args...));
 		log(level, {buffer.data(), buffer.size()});
+	} catch (const fmt::format_error &e) {
+		log(LogLevel::Error, e.what());
+	} catch (const std::exception &e) {
+		log(LogLevel::Error, e.what());
 	} catch (...) {
 		log(LogLevel::Error, "LOGGER PANIC OCCURRED");
 	}
