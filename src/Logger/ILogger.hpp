@@ -25,38 +25,15 @@ struct LogField {
 	std::string_view value;
 };
 
-/**
- * @class ILogger
- * @brief A thread-safe, noexcept interface for polymorphic logging.
- *
- * Provides a robust, exception-safe logging contract. All public logging
- * methods (debug, info, warn, error) are guaranteed not to throw exceptions.
- * If an internal formatting error occurs (e.g., std::bad_alloc),
- * the logger will fall back to writing a fatal error to `stderr`.
- *
- * This interface is designed to be implemented by concrete logger classes
- * and is non-copyable and non-movable.
- */
 class ILogger {
 public:
-	/**
-	 * @brief Default constructor.
-	 */
 	ILogger() noexcept = default;
-
-	/**
-	 * @brief Virtual destructor to ensure correct cleanup of derived classes.
-	 */
 	virtual ~ILogger() = default;
 
-	/** @name Non-Copyable and Non-Movable
-	 * @{
-	 */
 	ILogger(const ILogger &) = delete;
 	ILogger &operator=(const ILogger &) = delete;
 	ILogger(ILogger &&) = delete;
 	ILogger &operator=(ILogger &&) = delete;
-	/** @} */
 
 	template<typename... Args> void debug(fmt::format_string<Args...> fmt, Args &&...args) const noexcept
 	{
@@ -102,23 +79,10 @@ public:
 		log(LogLevel::Error, name, loc, context);
 	}
 
-	/**
-	 * @brief Logs an exception with context.
-	 *
-	 * Guaranteed not to throw an exception. This method is safe to call
-	 * from within a catch block.
-	 *
-	 * @param e The exception that was caught.
-	 * @param context A string view describing the context where the exception occurred.
-	 */
 	void logException(const std::exception &e, std::string_view context) const noexcept
 	{
 		error("{}: {}\n", context, e.what());
 	}
-
-	/**
-	 * @brief Returns true if this logger is an invalid logger.
-	 */
 	virtual bool isInvalid() const noexcept { return false; }
 
 protected:
