@@ -133,6 +133,7 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 		  createReductionPyramid(subPaddedRegion_.width, subPaddedRegion_.height)),
 	  r32fReducedMeanSquaredMotionReader_(1, 1, GS_R32F),
 	  segmenterRoi_(region_),
+	  previousSegmenterRoi_(region_),
 	  bgrxSegmenterInput_(makeTexture(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
 					  static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX,
 					  GS_RENDER_TARGET)),
@@ -235,6 +236,9 @@ void RenderingContext::videoRender()
 		float y = -static_cast<float>(segmenterRoi_.y * selfieSegmenter_->getHeight() / region_.height);
 
 		mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, width, height, x, y);
+
+		// Store the current segmenterRoi_ for motion compensation
+		previousSegmenterRoi_ = segmenterRoi_;
 	}
 
 	if (processingFrame && filterLevel >= FilterLevel::Segmentation) {
@@ -249,26 +253,48 @@ void RenderingContext::videoRender()
 				const std::uint64_t bbW = static_cast<std::uint64_t>(bb.width);
 				const std::uint64_t bbH = static_cast<std::uint64_t>(bb.height);
 
-				const std::uint64_t roiX = static_cast<std::uint64_t>(segmenterRoi_.x);
-				const std::uint64_t roiY = static_cast<std::uint64_t>(segmenterRoi_.y);
-				const std::uint64_t roiW = static_cast<std::uint64_t>(segmenterRoi_.width);
-				const std::uint64_t roiH = static_cast<std::uint64_t>(segmenterRoi_.height);
+				// Use previousSegmenterRoi_ because the mask was generated from it
+				const std::uint64_t roiX = static_cast<std::uint64_t>(previousSegmenterRoi_.x);
+				const std::uint64_t roiY = static_cast<std::uint64_t>(previousSegmenterRoi_.y);
+				const std::uint64_t roiW = static_cast<std::uint64_t>(previousSegmenterRoi_.width);
+				const std::uint64_t roiH = static_cast<std::uint64_t>(previousSegmenterRoi_.height);
 
 				const std::uint64_t baseW = static_cast<std::uint64_t>(selfieSegmenter_->getWidth());
 				const std::uint64_t baseH = static_cast<std::uint64_t>(selfieSegmenter_->getHeight());
 
 				if (baseW > 0 && baseH > 0) {
-					sourceRoi_.x =
+					// Calculate sourceRoi from the bounding box in the previous frame's coordinate system
+					std::uint32_t sourceRoiX =
 						static_cast<std::uint32_t>(((bbX * roiW) + (baseW / 2)) / baseW + roiX);
 
-					sourceRoi_.y =
+					std::uint32_t sourceRoiY =
 						static_cast<std::uint32_t>(((bbY * roiH) + (baseH / 2)) / baseH + roiY);
 
-					sourceRoi_.width =
+					std::uint32_t sourceRoiWidth =
 						static_cast<std::uint32_t>(((bbW * roiW) + (baseW / 2)) / baseW);
 
-					sourceRoi_.height =
+					std::uint32_t sourceRoiHeight =
 						static_cast<std::uint32_t>(((bbH * roiH) + (baseH / 2)) / baseH);
+
+					// Apply motion compensation: adjust for the difference between previous and current segmenterRoi_
+					std::int64_t deltaX = static_cast<std::int64_t>(segmenterRoi_.x) -
+							      static_cast<std::int64_t>(previousSegmenterRoi_.x);
+					std::int64_t deltaY = static_cast<std::int64_t>(segmenterRoi_.y) -
+							      static_cast<std::int64_t>(previousSegmenterRoi_.y);
+
+					// Apply the motion compensation
+					std::int64_t compensatedX = static_cast<std::int64_t>(sourceRoiX) + deltaX;
+					std::int64_t compensatedY = static_cast<std::int64_t>(sourceRoiY) + deltaY;
+
+					// Clamp to valid region bounds
+					sourceRoi_.x = static_cast<std::uint32_t>(std::max(
+						std::int64_t(0),
+						std::min(compensatedX, static_cast<std::int64_t>(region_.width))));
+					sourceRoi_.y = static_cast<std::uint32_t>(std::max(
+						std::int64_t(0),
+						std::min(compensatedY, static_cast<std::int64_t>(region_.height))));
+					sourceRoi_.width = sourceRoiWidth;
+					sourceRoi_.height = sourceRoiHeight;
 				}
 			}
 

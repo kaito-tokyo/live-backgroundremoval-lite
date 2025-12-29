@@ -110,6 +110,7 @@ public:
 	BridgeUtils::AsyncTextureReader r32fReducedMeanSquaredMotionReader_;
 
 	RenderingContextRegion segmenterRoi_;
+	RenderingContextRegion previousSegmenterRoi_;
 
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
