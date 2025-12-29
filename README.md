@@ -177,7 +177,6 @@ This project is built upon and incorporates several open-source components. We a
 <details>
 <summary>List of Open Source Components</summary>
 
-- **backward-cpp** (License: [MIT](https://github.com/bombela/backward-cpp/blob/master/LICENSE))
 - **cURL** (License: [curl](https://curl.se/docs/copyright.html))
 - **fmt** (License: [MIT](https://github.com/fmtlib/fmt/blob/master/LICENSE.rst))
 - **GoogleTest** (License: [BSD-3-Clause](https://github.com/google/googletest/blob/main/LICENSE))
@@ -188,6 +187,8 @@ This project is built upon and incorporates several open-source components. We a
 - **OpenCV** (License: [Apache-2.0](https://github.com/opencv/opencv/blob/master/LICENSE))
   - Source: [github.com/opencv/opencv](https://github.com/opencv/opencv)
 - **wolfSSL** (License: [GPL-3.0](https://github.com/wolfSSL/wolfssl/blob/master/COPYING))
+- **josuttis-jthread** (License: [MIT](https://github.com/josuttis/jthread/blob/main/LICENSE))
+  - Source: [github.com/josuttis/jthread](https://github.com/josuttis/jthread)
 
 </details>
 

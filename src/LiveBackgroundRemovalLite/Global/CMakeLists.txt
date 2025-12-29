@@ -14,5 +14,6 @@ target_sources(
     PluginConfig.hpp
     PluginConfigDialog.cpp
     PluginConfigDialog.hpp
+    licenses.qrc
 )
-set_target_properties(${CMAKE_PROJECT_NAME}_Global PROPERTIES AUTOMOC ON)
+set_target_properties(${CMAKE_PROJECT_NAME}_Global PROPERTIES AUTOMOC ON AUTORCC ON)

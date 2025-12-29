@@ -29,8 +29,6 @@ public:
 
 private:
 	void setupUi();
-
-private:
 	const std::shared_ptr<PluginConfig> pluginConfig_;
 };
 

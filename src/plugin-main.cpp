@@ -62,6 +62,7 @@ void handleFrontendEvent(enum obs_frontend_event event, void *)
 bool obs_module_load(void)
 {
 	Q_INIT_RESOURCE(resources);
+	Q_INIT_RESOURCE(licenses);
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	const std::shared_ptr<const Logger::ILogger> logger =
@@ -112,6 +113,7 @@ void obs_module_unload(void)
 	g_pluginConfig_.reset();
 	g_appTranslator_.reset();
 	curl_global_cleanup();
+	Q_CLEANUP_RESOURCE(licenses);
 	Q_CLEANUP_RESOURCE(resources);
 	logger->info("plugin unloaded");
 }

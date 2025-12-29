@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="//live-backgroundremoval-lite-licenses">
+        <file alias="LICENSE">../../../LICENSE</file>
+        <file alias="LICENSE.GPL-3.0-or-later">../../../LICENSE.GPL-3.0-or-later</file>
+        <file alias="LICENSE.MIT">../../../LICENSE.MIT</file>
+        <file alias="curl.txt">../../../data/licenses/curl.txt</file>
+        <file alias="fmt.txt">../../../data/licenses/fmt.txt</file>
+        <file alias="googletest.txt">../../../data/licenses/googletest.txt</file>
+        <file alias="josuttis-jthread.txt">../../../data/licenses/josuttis-jthread.txt</file>
+        <file alias="ncnn.txt">../../../data/licenses/ncnn.txt</file>
+        <file alias="obs-studio.txt">../../../data/licenses/obs-studio.txt</file>
+        <file alias="qt-lgpl-3.0.txt">../../../data/licenses/qt-lgpl-3.0.txt</file>
+        <file alias="stb.txt">../../../data/licenses/stb.txt</file>
+        <file alias="wolfssl.txt">../../../data/licenses/wolfssl.txt</file>
+        <file alias="zlib.txt">../../../data/licenses/zlib.txt</file>
+    </qresource>
+</RCC>

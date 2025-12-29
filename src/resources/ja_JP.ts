@@ -4,19 +4,30 @@
 <context>
     <name>KaitoTokyo::LiveBackgroundRemovalLite::Global::PluginConfigDialog</name>
     <message>
-        <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="38"/>
+        <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="42"/>
         <source>Live Background Removal Lite - Global Settings</source>
         <translation>Live Background Removal Lite - グローバル設定</translation>
     </message>
     <message>
-        <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="43"/>
+        <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="47"/>
         <source>Updates</source>
         <translation>アップデート</translation>
     </message>
     <message>
-        <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="46"/>
+        <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="50"/>
         <source>Check for updates automatically</source>
         <translation>自動的にアップデートを確認</translation>
+    </message>
+    <message>
+        <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="63"/>
+        <source>About Qt</source>
+        <translation>Qtについて</translation>
+    </message>
+    <message>
+        <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="64"/>
+        <location filename="../LiveBackgroundRemovalLite/Global/PluginConfigDialog.cpp" line="111"/>
+        <source>Open Source Licenses</source>
+        <translation>オープンソースライセンス</translation>
     </message>
 </context>
 <context>

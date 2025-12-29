@@ -20,7 +20,11 @@
 #include <QCheckBox>
 #include <QLabel>
 #include <QDialogButtonBox>
-#include <obs-data.h>
+#include <QPushButton>
+#include <QMessageBox>
+#include <QFile>
+#include <QTextStream>
+#include <QTextEdit>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
@@ -55,8 +59,68 @@ void PluginConfigDialog::setupUi()
 	auto *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
 	mainLayout->addWidget(buttonBox);
 
+	// Add About and Licenses buttons
+	auto *aboutButton = new QPushButton(tr("About Qt"), this);
+	auto *licensesButton = new QPushButton(tr("Open Source Licenses"), this);
+	buttonBox->addButton(aboutButton, QDialogButtonBox::HelpRole);
+	buttonBox->addButton(licensesButton, QDialogButtonBox::HelpRole);
+
 	connect(buttonBox, &QDialogButtonBox::accepted, this, &QDialog::accept);
 	connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
+
+	connect(aboutButton, &QPushButton::clicked, this, [this]() { QMessageBox::aboutQt(this); });
+
+	connect(licensesButton, &QPushButton::clicked, this, [this]() {
+		struct LicenseInfo {
+			QString name;
+			QString resourcePath;
+		};
+		const QList<LicenseInfo> licenses = {
+			{"Main LICENSE file", "://live-backgroundremoval-lite-licenses/LICENSE"},
+			{"GNU General Public License v3.0 or later",
+			 "://live-backgroundremoval-lite-licenses/LICENSE.GPL-3.0-or-later"},
+			{"MIT License", "://live-backgroundremoval-lite-licenses/LICENSE.MIT"},
+			{"curl", "://live-backgroundremoval-lite-licenses/curl.txt"},
+			{"fmt", "://live-backgroundremoval-lite-licenses/fmt.txt"},
+			{"googletest", "://live-backgroundremoval-lite-licenses/googletest.txt"},
+			{"josuttis-jthread", "://live-backgroundremoval-lite-licenses/josuttis-jthread.txt"},
+			{"ncnn", "://live-backgroundremoval-lite-licenses/ncnn.txt"},
+			{"obs-studio", "://live-backgroundremoval-lite-licenses/obs-studio.txt"},
+			{"qt-lgpl-3.0", "://live-backgroundremoval-lite-licenses/qt-lgpl-3.0.txt"},
+			{"stb", "://live-backgroundremoval-lite-licenses/stb.txt"},
+			{"wolfssl", "://live-backgroundremoval-lite-licenses/wolfssl.txt"},
+			{"zlib", "://live-backgroundremoval-lite-licenses/zlib.txt"}};
+		QString text;
+		text += "<b>Live Background Removal Lite</b><br>\n";
+		text += "Copyright (C) 2025 Kaito Udagawa &lt;umireon@kaito.tokyo&gt;<br>\n";
+		text += "<br>\n";
+		text += "This software is licensed under the GNU General Public License v3.0 or later.<br>\n";
+		text += "See below for included open source licenses.<br><br>\n";
+
+		for (const auto &license : licenses) {
+			QFile file(license.resourcePath);
+			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+				QTextStream in(&file);
+				QString content = in.readAll();
+				text += QString("<b>%1</b><br><pre>%2</pre><br>")
+						.arg(license.name, content.toHtmlEscaped());
+			}
+		}
+
+		QDialog dlg(this);
+		dlg.setWindowTitle(tr("Open Source Licenses"));
+		dlg.resize(700, 600);
+		QVBoxLayout *layout = new QVBoxLayout(&dlg);
+		QTextEdit *edit = new QTextEdit(&dlg);
+		edit->setReadOnly(true);
+		edit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
+		edit->setHtml(text);
+		layout->addWidget(edit);
+		QDialogButtonBox *box = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
+		layout->addWidget(box);
+		QObject::connect(box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+		dlg.exec();
+	});
 
 	connect(this, &QDialog::accepted, [this, chkAutoUpdate]() {
 		if (chkAutoUpdate->isChecked()) {
