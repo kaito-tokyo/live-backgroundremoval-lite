@@ -281,7 +281,11 @@ void RenderingContext::videoRender()
 						(segmenterRoi_.width == previousSegmenterRoi_.width) &&
 						(segmenterRoi_.height == previousSegmenterRoi_.height);
 
-					if (roiDimensionsConsistent) {
+					// Ensure the sourceRoi fits within the region before applying motion compensation
+					const bool sourceRoiFitsInRegion = (sourceRoiWidth <= region_.width) &&
+									   (sourceRoiHeight <= region_.height);
+
+					if (roiDimensionsConsistent && sourceRoiFitsInRegion) {
 						// Apply motion compensation: adjust for the difference between previous and current segmenterRoi_
 						std::int64_t deltaX =
 							static_cast<std::int64_t>(segmenterRoi_.x) -
@@ -297,22 +301,17 @@ void RenderingContext::videoRender()
 							static_cast<std::int64_t>(sourceRoiY) + deltaY;
 
 						// Clamp to valid region bounds, ensuring the entire ROI fits within the region
-						// Guard against underflow when sourceRoi dimensions exceed region dimensions
-						std::int64_t maxX = (sourceRoiWidth <= region_.width)
-									    ? static_cast<std::int64_t>(region_.width -
-													sourceRoiWidth)
-									    : std::int64_t(0);
-						std::int64_t maxY = (sourceRoiHeight <= region_.height)
-									    ? static_cast<std::int64_t>(region_.height -
-													sourceRoiHeight)
-									    : std::int64_t(0);
+						std::int64_t maxX =
+							static_cast<std::int64_t>(region_.width - sourceRoiWidth);
+						std::int64_t maxY =
+							static_cast<std::int64_t>(region_.height - sourceRoiHeight);
 
 						sourceRoi_.x = static_cast<std::uint32_t>(
 							std::max(std::int64_t(0), std::min(compensatedX, maxX)));
 						sourceRoi_.y = static_cast<std::uint32_t>(
 							std::max(std::int64_t(0), std::min(compensatedY, maxY)));
 					} else {
-						// ROI dimensions changed, don't apply motion compensation
+						// ROI dimensions changed or sourceRoi doesn't fit, don't apply motion compensation
 						sourceRoi_.x = sourceRoiX;
 						sourceRoi_.y = sourceRoiY;
 					}
