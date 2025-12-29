@@ -310,9 +310,14 @@ void RenderingContext::videoRender()
 	if (enableCenterFrame) {
 		gs_matrix_push();
 
-		float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
-		float heightScale = static_cast<float>(region_.height) / static_cast<float>(sourceRoi_.height);
-		float scaleFactor = std::min(widthScale, heightScale);
+		float scaleFactor;
+		if (sourceRoi_.width > 0 && sourceRoi_.height > 0) {
+			float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
+			float heightScale = static_cast<float>(region_.height) / static_cast<float>(sourceRoi_.height);
+			scaleFactor = std::min(widthScale, heightScale);
+		} else {
+			scaleFactor = 1.0f;
+		}
 
 		float displayW = static_cast<float>(sourceRoi_.width) * scaleFactor;
 		float displayH = static_cast<float>(sourceRoi_.height) * scaleFactor;
