@@ -277,6 +277,8 @@ inline bool calculateBoundingBoxAVX2256x144(BoundingBox *boundingBox, const std:
 		}
 	}
 
+	if (max_x < min_x)
+		return false;
 	boundingBox->x = min_x;
 	boundingBox->y = min_y;
 	boundingBox->width = max_x - min_x + 1;
