@@ -4,6 +4,8 @@ target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn Memory)
 target_sources(
   SelfieSegmenter
   PRIVATE
+    BoundingBox.cpp
+    BoundingBox.hpp
     ISelfieSegmenter.hpp
     MaskBuffer.hpp
     NcnnSelfieSegmenter.hpp
