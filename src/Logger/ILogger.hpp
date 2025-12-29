@@ -10,6 +10,7 @@
 #pragma once
 
 #include <exception>
+#include <iterator>
 #include <source_location>
 #include <span>
 #include <string_view>
