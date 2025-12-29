@@ -14,9 +14,11 @@
 
 #pragma once
 
-#include <mutex>
+#include <source_location>
+#include <span>
 #include <string_view>
-#include <string>
+
+#include <fmt/format.h>
 
 #include <util/base.h>
 
@@ -24,53 +26,72 @@
 
 namespace KaitoTokyo::BridgeUtils {
 
-class ObsLogger final : public Logger::ILogger {
+class ObsLogger : public Logger::ILogger {
 public:
-	ObsLogger(const char *prefix) : prefix_(prefix ? prefix : "") {}
-	~ObsLogger() noexcept override = default;
+	ObsLogger(std::string_view prefix) noexcept : prefix_(prefix) {}
+
+	~ObsLogger() override = default;
 
 protected:
-	static constexpr size_t MAX_LOG_CHUNK_SIZE = 4000;
-
 	void log(LogLevel level, std::string_view message) const noexcept override
 	{
-		int blogLevel;
-		switch (level) {
-		case LogLevel::Debug:
-			blogLevel = LOG_DEBUG;
-			break;
-		case LogLevel::Info:
-			blogLevel = LOG_INFO;
-			break;
-		case LogLevel::Warn:
-			blogLevel = LOG_WARNING;
-			break;
-		case LogLevel::Error:
-			blogLevel = LOG_ERROR;
-			break;
-		default:
-			std::lock_guard<std::mutex> lock(mutex_);
-			blog(LOG_ERROR, "[LOGGER FATAL] Unknown log level: %d\n", static_cast<int>(level));
+		int blogLevel = getBlogLevel(level);
+		if (blogLevel < 0) {
+			blog(LOG_ERROR, "%.*s Unknown log level: %d", static_cast<int>(prefix_.size()), prefix_.data(),
+			     static_cast<int>(level));
 			return;
 		}
 
-		std::lock_guard<std::mutex> lock(mutex_);
-		if (message.length() <= MAX_LOG_CHUNK_SIZE) {
-			blog(blogLevel, "%.*s", static_cast<int>(message.length()), message.data());
-		} else {
-			// Log in chunks if message is too long
-			for (size_t i = 0; i < message.length(); i += MAX_LOG_CHUNK_SIZE) {
-				const auto chunk = message.substr(i, MAX_LOG_CHUNK_SIZE);
-				blog(blogLevel, "%.*s", static_cast<int>(chunk.length()), chunk.data());
+		blog(blogLevel, "%.*s %.*s", static_cast<int>(prefix_.size()), prefix_.data(),
+		     static_cast<int>(message.length()), message.data());
+	}
+
+	void log(LogLevel level, std::string_view name, std::source_location loc,
+		 std::span<const Logger::LogField> context) const noexcept override
+	{
+		int blogLevel = getBlogLevel(level);
+		if (blogLevel < 0) {
+			std::source_location errloc = std::source_location::current();
+			blog(LOG_ERROR, "%.*s name=UnknownLogLevelError\tlocation=%s:%d\n",
+			     static_cast<int>(prefix_.size()), prefix_.data(), errloc.file_name(), errloc.line());
+			return;
+		}
+
+		try {
+			fmt::basic_memory_buffer<char, 4096> buffer;
+
+			fmt::format_to(std::back_inserter(buffer), "{} name={}\tlocation={}:{}", prefix_, name,
+				       loc.file_name(), loc.line());
+			for (const Logger::LogField &field : context) {
+				fmt::format_to(std::back_inserter(buffer), "\t{}={}", field.key, field.value);
 			}
+
+			blog(blogLevel, "%.*s", static_cast<int>(buffer.size()), buffer.data());
+		} catch (...) {
+			std::source_location errloc = std::source_location::current();
+			blog(blogLevel, "%.*s name=LoggerPanic\tlocation=%s:%d", static_cast<int>(prefix_.size()),
+			     prefix_.data(), errloc.file_name(), errloc.line());
 		}
 	}
 
-	const char *getPrefix() const noexcept override { return prefix_.c_str(); }
-
 private:
-	const std::string prefix_;
-	mutable std::mutex mutex_;
+	const std::string_view prefix_;
+
+	static int getBlogLevel(LogLevel level) noexcept
+	{
+		switch (level) {
+		case LogLevel::Debug:
+			return LOG_DEBUG;
+		case LogLevel::Info:
+			return LOG_INFO;
+		case LogLevel::Warn:
+			return LOG_WARNING;
+		case LogLevel::Error:
+			return LOG_ERROR;
+		default:
+			return -1;
+		}
+	}
 };
 
 } // namespace KaitoTokyo::BridgeUtils
