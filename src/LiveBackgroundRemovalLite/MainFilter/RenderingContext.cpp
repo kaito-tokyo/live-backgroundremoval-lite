@@ -244,27 +244,24 @@ void RenderingContext::videoRender()
 				SelfieSegmenter::BoundingBox bb;
 				bb.calculateBoundingBoxFrom256x144(selfieSegmenter_->getMask(), 200);
 
-				sourceRoi_.x = static_cast<std::uint32_t>(
-					bb.x * segmenterRoi_.width / selfieSegmenter_->getWidth() + segmenterRoi_.x);
-				sourceRoi_.y = static_cast<std::uint32_t>(
-					bb.y * segmenterRoi_.height / selfieSegmenter_->getHeight() + segmenterRoi_.y);
-				sourceRoi_.width = static_cast<std::uint32_t>(bb.width * segmenterRoi_.width /
-									      selfieSegmenter_->getWidth());
-				sourceRoi_.height = static_cast<std::uint32_t>(bb.height * segmenterRoi_.height /
-									       selfieSegmenter_->getHeight());
-				sourceRoi_.y = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.y) *
-						static_cast<std::uint64_t>(segmenterRoi_.height) /
-						static_cast<std::uint64_t>(selfieSegmenter_->getHeight()) +
-					static_cast<std::uint64_t>(segmenterRoi_.y));
-				sourceRoi_.width = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.width) *
-					static_cast<std::uint64_t>(segmenterRoi_.width) /
-					static_cast<std::uint64_t>(selfieSegmenter_->getWidth()));
-				sourceRoi_.height = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.height) *
-					static_cast<std::uint64_t>(segmenterRoi_.height) /
-					static_cast<std::uint64_t>(selfieSegmenter_->getHeight()));
+				   sourceRoi_.x = static_cast<std::uint32_t>(
+					   static_cast<std::uint64_t>(bb.x) *
+					   static_cast<std::uint64_t>(segmenterRoi_.width) /
+					   static_cast<std::uint64_t>(selfieSegmenter_->getWidth()) +
+					   static_cast<std::uint64_t>(segmenterRoi_.x));
+				   sourceRoi_.y = static_cast<std::uint32_t>(
+					   static_cast<std::uint64_t>(bb.y) *
+					   static_cast<std::uint64_t>(segmenterRoi_.height) /
+					   static_cast<std::uint64_t>(selfieSegmenter_->getHeight()) +
+					   static_cast<std::uint64_t>(segmenterRoi_.y));
+				   sourceRoi_.width = static_cast<std::uint32_t>(
+					   static_cast<std::uint64_t>(bb.width) *
+					   static_cast<std::uint64_t>(segmenterRoi_.width) /
+					   static_cast<std::uint64_t>(selfieSegmenter_->getWidth()));
+				   sourceRoi_.height = static_cast<std::uint32_t>(
+					   static_cast<std::uint64_t>(bb.height) *
+					   static_cast<std::uint64_t>(segmenterRoi_.height) /
+					   static_cast<std::uint64_t>(selfieSegmenter_->getHeight()));
 			}
 
 			const std::uint8_t *segmentationMaskData =
