@@ -278,10 +278,20 @@ void RenderingContext::videoRender()
 					segmenterOutputBoundingBox.height = max_y - min_y + 1;
 				}
 
-				sourceRoi_.x = static_cast<unsigned long>(segmenterOutputBoundingBox.x) * segmenterRoi_.width / selfieSegmenter_->getWidth() + segmenterRoi_.x;
-				sourceRoi_.y = static_cast<unsigned long>(segmenterOutputBoundingBox.y) * segmenterRoi_.height / selfieSegmenter_->getHeight() + segmenterRoi_.y;
-				sourceRoi_.width = static_cast<unsigned long>(segmenterOutputBoundingBox.width) * segmenterRoi_.width / selfieSegmenter_->getWidth();
-				sourceRoi_.height = static_cast<unsigned long>(segmenterOutputBoundingBox.height) * segmenterRoi_.height / selfieSegmenter_->getHeight();
+				sourceRoi_.x = static_cast<std::uint64_t>(segmenterOutputBoundingBox.x) *
+						       static_cast<std::uint64_t>(segmenterRoi_.width) /
+						       static_cast<std::uint64_t>(selfieSegmenter_->getWidth()) +
+					       static_cast<std::uint64_t>(segmenterRoi_.x);
+				sourceRoi_.y = static_cast<std::uint64_t>(segmenterOutputBoundingBox.y) *
+						       static_cast<std::uint64_t>(segmenterRoi_.height) /
+						       static_cast<std::uint64_t>(selfieSegmenter_->getHeight()) +
+					       static_cast<std::uint64_t>(segmenterRoi_.y);
+				sourceRoi_.width = static_cast<std::uint64_t>(segmenterOutputBoundingBox.width) *
+						   static_cast<std::uint64_t>(segmenterRoi_.width) /
+						   static_cast<std::uint64_t>(selfieSegmenter_->getWidth());
+				sourceRoi_.height = static_cast<std::uint64_t>(segmenterOutputBoundingBox.height) *
+						    static_cast<std::uint64_t>(segmenterRoi_.height) /
+						    static_cast<std::uint64_t>(selfieSegmenter_->getHeight());
 			}
 
 			const std::uint8_t *segmentationMaskData =
@@ -325,8 +335,7 @@ void RenderingContext::videoRender()
 		vec3 translate{
 			-static_cast<float>(sourceRoi_.x) + static_cast<float>(region_.width - sourceRoi_.width) / 2.0f,
 			-static_cast<float>(sourceRoi_.y) + static_cast<float>(region_.height - sourceRoi_.height),
-			0.0f
-		};
+			0.0f};
 		gs_matrix_translate(&translate);
 
 		float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
