@@ -177,7 +177,6 @@ This project is built upon and incorporates several open-source components. We a
 <details>
 <summary>List of Open Source Components</summary>
 
-- **backward-cpp** (License: [MIT](https://github.com/bombela/backward-cpp/blob/master/LICENSE))
 - **cURL** (License: [curl](https://curl.se/docs/copyright.html))
 - **fmt** (License: [MIT](https://github.com/fmtlib/fmt/blob/master/LICENSE.rst))
 - **GoogleTest** (License: [BSD-3-Clause](https://github.com/google/googletest/blob/main/LICENSE))
