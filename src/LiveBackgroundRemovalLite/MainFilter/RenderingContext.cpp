@@ -312,7 +312,7 @@ void RenderingContext::videoRender()
 
 		float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
 		float heightScale = static_cast<float>(region_.height) / static_cast<float>(sourceRoi_.height);
-		float scaleFactor = (widthScale + heightScale) / 2.0f;
+		float scaleFactor = std::min(widthScale, heightScale);
 
 		float displayW = static_cast<float>(sourceRoi_.width) * scaleFactor;
 		float displayH = static_cast<float>(sourceRoi_.height) * scaleFactor;
