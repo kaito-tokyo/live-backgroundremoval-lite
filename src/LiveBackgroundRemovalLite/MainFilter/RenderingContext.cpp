@@ -278,10 +278,20 @@ void RenderingContext::videoRender()
 					segmenterOutputBoundingBox.height = max_y - min_y + 1;
 				}
 
-				sourceRoi_.x = static_cast<std::uint64_t>(segmenterOutputBoundingBox.x) *
-						       static_cast<std::uint64_t>(segmenterRoi_.width) /
-						       static_cast<std::uint64_t>(selfieSegmenter_->getWidth()) +
-					       static_cast<std::uint64_t>(segmenterRoi_.x);
+				auto toUnsignedOrZero = [](auto v) -> unsigned long {
+					using T = decltype(v);
+					return v < static_cast<T>(0) ? 0UL : static_cast<unsigned long>(v);
+				};
+
+				const unsigned long bboxX = toUnsignedOrZero(segmenterOutputBoundingBox.x);
+				const unsigned long bboxY = toUnsignedOrZero(segmenterOutputBoundingBox.y);
+				const unsigned long bboxWidth = toUnsignedOrZero(segmenterOutputBoundingBox.width);
+				const unsigned long bboxHeight = toUnsignedOrZero(segmenterOutputBoundingBox.height);
+
+				sourceRoi_.x = bboxX * segmenterRoi_.width / selfieSegmenter_->getWidth() + segmenterRoi_.x;
+				sourceRoi_.y = bboxY * segmenterRoi_.height / selfieSegmenter_->getHeight() + segmenterRoi_.y;
+				sourceRoi_.width = bboxWidth * segmenterRoi_.width / selfieSegmenter_->getWidth();
+				sourceRoi_.height = bboxHeight * segmenterRoi_.height / selfieSegmenter_->getHeight();
 				sourceRoi_.y = static_cast<std::uint64_t>(segmenterOutputBoundingBox.y) *
 						       static_cast<std::uint64_t>(segmenterRoi_.height) /
 						       static_cast<std::uint64_t>(selfieSegmenter_->getHeight()) +
