@@ -187,6 +187,8 @@ This project is built upon and incorporates several open-source components. We a
 - **OpenCV** (License: [Apache-2.0](https://github.com/opencv/opencv/blob/master/LICENSE))
   - Source: [github.com/opencv/opencv](https://github.com/opencv/opencv)
 - **wolfSSL** (License: [GPL-3.0](https://github.com/wolfSSL/wolfssl/blob/master/COPYING))
+- **josuttis-jthread** (License: [MIT](https://github.com/josuttis/jthread/blob/main/LICENSE))
+  - Source: [github.com/josuttis/jthread](https://github.com/josuttis/jthread)
 
 </details>
 
