@@ -20,7 +20,7 @@
 
 #include <cstdint>
 
-namespace KaitoTokyo::LiveBackgroundRemovalLite::SelfieSegmenter {
+namespace KaitoTokyo::SelfieSegmenter {
 
 struct BoundingBox {
 	std::uint32_t x;
@@ -31,4 +31,4 @@ struct BoundingBox {
 	void calculateBoundingBoxFrom256x144(const std::uint8_t *data, std::uint8_t threshold);
 };
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::SelfieSegmenter
+} // namespace KaitoTokyo::SelfieSegmenter

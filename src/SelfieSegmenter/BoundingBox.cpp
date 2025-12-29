@@ -36,7 +36,7 @@
 
 #include <cstddef>
 
-namespace KaitoTokyo::LiveBackgroundRemovalLite::SelfieSegmenter {
+namespace KaitoTokyo::SelfieSegmenter {
 
 namespace {
 
@@ -344,4 +344,4 @@ void BoundingBox::calculateBoundingBoxFrom256x144(const std::uint8_t *data, std:
 #endif
 }
 
-} // namespace KaitoTokyo::LiveBackgroundRemovalLite::SelfieSegmenter
+} // namespace KaitoTokyo::SelfieSegmenter
