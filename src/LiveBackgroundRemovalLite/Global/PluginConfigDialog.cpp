@@ -76,33 +76,34 @@ void PluginConfigDialog::setupUi()
 			QString resourcePath;
 		};
 		const QList<LicenseInfo> licenses = {
-			{tr("Main LICENSE file"), "://live-backgroundremoval-lite-licenses/LICENSE"},
-			{tr("GNU General Public License v3.0 or later"),
+			{"Main LICENSE file", "://live-backgroundremoval-lite-licenses/LICENSE"},
+			{"GNU General Public License v3.0 or later",
 			 "://live-backgroundremoval-lite-licenses/LICENSE.GPL-3.0-or-later"},
-			{tr("MIT License"), "://live-backgroundremoval-lite-licenses/LICENSE.MIT"},
-			{tr("curl"), "://live-backgroundremoval-lite-licenses/curl.txt"},
-			{tr("fmt"), "://live-backgroundremoval-lite-licenses/fmt.txt"},
-			{tr("googletest"), "://live-backgroundremoval-lite-licenses/googletest.txt"},
-			{tr("josuttis-jthread"), "://live-backgroundremoval-lite-licenses/josuttis-jthread.txt"},
-			{tr("ncnn"), "://live-backgroundremoval-lite-licenses/ncnn.txt"},
-			{tr("obs-studio"), "://live-backgroundremoval-lite-licenses/obs-studio.txt"},
-			{tr("qt-lgpl-3.0"), "://live-backgroundremoval-lite-licenses/qt-lgpl-3.0.txt"},
-			{tr("stb"), "://live-backgroundremoval-lite-licenses/stb.txt"},
-			{tr("wolfssl"), "://live-backgroundremoval-lite-licenses/wolfssl.txt"},
-			{tr("zlib"), "://live-backgroundremoval-lite-licenses/zlib.txt"}};
+			{"MIT License", "://live-backgroundremoval-lite-licenses/LICENSE.MIT"},
+			{"curl", "://live-backgroundremoval-lite-licenses/curl.txt"},
+			{"fmt", "://live-backgroundremoval-lite-licenses/fmt.txt"},
+			{"googletest", "://live-backgroundremoval-lite-licenses/googletest.txt"},
+			{"josuttis-jthread", "://live-backgroundremoval-lite-licenses/josuttis-jthread.txt"},
+			{"ncnn", "://live-backgroundremoval-lite-licenses/ncnn.txt"},
+			{"obs-studio", "://live-backgroundremoval-lite-licenses/obs-studio.txt"},
+			{"qt-lgpl-3.0", "://live-backgroundremoval-lite-licenses/qt-lgpl-3.0.txt"},
+			{"stb", "://live-backgroundremoval-lite-licenses/stb.txt"},
+			{"wolfssl", "://live-backgroundremoval-lite-licenses/wolfssl.txt"},
+			{"zlib", "://live-backgroundremoval-lite-licenses/zlib.txt"}};
 		QString text;
-		text += tr("<b>Live Background Removal Lite</b><br>\n");
-		text += tr("Copyright (C) 2025 Kaito Udagawa &lt;umireon@kaito.tokyo&gt;<br>\n");
-		text += tr("<br>\n");
-		text += tr("This software is licensed under the GNU General Public License v3.0 or later.<br>\n");
-		text += tr("See below for included open source licenses.<br><br>\n");
+		text += "<b>Live Background Removal Lite</b><br>\n";
+		text += "Copyright (C) 2025 Kaito Udagawa &lt;umireon@kaito.tokyo&gt;<br>\n";
+		text += "<br>\n";
+		text += "This software is licensed under the GNU General Public License v3.0 or later.<br>\n";
+		text += "See below for included open source licenses.<br><br>\n";
 
 		for (const auto &license : licenses) {
 			QFile file(license.resourcePath);
 			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
 				QTextStream in(&file);
 				QString content = in.readAll();
-				text += tr("<b>%1</b><br><pre>%2</pre><br>").arg(license.name, content.toHtmlEscaped());
+				text += QString("<b>%1</b><br><pre>%2</pre><br>")
+						.arg(license.name, content.toHtmlEscaped());
 			}
 		}
 
