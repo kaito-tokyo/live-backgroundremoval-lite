@@ -114,7 +114,7 @@ void PluginConfigDialog::setupUi()
 		QTextEdit *edit = new QTextEdit(&dlg);
 		edit->setReadOnly(true);
 		edit->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::LinksAccessibleByMouse);
-		edit->setText(text);
+		edit->setHtml(text);
 		layout->addWidget(edit);
 		QDialogButtonBox *box = new QDialogButtonBox(QDialogButtonBox::Close, &dlg);
 		layout->addWidget(box);
