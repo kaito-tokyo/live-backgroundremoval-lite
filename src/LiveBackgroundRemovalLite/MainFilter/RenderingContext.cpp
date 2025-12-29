@@ -281,7 +281,8 @@ void RenderingContext::videoRender()
 						(segmenterRoi_.width == previousSegmenterRoi_.width) &&
 						(segmenterRoi_.height == previousSegmenterRoi_.height);
 
-					// Ensure the sourceRoi fits within the region before applying motion compensation
+					// Ensure the sourceRoi dimensions fit within the region before applying motion compensation
+					// Note: Position (x, y) will be clamped later to keep the entire ROI within bounds
 					const bool sourceRoiFitsInRegion = (sourceRoiWidth <= region_.width) &&
 									   (sourceRoiHeight <= region_.height);
 
@@ -301,6 +302,7 @@ void RenderingContext::videoRender()
 							static_cast<std::int64_t>(sourceRoiY) + deltaY;
 
 						// Clamp to valid region bounds, ensuring the entire ROI fits within the region
+						// Safe to subtract because sourceRoiFitsInRegion guarantees dimensions fit
 						std::int64_t maxX =
 							static_cast<std::int64_t>(region_.width - sourceRoiWidth);
 						std::int64_t maxY =
