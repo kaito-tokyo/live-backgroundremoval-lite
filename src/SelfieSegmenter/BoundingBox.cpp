@@ -218,6 +218,9 @@ checkIfAVX2Available()
 	return (cpuInfo[1] & (1 << 5)) != 0;
 }
 
+#if !defined(_MSC_VER)
+__attribute__((target("avx2")))
+#endif
 inline bool calculateBoundingBoxAVX2256x144(BoundingBox *boundingBox, const std::uint8_t *data, std::uint8_t threshold)
 {
 	constexpr std::uint32_t width = 256;
