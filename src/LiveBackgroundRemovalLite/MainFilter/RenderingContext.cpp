@@ -37,7 +37,7 @@ inline std::uint32_t bit_ceil(std::uint32_t x)
 } // anonymous namespace
 
 BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t width, std::uint32_t height,
-							       enum gs_color_format color_format,
+							   enum gs_color_format color_format,
 							       std::uint32_t flags) const noexcept
 {
 	BridgeUtils::unique_gs_texture_t texture =
@@ -242,8 +242,8 @@ void RenderingContext::videoRender()
 			if (enableCenterFrame) {
 				RenderingContextRegion segmenterOutputBoundingBox{0, 0, 0, 0};
 				const std::uint8_t *segmenterOutputData = selfieSegmenter_->getMask();
-				const int width = selfieSegmenter_->getWidth();
-				const int height = selfieSegmenter_->getHeight();
+				const int width = static_cast<int>(selfieSegmenter_->getWidth());
+				const int height = static_cast<int>(selfieSegmenter_->getHeight());
 
 				int min_x = width;
 				int max_x = -1;
@@ -254,7 +254,7 @@ void RenderingContext::videoRender()
 
 				for (int i = 0; i < height; ++i) {
 					for (int j = 0; j < width; ++j) {
-						std::uint8_t value = segmenterOutputData[i * width + j];
+						std::uint8_t value = segmenterOutputData[static_cast<size_t>(i) * static_cast<size_t>(width) + static_cast<size_t>(j)];
 
 						if (value > 200) {
 							if (j < min_x)
@@ -272,10 +272,10 @@ void RenderingContext::videoRender()
 				}
 
 				if (found) {
-					segmenterOutputBoundingBox.x = min_x;
-					segmenterOutputBoundingBox.y = min_y;
-					segmenterOutputBoundingBox.width = max_x - min_x + 1;
-					segmenterOutputBoundingBox.height = max_y - min_y + 1;
+					segmenterOutputBoundingBox.x = static_cast<std::uint32_t>(min_x);
+					segmenterOutputBoundingBox.y = static_cast<std::uint32_t>(min_y);
+					segmenterOutputBoundingBox.width = static_cast<std::uint32_t>(max_x - min_x + 1);
+					segmenterOutputBoundingBox.height = static_cast<std::uint32_t>(max_y - min_y + 1);
 				}
 
 				auto toUnsignedOrZero = [](auto v) -> unsigned long {
@@ -288,20 +288,20 @@ void RenderingContext::videoRender()
 				const unsigned long bboxWidth = toUnsignedOrZero(segmenterOutputBoundingBox.width);
 				const unsigned long bboxHeight = toUnsignedOrZero(segmenterOutputBoundingBox.height);
 
-				sourceRoi_.x = bboxX * segmenterRoi_.width / selfieSegmenter_->getWidth() + segmenterRoi_.x;
-				sourceRoi_.y = bboxY * segmenterRoi_.height / selfieSegmenter_->getHeight() + segmenterRoi_.y;
-				sourceRoi_.width = bboxWidth * segmenterRoi_.width / selfieSegmenter_->getWidth();
-				sourceRoi_.height = bboxHeight * segmenterRoi_.height / selfieSegmenter_->getHeight();
-				sourceRoi_.y = static_cast<std::uint64_t>(segmenterOutputBoundingBox.y) *
-						       static_cast<std::uint64_t>(segmenterRoi_.height) /
-						       static_cast<std::uint64_t>(selfieSegmenter_->getHeight()) +
-					       static_cast<std::uint64_t>(segmenterRoi_.y);
-				sourceRoi_.width = static_cast<std::uint64_t>(segmenterOutputBoundingBox.width) *
-						   static_cast<std::uint64_t>(segmenterRoi_.width) /
-						   static_cast<std::uint64_t>(selfieSegmenter_->getWidth());
-				sourceRoi_.height = static_cast<std::uint64_t>(segmenterOutputBoundingBox.height) *
-						    static_cast<std::uint64_t>(segmenterRoi_.height) /
-						    static_cast<std::uint64_t>(selfieSegmenter_->getHeight());
+				sourceRoi_.x = static_cast<std::uint32_t>(bboxX * segmenterRoi_.width / selfieSegmenter_->getWidth() + segmenterRoi_.x);
+				sourceRoi_.y = static_cast<std::uint32_t>(bboxY * segmenterRoi_.height / selfieSegmenter_->getHeight() + segmenterRoi_.y);
+				sourceRoi_.width = static_cast<std::uint32_t>(bboxWidth * segmenterRoi_.width / selfieSegmenter_->getWidth());
+				sourceRoi_.height = static_cast<std::uint32_t>(bboxHeight * segmenterRoi_.height / selfieSegmenter_->getHeight());
+				sourceRoi_.y = static_cast<std::uint32_t>(static_cast<std::uint64_t>(segmenterOutputBoundingBox.y) *
+							   static_cast<std::uint64_t>(segmenterRoi_.height) /
+							   static_cast<std::uint64_t>(selfieSegmenter_->getHeight()) +
+							   static_cast<std::uint64_t>(segmenterRoi_.y));
+				sourceRoi_.width = static_cast<std::uint32_t>(static_cast<std::uint64_t>(segmenterOutputBoundingBox.width) *
+								   static_cast<std::uint64_t>(segmenterRoi_.width) /
+								   static_cast<std::uint64_t>(selfieSegmenter_->getWidth()));
+				sourceRoi_.height = static_cast<std::uint32_t>(static_cast<std::uint64_t>(segmenterOutputBoundingBox.height) *
+									static_cast<std::uint64_t>(segmenterRoi_.height) /
+									static_cast<std::uint64_t>(selfieSegmenter_->getHeight()));
 			}
 
 			const std::uint8_t *segmentationMaskData =
