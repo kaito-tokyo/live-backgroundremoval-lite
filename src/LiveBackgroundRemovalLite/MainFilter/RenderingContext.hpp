@@ -109,10 +109,14 @@ public:
 	const std::vector<BridgeUtils::unique_gs_texture_t> r32fMeanSquaredMotionReductionPyramid_;
 	BridgeUtils::AsyncTextureReader r32fReducedMeanSquaredMotionReader_;
 
+	RenderingContextRegion segmenterRoi_;
+
 	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
 	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
 
 	std::vector<std::uint8_t> segmenterInputBuffer_;
+
+	RenderingContextRegion sourceRoi_;
 
 	const BridgeUtils::unique_gs_texture_t r8SegmentationMask_;
 
@@ -142,6 +146,8 @@ private:
 	std::atomic<float> maskUpperBoundMargin_;
 
 	std::atomic<float> timeAveragedFilteringAlpha_;
+
+	std::atomic<bool> enableCenterFrame_;
 
 	std::atomic<bool> shouldNextVideoRenderProcessFrame_ = true;
 

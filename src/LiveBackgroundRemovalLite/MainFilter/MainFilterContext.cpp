@@ -100,6 +100,9 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
 
+	// Removed enableDynamicRoi
+	obs_data_set_default_bool(data, "enableCenterFrame", false);
+
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
 	obs_data_set_default_double(data, "maskLowerBoundAmpDb", defaultProperty.maskLowerBoundAmpDb);
 	obs_data_set_default_double(data, "maskUpperBoundMarginAmpDb", defaultProperty.maskUpperBoundMarginAmpDb);
@@ -195,6 +198,9 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha",
 					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
 
+	// Center Frame
+	obs_properties_add_bool(props, "enableCenterFrame", obs_module_text("enableCenterFrame"));
+
 	// Advanced settings group
 	obs_properties_t *propsAdvancedSettings = obs_properties_create();
 	obs_properties_add_group(props, "advancedSettings", obs_module_text("advancedSettings"), OBS_GROUP_CHECKABLE,
@@ -257,6 +263,8 @@ void MainFilterContext::update(obs_data_t *settings)
 		newPluginProperty.maskUpperBoundMarginAmpDb =
 			obs_data_get_double(settings, "maskUpperBoundMarginAmpDb");
 	}
+
+	newPluginProperty.enableCenterFrame = obs_data_get_bool(settings, "enableCenterFrame");
 
 	std::shared_ptr<RenderingContext> renderingContext;
 	{
