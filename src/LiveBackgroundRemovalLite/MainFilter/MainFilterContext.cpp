@@ -100,7 +100,6 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
 
-	// Removed enableDynamicRoi
 	obs_data_set_default_bool(data, "enableCenterFrame", false);
 
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
