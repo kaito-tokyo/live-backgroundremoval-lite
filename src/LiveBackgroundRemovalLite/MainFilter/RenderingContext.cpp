@@ -244,24 +244,32 @@ void RenderingContext::videoRender()
 				SelfieSegmenter::BoundingBox bb;
 				bb.calculateBoundingBoxFrom256x144(selfieSegmenter_->getMask(), 200);
 
-				sourceRoi_.x = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.x) *
-						static_cast<std::uint64_t>(segmenterRoi_.width) /
-						static_cast<std::uint64_t>(selfieSegmenter_->getWidth()) +
-					static_cast<std::uint64_t>(segmenterRoi_.x));
-				sourceRoi_.y = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.y) *
-						static_cast<std::uint64_t>(segmenterRoi_.height) /
-						static_cast<std::uint64_t>(selfieSegmenter_->getHeight()) +
-					static_cast<std::uint64_t>(segmenterRoi_.y));
-				sourceRoi_.width = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.width) *
-					static_cast<std::uint64_t>(segmenterRoi_.width) /
-					static_cast<std::uint64_t>(selfieSegmenter_->getWidth()));
-				sourceRoi_.height = static_cast<std::uint32_t>(
-					static_cast<std::uint64_t>(bb.height) *
-					static_cast<std::uint64_t>(segmenterRoi_.height) /
-					static_cast<std::uint64_t>(selfieSegmenter_->getHeight()));
+				const std::uint64_t bbX = static_cast<std::uint64_t>(bb.x);
+				const std::uint64_t bbY = static_cast<std::uint64_t>(bb.y);
+				const std::uint64_t bbW = static_cast<std::uint64_t>(bb.width);
+				const std::uint64_t bbH = static_cast<std::uint64_t>(bb.height);
+
+				const std::uint64_t roiX = static_cast<std::uint64_t>(segmenterRoi_.x);
+				const std::uint64_t roiY = static_cast<std::uint64_t>(segmenterRoi_.y);
+				const std::uint64_t roiW = static_cast<std::uint64_t>(segmenterRoi_.width);
+				const std::uint64_t roiH = static_cast<std::uint64_t>(segmenterRoi_.height);
+
+				const std::uint64_t baseW = static_cast<std::uint64_t>(selfieSegmenter_->getWidth());
+				const std::uint64_t baseH = static_cast<std::uint64_t>(selfieSegmenter_->getHeight());
+
+				if (baseW > 0 && baseH > 0) {
+					sourceRoi_.x =
+						static_cast<std::uint32_t>(((bbX * roiW) + (baseW / 2)) / baseW + roiX);
+
+					sourceRoi_.y =
+						static_cast<std::uint32_t>(((bbY * roiH) + (baseH / 2)) / baseH + roiY);
+
+					sourceRoi_.width =
+						static_cast<std::uint32_t>(((bbW * roiW) + (baseW / 2)) / baseW);
+
+					sourceRoi_.height =
+						static_cast<std::uint32_t>(((bbH * roiH) + (baseH / 2)) / baseH);
+				}
 			}
 
 			const std::uint8_t *segmentationMaskData =
@@ -302,17 +310,29 @@ void RenderingContext::videoRender()
 	if (enableCenterFrame) {
 		gs_matrix_push();
 
-		vec3 translate{
-			-static_cast<float>(sourceRoi_.x) + static_cast<float>(region_.width - sourceRoi_.width) / 2.0f,
-			-static_cast<float>(sourceRoi_.y) + static_cast<float>(region_.height - sourceRoi_.height),
-			0.0f};
-		gs_matrix_translate(&translate);
+		float scaleFactor;
+		if (sourceRoi_.width > 0 && sourceRoi_.height > 0) {
+			float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
+			float heightScale = static_cast<float>(region_.height) / static_cast<float>(sourceRoi_.height);
+			scaleFactor = std::min(widthScale, heightScale);
+		} else {
+			scaleFactor = 1.0f;
+		}
 
-		float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
-		float heightScale = static_cast<float>(region_.height) / static_cast<float>(sourceRoi_.height);
-		float scaleFactor = std::min(widthScale, heightScale);
-		vec3 scale{scaleFactor, scaleFactor, 1.0f};
-		gs_matrix_scale(&scale);
+		float displayW = static_cast<float>(sourceRoi_.width) * scaleFactor;
+		float displayH = static_cast<float>(sourceRoi_.height) * scaleFactor;
+
+		float offsetX = (static_cast<float>(region_.width) - displayW) / 2.0f;
+		float offsetY = (static_cast<float>(region_.height) - displayH);
+
+		vec3 vecDest{offsetX, offsetY, 0.0f};
+		gs_matrix_translate(&vecDest);
+
+		vec3 vecScale{scaleFactor, scaleFactor, 1.0f};
+		gs_matrix_scale(&vecScale);
+
+		vec3 vecSource{-static_cast<float>(sourceRoi_.x), -static_cast<float>(sourceRoi_.y), 0.0f};
+		gs_matrix_translate(&vecSource);
 	}
 
 	if (filterLevel == FilterLevel::Passthrough) {
