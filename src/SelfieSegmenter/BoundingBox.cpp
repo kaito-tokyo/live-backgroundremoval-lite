@@ -153,6 +153,10 @@ found_min_x:;
 	}
 found_max_x:;
 
+	if (max_x == -1 && min_x != width) {
+		max_x = min_x;
+	}
+
 	boundingBox->x = min_x;
 	boundingBox->y = min_y;
 	boundingBox->width = max_x - min_x + 1;
