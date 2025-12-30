@@ -4,6 +4,7 @@
         <file alias="LICENSE.GPL-3.0-or-later">../../../LICENSE.GPL-3.0-or-later</file>
         <file alias="LICENSE.MIT">../../../LICENSE.MIT</file>
         <file alias="curl.txt">../../../data/licenses/curl.txt</file>
+        <file alias="exprtk.txt">../../../data/licenses/exprtk.txt</file>
         <file alias="fmt.txt">../../../data/licenses/fmt.txt</file>
         <file alias="googletest.txt">../../../data/licenses/googletest.txt</file>
         <file alias="josuttis-jthread.txt">../../../data/licenses/josuttis-jthread.txt</file>

@@ -178,17 +178,25 @@ This project is built upon and incorporates several open-source components. We a
 <summary>List of Open Source Components</summary>
 
 - **cURL** (License: [curl](https://curl.se/docs/copyright.html))
+  - Source: [github.com/curl/curl](https://github.com/curl/curl)
+- **exprtk** (License: [MIT](https://www.partow.net/programming/exprtk/index.html))
+  - Source: [github.com/ArashPartow/exprtk](https://github.com/ArashPartow/exprtk)
 - **fmt** (License: [MIT](https://github.com/fmtlib/fmt/blob/master/LICENSE.rst))
+  - Source: [github.com/fmtlib/fmt](https://github.com/fmtlib/fmt)
 - **GoogleTest** (License: [BSD-3-Clause](https://github.com/google/googletest/blob/main/LICENSE))
+  - Source: [github.com/google/googletest](https://github.com/google/googletest)
+- **josuttis-jthread** (License: [MIT](https://github.com/josuttis/jthread/blob/main/LICENSE))
+  - Source: [github.com/josuttis/jthread](https://github.com/josuttis/jthread)
 - **MediaPipe Selfie Segmentation** (License: [Apache-2.0](https://opensource.org/licenses/Apache-2.0))
   - Source: [huggingface.co/onnx-community/mediapipe_selfie_segmentation](https://huggingface.co/onnx-community/mediapipe_selfie_segmentation)
 - **ncnn** (License: [BSD-3-Clause](https://github.com/Tencent/ncnn/blob/master/LICENSE.txt))
+  - Source: [github.com/Tencent/ncnn](https://github.com/Tencent/ncnn)
 - **OBS Studio** (License: [GPL-2.0](https://github.com/obsproject/obs-studio/blob/master/COPYING))
+  - Source: [github.com/obsproject/obs-studio](https://github.com/obsproject/obs-studio)
 - **OpenCV** (License: [Apache-2.0](https://github.com/opencv/opencv/blob/master/LICENSE))
   - Source: [github.com/opencv/opencv](https://github.com/opencv/opencv)
 - **wolfSSL** (License: [GPL-3.0](https://github.com/wolfSSL/wolfssl/blob/master/COPYING))
-- **josuttis-jthread** (License: [MIT](https://github.com/josuttis/jthread/blob/main/LICENSE))
-  - Source: [github.com/josuttis/jthread](https://github.com/josuttis/jthread)
+  - Source: [github.com/wolfSSL/wolfssl](https://github.com/wolfSSL/wolfssl)
 
 </details>
 
