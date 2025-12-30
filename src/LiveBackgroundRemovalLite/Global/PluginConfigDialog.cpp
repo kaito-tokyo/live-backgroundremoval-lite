@@ -92,6 +92,7 @@ void PluginConfigDialog::setupUi()
 			{"wolfssl", "://live-backgroundremoval-lite-licenses/wolfssl.txt"},
 			{"zlib", "://live-backgroundremoval-lite-licenses/zlib.txt"},
 		};
+
 		QString text;
 		text += "<b>Live Background Removal Lite</b><br>\n";
 		text += "Copyright (C) 2025 Kaito Udagawa &lt;umireon@kaito.tokyo&gt;<br>\n";
@@ -100,12 +101,13 @@ void PluginConfigDialog::setupUi()
 		text += "See below for included open source licenses.<br><br>\n";
 
 		for (const auto &license : licenses) {
-		QFile file(license.resourcePath);
-		if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-			QTextStream in(&file);
-			QString content = in.readAll();
-			text += QString("<b>%1</b><br><pre>%2</pre><br>").arg(license.name, content.toHtmlEscaped());
-		}
+			QFile file(license.resourcePath);
+			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+				QTextStream in(&file);
+				QString content = in.readAll();
+				text += QString("<b>%1</b><br><pre>%2</pre><br>")
+						.arg(license.name, content.toHtmlEscaped());
+			}
 		}
 
 		QDialog dlg(this);
@@ -121,15 +123,15 @@ void PluginConfigDialog::setupUi()
 		layout->addWidget(box);
 		QObject::connect(box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
 		dlg.exec();
-});
+	});
 
-connect(this, &QDialog::accepted, [this, chkAutoUpdate]() {
-	if (chkAutoUpdate->isChecked()) {
-		pluginConfig_->setAutoCheckForUpdateEnabled();
-	} else {
-		pluginConfig_->setAutoCheckForUpdateDisabled();
-	}
-});
+	connect(this, &QDialog::accepted, [this, chkAutoUpdate]() {
+		if (chkAutoUpdate->isChecked()) {
+			pluginConfig_->setAutoCheckForUpdateEnabled();
+		} else {
+			pluginConfig_->setAutoCheckForUpdateDisabled();
+		}
+	});
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global
