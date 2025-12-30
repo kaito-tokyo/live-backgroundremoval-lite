@@ -81,6 +81,7 @@ void PluginConfigDialog::setupUi()
 			 "://live-backgroundremoval-lite-licenses/LICENSE.GPL-3.0-or-later"},
 			{"MIT License", "://live-backgroundremoval-lite-licenses/LICENSE.MIT"},
 			{"curl", "://live-backgroundremoval-lite-licenses/curl.txt"},
+			{"exprtk", "://live-backgroundremoval-lite-licenses/exprtk.txt"},
 			{"fmt", "://live-backgroundremoval-lite-licenses/fmt.txt"},
 			{"googletest", "://live-backgroundremoval-lite-licenses/googletest.txt"},
 			{"josuttis-jthread", "://live-backgroundremoval-lite-licenses/josuttis-jthread.txt"},
@@ -89,7 +90,8 @@ void PluginConfigDialog::setupUi()
 			{"qt-lgpl-3.0", "://live-backgroundremoval-lite-licenses/qt-lgpl-3.0.txt"},
 			{"stb", "://live-backgroundremoval-lite-licenses/stb.txt"},
 			{"wolfssl", "://live-backgroundremoval-lite-licenses/wolfssl.txt"},
-			{"zlib", "://live-backgroundremoval-lite-licenses/zlib.txt"}};
+			{"zlib", "://live-backgroundremoval-lite-licenses/zlib.txt"},
+		};
 		QString text;
 		text += "<b>Live Background Removal Lite</b><br>\n";
 		text += "Copyright (C) 2025 Kaito Udagawa &lt;umireon@kaito.tokyo&gt;<br>\n";
@@ -98,13 +100,12 @@ void PluginConfigDialog::setupUi()
 		text += "See below for included open source licenses.<br><br>\n";
 
 		for (const auto &license : licenses) {
-			QFile file(license.resourcePath);
-			if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-				QTextStream in(&file);
-				QString content = in.readAll();
-				text += QString("<b>%1</b><br><pre>%2</pre><br>")
-						.arg(license.name, content.toHtmlEscaped());
-			}
+		QFile file(license.resourcePath);
+		if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+			QTextStream in(&file);
+			QString content = in.readAll();
+			text += QString("<b>%1</b><br><pre>%2</pre><br>").arg(license.name, content.toHtmlEscaped());
+		}
 		}
 
 		QDialog dlg(this);
@@ -120,15 +121,15 @@ void PluginConfigDialog::setupUi()
 		layout->addWidget(box);
 		QObject::connect(box, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
 		dlg.exec();
-	});
+});
 
-	connect(this, &QDialog::accepted, [this, chkAutoUpdate]() {
-		if (chkAutoUpdate->isChecked()) {
-			pluginConfig_->setAutoCheckForUpdateEnabled();
-		} else {
-			pluginConfig_->setAutoCheckForUpdateDisabled();
-		}
-	});
+connect(this, &QDialog::accepted, [this, chkAutoUpdate]() {
+	if (chkAutoUpdate->isChecked()) {
+		pluginConfig_->setAutoCheckForUpdateEnabled();
+	} else {
+		pluginConfig_->setAutoCheckForUpdateDisabled();
+	}
+});
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global
