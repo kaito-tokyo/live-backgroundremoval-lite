@@ -6,7 +6,8 @@ include(init)
 project(${PLUGIN_NAME} VERSION ${PLUGIN_VERSION} LANGUAGES C CXX)
 
 option(BUILD_TESTING "Build test cases" ON)
-option(USE_PKGCONFIG "Use pkg-config to find dependencies" OFF)
+option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
+option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
 
 if(MSVC)
   list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/windows")
@@ -55,47 +56,105 @@ elseif(APPLE)
   )
 endif()
 
+if(ENABLE_ASAN)
+  if(MSVC)
+    message(
+      WARNING
+      "ENABLE_ASAN is enabled, but ASan flags are not applied for MSVC due to limited support and incompatible flag syntax."
+    )
+  else()
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+  endif()
+endif()
+
+if(ENABLE_UBSAN)
+  if(MSVC)
+    message(
+      WARNING
+      "ENABLE_UBSAN is enabled, but UBSan flags are not applied for MSVC due to limited support and incompatible flag syntax."
+    )
+  else()
+    add_compile_options(-fsanitize=undefined)
+    add_link_options(-fsanitize=undefined)
+  endif()
+endif()
+
 find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 
 if(VCPKG_TARGET_TRIPLET)
   list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
-
-  find_package(CURL CONFIG REQUIRED)
-  find_package(fmt CONFIG REQUIRED)
-  find_package(ncnn CONFIG REQUIRED)
-  add_library(ncnn::ncnn ALIAS ncnn)
-elseif(USE_PKGCONFIG)
-  find_package(PkgConfig REQUIRED)
-
-  # --- CURL ---
-  pkg_check_modules(PC_CURL REQUIRED libcurl)
-  add_library(CURL::libcurl INTERFACE IMPORTED)
-  target_link_libraries(CURL::libcurl INTERFACE ${PC_CURL_LIBRARIES})
-  target_include_directories(CURL::libcurl INTERFACE ${PC_CURL_INCLUDE_DIRS})
-  target_compile_definitions(CURL::libcurl INTERFACE ${PC_CURL_CFLAGS_OTHER})
-  target_link_directories(CURL::libcurl INTERFACE ${PC_CURL_LIBRARY_DIRS})
-
-  # --- fmt ---
-  pkg_check_modules(PC_FMT REQUIRED fmt)
-  add_library(fmt::fmt INTERFACE IMPORTED)
-  target_link_libraries(fmt::fmt INTERFACE ${PC_FMT_LIBRARIES})
-  target_include_directories(fmt::fmt INTERFACE ${PC_FMT_INCLUDE_DIRS})
-  target_compile_definitions(fmt::fmt INTERFACE ${PC_FMT_CFLAGS_OTHER})
-  target_link_directories(fmt::fmt INTERFACE ${PC_FMT_LIBRARY_DIRS})
-
-  # --- ncnn ---
-  pkg_check_modules(PC_NCNN REQUIRED ncnn)
-  add_library(ncnn::ncnn INTERFACE IMPORTED)
-  target_link_libraries(ncnn::ncnn INTERFACE ${PC_NCNN_LIBRARIES})
-  target_include_directories(ncnn::ncnn INTERFACE ${PC_NCNN_INCLUDE_DIRS})
-  target_compile_definitions(ncnn::ncnn INTERFACE ${PC_NCNN_CFLAGS_OTHER} PREFIXED_NCNN_HEADERS)
-  target_link_directories(ncnn::ncnn INTERFACE ${PC_NCNN_LIBRARY_DIRS})
-else()
-  message(FATAL_ERROR "Either USE_PKGCONFIG or VCPKG_TARGET_TRIPLET must be set.")
 endif()
 
+find_package(PkgConfig QUIET)
+
+# --- CURL ---
+find_package(CURL CONFIG QUIET)
+if(NOT CURL_FOUND)
+  find_package(CURL QUIET)
+endif()
+
+if(NOT CURL_FOUND AND PkgConfig_FOUND)
+  pkg_check_modules(PC_CURL libcurl)
+  if(PC_CURL_FOUND)
+    add_library(CURL::libcurl INTERFACE IMPORTED)
+    target_link_libraries(CURL::libcurl INTERFACE ${PC_CURL_LIBRARIES})
+    target_include_directories(CURL::libcurl INTERFACE ${PC_CURL_INCLUDE_DIRS})
+    target_compile_definitions(CURL::libcurl INTERFACE ${PC_CURL_CFLAGS_OTHER})
+    target_link_directories(CURL::libcurl INTERFACE ${PC_CURL_LIBRARY_DIRS})
+    set(CURL_FOUND TRUE)
+  endif()
+endif()
+
+if(NOT CURL_FOUND)
+  message(FATAL_ERROR "CURL not found via CMake Config or PkgConfig.")
+endif()
+
+# --- fmt ---
+find_package(fmt CONFIG QUIET)
+
+if(NOT fmt_FOUND AND PkgConfig_FOUND)
+  pkg_check_modules(PC_FMT fmt)
+  if(PC_FMT_FOUND)
+    add_library(fmt::fmt INTERFACE IMPORTED)
+    target_link_libraries(fmt::fmt INTERFACE ${PC_FMT_LIBRARIES})
+    target_include_directories(fmt::fmt INTERFACE ${PC_FMT_INCLUDE_DIRS})
+    target_compile_definitions(fmt::fmt INTERFACE ${PC_FMT_CFLAGS_OTHER})
+    target_link_directories(fmt::fmt INTERFACE ${PC_FMT_LIBRARY_DIRS})
+    set(fmt_FOUND TRUE)
+  endif()
+endif()
+
+if(NOT fmt_FOUND)
+  message(FATAL_ERROR "fmt not found via CMake Config or PkgConfig.")
+endif()
+
+# --- ncnn ---
+find_package(ncnn CONFIG QUIET)
+
+if(ncnn_FOUND)
+  if(NOT TARGET ncnn::ncnn)
+    add_library(ncnn::ncnn ALIAS ncnn)
+  endif()
+elseif(PkgConfig_FOUND)
+  pkg_check_modules(PC_NCNN ncnn)
+  if(PC_NCNN_FOUND)
+    add_library(ncnn::ncnn INTERFACE IMPORTED)
+    target_link_libraries(ncnn::ncnn INTERFACE ${PC_NCNN_LIBRARIES})
+    target_include_directories(ncnn::ncnn INTERFACE ${PC_NCNN_INCLUDE_DIRS})
+    target_compile_definitions(ncnn::ncnn INTERFACE ${PC_NCNN_CFLAGS_OTHER} PREFIXED_NCNN_HEADERS)
+    target_link_directories(ncnn::ncnn INTERFACE ${PC_NCNN_LIBRARY_DIRS})
+    set(ncnn_FOUND TRUE)
+  endif()
+endif()
+
+if(NOT ncnn_FOUND)
+  message(FATAL_ERROR "ncnn not found via CMake Config or PkgConfig.")
+endif()
+
+# --- jthread ---
 if(APPLE)
   set(JTHREAD_LIBRARIES jthread::jthread)
   add_subdirectory(vendor/josuttis-jthread)

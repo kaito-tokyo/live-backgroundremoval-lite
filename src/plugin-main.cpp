@@ -111,6 +111,9 @@ void obs_module_unload(void)
 	g_startupController_.reset();
 	g_globalContext_.reset();
 	g_pluginConfig_.reset();
+	if (!g_appTranslator_->isEmpty()) {
+		QCoreApplication::removeTranslator(g_appTranslator_.get());
+	}
 	g_appTranslator_.reset();
 	curl_global_cleanup();
 	Q_CLEANUP_RESOURCE(licenses);

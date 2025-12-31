@@ -22,6 +22,14 @@
    cmake --build --preset macos && cmake --install build_macos --config RelWithDebInfo --prefix ~/Library/Application\ Support/obs-studio/plugins
    ```
 
+## Testing the Plugin with ASan on Mac
+
+1. Run `cmake --preset macos-dev` only if CMake-related changes were made.
+2. Run:
+   ```
+   cmake --build --preset macos-dev && cmake --install build_macos_dev --config RelWithDebInfo --prefix ~/Library/Application\ Support/obs-studio/plugins
+   ```
+
 ## Release Automation
 
 To initiate a new release, the user will instruct Gemini to start the process (e.g., "リリースを開始して" or "リリースしたい"). Gemini will then perform the following steps:
