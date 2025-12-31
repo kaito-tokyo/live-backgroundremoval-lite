@@ -88,12 +88,12 @@ if(VCPKG_TARGET_TRIPLET)
   list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
 endif()
 
-find_package(PkgConfig)
+find_package(PkgConfig QUIET)
 
 # --- CURL ---
-find_package(CURL CONFIG)
+find_package(CURL CONFIG QUIET)
 if(NOT CURL_FOUND)
-  find_package(CURL)
+  find_package(CURL QUIET)
 endif()
 
 if(NOT CURL_FOUND AND PkgConfig_FOUND)
