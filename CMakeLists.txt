@@ -5,7 +5,7 @@ include(init)
 
 project(${PLUGIN_NAME} VERSION ${PLUGIN_VERSION} LANGUAGES C CXX)
 
-option(BUILD_TESTING "Build test cases" ON)
+option(BUILD_TESTING "Build test cases" OFF)
 option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
 
