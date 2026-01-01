@@ -325,16 +325,16 @@ void MainFilterContext::videoTick(float seconds)
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
-		logger_->debug("No parent source found, skipping video tick");
+		logger_->debug("NoParentSourceFound");
 		return;
 	} else if (!obs_source_active(parent)) {
-		logger_->debug("Parent source is not active, skipping video tick");
+		logger_->debug("ParentSourceNotActive");
 		return;
 	}
 
 	obs_source_t *const target = obs_filter_get_target(source_);
 	if (!target) {
-		logger_->debug("No target source found, skipping video tick");
+		logger_->debug("NoTargetSourceFound");
 		return;
 	}
 
@@ -346,16 +346,14 @@ void MainFilterContext::videoTick(float seconds)
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
 
 		if (targetWidth == 0 || targetHeight == 0) {
-			logger_->debug(
-				"Target source has zero width or height, skipping video tick and destroying rendering context");
+			logger_->debug("TargetSourceHasZeroWidthOrHeight");
 			renderingContext_.reset();
 			return;
 		}
 
 		const std::uint32_t minSize = 2 * static_cast<std::uint32_t>(pluginProperty_.subsamplingRate);
 		if (targetWidth < minSize || targetHeight < minSize) {
-			logger_->debug(
-				"Target source is too small for the current subsampling rate, skipping video tick and destroying rendering context");
+			logger_->debug("TargetSourceTooSmall");
 			renderingContext_.reset();
 			return;
 		}
@@ -379,7 +377,7 @@ void MainFilterContext::videoRender()
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
-		logger_->debug("No parent source found, skipping video render");
+		logger_->debug("NoParentSourceFound");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	} else if (!obs_source_active(parent)) {

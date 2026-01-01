@@ -86,8 +86,6 @@ public:
 	std::uint32_t getWidth() const noexcept { return region_.width; }
 	std::uint32_t getHeight() const noexcept { return region_.height; }
 
-	void clearTextures();
-
 private:
 	obs_source_t *const source_;
 	const std::shared_ptr<const Logger::ILogger> logger_;
