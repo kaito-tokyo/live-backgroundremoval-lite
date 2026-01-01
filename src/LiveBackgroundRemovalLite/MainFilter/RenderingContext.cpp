@@ -97,7 +97,8 @@ std::vector<ObsBridgeUtils::unique_gs_texture_t> RenderingContext::createReducti
 
 namespace {
 
-auto createSelfieSegmenter(std::shared_ptr<Global::PluginConfig> pluginConfig) {
+auto createSelfieSegmenter(std::shared_ptr<Global::PluginConfig> pluginConfig)
+{
 	const auto paramPathStr = pluginConfig->getMediaPipeLandscapeSelfieSegmenterParamPath().string();
 	const auto binPathStr = pluginConfig->getMediaPipeLandscapeSelfieSegmenterBinPath().string();
 	return std::make_unique<SelfieSegmenter::NcnnSelfieSegmenter>(paramPathStr.c_str(), binPathStr.c_str());

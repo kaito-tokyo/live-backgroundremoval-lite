@@ -93,8 +93,8 @@ try {
 	std::unique_ptr<Global::PluginConfig> pluginConfigUnique = Global::PluginConfig::load(logger);
 	std::shared_ptr<Global::PluginConfig> pluginConfigShared = std::move(pluginConfigUnique);
 	g_pluginConfig_ = pluginConfigShared;
-	g_globalContext_ = std::make_shared<Global::GlobalContext>(
-		pluginConfigShared, logger, PLUGIN_NAME, PLUGIN_VERSION, latestVersionUrl);
+	g_globalContext_ = std::make_shared<Global::GlobalContext>(pluginConfigShared, logger, PLUGIN_NAME,
+								   PLUGIN_VERSION, latestVersionUrl);
 
 	g_globalContext_->checkForUpdates();
 
