@@ -64,6 +64,10 @@ public:
 
 	obs_properties_t *getProperties();
 	void update(obs_data_t *settings);
+	void activate();
+	void deactivate();
+	void show();
+	void hide();
 
 	void videoTick(float seconds);
 	void videoRender();

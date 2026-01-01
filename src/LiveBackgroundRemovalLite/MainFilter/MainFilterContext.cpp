@@ -110,8 +110,6 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_bool(data, "advancedSettings", false);
 
-	obs_data_set_default_int(data, "numThreads", defaultProperty.numThreads);
-
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
 
 	obs_data_set_default_bool(data, "enableCenterFrame", false);
@@ -218,9 +216,6 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_properties_add_group(props, "advancedSettings", obs_module_text("advancedSettings"), OBS_GROUP_CHECKABLE,
 				 propsAdvancedSettings);
 
-	// Number of threads
-	obs_properties_add_int_slider(propsAdvancedSettings, "numThreads", obs_module_text("numThreads"), 0, 16, 2);
-
 	// Guided filter
 	obs_properties_add_float_slider(propsAdvancedSettings, "guidedFilterEpsPowDb",
 					obs_module_text("guidedFilterEpsPowDb"), -60.0, -20.0, 0.1);
@@ -281,18 +276,6 @@ void MainFilterContext::update(obs_data_t *settings)
 
 		bool doesRenewRenderingContext = false;
 
-		int numThreads;
-		if (advancedSettingsEnabled) {
-			numThreads = obs_data_get_int(settings, "numThreads");
-		} else {
-			numThreads = newPluginProperty.numThreads;
-		}
-
-		if (pluginProperty_.numThreads != numThreads) {
-			doesRenewRenderingContext = true;
-		}
-		newPluginProperty.numThreads = numThreads;
-
 		pluginProperty_ = newPluginProperty;
 		renderingContext = renderingContext_;
 
@@ -310,20 +293,48 @@ void MainFilterContext::update(obs_data_t *settings)
 	}
 }
 
+void MainFilterContext::activate()
+{
+	if (renderingContext_) {
+		renderingContext_->activate();
+	}
+}
+
+void MainFilterContext::deactivate()
+{
+	if (renderingContext_) {
+		renderingContext_->deactivate();
+	}
+}
+
+void MainFilterContext::show()
+{
+	if (renderingContext_) {
+		renderingContext_->show();
+	}
+}
+
+void MainFilterContext::hide()
+{
+	if (renderingContext_) {
+		renderingContext_->hide();
+	}
+}
+
 void MainFilterContext::videoTick(float seconds)
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
-		logger_->debug("No parent source found, skipping video tick");
+		logger_->debug("NoParentSourceFound");
 		return;
 	} else if (!obs_source_active(parent)) {
-		logger_->debug("Parent source is not active, skipping video tick");
+		logger_->debug("ParentSourceNotActive");
 		return;
 	}
 
 	obs_source_t *const target = obs_filter_get_target(source_);
 	if (!target) {
-		logger_->debug("No target source found, skipping video tick");
+		logger_->debug("NoTargetSourceFound");
 		return;
 	}
 
@@ -335,16 +346,14 @@ void MainFilterContext::videoTick(float seconds)
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
 
 		if (targetWidth == 0 || targetHeight == 0) {
-			logger_->debug(
-				"Target source has zero width or height, skipping video tick and destroying rendering context");
+			logger_->debug("TargetSourceHasZeroWidthOrHeight");
 			renderingContext_.reset();
 			return;
 		}
 
 		const std::uint32_t minSize = 2 * static_cast<std::uint32_t>(pluginProperty_.subsamplingRate);
 		if (targetWidth < minSize || targetHeight < minSize) {
-			logger_->debug(
-				"Target source is too small for the current subsampling rate, skipping video tick and destroying rendering context");
+			logger_->debug("TargetSourceTooSmall");
 			renderingContext_.reset();
 			return;
 		}
@@ -368,15 +377,15 @@ void MainFilterContext::videoRender()
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);
 	if (!parent) {
-		logger_->debug("No parent source found, skipping video render");
+		logger_->debug("NoParentSourceFound");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	} else if (!obs_source_active(parent)) {
-		logger_->debug("Parent source is not active, skipping video render");
+		logger_->debug("ParentSourceNotActive");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	} else if (!obs_source_showing(parent)) {
-		logger_->debug("Parent source is not showing, skipping video render");
+		logger_->debug("ParentSourceNotShowing");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	}

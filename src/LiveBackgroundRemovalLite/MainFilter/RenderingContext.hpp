@@ -73,6 +73,11 @@ public:
 			 const std::uint32_t width, const std::uint32_t height, const int numThreads);
 	~RenderingContext() noexcept;
 
+	void activate();
+	void deactivate();
+	void show();
+	void hide();
+
 	void videoTick(float);
 	void videoRender();
 
@@ -153,8 +158,7 @@ private:
 	std::atomic<bool> enableCenterFrame_;
 
 	std::atomic<bool> shouldNextVideoRenderProcessFrame_ = true;
-
-	vec4 blackColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
+	std::atomic<bool> shouldNextVideoRenderForceProcessFrame_ = true;
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
