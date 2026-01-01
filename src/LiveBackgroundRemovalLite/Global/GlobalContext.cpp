@@ -1,6 +1,8 @@
 /*
+ * SPDX-FileCopyrightText: Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
  * Live Background Removal Lite - Global Module
- * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
