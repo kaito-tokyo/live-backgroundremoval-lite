@@ -193,8 +193,7 @@ void DebugWindow::videoRender()
 			currentReader = r8Reader_;
 			currentTexture = renderingContext->r8TimeAveragedMasks_[1].get();
 		} else {
-			logger->warn("DebugWindow::videoRender: Unknown texture selected: {}",
-				     selectedPreviewTextureName);
+			logger->warn("UnknownTextureSelectedError", {{"textureName", selectedPreviewTextureName}});
 			return;
 		}
 	}
@@ -391,7 +390,7 @@ void DebugWindow::updatePreview()
 				       r32fSubPaddedReader->getHeight(), QImage::Format_Grayscale8);
 		}
 	} catch (const std::exception &e) {
-		mainPluginContext->getLogger()->error("Failed to sync and update preview: {}", e.what());
+		mainPluginContext->getLogger()->error("UpdatePreviewTextureReadError", {{"message", e.what()}});
 		return;
 	}
 

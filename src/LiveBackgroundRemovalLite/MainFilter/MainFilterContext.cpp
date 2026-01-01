@@ -40,10 +40,17 @@ namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 MainFilterContext::MainFilterContext(obs_data_t *settings, obs_source_t *source,
 				     std::shared_ptr<Global::PluginConfig> pluginConfig,
 				     std::shared_ptr<Global::GlobalContext> globalContext)
-	: source_{source},
-	  pluginConfig_{std::move(pluginConfig)},
-	  globalContext_{std::move(globalContext)},
-	  logger_(globalContext_->logger_),
+	: source_{source ? source
+			 : throw std::invalid_argument("SourceIsNullError(MainFilterContext::MainFilterContext)")},
+	  pluginConfig_{pluginConfig ? std::move(pluginConfig)
+				     : throw std::invalid_argument(
+					       "PluginConfigIsNullError(MainFilterContext::MainFilterContext)")},
+	  globalContext_{globalContext ? std::move(globalContext)
+				       : throw std::invalid_argument(
+						 "GlobalContextIsNullError(MainFilterContext::MainFilterContext)")},
+	  logger_(globalContext_->getLogger()
+			  ? globalContext_->getLogger()
+			  : throw std::invalid_argument("LoggerIsNullError(MainFilterContext::MainFilterContext)")),
 	  mainEffect_(logger_, unique_obs_module_file("effects/main.effect")),
 	  selfieSegmenterTaskQueue_(logger_, 1)
 {
@@ -113,23 +120,22 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_properties_t *props = obs_properties_create();
 
 	// Update notifier
-	if (!pluginConfig_->disableAutoCheckForUpdate) {
+	if (pluginConfig_->isAutoCheckForUpdateEnabled()) {
 		const char *updateAvailableText = obs_module_text("updateCheckerCheckingError");
 		try {
-			std::string latestVersion = globalContext_->getLatestVersion();
-			if (!latestVersion.empty()) {
-				if (latestVersion == globalContext_->pluginVersion_) {
-					updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
-				} else {
-					updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
-				}
+			std::optional<std::string> latestVersionOpt = globalContext_->getLatestVersion();
+			if (!latestVersionOpt.has_value()) {
+				updateAvailableText = obs_module_text("updateCheckerCheckingPending");
+			} else if (latestVersionOpt.value() == globalContext_->getPluginVersion()) {
+				updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
+			} else {
+				updateAvailableText = obs_module_text("updateCheckerUpdateAvailable");
 			}
 		} catch (const std::exception &e) {
-			logger_->error("Failed to check for updates: {}", e.what());
+			logger_->error("CheckUpdateExceptionError", {{"message", e.what()}});
 		} catch (...) {
-			logger_->error("Failed to check for updates: unknown error");
+			logger_->error("CheckUpdateUnknownExceptionError");
 		}
-		obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 	}
 
 	// Debug button

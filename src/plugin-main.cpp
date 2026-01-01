@@ -21,6 +21,8 @@
 
 #include <obs-module.h>
 
+#include <KaitoTokyo/Logger/ILogger.hpp>
+#include <KaitoTokyo/Logger/NullLogger.hpp>
 #include <KaitoTokyo/ObsBridgeUtils/ObsLogger.hpp>
 
 #include <GlobalContext.hpp>
@@ -52,16 +54,20 @@ OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
 void handleFrontendEvent(enum obs_frontend_event event, void *)
-{
+try {
 	if (event == OBS_FRONTEND_EVENT_FINISHED_LOADING) {
 		if (g_pluginConfig_ && g_startupController_ && g_pluginConfig_->isFirstRun()) {
 			g_startupController_->showFirstRunDialog();
 		}
 	}
+} catch (const std::exception &e) {
+	blog(LOG_ERROR, "[%s] Exception in frontend event handler: %s", PLUGIN_NAME, e.what());
+} catch (...) {
+	blog(LOG_ERROR, "[%s] Unknown exception in frontend event handler", PLUGIN_NAME);
 }
 
 bool obs_module_load(void)
-{
+try {
 	Q_INIT_RESOURCE(resources);
 	Q_INIT_RESOURCE(licenses);
 	curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -79,34 +85,40 @@ bool obs_module_load(void)
 
 	if (g_appTranslator_->load(qmPath)) {
 		QCoreApplication::installTranslator(g_appTranslator_.get());
-		logger->info("loaded translation for locale '{}'", localeStr.toStdString());
+		logger->info("TranslationLoaded", {{"locale", localeStr.toStdString()}});
 	} else {
-		logger->info("no translation found for locale '{}', using default (en-US)", localeStr.toStdString());
+		logger->info("DefaultTranslationLoaded");
 	}
 
-	g_pluginConfig_ = std::make_shared<Global::PluginConfig>(Global::PluginConfig::load(logger));
-
-	g_globalContext_ = std::make_shared<Global::GlobalContext>(PLUGIN_NAME, PLUGIN_VERSION, logger,
-								   latestVersionUrl, g_pluginConfig_);
+	std::unique_ptr<Global::PluginConfig> pluginConfigUnique = Global::PluginConfig::load(logger);
+	std::shared_ptr<Global::PluginConfig> pluginConfigShared = std::move(pluginConfigUnique);
+	g_pluginConfig_ = pluginConfigShared;
+	g_globalContext_ = std::make_shared<Global::GlobalContext>(
+		pluginConfigShared, logger, PLUGIN_NAME, PLUGIN_VERSION, latestVersionUrl);
 
 	g_globalContext_->checkForUpdates();
 
 	g_startupController_ = std::make_shared<StartupUI::StartupController>(g_pluginConfig_, g_globalContext_);
 
 	if (!MainFilter::loadModule(g_pluginConfig_, g_globalContext_)) {
-		logger->error("failed to load plugin");
-		return false;
+		throw std::runtime_error("MainFilterLoadModuleError(obs_module_load)");
 	}
 
 	obs_frontend_add_event_callback(handleFrontendEvent, nullptr);
 
-	logger->info("plugin loaded successfully (version {})", PLUGIN_VERSION);
+	blog(LOG_INFO, "[%s] plugin loaded successfully (version %s)", PLUGIN_NAME, PLUGIN_VERSION);
 	return true;
+} catch (const std::exception &e) {
+	blog(LOG_ERROR, "[%s] %s", PLUGIN_NAME, e.what());
+	blog(LOG_ERROR, "[%s] plugin load failed (version %s): %s", PLUGIN_NAME, PLUGIN_VERSION, e.what());
+	return false;
+} catch (...) {
+	blog(LOG_ERROR, "[%s] plugin load failed (version %s)", PLUGIN_NAME, PLUGIN_VERSION);
+	return false;
 }
 
 void obs_module_unload(void)
 {
-	const std::shared_ptr<const Logger::ILogger> logger = g_globalContext_->logger_;
 	obs_frontend_remove_event_callback(handleFrontendEvent, nullptr);
 	MainFilter::unloadModule();
 	g_startupController_.reset();
@@ -119,5 +131,5 @@ void obs_module_unload(void)
 	curl_global_cleanup();
 	Q_CLEANUP_RESOURCE(licenses);
 	Q_CLEANUP_RESOURCE(resources);
-	logger->info("plugin unloaded");
+	blog(LOG_INFO, "[%s] plugin unloaded", PLUGIN_NAME);
 }

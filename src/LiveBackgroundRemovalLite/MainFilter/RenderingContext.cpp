@@ -109,8 +109,8 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  subsamplingRate_(subsamplingRate),
 	  numThreads_(numThreads),
 	  selfieSegmenter_(std::make_unique<SelfieSegmenter::NcnnSelfieSegmenter>(
-		  pluginConfig_->selfieSegmenterParamPath.c_str(), pluginConfig_->selfieSegmenterBinPath.c_str(),
-		  numThreads)),
+		  pluginConfig_->getMediaPipeLandscapeSelfieSegmenterParamPath().c_str(),
+		  pluginConfig_->getMediaPipeLandscapeSelfieSegmenterBinPath().c_str(), numThreads)),
 	  selfieSegmenterMemoryBlockPool_(
 		  Memory::MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),
 	  region_{0, 0, width, height},
@@ -207,7 +207,7 @@ void RenderingContext::videoRender()
 		try {
 			bgrxSegmenterInputReader_.sync();
 		} catch (const std::exception &e) {
-			logger_->error("Failed to sync texture reader: {}", e.what());
+			logger_->error("TextureSyncError", {{"message", e.what()}});
 		}
 	}
 
@@ -420,7 +420,8 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 	maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_relaxed);
 	enableCenterFrame_.store(pluginProperty.enableCenterFrame, std::memory_order_relaxed);
 
-	logger_->info("PluginPropertySet", {{"key", "filterLevel"}, {"value", std::to_string(newFilterLevel)}});
+	logger_->info("PluginPropertySet",
+		      {{"key", "filterLevel"}, {"value", std::to_string(static_cast<int>(newFilterLevel))}});
 	logger_->info("PluginPropertySet",
 		      {{"key", "motionIntensityThreshold"}, {"value", std::to_string(newMotionIntensityThreshold)}});
 	logger_->info("PluginPropertySet", {{"key", "guidedFilterEps"}, {"value", std::to_string(newGuidedFilterEps)}});
