@@ -49,7 +49,7 @@ void PluginConfigDialog::setupUi()
 
 	auto *chkAutoUpdate = new QCheckBox(tr("Check for updates automatically"), updatesGroup);
 
-	chkAutoUpdate->setChecked(!pluginConfig_->disableAutoCheckForUpdate);
+	chkAutoUpdate->setChecked(pluginConfig_->isAutoCheckForUpdateEnabled());
 
 	updatesLayout->addWidget(chkAutoUpdate);
 	mainLayout->addWidget(updatesGroup);

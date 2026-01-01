@@ -9,13 +9,17 @@
 
 #pragma once
 
+#include <algorithm>
 #include <atomic>
+#include <cstddef>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <memory>
 #include <mutex>
-#include <vector>
 #include <stdexcept>
 #include <string>
-#include <algorithm>
+#include <vector>
 
 #ifdef PREFIXED_NCNN_HEADERS
 #include <ncnn/net.h>
@@ -23,26 +27,60 @@
 #include <net.h>
 #endif
 
+#include <KaitoTokyo/Memory/AlignedAllocator.hpp>
+
 #include "ISelfieSegmenter.hpp"
 #include "MaskBuffer.hpp"
 #include "ShapeConverter.hpp"
 
 namespace KaitoTokyo::SelfieSegmenter {
 
+namespace {
+
+constexpr auto kMaxFileSize = 10 * 1024 * 1024;
+constexpr auto kAlignment = 32;
+
+} // anonymous namespace
+
 class NcnnSelfieSegmenter final : public ISelfieSegmenter {
 public:
-	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int numThreads) : maskBuffer_(kPixelCount)
+	NcnnSelfieSegmenter(const std::filesystem::path &paramPath, const std::filesystem::path &binPath,
+			    int numThreads)
+		: maskBuffer_(kPixelCount)
 	{
 		selfieSegmenterNet_.opt.num_threads = numThreads;
 		selfieSegmenterNet_.opt.use_local_pool_allocator = true;
 		selfieSegmenterNet_.opt.openmp_blocktime = 1;
 
-		if (int ret = selfieSegmenterNet_.load_param(paramPath)) {
-			throw std::runtime_error("Failed to load selfie segmenter param: " + std::to_string(ret));
+		std::uintmax_t paramFileSize = std::filesystem::file_size(paramPath);
+		std::ifstream paramIfs(paramPath, std::ios::binary);
+		if (!paramIfs.is_open()) {
+			throw std::runtime_error("ParamFileOpenError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
+		}
+		std::vector<char> paramBuffer(paramFileSize + 1);
+		if (!paramIfs.read(paramBuffer.data(), paramFileSize)) {
+			throw std::runtime_error("ParamFileReadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
+		}
+		paramIfs.close();
+		paramBuffer[paramFileSize] = '\0';
+
+		if (selfieSegmenterNet_.load_param_mem(paramBuffer.data()) != 0) {
+			throw std::runtime_error("ParamLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 
-		if (int ret = selfieSegmenterNet_.load_model(binPath)) {
-			throw std::runtime_error("Failed to load selfie segmenter bin: " + std::to_string(ret));
+		std::uintmax_t binFileSize = std::filesystem::file_size(binPath);
+		std::ifstream binIfs(binPath, std::ios::binary);
+		if (!binIfs.is_open()) {
+			throw std::runtime_error("BinFileOpenError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
+		}
+		binBuffer_ = std::vector<unsigned char, Memory::AlignedAllocator<unsigned char>>(
+			binFileSize, Memory::AlignedAllocator<unsigned char>(kAlignment));
+		if (!binIfs.read(reinterpret_cast<char *>(binBuffer_.data()), binFileSize)) {
+			throw std::runtime_error("BinFileReadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
+		}
+		binIfs.close();
+		if (selfieSegmenterNet_.load_model(binBuffer_.data()) != static_cast<int>(binFileSize)) {
+			throw std::runtime_error("ModelLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 
 		inputMat_.create(static_cast<int>(getWidth()), static_cast<int>(getHeight()), 3);
@@ -92,6 +130,8 @@ private:
 
 	MaskBuffer maskBuffer_;
 
+	std::vector<unsigned char, Memory::AlignedAllocator<unsigned char>> binBuffer_{
+		0, Memory::AlignedAllocator<unsigned char>(kAlignment)};
 	ncnn::Net selfieSegmenterNet_;
 	ncnn::Mat inputMat_;
 	ncnn::Mat outputMat_;

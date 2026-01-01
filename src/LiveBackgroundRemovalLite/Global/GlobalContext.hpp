@@ -18,19 +18,20 @@
 
 #pragma once
 
+#ifdef __APPLE__
+#include <jthread.hpp>
+#endif
+
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
 #include <thread>
 
-#ifdef __APPLE__
-#include <jthread.hpp>
-#endif
+#include <KaitoTokyo/CurlHelper/CurlHandle.hpp>
+#include <KaitoTokyo/Logger/ILogger.hpp>
 
-#include <ILogger.hpp>
-#include <PluginConfig.hpp>
-#include <Task.hpp>
+#include "PluginConfig.hpp"
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
@@ -42,26 +43,32 @@ namespace jthread_ns = std;
 
 class GlobalContext : public std::enable_shared_from_this<GlobalContext> {
 public:
-	GlobalContext(const char *pluginName, const char *pluginVersion, std::shared_ptr<const Logger::ILogger> logger,
-		      const char *latestVersionUrl, std::shared_ptr<PluginConfig> pluginConfig);
+	GlobalContext(std::shared_ptr<PluginConfig> pluginConfig, std::shared_ptr<const Logger::ILogger> logger,
+		      std::string pluginName, std::string pluginVersion, std::string latestVersionUrl);
 
+	~GlobalContext() noexcept;
+
+	std::string getPluginName() const noexcept;
+	std::string getPluginVersion() const noexcept;
+	std::shared_ptr<const Logger::ILogger> getLogger() const noexcept;
+	std::optional<std::string> getLatestVersion() const;
+
+	void checkForUpdates();
+
+private:
 	const std::string pluginName_;
 	const std::string pluginVersion_;
 	const std::shared_ptr<const Logger::ILogger> logger_;
 	const std::string latestVersionUrl_;
-
-	void checkForUpdates() noexcept;
-	std::string getLatestVersion() const;
-
-private:
 	const std::shared_ptr<PluginConfig> pluginConfig_;
 
-	std::optional<Async::Task<void>> fetchLatestVersionTask_ = std::nullopt;
-	std::string latestVersion_;
 	mutable std::mutex mutex_;
+	CurlHelper::CurlHandle curl_;
 
+	std::optional<std::string> latestVersion_{std::nullopt};
 	jthread_ns::jthread fetchLatestVersionThread_;
-	static Async::Task<void> fetchLatestVersion(std::shared_ptr<GlobalContext> self);
+
+	static void fetchLatestVersionThread(jthread_ns::stop_token stoken, std::shared_ptr<GlobalContext> self);
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

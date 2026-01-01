@@ -18,90 +18,103 @@
 
 #include "GlobalContext.hpp"
 
-#include <cstddef>
 #include <regex>
 #include <string_view>
 #include <utility>
 
 #include <curl/curl.h>
-#include <fmt/format.h>
 
-#include <CurlVectorWriter.hpp>
+#include <KaitoTokyo/CurlHelper/CurlWriteCallback.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
-namespace {
+GlobalContext::GlobalContext(std::shared_ptr<PluginConfig> pluginConfig, std::shared_ptr<const Logger::ILogger> logger,
+			     std::string pluginName, std::string pluginVersion, std::string latestVersionUrl)
+	: pluginName_(std::move(pluginName)),
+	  pluginVersion_(std::move(pluginVersion)),
+	  logger_(logger ? std::move(logger)
+			 : throw std::invalid_argument("LoggerIsNullError(GlobalContext::GlobalContext)")),
+	  latestVersionUrl_(std::move(latestVersionUrl)),
+	  pluginConfig_(pluginConfig
+				? std::move(pluginConfig)
+				: throw std::invalid_argument("PluginConfigIsNullError(GlobalContext::GlobalContext)"))
+{
+}
 
-struct ResumeOnJThread {
-	jthread_ns::jthread &threadStorage;
-
-	bool await_ready() { return false; }
-
-	void await_suspend(std::coroutine_handle<> h)
-	{
-		threadStorage = jthread_ns::jthread([h] { h.resume(); });
+GlobalContext::~GlobalContext() noexcept
+{
+	if (fetchLatestVersionThread_.joinable()) {
+		fetchLatestVersionThread_.request_stop();
+		try {
+			fetchLatestVersionThread_.join();
+		} catch (...) {
+			logger_->error("UnrecoverableError");
+		}
 	}
-
-	void await_resume() {}
 };
 
-} // namespace
-
-GlobalContext::GlobalContext(const char *pluginName, const char *pluginVersion,
-			     std::shared_ptr<const Logger::ILogger> logger, const char *latestVersionUrl,
-			     std::shared_ptr<PluginConfig> pluginConfig)
-	: pluginName_(pluginName),
-	  pluginVersion_(pluginVersion),
-	  logger_(std::move(logger)),
-	  latestVersionUrl_(latestVersionUrl),
-	  pluginConfig_(std::move(pluginConfig))
+std::string GlobalContext::getPluginName() const noexcept
 {
+	return pluginName_;
 }
 
-void GlobalContext::checkForUpdates() noexcept
+std::string GlobalContext::getPluginVersion() const noexcept
 {
-	if (!pluginConfig_->disableAutoCheckForUpdate) {
-		fetchLatestVersionTask_ = fetchLatestVersion(shared_from_this());
-		fetchLatestVersionTask_->start();
-	}
+	return pluginVersion_;
 }
 
-std::string GlobalContext::getLatestVersion() const
+std::shared_ptr<const Logger::ILogger> GlobalContext::getLogger() const noexcept
+{
+	return logger_;
+}
+
+std::optional<std::string> GlobalContext::getLatestVersion() const
 {
 	std::lock_guard lock(mutex_);
 	return latestVersion_;
 }
 
-Async::Task<void> GlobalContext::fetchLatestVersion(std::shared_ptr<GlobalContext> self)
+void GlobalContext::checkForUpdates()
 {
-	std::shared_ptr<const Logger::ILogger> logger = self->logger_;
+	if (pluginConfig_->isAutoCheckForUpdateEnabled()) {
+		fetchLatestVersionThread_ =
+			jthread_ns::jthread(&GlobalContext::fetchLatestVersionThread, shared_from_this());
+	}
+}
 
-	co_await ResumeOnJThread{self->fetchLatestVersionThread_};
+void GlobalContext::fetchLatestVersionThread(jthread_ns::stop_token stoken, std::shared_ptr<GlobalContext> self)
+try {
+	std::vector<char> readBuffer;
 
-	const std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> curl(curl_easy_init(), &curl_easy_cleanup);
-	if (!curl) {
-		logger->error("Failed to initialize CURL for fetching latest version");
-		throw std::runtime_error("InitError(GlobalContext::fetchLatestVersion)");
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_URL, self->latestVersionUrl_.c_str());
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_FOLLOWLOCATION, 2L);
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_MAXFILESIZE, 100L);
+
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_WRITEFUNCTION, CurlHelper::CurlCharVectorWriteCallback);
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_WRITEDATA, &readBuffer);
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_XFERINFODATA, &stoken);
+	curl_easy_setopt(
+		self->curl_.getRaw(), CURLOPT_XFERINFOFUNCTION,
+		+[](void *clientp, curl_off_t, curl_off_t, curl_off_t, curl_off_t) -> int {
+			auto *token = static_cast<jthread_ns::stop_token *>(clientp);
+			return token->stop_requested() ? 1 : 0;
+		});
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_NOPROGRESS, 0L);
+
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_CONNECTTIMEOUT, 10L);
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_TIMEOUT, 60L);
+	curl_easy_setopt(self->curl_.getRaw(), CURLOPT_NOSIGNAL, 1L);
+
+	const CURLcode res = curl_easy_perform(self->curl_.getRaw());
+
+	if (res == CURLE_ABORTED_BY_CALLBACK) {
+		self->logger_->warn("FetchLatestVersionCancelled");
+		return;
 	}
 
-	CurlHelper::CurlVectorWriterBuffer readBuffer;
-
-	curl_easy_setopt(curl.get(), CURLOPT_URL, self->latestVersionUrl_.c_str());
-	curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, CurlHelper::CurlVectorWriter);
-	curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &readBuffer);
-	curl_easy_setopt(curl.get(), CURLOPT_CONNECTTIMEOUT, 10L);
-	curl_easy_setopt(curl.get(), CURLOPT_TIMEOUT, 60L);
-	curl_easy_setopt(curl.get(), CURLOPT_MAXFILESIZE, 100L);
-	curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 1L);
-	curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 2L);
-
-	const CURLcode res = curl_easy_perform(curl.get());
-
 	if (res != CURLE_OK) {
-		logger->error("Failed to fetch latest version from {}: {}", self->latestVersionUrl_,
-			      curl_easy_strerror(res));
-		throw std::runtime_error(
-			fmt::format("NetworkError(GlobalContext::fetchLatestVersion):{}", curl_easy_strerror(res)));
+		self->logger_->error("CurlPerformError", {{"message", curl_easy_strerror(res)}});
+		return;
 	}
 
 	std::size_t len = std::min(readBuffer.size(), std::size_t(100));
@@ -113,17 +126,21 @@ Async::Task<void> GlobalContext::fetchLatestVersion(std::shared_ptr<GlobalContex
 	std::match_results<std::string_view::const_iterator> matches;
 
 	if (!std::regex_match(rawInput.begin(), rawInput.end(), matches, extractPattern)) {
-		logger->error("Invalid version format received: '{}'", rawInput);
-		throw std::runtime_error("InvalidVersionFormat(GlobalContext::fetchLatestVersion)");
+		self->logger_->error("InvalidVersinoFormatError", {{"rawInput", rawInput}});
+		return;
 	}
 
-	std::string_view extractedVersion(rawInput.data() + std::distance(rawInput.begin(), matches[1].first),
-					  static_cast<std::size_t>(matches[1].length()));
+	std::string_view latestVersion(rawInput.data() + std::distance(rawInput.begin(), matches[1].first),
+				       static_cast<std::size_t>(matches[1].length()));
 
-	logger->info("Latest version on Internet is {}", extractedVersion);
+	self->logger_->info("LatestVersionObtained", {{"latestVersion", latestVersion}});
 
 	std::scoped_lock lock(self->mutex_);
-	self->latestVersion_ = extractedVersion;
+	self->latestVersion_ = latestVersion;
+} catch (const std::exception &e) {
+	self->logger_->error("GeneralError", {{"message", e.what()}});
+} catch (...) {
+	self->logger_->error("UnrecoverableError");
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

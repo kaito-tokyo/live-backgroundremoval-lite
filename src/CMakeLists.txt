@@ -4,7 +4,7 @@ add_subdirectory(Memory)
 
 add_subdirectory(CurlHelper)
 add_subdirectory(TaskQueue)
-add_subdirectory(BridgeUtils)
+add_subdirectory(ObsBridgeUtils)
 
 add_subdirectory(SelfieSegmenter)
 

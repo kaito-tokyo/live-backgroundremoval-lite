@@ -23,9 +23,8 @@
 #include <memory>
 #include <mutex>
 
-#include <ILogger.hpp>
-
-#include <ThrottledTaskQueue.hpp>
+#include <KaitoTokyo/Logger/ILogger.hpp>
+#include <KaitoTokyo/TaskQueue/ThrottledTaskQueue.hpp>
 
 #include <GlobalContext.hpp>
 #include <PluginConfig.hpp>

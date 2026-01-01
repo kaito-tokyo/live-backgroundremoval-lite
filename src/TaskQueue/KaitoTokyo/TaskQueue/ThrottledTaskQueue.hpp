@@ -21,7 +21,7 @@
 #include <thread>
 #include <utility>
 
-#include <ILogger.hpp>
+#include <KaitoTokyo/Logger/ILogger.hpp>
 
 namespace KaitoTokyo::TaskQueue {
 
@@ -142,9 +142,9 @@ private:
 			try {
 				queuedTaskOpt->first();
 			} catch (const std::exception &e) {
-				logger_->error("ThrottledTaskQueue: Task threw an exception: {}", e.what());
+				logger_->error("TaskExceptionError", {{"message", e.what()}});
 			} catch (...) {
-				logger_->error("ThrottledTaskQueue: Task threw an unknown exception.");
+				logger_->error("TaskUnknownExceptionError");
 			}
 
 			{

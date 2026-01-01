@@ -16,7 +16,7 @@ foreach(TEST_NAME IN LISTS TEST_LIST)
   )
   target_compile_definitions(
     ${TEST_NAME}
-    PRIVATE DATA_DIR=\"${CMAKE_SOURCE_DIR}/data\" TESTS_DIR=\"${CMAKE_SOURCE_DIR}/tests\" NOMINMAX
+    PRIVATE DATA_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../data\" TESTS_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}/../tests\" NOMINMAX
   )
   gtest_discover_tests(${TEST_NAME} DISCOVERY_MODE PRE_TEST)
 endforeach()

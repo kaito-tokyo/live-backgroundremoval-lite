@@ -26,15 +26,12 @@
 #include <net.h>
 #endif
 
-#include <ILogger.hpp>
-
-#include <AsyncTextureReader.hpp>
-#include <GsUnique.hpp>
-
-#include <MemoryBlockPool.hpp>
-#include <ThrottledTaskQueue.hpp>
-
-#include <ISelfieSegmenter.hpp>
+#include <KaitoTokyo/Logger/ILogger.hpp>
+#include <KaitoTokyo/Memory/MemoryBlockPool.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/AsyncTextureReader.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/GsUnique.hpp>
+#include <KaitoTokyo/SelfieSegmenter/ISelfieSegmenter.hpp>
+#include <KaitoTokyo/TaskQueue/ThrottledTaskQueue.hpp>
 
 #include "MainEffect.hpp"
 #include "PluginConfig.hpp"
@@ -52,16 +49,16 @@ struct RenderingContextRegion {
 class RenderingContext : public std::enable_shared_from_this<RenderingContext> {
 private:
 	[[nodiscard]]
-	BridgeUtils::unique_gs_texture_t makeTexture(std::uint32_t width, std::uint32_t height,
-						     enum gs_color_format color_format,
-						     std::uint32_t flags) const noexcept;
+	ObsBridgeUtils::unique_gs_texture_t makeTexture(std::uint32_t width, std::uint32_t height,
+							enum gs_color_format color_format,
+							std::uint32_t flags) const noexcept;
 
 	[[nodiscard]]
 	RenderingContextRegion getMaskRoiPosition() const noexcept;
 
 	[[nodiscard]]
-	std::vector<BridgeUtils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
-									     std::uint32_t height) const;
+	std::vector<ObsBridgeUtils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
+										std::uint32_t height) const;
 
 public:
 	RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
@@ -99,39 +96,39 @@ public:
 	const RenderingContextRegion subPaddedRegion_;
 	const RenderingContextRegion maskRoi_;
 
-	const BridgeUtils::unique_gs_texture_t bgrxSource_;
-	const BridgeUtils::unique_gs_texture_t r32fLuma_;
+	const ObsBridgeUtils::unique_gs_texture_t bgrxSource_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fLuma_;
 
-	const std::array<BridgeUtils::unique_gs_texture_t, 2> r32fSubLumas_;
+	const std::array<ObsBridgeUtils::unique_gs_texture_t, 2> r32fSubLumas_;
 	std::size_t currentSubLumaIndex_ = 0;
 
-	const BridgeUtils::unique_gs_texture_t r32fSubPaddedSquaredMotion_;
-	const std::vector<BridgeUtils::unique_gs_texture_t> r32fMeanSquaredMotionReductionPyramid_;
-	BridgeUtils::AsyncTextureReader r32fReducedMeanSquaredMotionReader_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fSubPaddedSquaredMotion_;
+	const std::vector<ObsBridgeUtils::unique_gs_texture_t> r32fMeanSquaredMotionReductionPyramid_;
+	ObsBridgeUtils::AsyncTextureReader r32fReducedMeanSquaredMotionReader_;
 
 	RenderingContextRegion segmenterRoi_;
 
-	const BridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
-	BridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
+	const ObsBridgeUtils::unique_gs_texture_t bgrxSegmenterInput_;
+	ObsBridgeUtils::AsyncTextureReader bgrxSegmenterInputReader_;
 
 	std::vector<std::uint8_t> segmenterInputBuffer_;
 
 	RenderingContextRegion sourceRoi_;
 
-	const BridgeUtils::unique_gs_texture_t r8SegmentationMask_;
+	const ObsBridgeUtils::unique_gs_texture_t r8SegmentationMask_;
 
-	const BridgeUtils::unique_gs_texture_t r32fSubGFIntermediate_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFIntermediate_;
 
-	const BridgeUtils::unique_gs_texture_t r32fSubGFSource_;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide_;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanSource_;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSource_;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSq_;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFA_;
-	const BridgeUtils::unique_gs_texture_t r32fSubGFB_;
-	const BridgeUtils::unique_gs_texture_t r8GuidedFilterResult_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFSource_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFMeanGuide_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFMeanSource_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSource_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFMeanGuideSq_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFA_;
+	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFB_;
+	const ObsBridgeUtils::unique_gs_texture_t r8GuidedFilterResult_;
 
-	const std::array<BridgeUtils::unique_gs_texture_t, 2> r8TimeAveragedMasks_;
+	const std::array<ObsBridgeUtils::unique_gs_texture_t, 2> r8TimeAveragedMasks_;
 	std::size_t currentTimeAveragedMaskIndex_ = 0;
 
 private:
