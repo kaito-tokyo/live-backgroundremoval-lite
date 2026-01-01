@@ -381,11 +381,11 @@ void MainFilterContext::videoRender()
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	} else if (!obs_source_active(parent)) {
-		logger_->debug("Parent source is not active, skipping video render");
+		logger_->debug("ParentSourceNotActive");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	} else if (!obs_source_showing(parent)) {
-		logger_->debug("Parent source is not showing, skipping video render");
+		logger_->debug("ParentSourceNotShowing");
 		// Draw nothing to prevent unexpected background disclosure
 		return;
 	}
