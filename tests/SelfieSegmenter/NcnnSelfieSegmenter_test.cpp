@@ -28,11 +28,13 @@
 
 using namespace KaitoTokyo::SelfieSegmenter;
 
-const char kParamPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
-const char kBinPath[] = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
+const std::filesystem::path kParamPath = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
+const std::filesystem::path kBinPath = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
 
 const char kTestImage[] = TESTS_DIR "/SelfieSegmenter/selfie001.jpg";
 const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_ncnn.png";
+
+#include <iostream>
 
 TEST(NcnnSelfieSegmenterTest, Construction)
 {

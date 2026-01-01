@@ -11,20 +11,23 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cstddef>
 #include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include <fstream>
-#include <cstddef>
 
 #ifdef PREFIXED_NCNN_HEADERS
 #include <ncnn/net.h>
 #else
 #include <net.h>
 #endif
+
+#include <KaitoTokyo/Memory/AlignedAllocator.hpp>
 
 #include "ISelfieSegmenter.hpp"
 #include "MaskBuffer.hpp"
@@ -35,26 +38,7 @@ namespace KaitoTokyo::SelfieSegmenter {
 namespace {
 
 constexpr auto kMaxFileSize = 10 * 1024 * 1024;
-
-std::vector<unsigned char> readSmallFileToBuffer(const std::filesystem::path &path)
-{
-	std::uintmax_t fileSize = std::filesystem::file_size(path);
-
-	if (fileSize > kMaxFileSize)
-		throw std::runtime_error("FileSizeTooLargeError(NcnnSelfieSegmenter::readSmallFileToBuffer)");
-
-	std::ifstream file(path, std::ios::binary);
-
-	if (!file.is_open())
-		throw std::runtime_error("FileOpenError(NcnnSelfieSegmenter::readSmallFileToBuffer)");
-
-	std::vector<unsigned char> buffer(fileSize);
-	if (!file.read(reinterpret_cast<char *>(buffer.data()), fileSize)) {
-		throw std::runtime_error("FileReadError(NcnnSelfieSegmenter::readSmallFileToBuffer)");
-	}
-
-	return buffer;
-}
+constexpr auto kAlignment = 32;
 
 } // anonymous namespace
 
@@ -68,13 +52,34 @@ public:
 		selfieSegmenterNet_.opt.use_local_pool_allocator = true;
 		selfieSegmenterNet_.opt.openmp_blocktime = 1;
 
-		std::vector<unsigned char> paramBuffer = readSmallFileToBuffer(paramPath);
-		if (selfieSegmenterNet_.load_param(paramBuffer.data()) != 0) {
+		std::uintmax_t paramFileSize = std::filesystem::file_size(paramPath);
+		std::ifstream paramIfs(paramPath, std::ios::binary);
+		if (!paramIfs.is_open()) {
+			throw std::runtime_error("ParamFileOpenError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
+		}
+		std::vector<char> paramBuffer(paramFileSize + 1);
+		if (!paramIfs.read(paramBuffer.data(), paramFileSize)) {
+			throw std::runtime_error("ParamFileReadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
+		}
+		paramIfs.close();
+		paramBuffer[paramFileSize] = '\0';
+
+		if (selfieSegmenterNet_.load_param_mem(paramBuffer.data()) != 0) {
 			throw std::runtime_error("ParamLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 
-		std::vector<unsigned char> binBuffer = readSmallFileToBuffer(binPath);
-		if (selfieSegmenterNet_.load_model(binBuffer.data()) != 0) {
+		std::uintmax_t binFileSize = std::filesystem::file_size(binPath);
+		std::ifstream binIfs(binPath, std::ios::binary);
+		if (!binIfs.is_open()) {
+			throw std::runtime_error("BinFileOpenError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
+		}
+		binBuffer_ = std::vector<unsigned char, Memory::AlignedAllocator<unsigned char>>(
+			binFileSize, Memory::AlignedAllocator<unsigned char>(kAlignment));
+		if (!binIfs.read(reinterpret_cast<char *>(binBuffer_.data()), binFileSize)) {
+			throw std::runtime_error("BinFileReadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
+		}
+		binIfs.close();
+		if (selfieSegmenterNet_.load_model(binBuffer_.data()) != static_cast<int>(binFileSize)) {
 			throw std::runtime_error("ModelLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 
@@ -125,6 +130,7 @@ private:
 
 	MaskBuffer maskBuffer_;
 
+	std::vector<unsigned char, Memory::AlignedAllocator<unsigned char>> binBuffer_{0, Memory::AlignedAllocator<unsigned char>(kAlignment)};
 	ncnn::Net selfieSegmenterNet_;
 	ncnn::Mat inputMat_;
 	ncnn::Mat outputMat_;
