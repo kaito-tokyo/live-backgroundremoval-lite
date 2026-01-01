@@ -69,12 +69,12 @@ public:
 		selfieSegmenterNet_.opt.openmp_blocktime = 1;
 
 		std::vector<unsigned char> paramBuffer = readSmallFileToBuffer(paramPath);
-		if (int ret = selfieSegmenterNet_.load_param(paramBuffer.data())) {
+		if (selfieSegmenterNet_.load_param(paramBuffer.data()) != 0) {
 			throw std::runtime_error("ParamLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 
 		std::vector<unsigned char> binBuffer = readSmallFileToBuffer(binPath);
-		if (int ret = selfieSegmenterNet_.load_model(binBuffer.data())) {
+		if (selfieSegmenterNet_.load_model(binBuffer.data()) != 0) {
 			throw std::runtime_error("ModelLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 
