@@ -310,6 +310,34 @@ void MainFilterContext::update(obs_data_t *settings)
 	}
 }
 
+void MainFilterContext::activate()
+{
+	if (renderingContext_ ) {
+		renderingContext_->activate();
+	}
+}
+
+void MainFilterContext::deactivate()
+{
+	if (renderingContext_) {
+		renderingContext_->deactivate();
+	}
+}
+
+void MainFilterContext::show()
+{
+	if (renderingContext_) {
+		renderingContext_->show();
+	}
+}
+
+void MainFilterContext::hide()
+{
+	if (renderingContext_) {
+		renderingContext_->hide();
+	}
+}
+
 void MainFilterContext::videoTick(float seconds)
 {
 	obs_source_t *const parent = obs_filter_get_parent(source_);

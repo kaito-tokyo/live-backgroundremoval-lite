@@ -45,6 +45,10 @@ obs_source_info g_mainFilterInfo_ = {.id = "live_backgroundremoval_lite",
 				     .get_defaults = MainFilter::getDefaults,
 				     .get_properties = MainFilter::getProperties,
 				     .update = MainFilter::update,
+				     .activate = MainFilter::activate,
+				     .deactivate = MainFilter::deactivate,
+				     .show = MainFilter::show,
+				     .hide = MainFilter::hide,
 				     .video_tick = MainFilter::videoTick,
 				     .video_render = MainFilter::videoRender};
 
@@ -225,6 +229,122 @@ void update(void *data, obs_data_t *settings) noexcept
 		logger->error("UpdateExceptionError", {{"message", e.what()}});
 	} catch (...) {
 		logger->error("UpdateUnknownExceptionError");
+	}
+}
+
+void activate(void *data) noexcept
+{
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
+
+	if (!data) {
+		logger->error("FilterDataIsNullError");
+		return;
+	}
+
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
+		return;
+	}
+
+	try {
+		(*selfPtr)->activate();
+	} catch (const std::exception &e) {
+		logger->error("ActivateExceptionError", {{"message", e.what()}});
+	} catch (...) {
+		logger->error("ActivateUnknownExceptionError");
+	}
+}
+
+void deactivate(void *data) noexcept
+{
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
+
+	if (!data) {
+		logger->error("FilterDataIsNullError");
+		return;
+	}
+
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
+		return;
+	}
+
+	try {
+		(*selfPtr)->deactivate();
+	} catch (const std::exception &e) {
+		logger->error("DeactivateExceptionError", {{"message", e.what()}});
+	} catch (...) {
+		logger->error("DeactivateUnknownExceptionError");
+	}
+}
+
+void show(void *data) noexcept
+{
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
+
+	if (!data) {
+		logger->error("FilterDataIsNullError");
+		return;
+	}
+
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
+		return;
+	}
+
+	try {
+		(*selfPtr)->show();
+	} catch (const std::exception &e) {
+		logger->error("ShowExceptionError", {{"message", e.what()}});
+	} catch (...) {
+		logger->error("ShowUnknownExceptionError");
+	}
+}
+
+void hide(void *data) noexcept
+{
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
+
+	if (!data) {
+		logger->error("FilterDataIsNullError");
+		return;
+	}
+
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
+		return;
+	}
+
+	try {
+		(*selfPtr)->hide();
+	} catch (const std::exception &e) {
+		logger->error("HideExceptionError", {{"message", e.what()}});
+	} catch (...) {
+		logger->error("HideUnknownExceptionError");
 	}
 }
 

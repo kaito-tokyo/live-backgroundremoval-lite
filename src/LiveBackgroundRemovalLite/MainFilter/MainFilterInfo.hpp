@@ -39,6 +39,11 @@ uint32_t getHeight(void *data) noexcept;
 void getDefaults(obs_data_t *data) noexcept;
 obs_properties_t *getProperties(void *data) noexcept;
 void update(void *data, obs_data_t *settings) noexcept;
+void activate(void *data) noexcept;
+void deactivate(void *data) noexcept;
+void show(void *data) noexcept;
+void hide(void *data) noexcept;
+
 void videoTick(void *data, float seconds) noexcept;
 void videoRender(void *data, gs_effect_t *effect) noexcept;
 

@@ -73,6 +73,11 @@ public:
 			 const std::uint32_t width, const std::uint32_t height, const int numThreads);
 	~RenderingContext() noexcept;
 
+	void activate();
+	void deactivate();
+	void show();
+	void hide();
+
 	void videoTick(float);
 	void videoRender();
 
@@ -80,6 +85,8 @@ public:
 
 	std::uint32_t getWidth() const noexcept { return region_.width; }
 	std::uint32_t getHeight() const noexcept { return region_.height; }
+
+	void clearTextures();
 
 private:
 	obs_source_t *const source_;
@@ -153,8 +160,7 @@ private:
 	std::atomic<bool> enableCenterFrame_;
 
 	std::atomic<bool> shouldNextVideoRenderProcessFrame_ = true;
-
-	vec4 blackColor_ = {0.0f, 0.0f, 0.0f, 1.0f};
+	std::atomic<bool> shouldNextVideoRenderForceProcessFrame_ = true;
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
