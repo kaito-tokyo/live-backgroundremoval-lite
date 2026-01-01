@@ -9,13 +9,16 @@
 
 #pragma once
 
+#include <algorithm>
 #include <atomic>
+#include <filesystem>
 #include <memory>
 #include <mutex>
-#include <vector>
 #include <stdexcept>
 #include <string>
-#include <algorithm>
+#include <vector>
+#include <fstream>
+#include <cstddef>
 
 #ifdef PREFIXED_NCNN_HEADERS
 #include <ncnn/net.h>
@@ -29,20 +32,50 @@
 
 namespace KaitoTokyo::SelfieSegmenter {
 
+namespace {
+
+constexpr auto kMaxFileSize = 10 * 1024 * 1024;
+
+std::vector<unsigned char> readSmallFileToBuffer(const std::filesystem::path &path)
+{
+	std::uintmax_t fileSize = std::filesystem::file_size(path);
+
+	if (fileSize > kMaxFileSize)
+		throw std::runtime_error("FileSizeTooLargeError(NcnnSelfieSegmenter::readSmallFileToBuffer)");
+
+	std::ifstream file(path, std::ios::binary);
+
+	if (!file.is_open())
+		throw std::runtime_error("FileOpenError(NcnnSelfieSegmenter::readSmallFileToBuffer)");
+
+	std::vector<unsigned char> buffer(fileSize);
+	if (!file.read(reinterpret_cast<char *>(buffer.data()), fileSize)) {
+		throw std::runtime_error("FileReadError(NcnnSelfieSegmenter::readSmallFileToBuffer)");
+	}
+
+	return buffer;
+}
+
+} // anonymous namespace
+
 class NcnnSelfieSegmenter final : public ISelfieSegmenter {
 public:
-	NcnnSelfieSegmenter(const char *paramPath, const char *binPath, int numThreads) : maskBuffer_(kPixelCount)
+	NcnnSelfieSegmenter(const std::filesystem::path &paramPath, const std::filesystem::path &binPath,
+			    int numThreads)
+		: maskBuffer_(kPixelCount)
 	{
 		selfieSegmenterNet_.opt.num_threads = numThreads;
 		selfieSegmenterNet_.opt.use_local_pool_allocator = true;
 		selfieSegmenterNet_.opt.openmp_blocktime = 1;
 
-		if (int ret = selfieSegmenterNet_.load_param(paramPath)) {
-			throw std::runtime_error("Failed to load selfie segmenter param: " + std::to_string(ret));
+		std::vector<unsigned char> paramBuffer = readSmallFileToBuffer(paramPath);
+		if (int ret = selfieSegmenterNet_.load_param(paramBuffer.data())) {
+			throw std::runtime_error("ParamLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 
-		if (int ret = selfieSegmenterNet_.load_model(binPath)) {
-			throw std::runtime_error("Failed to load selfie segmenter bin: " + std::to_string(ret));
+		std::vector<unsigned char> binBuffer = readSmallFileToBuffer(binPath);
+		if (int ret = selfieSegmenterNet_.load_model(binBuffer.data())) {
+			throw std::runtime_error("ModelLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 
 		inputMat_.create(static_cast<int>(getWidth()), static_cast<int>(getHeight()), 3);

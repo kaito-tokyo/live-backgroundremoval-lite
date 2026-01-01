@@ -95,17 +95,6 @@ std::vector<ObsBridgeUtils::unique_gs_texture_t> RenderingContext::createReducti
 	return pyramid;
 }
 
-namespace {
-
-auto createSelfieSegmenter(std::shared_ptr<Global::PluginConfig> pluginConfig)
-{
-	const auto paramPathStr = pluginConfig->getMediaPipeLandscapeSelfieSegmenterParamPath().string();
-	const auto binPathStr = pluginConfig->getMediaPipeLandscapeSelfieSegmenterBinPath().string();
-	return std::make_unique<SelfieSegmenter::NcnnSelfieSegmenter>(paramPathStr.c_str(), binPathStr.c_str());
-}
-
-} // anonymous namespace
-
 RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
 				   const MainEffect &mainEffect,
 				   TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
@@ -119,7 +108,9 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  pluginConfig_(pluginConfig),
 	  subsamplingRate_(subsamplingRate),
 	  numThreads_(numThreads),
-	  selfieSegmenter_(createSelfieSegmenter(pluginConfig_)),
+	  selfieSegmenter_(std::make_unique<KaitoTokyo::SelfieSegmenter::NcnnSelfieSegmenter>(
+		  pluginConfig_->getMediaPipeLandscapeSelfieSegmenterParamPath(),
+		  pluginConfig_->getMediaPipeLandscapeSelfieSegmenterBinPath(), numThreads_)),
 	  selfieSegmenterMemoryBlockPool_(
 		  Memory::MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),
 	  region_{0, 0, width, height},
