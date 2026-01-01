@@ -110,8 +110,6 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_bool(data, "advancedSettings", false);
 
-	obs_data_set_default_int(data, "numThreads", defaultProperty.numThreads);
-
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
 
 	obs_data_set_default_bool(data, "enableCenterFrame", false);
@@ -218,9 +216,6 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_properties_add_group(props, "advancedSettings", obs_module_text("advancedSettings"), OBS_GROUP_CHECKABLE,
 				 propsAdvancedSettings);
 
-	// Number of threads
-	obs_properties_add_int_slider(propsAdvancedSettings, "numThreads", obs_module_text("numThreads"), 0, 16, 2);
-
 	// Guided filter
 	obs_properties_add_float_slider(propsAdvancedSettings, "guidedFilterEpsPowDb",
 					obs_module_text("guidedFilterEpsPowDb"), -60.0, -20.0, 0.1);
@@ -280,18 +275,6 @@ void MainFilterContext::update(obs_data_t *settings)
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
 
 		bool doesRenewRenderingContext = false;
-
-		int numThreads;
-		if (advancedSettingsEnabled) {
-			numThreads = obs_data_get_int(settings, "numThreads");
-		} else {
-			numThreads = newPluginProperty.numThreads;
-		}
-
-		if (pluginProperty_.numThreads != numThreads) {
-			doesRenewRenderingContext = true;
-		}
-		newPluginProperty.numThreads = numThreads;
 
 		pluginProperty_ = newPluginProperty;
 		renderingContext = renderingContext_;
