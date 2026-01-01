@@ -169,9 +169,7 @@ void RenderingContext::activate()
 	shouldNextVideoRenderForceProcessFrame_.store(true, std::memory_order_release);
 }
 
-void RenderingContext::deactivate()
-{
-}
+void RenderingContext::deactivate() {}
 
 void RenderingContext::show()
 {
@@ -179,9 +177,7 @@ void RenderingContext::show()
 	shouldNextVideoRenderForceProcessFrame_.store(true, std::memory_order_release);
 }
 
-void RenderingContext::hide()
-{
-}
+void RenderingContext::hide() {}
 
 void RenderingContext::videoTick(float)
 {
@@ -205,8 +201,8 @@ void RenderingContext::videoRender()
 	const float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_.load(std::memory_order_relaxed);
 
 	const bool processingFrame = shouldNextVideoRenderProcessFrame_.exchange(false, std::memory_order_acquire);
-	const bool forceProcessingFrame = shouldNextVideoRenderForceProcessFrame_.exchange(
-		false, std::memory_order_acquire);
+	const bool forceProcessingFrame =
+		shouldNextVideoRenderForceProcessFrame_.exchange(false, std::memory_order_acquire);
 
 	if (processingFrame && filterLevel >= FilterLevel::Passthrough) {
 		mainEffect_.drawSource(bgrxSource_, source_);
@@ -249,7 +245,8 @@ void RenderingContext::videoRender()
 
 	const bool isCurrentMotionIntense = (motionIntensity >= motionIntensityThreshold);
 
-	if (processingFrame && filterLevel >= FilterLevel::Segmentation && (isCurrentMotionIntense || forceProcessingFrame)) {
+	if (processingFrame && filterLevel >= FilterLevel::Segmentation &&
+	    (isCurrentMotionIntense || forceProcessingFrame)) {
 		constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
 		const double targetW = static_cast<double>(selfieSegmenter_->getWidth());
@@ -388,7 +385,8 @@ void RenderingContext::videoRender()
 		gs_matrix_pop();
 	}
 
-	if (processingFrame && filterLevel >= FilterLevel::Segmentation && (isCurrentMotionIntense || forceProcessingFrame)) {
+	if (processingFrame && filterLevel >= FilterLevel::Segmentation &&
+	    (isCurrentMotionIntense || forceProcessingFrame)) {
 		bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
 		hasNewSegmenterInput_ = true;
 

@@ -295,7 +295,7 @@ void MainFilterContext::update(obs_data_t *settings)
 
 void MainFilterContext::activate()
 {
-	if (renderingContext_ ) {
+	if (renderingContext_) {
 		renderingContext_->activate();
 	}
 }
