@@ -16,7 +16,7 @@
 #include <mutex>
 #include <vector>
 
-#include <AlignedAllocator.hpp>
+#include <KaitoTokyo/Memory/AlignedAllocator.hpp>
 
 namespace KaitoTokyo::SelfieSegmenter {
 

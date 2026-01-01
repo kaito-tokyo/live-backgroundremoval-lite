@@ -7,7 +7,7 @@ target_link_libraries(
     OBS::obs-frontend-api
     Qt6::Core
     Qt6::Widgets
-    BridgeUtils
+    ObsBridgeUtils
     SelfieSegmenter
     TaskQueue
     ${CMAKE_PROJECT_NAME}_Global

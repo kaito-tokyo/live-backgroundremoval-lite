@@ -21,9 +21,10 @@
 
 #include <obs-module.h>
 
+#include <KaitoTokyo/ObsBridgeUtils/ObsLogger.hpp>
+
 #include <GlobalContext.hpp>
 #include <MainFilterInfo.hpp>
-#include <ObsLogger.hpp>
 #include <PluginConfig.hpp>
 #include <StartupController.hpp>
 
@@ -66,7 +67,7 @@ bool obs_module_load(void)
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	const std::shared_ptr<const Logger::ILogger> logger =
-		std::make_shared<BridgeUtils::ObsLogger>("[" PLUGIN_NAME "]");
+		std::make_shared<ObsBridgeUtils::ObsLogger>("[" PLUGIN_NAME "]");
 
 	const char *obsLocale = obs_get_locale();
 	QString localeStr = QString::fromUtf8(obsLocale ? obsLocale : "en-US");

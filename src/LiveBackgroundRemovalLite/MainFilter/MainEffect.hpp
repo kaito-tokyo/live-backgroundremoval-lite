@@ -18,10 +18,9 @@
 
 #include <obs.h>
 
-#include <ILogger.hpp>
-
-#include <GsUnique.hpp>
-#include <ObsUnique.hpp>
+#include <KaitoTokyo/Logger/ILogger.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/GsUnique.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/ObsUnique.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
@@ -63,7 +62,7 @@ struct TextureRenderGuard {
 	gs_zstencil_t *previousZStencil;
 	gs_color_space previousColorSpace;
 
-	explicit TextureRenderGuard(const BridgeUtils::unique_gs_texture_t &targetTexture)
+	explicit TextureRenderGuard(const ObsBridgeUtils::unique_gs_texture_t &targetTexture)
 		: previousRenderTarget(gs_get_render_target()),
 		  previousZStencil(gs_get_zstencil_target()),
 		  previousColorSpace(gs_get_color_space())
@@ -110,9 +109,9 @@ private:
 	}
 
 public:
-	MainEffect(std::shared_ptr<const Logger::ILogger> logger, const BridgeUtils::unique_bfree_char_t &effectPath)
+	MainEffect(std::shared_ptr<const Logger::ILogger> logger, const ObsBridgeUtils::unique_bfree_char_t &effectPath)
 		: logger_(std::move(logger)),
-		  gsEffect_(BridgeUtils::make_unique_gs_effect_from_file(effectPath)),
+		  gsEffect_(ObsBridgeUtils::make_unique_gs_effect_from_file(effectPath)),
 		  textureImage_(getEffectParam("image")),
 		  floatTexelWidth_(getEffectParam("texelWidth")),
 		  floatTexelHeight_(getEffectParam("texelHeight")),
@@ -132,7 +131,7 @@ public:
 	MainEffect &operator=(const MainEffect &) = delete;
 	MainEffect &operator=(MainEffect &&) = delete;
 
-	void drawSource(const BridgeUtils::unique_gs_texture_t &targetTexture,
+	void drawSource(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
 			obs_source_t *const source) const noexcept
 	{
 		TextureRenderGuard textureRenderGuard(targetTexture);
@@ -149,8 +148,8 @@ public:
 		}
 	}
 
-	void drawRoi(const BridgeUtils::unique_gs_texture_t &targetTexture,
-		     const BridgeUtils::unique_gs_texture_t &sourceTexture, const vec4 *color,
+	void drawRoi(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+		     const ObsBridgeUtils::unique_gs_texture_t &sourceTexture, const vec4 *color,
 		     const std::uint32_t width = 0, const std::uint32_t height = 0, const float x = 0.0f,
 		     const float y = 0.0f) const noexcept
 	{
@@ -166,8 +165,8 @@ public:
 		}
 	}
 
-	void convertToLuma(const BridgeUtils::unique_gs_texture_t &targetTexture,
-			   const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
+	void convertToLuma(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+			   const ObsBridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
@@ -177,8 +176,8 @@ public:
 		}
 	}
 
-	void resampleByNearestR8(const BridgeUtils::unique_gs_texture_t &targetTexture,
-				 const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
+	void resampleByNearestR8(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+				 const ObsBridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
@@ -188,9 +187,9 @@ public:
 		}
 	}
 
-	void calculateSquaredMotion(const BridgeUtils::unique_gs_texture_t &targetTexture,
-				    const BridgeUtils::unique_gs_texture_t &currentLumaTexture,
-				    const BridgeUtils::unique_gs_texture_t &lastLumaTexture) const noexcept
+	void calculateSquaredMotion(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+				    const ObsBridgeUtils::unique_gs_texture_t &currentLumaTexture,
+				    const ObsBridgeUtils::unique_gs_texture_t &lastLumaTexture) const noexcept
 	{
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
@@ -201,10 +200,10 @@ public:
 		}
 	}
 
-	void reduce(const std::vector<BridgeUtils::unique_gs_texture_t> &reductionPyramidTextures,
-		    const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
+	void reduce(const std::vector<ObsBridgeUtils::unique_gs_texture_t> &reductionPyramidTextures,
+		    const ObsBridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
-		using BridgeUtils::unique_gs_texture_t;
+		using ObsBridgeUtils::unique_gs_texture_t;
 
 		gs_texture_t *currentSourceTexture = sourceTexture.get();
 
@@ -223,9 +222,9 @@ public:
 		}
 	}
 
-	void applyBoxFilterR8KS17(const BridgeUtils::unique_gs_texture_t &targetTexture,
-				  const BridgeUtils::unique_gs_texture_t &sourceTexture,
-				  const BridgeUtils::unique_gs_texture_t &intermediateTexture) const noexcept
+	void applyBoxFilterR8KS17(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+				  const ObsBridgeUtils::unique_gs_texture_t &sourceTexture,
+				  const ObsBridgeUtils::unique_gs_texture_t &intermediateTexture) const noexcept
 	{
 		{
 			TextureRenderGuard renderTargetGuard(intermediateTexture);
@@ -252,10 +251,10 @@ public:
 		}
 	}
 
-	void applyBoxFilterWithMulR8KS17(const BridgeUtils::unique_gs_texture_t &targetTexture,
-					 const BridgeUtils::unique_gs_texture_t &sourceTexture1,
-					 const BridgeUtils::unique_gs_texture_t &sourceTexture2,
-					 const BridgeUtils::unique_gs_texture_t &intermediateTexture) const noexcept
+	void applyBoxFilterWithMulR8KS17(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+					 const ObsBridgeUtils::unique_gs_texture_t &sourceTexture1,
+					 const ObsBridgeUtils::unique_gs_texture_t &sourceTexture2,
+					 const ObsBridgeUtils::unique_gs_texture_t &intermediateTexture) const noexcept
 	{
 		{
 			TextureRenderGuard renderTargetGuard(intermediateTexture);
@@ -283,9 +282,9 @@ public:
 		}
 	}
 
-	void applyBoxFilterWithSqR8KS17(const BridgeUtils::unique_gs_texture_t &targetTexture,
-					const BridgeUtils::unique_gs_texture_t &sourceTexture,
-					const BridgeUtils::unique_gs_texture_t &intermediateTexture) const noexcept
+	void applyBoxFilterWithSqR8KS17(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+					const ObsBridgeUtils::unique_gs_texture_t &sourceTexture,
+					const ObsBridgeUtils::unique_gs_texture_t &intermediateTexture) const noexcept
 	{
 		{
 			TextureRenderGuard renderTargetGuard(intermediateTexture);
@@ -312,12 +311,12 @@ public:
 		}
 	}
 
-	void calculateGuidedFilterAAndB(const BridgeUtils::unique_gs_texture_t &targetATexture,
-					const BridgeUtils::unique_gs_texture_t &targetBTexture,
-					const BridgeUtils::unique_gs_texture_t &sourceMeanGuideSqTexture,
-					const BridgeUtils::unique_gs_texture_t &sourceMeanGuideTexture,
-					const BridgeUtils::unique_gs_texture_t &sourceMeanGuideSourceTexture,
-					const BridgeUtils::unique_gs_texture_t &sourceMeanSourceTexture,
+	void calculateGuidedFilterAAndB(const ObsBridgeUtils::unique_gs_texture_t &targetATexture,
+					const ObsBridgeUtils::unique_gs_texture_t &targetBTexture,
+					const ObsBridgeUtils::unique_gs_texture_t &sourceMeanGuideSqTexture,
+					const ObsBridgeUtils::unique_gs_texture_t &sourceMeanGuideTexture,
+					const ObsBridgeUtils::unique_gs_texture_t &sourceMeanGuideSourceTexture,
+					const ObsBridgeUtils::unique_gs_texture_t &sourceMeanSourceTexture,
 					const float eps) const noexcept
 	{
 		{
@@ -347,10 +346,10 @@ public:
 		}
 	}
 
-	void finalizeGuidedFilter(const BridgeUtils::unique_gs_texture_t &targetTexture,
-				  const BridgeUtils::unique_gs_texture_t &sourceGuideTexture,
-				  const BridgeUtils::unique_gs_texture_t &sourceATexture,
-				  const BridgeUtils::unique_gs_texture_t &sourceBTexture) const noexcept
+	void finalizeGuidedFilter(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+				  const ObsBridgeUtils::unique_gs_texture_t &sourceGuideTexture,
+				  const ObsBridgeUtils::unique_gs_texture_t &sourceATexture,
+				  const ObsBridgeUtils::unique_gs_texture_t &sourceBTexture) const noexcept
 	{
 		TextureRenderGuard renderTargetGuard(targetTexture);
 
@@ -363,9 +362,9 @@ public:
 		}
 	}
 
-	void timeAveragedFiltering(const BridgeUtils::unique_gs_texture_t &targetTexture,
-				   const BridgeUtils::unique_gs_texture_t &previousMaskTexture,
-				   const BridgeUtils::unique_gs_texture_t &sourceTexture,
+	void timeAveragedFiltering(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+				   const ObsBridgeUtils::unique_gs_texture_t &previousMaskTexture,
+				   const ObsBridgeUtils::unique_gs_texture_t &sourceTexture,
 				   const float alpha) const noexcept
 	{
 		TextureRenderGuard textureRenderGuard(targetTexture);
@@ -379,7 +378,7 @@ public:
 		}
 	}
 
-	void directDraw(const BridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
+	void directDraw(const ObsBridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
 		while (gs_effect_loop(gsEffect_.get(), "Draw")) {
 			gs_effect_set_texture(textureImage_, sourceTexture.get());
@@ -387,8 +386,8 @@ public:
 		}
 	}
 
-	void directDrawWithMask(const BridgeUtils::unique_gs_texture_t &sourceTexture,
-				const BridgeUtils::unique_gs_texture_t &maskTexture) const noexcept
+	void directDrawWithMask(const ObsBridgeUtils::unique_gs_texture_t &sourceTexture,
+				const ObsBridgeUtils::unique_gs_texture_t &maskTexture) const noexcept
 	{
 		while (gs_effect_loop(gsEffect_.get(), "DrawWithMask")) {
 			gs_effect_set_texture(textureImage_, sourceTexture.get());
@@ -397,8 +396,8 @@ public:
 		}
 	}
 
-	void directDrawWithRefinedMask(const BridgeUtils::unique_gs_texture_t &sourceTexture,
-				       const BridgeUtils::unique_gs_texture_t &maskTexture, const double gamma,
+	void directDrawWithRefinedMask(const ObsBridgeUtils::unique_gs_texture_t &sourceTexture,
+				       const ObsBridgeUtils::unique_gs_texture_t &maskTexture, const double gamma,
 				       const double lowerBound, const double upperBoundMargin) const noexcept
 	{
 		while (gs_effect_loop(gsEffect_.get(), "DrawWithRefinedMask")) {
@@ -414,7 +413,7 @@ public:
 	}
 
 	const std::shared_ptr<const Logger::ILogger> logger_;
-	const BridgeUtils::unique_gs_effect_t gsEffect_ = nullptr;
+	const ObsBridgeUtils::unique_gs_effect_t gsEffect_ = nullptr;
 
 	gs_eparam_t *const textureImage_ = nullptr;
 

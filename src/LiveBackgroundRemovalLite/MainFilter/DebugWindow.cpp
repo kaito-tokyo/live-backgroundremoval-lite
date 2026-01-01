@@ -22,12 +22,12 @@
 #include <QTimer>
 #include <QDebug>
 
-#include <AsyncTextureReader.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/AsyncTextureReader.hpp>
 
 #include "MainFilterContext.hpp"
 #include "RenderingContext.hpp"
 
-using namespace KaitoTokyo::BridgeUtils;
+using namespace KaitoTokyo::ObsBridgeUtils;
 
 namespace {
 

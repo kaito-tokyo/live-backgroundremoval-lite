@@ -1,6 +1,8 @@
 /*
+ * SPDX-FileCopyrightText: Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
+ * SPDX-License-Identifier: MIT
+ *
  * KaitoTokyo Async Library
- * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,77 +27,61 @@
 
 /**
  * =============================================================================
- * KAITOTOKYO ASYNC LIBRARY - INTERNAL API DOCUMENTATION
+ * KAITOTOKYO ASYNC LIBRARY - GENERAL PURPOSE TASK
  * =============================================================================
  *
- * @section WARNING CRITICAL USAGE WARNING
+ * @brief High-Performance, General-Purpose C++20 Coroutine Task
  *
- * This library provides a zero-overhead, allocation-aware coroutine mechanism
- * designed for precise memory control. Unlike general-purpose async libraries,
- * it DOES NOT manage lifecycles automatically via reference counting.
+ * This header defines `Task<T>`, the standard unit of asynchronous work for
+ * this library. It is designed to be the default choice for general usage,
+ * balancing ease of use with maximum runtime performance.
  *
- * @brief THE "POWER USER" CONTRACT
+ * @section PERFORMANCE Performance Characteristics
  *
- * By using this library, you agree to the following STRICT contracts.
- * Failure to adhere to these rules will result in `std::terminate`, memory corruption,
- * or undefined behavior.
+ * 1. **Optimized Execution**: Beyond the initial memory allocation, the execution
+ * model is zero-overhead. It utilizes **Symmetric Transfer** to switch contexts,
+ * preventing stack overflows during deep recursion and minimizing CPU cycles.
+ * 2. **Standard Allocation**: This implementation uses standard heap allocation
+ * (`operator new`) for the coroutine frame. This ensures compatibility with
+ * standard C++ memory models.
  *
- * 1. **EXPLICIT OWNERSHIP**: The `Task` object uniquely owns the coroutine frame.
- * 2. **NO FIRE-AND-FORGET**: If a `Task` object goes out of scope, the coroutine
- * is immediately destroyed (cancelled). You MUST keep the `Task` object alive
- * until the operation completes.
- * 3. **STRICT STORAGE HIERARCHY**: When using `TaskStorage`, the storage object
- * MUST strictly outlive the `Task` created from it.
- * 4. **ALLOCATOR ARGUMENT REQUIREMENT**:
- * To enable the custom allocation mechanism, every coroutine function returning
- * a `Task` MUST accept `std::allocator_arg_t` as the first argument and
- * a reference to a `TaskAllocator` (e.g., `TaskStorage&`) as the second argument.
- * Failure to do so will result in a compilation error regarding `operator new`.
+ * @section LIFECYCLE Ownership & Destruction
  *
- * Example:
+ * This library enforces strict **unique ownership** (RAII):
+ *
+ * 1. **Resource Management**: The `Task` object owns the coroutine frame.
+ * 2. **Destruction**: When the `Task` object is destroyed (e.g., goes out of scope
+ * or is assigned `Task{}`), the coroutine frame is immediately deallocated.
+ * 3. **Effect of Destruction**:
+ * - **If Suspended**: The coroutine is effectively cancelled because it can
+ * no longer be resumed. Local variables in the coroutine are destructed.
+ * - **If Running**: DO NOT destroy the `Task` object while the coroutine is
+ * executing instructions (e.g., on another thread). This causes a
+ * Use-After-Free error.
+ *
+ * @section EXAMPLE Usage
+ *
  * @code
- * Task<int> my_coroutine(std::allocator_arg_t, TaskStorage<>& storage, int arg1) {
- * co_return arg1 * 2;
+ * // A standard async function
+ * Task<int> calculate_async(int value) {
+ *         co_return value * 2;
+ * }
+ *
+ * int main() {
+ *         Task<int> task; // Default constructible (empty state)
+ *         task = calculate_async(10); // Move assignment
+ *         task.start(); // Kick off execution manually
+ *
+ *         return 0;
  * }
  * @endcode
- *
- * @section STACK_USAGE STACK CONSUMPTION WARNING
- *
- * `TaskStorage` reserves a fixed memory block directly inline (Default: 4KB in Release,
- * 32KB in Debug).
- *
- * - **Avoid Recursive Stack Allocation**: Instantiating `TaskStorage` as a local
- * variable (automatic storage duration) inside a recursive function will rapidly
- * cause a Stack Overflow due to the cumulative size.
- * - **Placement Strategy**: Users are strongly encouraged to use `static`,
- * `thread_local`, or external lifetime management (e.g., as a member of a
- * heap-allocated object) rather than placing storage on the transient call stack
- * unless the recursion depth is strictly bounded.
- *
- * @section THREAD_SAFETY THREAD SAFETY AND EXECUTION MODEL
- *
- * - **Cross-Thread Execution**: It is explicitly permitted for the thread that calls
- * `Task::start()` to be different from the thread that `co_await`s the result.
- * The library is designed to allow the task to migrate or be awaited across
- * thread boundaries, provided that ownership of the `Task` object is correctly managed.
- * - **Synchronization**: While the `Task` object itself manages the lifecycle,
- * users must ensure appropriate memory visibility when accessing shared state
- * outside the task's return value.
- *
- * Use this library only when standard dynamic allocation is unacceptable and
- * you can guarantee the lifetime hierarchy of your objects.
  * =============================================================================
  */
 
-#include <atomic>
-#include <concepts>
 #include <coroutine>
-#include <cstddef>
 #include <exception>
 #include <memory>
-#include <new>
 #include <stdexcept>
-#include <string>
 #include <utility>
 #include <variant>
 
@@ -103,6 +89,8 @@ namespace KaitoTokyo::Async {
 
 // -----------------------------------------------------------------------------
 // SymmetricTransfer
+// Implements symmetric control transfer to allow tail-call optimization
+// in the coroutine state machine, preventing stack overflow in deep chains.
 // -----------------------------------------------------------------------------
 
 template<typename PromiseType> struct TaskSymmetricTransfer {
@@ -121,7 +109,7 @@ template<typename PromiseType> struct TaskSymmetricTransfer {
 };
 
 // -----------------------------------------------------------------------------
-// Task
+// Promise Types
 // -----------------------------------------------------------------------------
 
 template<typename T> struct TaskPromiseBase {
@@ -146,7 +134,7 @@ template<typename T> struct TaskPromiseBase {
 
 template<> struct TaskPromiseBase<void> {
 	// Index 0: std::monostate (Running/Not Ready)
-	// Index 1: std::monostate (Done/Void Result) - used_ as a flag for completion
+	// Index 1: std::monostate (Done/Void Result)
 	// Index 2: std::exception_ptr (Error)
 	std::variant<std::monostate, std::monostate, std::exception_ptr> result_;
 
@@ -162,28 +150,22 @@ template<> struct TaskPromiseBase<void> {
 		} else if (result_.index() == 0) {
 			throw std::logic_error("Task result is not ready. Do not await a running task.");
 		}
-		// Index 1 means success (void), simply return.
 	}
 };
 
 /**
- * @brief A unique-ownership coroutine task.
+ * @brief The standard coroutine task for asynchronous operations.
  *
  * @details
- * This class implements a strict RAII (Resource Acquisition Is Initialization) model
- * for coroutines. It does not support shared ownership or detachment.
+ * This task is lazy (does not start until awaited or explicitly started) and
+ * strictly manages the lifecycle of the coroutine frame via RAII.
  *
- * @warning **FIRE-AND-FORGET PROHIBITED**
- * You MUST store the returned `Task` object. If the `Task` object is destroyed
- * (e.g., goes out of scope) while the coroutine is suspended, the coroutine
- * frame is immediately destroyed and execution is cancelled.
- *
- * @warning **NO AUTOMATIC START**
- * Tasks are lazy. They do not start executing until you explicitly call `.start()`
- * or `co_await` them.
+ * It is optimized for runtime performance using symmetric transfer mechanics,
+ * making it suitable for high-frequency async operations where standard
+ * allocation overhead is acceptable.
  */
 template<typename T>
-struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object to keep the coroutine alive.")]] Task {
+struct [[nodiscard("Task objects own the running coroutine. Do not discard without awaiting or storing.")]] Task {
 	struct promise_type : TaskPromiseBase<T> {
 		std::coroutine_handle<> continuation = nullptr;
 
@@ -193,17 +175,23 @@ struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object
 		auto final_suspend() noexcept { return TaskSymmetricTransfer<promise_type>{}; }
 	};
 
+	// Default constructor creates an empty task.
+	Task() noexcept : handle(nullptr) {}
+
 	explicit Task(std::coroutine_handle<promise_type> h) : handle(h) {}
 
-	// Destructor enforces strict lifecycle management.
-	~Task()
+	// Destructor: Automatically destroys the coroutine frame (cancellation).
+	~Task() noexcept
 	{
 		if (handle)
 			handle.destroy();
 	}
 
+	// Disable copying to enforce unique ownership.
 	Task(const Task &) = delete;
 	Task &operator=(const Task &) = delete;
+
+	// Enable moving to transfer ownership.
 	Task(Task &&other) noexcept : handle(other.handle) { other.handle = nullptr; }
 	Task &operator=(Task &&other) noexcept
 	{
@@ -216,7 +204,13 @@ struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object
 		return *this;
 	}
 
-	[[nodiscard]] bool await_ready() { return handle.done(); }
+	/**
+	 * @brief Checks if the task object currently owns a valid coroutine.
+	 * @return true if the task is valid, false if it is empty.
+	 */
+	explicit operator bool() const noexcept { return handle != nullptr; }
+
+	[[nodiscard]] bool await_ready() const noexcept { return !handle || handle.done(); }
 
 	std::coroutine_handle<> await_suspend(std::coroutine_handle<> caller)
 	{
@@ -227,16 +221,12 @@ struct [[nodiscard("PROHIBITED: Fire-and-Forget. You must store this Task object
 	T await_resume() { return handle.promise().extract_value(); }
 
 	/**
-	 * @brief Kicks off the root task execution.
+	 * @brief Explicitly starts the task.
 	 *
-	 * @warning **LIFETIME HAZARD**
-	 * Calling `start()` DOES NOT detach the task. You must continue to hold the
-	 * `Task` object after calling `start()`. If the `Task` object is destroyed
-	 * immediately after `start()`, the coroutine will be aborted before it finishes.
-	 *
-	 * @warning **SINGLE EXECUTION ONLY**
-	 * This method must be called exactly once. Calling `start()` on a task that
-	 * has already been started (whether running or suspended) is undefined behavior.
+	 * Use this method when the task is the root of an execution chain
+	 * (e.g., called from main() or a synchronous event handler).
+	 * If the task is being awaited by another coroutine, this call is not needed.
+	 * @note Calling start() on an empty task is a no-op.
 	 */
 	void start()
 	{

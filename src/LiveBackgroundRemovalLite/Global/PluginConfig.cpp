@@ -1,15 +1,21 @@
 /*
- * Live Background Removal Lite - Global Module
- * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
+ * SPDX-FileCopyrightText: Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * This program is free software; you can redistribute it and/or modify
+ * Live Background Removal Lite - Global Module
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; for more details see the file
- * "LICENSE.GPL-3.0-or-later" in the distribution root.
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #include "PluginConfig.hpp"
@@ -17,102 +23,167 @@
 #include <filesystem>
 #include <fstream>
 
-#include <ObsUnique.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/ObsUnique.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
-PluginConfig PluginConfig::load(std::shared_ptr<const Logger::ILogger> logger)
+namespace {
+
+constexpr auto kFirstRunOccurredFileName = "live-backgroundremoval-lite_PluginConfig_HasFirstRunOccurred.txt";
+constexpr auto kAutoCheckForUpdateDisabledFileName = "live-backgroundremoval-lite_PluginConfig_AutoCheckForUpdateDisabled.txt";
+constexpr auto kMediaPipeLandscapeSelfieSegmenterParamPath =
+	"models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
+constexpr auto kMediaPipeLandscapeSelfieSegmenterBinPath =
+	"models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
+
+std::filesystem::path obsToPath(const char *obsPath)
 {
-	BridgeUtils::unique_bfree_char_t configPath = BridgeUtils::unique_obs_module_config_path("PluginConfig.json");
+	return std::filesystem::path(reinterpret_cast<const char8_t *>(obsPath));
+}
 
-	BridgeUtils::unique_obs_data_t data(obs_data_create_from_json_file_safe(configPath.get(), ".bak"));
+} // anonymous namespace
 
-	PluginConfig pluginConfig;
+PluginConfig::~PluginConfig() noexcept = default;
 
-	BridgeUtils::unique_bfree_char_t firstRunFlagPathRaw =
-		BridgeUtils::unique_obs_module_config_path("PluginConfig_HasFirstRunOccurred.txt");
-	if (firstRunFlagPathRaw) {
-		pluginConfig.hasFirstRunOccurred = std::filesystem::exists(firstRunFlagPathRaw.get());
-	}
+bool PluginConfig::isFirstRun()
+try {
+	ObsBridgeUtils::unique_bfree_char_t configPathRaw(obs_module_config_path(kFirstRunOccurredFileName));
+	if (!configPathRaw)
+		return false;
 
-	BridgeUtils::unique_bfree_char_t disableFlagPathRaw =
-		BridgeUtils::unique_obs_module_config_path("PluginConfig_AutoCheckForUpdateDisabled.txt");
-	if (disableFlagPathRaw) {
-		pluginConfig.disableAutoCheckForUpdate = std::filesystem::exists(disableFlagPathRaw.get());
-	}
+	const std::filesystem::path path(obsToPath(configPathRaw.get()));
 
-	pluginConfig.selfieSegmenterParamPath =
-		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param")
-			.get();
+	if (std::filesystem::exists(path))
+		return false;
 
-	pluginConfig.selfieSegmenterBinPath =
-		BridgeUtils::unique_obs_module_file("models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin")
-			.get();
+	std::error_code ec;
+	std::filesystem::create_directories(path.parent_path(), ec);
+	if (ec)
+		return false;
 
-	if (!data) {
-		logger->info("No config file found, using default configuration");
-		return pluginConfig;
-	}
+	std::ofstream ofs(path);
+	bool is_open = ofs.is_open();
+	ofs.close();
 
-	if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterParamPath")) {
-		logger->info("Loaded selfieSegmenterParamPath from config: {}", str);
-		pluginConfig.selfieSegmenterParamPath = str;
-	}
-
-	if (const char *str = obs_data_get_string(data.get(), "selfieSegmenterBinPath")) {
-		logger->info("Loaded selfieSegmenterBinPath from config: {}", str);
-		pluginConfig.selfieSegmenterBinPath = str;
-	}
-
-	return pluginConfig;
+	return is_open;
+} catch (...) {
+	return false;
 }
 
 void PluginConfig::setAutoCheckForUpdateEnabled()
 {
-	BridgeUtils::unique_bfree_char_t configPathRaw =
-		BridgeUtils::unique_obs_module_config_path("PluginConfig_AutoCheckForUpdateDisabled.txt");
-	const std::filesystem::path path(configPathRaw.get());
+	ObsBridgeUtils::unique_bfree_char_t configPathRaw(obs_module_config_path(kAutoCheckForUpdateDisabledFileName));
+
+	if (!configPathRaw) {
+		logger_->error("ModuleConfigPathError", {{"configFile", kAutoCheckForUpdateDisabledFileName}});
+		throw std::runtime_error("ModuleConfigPathError(PluginConfig::setAutoCheckForUpdateEnabled)");
+	}
+
+	const std::filesystem::path path(obsToPath(configPathRaw.get()));
+
 	std::filesystem::remove(path);
-	disableAutoCheckForUpdate = false;
+
+	disableAutoCheckForUpdate_ = false;
 }
 
 void PluginConfig::setAutoCheckForUpdateDisabled()
 {
-	BridgeUtils::unique_bfree_char_t configPathRaw =
-		BridgeUtils::unique_obs_module_config_path("PluginConfig_AutoCheckForUpdateDisabled.txt");
+	ObsBridgeUtils::unique_bfree_char_t configPathRaw(obs_module_config_path(kAutoCheckForUpdateDisabledFileName));
 
-	const std::filesystem::path path(configPathRaw.get());
+	if (!configPathRaw) {
+		logger_->error("ModuleConfigPathError", {{"configFile", kAutoCheckForUpdateDisabledFileName}});
+		throw std::runtime_error("ModuleConfigPathError(PluginConfig::setAutoCheckForUpdateDisabled)");
+	}
+
+	const std::filesystem::path path(obsToPath(configPathRaw.get()));
+
 	if (!std::filesystem::exists(path)) {
 		std::filesystem::create_directories(path.parent_path());
 		std::ofstream ofs(path);
 	}
-	disableAutoCheckForUpdate = true;
+
+	disableAutoCheckForUpdate_ = true;
 }
 
-bool PluginConfig::isFirstRun()
+bool PluginConfig::isAutoCheckForUpdateEnabled() const noexcept
 {
-	BridgeUtils::unique_bfree_char_t configPathRaw =
-		BridgeUtils::unique_obs_module_config_path("PluginConfig_HasFirstRunOccurred.txt");
+	return !disableAutoCheckForUpdate_;
+}
 
-	if (!configPathRaw) {
-		return false;
+std::filesystem::path PluginConfig::getMediaPipeLandscapeSelfieSegmenterParamPath() const noexcept
+{
+	return mediaPipeLandscapeSelfieSegmenterParamPath_;
+}
+
+std::filesystem::path PluginConfig::getMediaPipeLandscapeSelfieSegmenterBinPath() const noexcept
+{
+	return mediaPipeLandscapeSelfieSegmenterBinPath_;
+}
+
+PluginConfig::PluginConfig(std::shared_ptr<const Logger::ILogger> logger)
+	: logger_(logger ? std::move(logger)
+			 : throw std::invalid_argument("LoggerIsNullError(PluginConfig::PluginConfig)"))
+{
+}
+
+std::unique_ptr<PluginConfig> PluginConfig::load(std::shared_ptr<const Logger::ILogger> logger)
+{
+	auto pluginConfig(std::unique_ptr<PluginConfig>(new PluginConfig(std::move(logger))));
+
+	// --- HasFirstRunOccurred ---
+	ObsBridgeUtils::unique_bfree_char_t hasFirstRunOccurredPathRaw(obs_module_config_path(kFirstRunOccurredFileName));
+
+	if (!hasFirstRunOccurredPathRaw) {
+		logger->error("ModuleConfigPathError", {{"configFile", kFirstRunOccurredFileName}});
+		throw std::runtime_error("ModuleConfigPathError(PluginConfig::load)");
 	}
 
-	const std::filesystem::path path(configPathRaw.get());
+	std::filesystem::path hasFirstRunOccurredPath(obsToPath(hasFirstRunOccurredPathRaw.get()));
 
-	if (std::filesystem::exists(path)) {
-		return false;
+	pluginConfig->hasFirstRunOccurred_ = std::filesystem::exists(hasFirstRunOccurredPath);
+
+	// --- AutoCheckForUpdateDisabled ---
+	ObsBridgeUtils::unique_bfree_char_t disableFlagPathRaw(
+		obs_module_config_path(kAutoCheckForUpdateDisabledFileName));
+
+	if (!disableFlagPathRaw) {
+		logger->error("ModuleConfigPathError", {{"configFile", kAutoCheckForUpdateDisabledFileName}});
+		throw std::runtime_error("ModuleConfigPathError(PluginConfig::load)");
 	}
 
-	std::error_code ec;
-	std::filesystem::create_directories(path.parent_path(), ec);
-	if (ec) {
-		return false;
+	std::filesystem::path disableFlagPath(obsToPath(disableFlagPathRaw.get()));
+
+	pluginConfig->disableAutoCheckForUpdate_ = std::filesystem::exists(disableFlagPath);
+
+	// --- mediaPipeLandscapeSelfieSegmenterParamPath ---
+	ObsBridgeUtils::unique_bfree_char_t mediaPipeLandscapeSelfieSegmenterParamPathRaw(
+		obs_module_file(kMediaPipeLandscapeSelfieSegmenterParamPath));
+
+	if (!mediaPipeLandscapeSelfieSegmenterParamPathRaw) {
+		logger->error("ModuleFileError", {{"file", kMediaPipeLandscapeSelfieSegmenterParamPath}});
+		throw std::runtime_error("ModuleFileError(PluginConfig::load)");
 	}
 
-	std::ofstream ofs(path);
+	std::filesystem::path mediaPipeLandscapeSelfieSegmenterParamPath(
+		obsToPath(mediaPipeLandscapeSelfieSegmenterParamPathRaw.get()));
 
-	return ofs.good();
+	pluginConfig->mediaPipeLandscapeSelfieSegmenterParamPath_ = mediaPipeLandscapeSelfieSegmenterParamPath;
+
+	// --- mediaPipeLandscapeSelfieSegmenterBinPath ---
+	ObsBridgeUtils::unique_bfree_char_t mediaPipeLandscapeSelfieSegmenterBinPathRaw(
+		obs_module_file(kMediaPipeLandscapeSelfieSegmenterBinPath));
+
+	if (!mediaPipeLandscapeSelfieSegmenterBinPathRaw) {
+		logger->error("ModuleFileError", {{"file", kMediaPipeLandscapeSelfieSegmenterBinPath}});
+		throw std::runtime_error("ModuleFileError(PluginConfig::load)");
+	}
+
+	std::filesystem::path mediaPipeLandscapeSelfieSegmenterBinPath(
+		obsToPath(mediaPipeLandscapeSelfieSegmenterBinPathRaw.get()));
+
+	pluginConfig->mediaPipeLandscapeSelfieSegmenterBinPath_ = mediaPipeLandscapeSelfieSegmenterBinPath;
+
+	return pluginConfig;
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

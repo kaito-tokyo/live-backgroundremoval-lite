@@ -23,16 +23,17 @@
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 
-#include <GsUnique.hpp>
-#include <ObsLogger.hpp>
-#include <ObsUnique.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/GsUnique.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/ObsLogger.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/ObsUnique.hpp>
+
 #include <PluginConfigDialog.hpp>
 
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
 
 using namespace KaitoTokyo::Logger;
-using namespace KaitoTokyo::BridgeUtils;
+using namespace KaitoTokyo::ObsBridgeUtils;
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 

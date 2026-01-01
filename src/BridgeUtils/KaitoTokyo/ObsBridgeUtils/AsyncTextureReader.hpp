@@ -1,15 +1,21 @@
 /*
- * BridgeUtils
- * Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
+ * SPDX-FileCopyrightText: Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * This program is free software; you can redistribute it and/or modify
+ * KaitoTokyo ObsBridgeUtils Library
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; for more details see the file
- * "LICENSE.GPL-3.0-or-later" in the distribution root.
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 #pragma once
@@ -26,7 +32,8 @@
 
 #include "GsUnique.hpp"
 
-namespace KaitoTokyo::BridgeUtils {
+namespace KaitoTokyo {
+namespace ObsBridgeUtils {
 
 /**
  * @brief Internal implementation details for AsyncTextureReader.
@@ -190,8 +197,8 @@ public:
 		  bufferLinesize_(width_ * getBytesPerPixel(format)),
 		  cpuBuffers_{std::vector<std::uint8_t>(static_cast<std::size_t>(height_) * bufferLinesize_),
 			      std::vector<std::uint8_t>(static_cast<std::size_t>(height_) * bufferLinesize_)},
-		  stagesurfs_{BridgeUtils::make_unique_gs_stagesurf(width, height, format),
-			      BridgeUtils::make_unique_gs_stagesurf(width, height, format)}
+		  stagesurfs_{ObsBridgeUtils::make_unique_gs_stagesurf(width, height, format),
+			      ObsBridgeUtils::make_unique_gs_stagesurf(width, height, format)}
 	{
 		if (!stagesurfs_[0] || !stagesurfs_[1]) {
 			throw std::runtime_error("Failed to create staging surfaces");
@@ -224,7 +231,7 @@ public:
 			return;
 		}
 
-		std::lock_guard<std::mutex> lock(gpuMutex_);
+		std::scoped_lock lock(gpuMutex_);
 		gs_stage_texture(stagesurfs_[gpuWriteIndex_].get(), sourceTexture);
 		gpuWriteIndex_ = 1 - gpuWriteIndex_;
 	}
@@ -241,7 +248,7 @@ public:
 
 		std::size_t gpuReadIndex;
 		{
-			std::lock_guard<std::mutex> lock(gpuMutex_);
+			std::scoped_lock lock(gpuMutex_);
 			gpuReadIndex = 1 - gpuWriteIndex_;
 		}
 		gs_stagesurf_t *const stagesurf = stagesurfs_[gpuReadIndex].get();
@@ -330,7 +337,7 @@ private:
 	/**
 	 * @brief Double-buffered GPU staging surfaces.
 	 */
-	const std::array<BridgeUtils::unique_gs_stagesurf_t, 2> stagesurfs_;
+	const std::array<ObsBridgeUtils::unique_gs_stagesurf_t, 2> stagesurfs_;
 
 	/**
 	 * @brief Index of the GPU write buffer.
@@ -343,4 +350,5 @@ private:
 	std::mutex gpuMutex_;
 };
 
-} // namespace KaitoTokyo::BridgeUtils
+} // namespace ObsBridgeUtils
+} // namespace KaitoTokyo

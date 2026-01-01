@@ -14,8 +14,8 @@
 
 #include "RenderingContext.hpp"
 
-#include <BoundingBox.hpp>
-#include <NcnnSelfieSegmenter.hpp>
+#include <KaitoTokyo/SelfieSegmenter/BoundingBox.hpp>
+#include <KaitoTokyo/SelfieSegmenter/NcnnSelfieSegmenter.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
@@ -37,12 +37,12 @@ inline std::uint32_t bit_ceil(std::uint32_t x)
 
 } // anonymous namespace
 
-BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t width, std::uint32_t height,
+ObsBridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t width, std::uint32_t height,
 							       enum gs_color_format color_format,
 							       std::uint32_t flags) const noexcept
 {
-	BridgeUtils::unique_gs_texture_t texture =
-		BridgeUtils::make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
+	ObsBridgeUtils::unique_gs_texture_t texture =
+		ObsBridgeUtils::make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
 	if ((flags & GS_RENDER_TARGET) == GS_RENDER_TARGET) {
 		TextureRenderGuard renderTargetGuard(texture);
 		vec4 clearColor{0.0f, 0.0f, 0.0f, 1.0f};
@@ -52,10 +52,10 @@ BridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t wid
 		std::vector<std::uint8_t> zeroData(
 			static_cast<std::size_t>(width) * static_cast<std::size_t>(height) *
 				static_cast<std::size_t>(
-					BridgeUtils::AsyncTextureReader::getBytesPerPixel(color_format)),
+					ObsBridgeUtils::AsyncTextureReader::getBytesPerPixel(color_format)),
 			0);
 		gs_texture_set_image(texture.get(), zeroData.data(),
-				     width * BridgeUtils::AsyncTextureReader::getBytesPerPixel(color_format), 0);
+				     width * ObsBridgeUtils::AsyncTextureReader::getBytesPerPixel(color_format), 0);
 	}
 	return texture;
 }
@@ -77,10 +77,10 @@ RenderingContextRegion RenderingContext::getMaskRoiPosition() const noexcept
 	return {offsetX, offsetY, scaledWidth, scaledHeight};
 }
 
-std::vector<BridgeUtils::unique_gs_texture_t> RenderingContext::createReductionPyramid(std::uint32_t width,
+std::vector<ObsBridgeUtils::unique_gs_texture_t> RenderingContext::createReductionPyramid(std::uint32_t width,
 										       std::uint32_t height) const
 {
-	std::vector<BridgeUtils::unique_gs_texture_t> pyramid;
+	std::vector<ObsBridgeUtils::unique_gs_texture_t> pyramid;
 
 	std::uint32_t currentWidth = width;
 	std::uint32_t currentHeight = height;
@@ -288,7 +288,7 @@ void RenderingContext::videoRender()
 	}
 
 	if (processingFrame && filterLevel >= FilterLevel::GuidedFilter) {
-		const BridgeUtils::unique_gs_texture_t &currentSubLuma = r32fSubLumas_[currentSubLumaIndex_];
+		const ObsBridgeUtils::unique_gs_texture_t &currentSubLuma = r32fSubLumas_[currentSubLumaIndex_];
 		mainEffect_.resampleByNearestR8(r32fSubGFSource_, r8SegmentationMask_);
 
 		mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, currentSubLuma, r32fSubGFIntermediate_);

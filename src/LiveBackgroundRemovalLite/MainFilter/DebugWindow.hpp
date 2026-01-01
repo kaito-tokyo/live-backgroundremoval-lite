@@ -56,14 +56,14 @@ private:
 	std::atomic<int> selectedPreviewTextureIndex_ = 0;
 
 	std::mutex readerMutex_;
-	std::shared_ptr<BridgeUtils::AsyncTextureReader> bgrxReader_;
-	std::shared_ptr<BridgeUtils::AsyncTextureReader> r8Reader_;
-	std::shared_ptr<BridgeUtils::AsyncTextureReader> r32fReader_;
-	std::shared_ptr<BridgeUtils::AsyncTextureReader> bgrxSegmenterInputReader_;
-	std::shared_ptr<BridgeUtils::AsyncTextureReader> r8MaskRoiReader_;
-	std::shared_ptr<BridgeUtils::AsyncTextureReader> r8SubR8Reader_;
-	std::shared_ptr<BridgeUtils::AsyncTextureReader> r32fSubReader_;
-	std::shared_ptr<BridgeUtils::AsyncTextureReader> r32fSubPaddedReader_;
+	std::shared_ptr<ObsBridgeUtils::AsyncTextureReader> bgrxReader_;
+	std::shared_ptr<ObsBridgeUtils::AsyncTextureReader> r8Reader_;
+	std::shared_ptr<ObsBridgeUtils::AsyncTextureReader> r32fReader_;
+	std::shared_ptr<ObsBridgeUtils::AsyncTextureReader> bgrxSegmenterInputReader_;
+	std::shared_ptr<ObsBridgeUtils::AsyncTextureReader> r8MaskRoiReader_;
+	std::shared_ptr<ObsBridgeUtils::AsyncTextureReader> r8SubR8Reader_;
+	std::shared_ptr<ObsBridgeUtils::AsyncTextureReader> r32fSubReader_;
+	std::shared_ptr<ObsBridgeUtils::AsyncTextureReader> r32fSubPaddedReader_;
 
 	std::vector<std::uint8_t> bufferR8_;
 	std::vector<std::uint8_t> bufferSubR8_;

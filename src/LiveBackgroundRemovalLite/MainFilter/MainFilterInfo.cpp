@@ -22,7 +22,7 @@
 #include <memory>
 #include <utility>
 
-#include <GsUnique.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/GsUnique.hpp>
 
 #include "MainFilterContext.hpp"
 
@@ -68,7 +68,7 @@ const char *getName(void *) noexcept
 void *create(obs_data_t *settings, obs_source_t *source) noexcept
 {
 	const auto logger = g_globalContext_->logger_;
-	BridgeUtils::GraphicsContextGuard graphicsContextGuard;
+	ObsBridgeUtils::GraphicsContextGuard graphicsContextGuard;
 	try {
 		auto self = std::make_shared<MainFilterContext>(settings, source, g_pluginConfig_, g_globalContext_);
 		return new std::shared_ptr<MainFilterContext>(self);
@@ -100,8 +100,8 @@ void destroy(void *data) noexcept
 	self->shutdown();
 	delete selfPtr;
 
-	BridgeUtils::GraphicsContextGuard graphicsContextGuard;
-	BridgeUtils::GsUnique::drain();
+	ObsBridgeUtils::GraphicsContextGuard graphicsContextGuard;
+	ObsBridgeUtils::GsUnique::drain();
 }
 
 std::uint32_t getWidth(void *data) noexcept
@@ -236,7 +236,7 @@ void videoRender(void *data, gs_effect_t *) noexcept
 
 	try {
 		self->videoRender();
-		BridgeUtils::GsUnique::drain();
+		ObsBridgeUtils::GsUnique::drain();
 	} catch (const std::exception &e) {
 		logger->logException(e, "Failed to render video in MainFilterContext");
 	} catch (...) {

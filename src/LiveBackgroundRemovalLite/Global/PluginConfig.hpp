@@ -14,24 +14,40 @@
 
 #pragma once
 
-#include <string>
+#include <filesystem>
 #include <memory>
 
-#include <ILogger.hpp>
+#include <KaitoTokyo/Logger/ILogger.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
-struct PluginConfig {
-	bool hasFirstRunOccurred = true;
-	bool disableAutoCheckForUpdate = false;
-	std::string selfieSegmenterParamPath;
-	std::string selfieSegmenterBinPath;
+class PluginConfig {
+public:
+	~PluginConfig() noexcept;
 
-	static PluginConfig load(std::shared_ptr<const Logger::ILogger> logger);
+	PluginConfig(const PluginConfig &) = delete;
+	PluginConfig &operator=(const PluginConfig &) = delete;
+	PluginConfig(PluginConfig &&);
+	PluginConfig &operator=(PluginConfig &&);
 
+	bool isFirstRun();
 	void setAutoCheckForUpdateEnabled();
 	void setAutoCheckForUpdateDisabled();
-	bool isFirstRun();
+	bool isAutoCheckForUpdateEnabled() const noexcept;
+	std::filesystem::path getMediaPipeLandscapeSelfieSegmenterParamPath() const noexcept;
+	std::filesystem::path getMediaPipeLandscapeSelfieSegmenterBinPath() const noexcept;
+
+	static std::unique_ptr<PluginConfig> load(std::shared_ptr<const Logger::ILogger> logger);
+
+private:
+	PluginConfig(std::shared_ptr<const Logger::ILogger> logger);
+
+	const std::shared_ptr<const Logger::ILogger> logger_;
+
+	bool hasFirstRunOccurred_ = true;
+	bool disableAutoCheckForUpdate_ = false;
+	std::filesystem::path mediaPipeLandscapeSelfieSegmenterParamPath_;
+	std::filesystem::path mediaPipeLandscapeSelfieSegmenterBinPath_;
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

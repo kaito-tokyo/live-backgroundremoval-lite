@@ -21,7 +21,7 @@
 #include <thread>
 #include <utility>
 
-#include <ILogger.hpp>
+#include <KaitoTokyo/Logger/ILogger.hpp>
 
 namespace KaitoTokyo::TaskQueue {
 

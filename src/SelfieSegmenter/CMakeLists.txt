@@ -4,12 +4,12 @@ target_link_libraries(SelfieSegmenter PUBLIC ncnn::ncnn Memory)
 target_sources(
   SelfieSegmenter
   PRIVATE
-    BoundingBox.cpp
-    BoundingBox.hpp
-    ISelfieSegmenter.hpp
-    MaskBuffer.hpp
-    NcnnSelfieSegmenter.hpp
-    NullSelfieSegmenter.hpp
-    ShapeConverter.cpp
-    ShapeConverter.hpp
+    KaitoTokyo/SelfieSegmenter/BoundingBox.cpp
+    KaitoTokyo/SelfieSegmenter/BoundingBox.hpp
+    KaitoTokyo/SelfieSegmenter/ISelfieSegmenter.hpp
+    KaitoTokyo/SelfieSegmenter/MaskBuffer.hpp
+    KaitoTokyo/SelfieSegmenter/NcnnSelfieSegmenter.hpp
+    KaitoTokyo/SelfieSegmenter/NullSelfieSegmenter.hpp
+    KaitoTokyo/SelfieSegmenter/ShapeConverter.cpp
+    KaitoTokyo/SelfieSegmenter/ShapeConverter.hpp
 )
