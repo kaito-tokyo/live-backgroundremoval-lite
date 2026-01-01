@@ -9,7 +9,7 @@
 
 #include <gtest/gtest.h>
 
-#include <NcnnSelfieSegmenter.hpp>
+#include <KaitoTokyo/SelfieSegmenter/NcnnSelfieSegmenter.hpp>
 
 #include <cstddef>
 #include <cstdint>

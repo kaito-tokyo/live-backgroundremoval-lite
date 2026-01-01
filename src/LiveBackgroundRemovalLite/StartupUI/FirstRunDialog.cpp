@@ -107,8 +107,12 @@ FirstRunDialog::FirstRunDialog(std::shared_ptr<Global::PluginConfig> pluginConfi
 	titleAreaLayout->addWidget(titleLabel);
 
 	// Subtitle
-	QString currentVer = QString::fromStdString(globalContext_->pluginVersion_);
-	QString latestVer = QString::fromStdString(globalContext_->getLatestVersion());
+	QString currentVer = QString::fromStdString(globalContext_->getPluginVersion());
+	QString latestVer;
+	std::optional<std::string> optLatestVer = globalContext_->getLatestVersion();
+	if (optLatestVer.has_value()) {
+		latestVer = QString::fromStdString(optLatestVer.value());
+	}
 
 	QString subtitleHtml = QString("<span style='font-size: 10pt; color: %1;'>v%2").arg(colSubText, currentVer);
 	if (!latestVer.isEmpty()) {

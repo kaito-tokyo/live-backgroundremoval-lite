@@ -63,6 +63,11 @@ std::string GlobalContext::getPluginVersion() const noexcept
 	return pluginVersion_;
 }
 
+std::shared_ptr<const Logger::ILogger> GlobalContext::getLogger() const noexcept
+{
+	return logger_;
+}
+
 std::optional<std::string> GlobalContext::getLatestVersion() const
 {
 	std::lock_guard lock(mutex_);

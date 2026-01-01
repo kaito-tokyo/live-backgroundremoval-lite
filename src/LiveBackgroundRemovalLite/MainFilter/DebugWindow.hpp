@@ -23,8 +23,8 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
-#include <AsyncTextureReader.hpp>
-#include <ILogger.hpp>
+#include <KaitoTokyo/Logger/ILogger.hpp>
+#include <KaitoTokyo/ObsBridgeUtils/AsyncTextureReader.hpp>
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 

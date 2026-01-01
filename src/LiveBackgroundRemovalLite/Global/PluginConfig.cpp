@@ -30,7 +30,8 @@ namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 namespace {
 
 constexpr auto kFirstRunOccurredFileName = "live-backgroundremoval-lite_PluginConfig_HasFirstRunOccurred.txt";
-constexpr auto kAutoCheckForUpdateDisabledFileName = "live-backgroundremoval-lite_PluginConfig_AutoCheckForUpdateDisabled.txt";
+constexpr auto kAutoCheckForUpdateDisabledFileName =
+	"live-backgroundremoval-lite_PluginConfig_AutoCheckForUpdateDisabled.txt";
 constexpr auto kMediaPipeLandscapeSelfieSegmenterParamPath =
 	"models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
 constexpr auto kMediaPipeLandscapeSelfieSegmenterBinPath =
@@ -131,7 +132,8 @@ std::unique_ptr<PluginConfig> PluginConfig::load(std::shared_ptr<const Logger::I
 	auto pluginConfig(std::unique_ptr<PluginConfig>(new PluginConfig(std::move(logger))));
 
 	// --- HasFirstRunOccurred ---
-	ObsBridgeUtils::unique_bfree_char_t hasFirstRunOccurredPathRaw(obs_module_config_path(kFirstRunOccurredFileName));
+	ObsBridgeUtils::unique_bfree_char_t hasFirstRunOccurredPathRaw(
+		obs_module_config_path(kFirstRunOccurredFileName));
 
 	if (!hasFirstRunOccurredPathRaw) {
 		logger->error("ModuleConfigPathError", {{"configFile", kFirstRunOccurredFileName}});

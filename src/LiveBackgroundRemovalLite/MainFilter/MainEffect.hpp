@@ -101,8 +101,8 @@ private:
 		gs_eparam_t *param = gs_effect_get_param_by_name(gsEffect_.get(), name);
 
 		if (!param) {
-			logger_->error("Effect parameter {} not found", name);
-			throw std::runtime_error("Effect parameter not found");
+			logger_->error("EffectParamNotFoundError", {{"param_name", name}});
+			throw std::runtime_error("EffectParamNotFoundError(MainEffect:getEffectParam)");
 		}
 
 		return param;

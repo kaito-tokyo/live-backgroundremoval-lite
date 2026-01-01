@@ -22,6 +22,7 @@
 #include <memory>
 #include <utility>
 
+#include <KaitoTokyo/Logger/NullLogger.hpp>
 #include <KaitoTokyo/ObsBridgeUtils/GsUnique.hpp>
 
 #include "MainFilterContext.hpp"
@@ -31,26 +32,26 @@ namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 std::shared_ptr<Global::PluginConfig> g_pluginConfig_ = nullptr;
 std::shared_ptr<Global::GlobalContext> g_globalContext_ = nullptr;
 
-obs_source_info g_mainFilterInfo = {.id = "live_backgroundremoval_lite",
-				    .type = OBS_SOURCE_TYPE_FILTER,
-				    .output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW,
-				    .get_name = MainFilter::getName,
-				    .create = MainFilter::create,
-				    .destroy = MainFilter::destroy,
-				    .get_width = MainFilter::getWidth,
-				    .get_height = MainFilter::getHeight,
-				    .get_defaults = MainFilter::getDefaults,
-				    .get_properties = MainFilter::getProperties,
-				    .update = MainFilter::update,
-				    .video_tick = MainFilter::videoTick,
-				    .video_render = MainFilter::videoRender};
+obs_source_info g_mainFilterInfo_ = {.id = "live_backgroundremoval_lite",
+				     .type = OBS_SOURCE_TYPE_FILTER,
+				     .output_flags = OBS_SOURCE_VIDEO | OBS_SOURCE_CUSTOM_DRAW,
+				     .get_name = MainFilter::getName,
+				     .create = MainFilter::create,
+				     .destroy = MainFilter::destroy,
+				     .get_width = MainFilter::getWidth,
+				     .get_height = MainFilter::getHeight,
+				     .get_defaults = MainFilter::getDefaults,
+				     .get_properties = MainFilter::getProperties,
+				     .update = MainFilter::update,
+				     .video_tick = MainFilter::videoTick,
+				     .video_render = MainFilter::videoRender};
 
 bool loadModule(std::shared_ptr<Global::PluginConfig> pluginConfig,
 		std::shared_ptr<Global::GlobalContext> globalContext) noexcept
 {
 	g_pluginConfig_ = std::move(pluginConfig);
 	g_globalContext_ = std::move(globalContext);
-	obs_register_source(&g_mainFilterInfo);
+	obs_register_source(&g_mainFilterInfo_);
 	return true;
 }
 
@@ -67,37 +68,47 @@ const char *getName(void *) noexcept
 
 void *create(obs_data_t *settings, obs_source_t *source) noexcept
 {
-	const auto logger = g_globalContext_->logger_;
-	ObsBridgeUtils::GraphicsContextGuard graphicsContextGuard;
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
+
 	try {
+		ObsBridgeUtils::GraphicsContextGuard graphicsContextGuard;
 		auto self = std::make_shared<MainFilterContext>(settings, source, g_pluginConfig_, g_globalContext_);
 		return new std::shared_ptr<MainFilterContext>(self);
 	} catch (const std::exception &e) {
-		logger->logException(e, "Failed to create MainFilterContext");
+		logger->error("CreateMainFilterContextExceptionError", {{"message", e.what()}});
 		return nullptr;
 	} catch (...) {
-		logger->error("Failed to create MainFilterContext: unknown error");
+		logger->error("CreateMainFilterContextUnknownExceptionError");
 		return nullptr;
 	}
 }
 
 void destroy(void *data) noexcept
 {
-	const auto logger = g_globalContext_->logger_;
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
 
 	if (!data) {
-		logger->error("MainFilter::destroy called with null data");
+		logger->error("FilterDataIsNullError");
 		return;
 	}
 
 	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
-	auto self = selfPtr->get();
-	if (!self) {
-		logger->error("MainFilter::destroy called with null MainFilterContext");
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
 		return;
 	}
 
-	self->shutdown();
+	(*selfPtr)->shutdown();
 	delete selfPtr;
 
 	ObsBridgeUtils::GraphicsContextGuard graphicsContextGuard;
@@ -106,38 +117,48 @@ void destroy(void *data) noexcept
 
 std::uint32_t getWidth(void *data) noexcept
 {
-	const auto logger = g_globalContext_->logger_;
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
 
 	if (!data) {
-		logger->error("MainFilter::getWidth called with null data");
+		logger->error("FilterDataIsNullError");
 		return 0;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainFilterContext> *>(data)->get();
-	if (!self) {
-		logger->error("MainFilter::getWidth called with null MainFilterContext");
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
 		return 0;
 	}
 
-	return self->getWidth();
+	return (*selfPtr)->getWidth();
 }
 
 std::uint32_t getHeight(void *data) noexcept
 {
-	const auto logger = g_globalContext_->logger_;
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
 
 	if (!data) {
-		logger->error("MainFilter::getHeight called with null data");
+		logger->error("FilterDataIsNullError");
 		return 0;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainFilterContext> *>(data)->get();
-	if (!self) {
-		logger->error("MainFilter::getHeight called with null MainFilterContext");
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
 		return 0;
 	}
 
-	return self->getHeight();
+	return (*selfPtr)->getHeight();
 }
 
 void getDefaults(obs_data_t *data) noexcept
@@ -147,25 +168,30 @@ void getDefaults(obs_data_t *data) noexcept
 
 obs_properties_t *getProperties(void *data) noexcept
 {
-	const auto logger = g_globalContext_->logger_;
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
 
 	if (!data) {
-		logger->error("MainFilter::getProperties called with null data");
+		logger->error("FilterDataIsNullError");
 		return obs_properties_create();
 	}
 
-	auto self = static_cast<std::shared_ptr<MainFilterContext> *>(data)->get();
-	if (!self) {
-		logger->error("MainFilter::getProperties called with null MainFilterContext");
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
 		return obs_properties_create();
 	}
 
 	try {
-		return self->getProperties();
+		return (*selfPtr)->getProperties();
 	} catch (const std::exception &e) {
-		logger->logException(e, "Failed to get properties");
+		logger->error("GetPropertiesExceptionError", {{"message", e.what()}});
 	} catch (...) {
-		logger->error("Failed to get properties: unknown error");
+		logger->error("GetPropertiesUnknownExceptionError");
 	}
 
 	return obs_properties_create();
@@ -173,74 +199,89 @@ obs_properties_t *getProperties(void *data) noexcept
 
 void update(void *data, obs_data_t *settings) noexcept
 {
-	const auto logger = g_globalContext_->logger_;
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
 
 	if (!data) {
-		logger->error("MainFilter::update called with null data");
+		logger->error("FilterDataIsNullError");
 		return;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainFilterContext> *>(data)->get();
-	if (!self) {
-		logger->error("MainFilter::update called with null MainFilterContext");
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
 		return;
 	}
 
 	try {
-		self->update(settings);
+		(*selfPtr)->update(settings);
 	} catch (const std::exception &e) {
-		logger->logException(e, "Failed to update MainFilterContext");
+		logger->error("UpdateExceptionError", {{"message", e.what()}});
 	} catch (...) {
-		logger->error("Failed to update MainFilterContext: unknown error");
+		logger->error("UpdateUnknownExceptionError");
 	}
 }
 
 void videoTick(void *data, float seconds) noexcept
 {
-	const auto logger = g_globalContext_->logger_;
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
 
 	if (!data) {
-		logger->error("MainFilter::videoTick called with null data");
+		logger->error("FilterDataIsNullError");
 		return;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainFilterContext> *>(data)->get();
-	if (!self) {
-		logger->error("MainFilter::videoTick called with null MainFilterContext");
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
 		return;
 	}
 
 	try {
-		self->videoTick(seconds);
+		(*selfPtr)->videoTick(seconds);
 	} catch (const std::exception &e) {
-		logger->logException(e, "Failed to tick MainFilterContext");
+		logger->error("VideoTickExceptionError", {{"message", e.what()}});
 	} catch (...) {
-		logger->error("Failed to tick MainFilterContext: unknown error");
+		logger->error("VideoTickUnknownExceptionError");
 	}
 }
 
 void videoRender(void *data, gs_effect_t *) noexcept
 {
-	const auto logger = g_globalContext_->logger_;
+	std::shared_ptr<const Logger::ILogger> logger;
+	if (g_globalContext_ && g_globalContext_->getLogger()) {
+		logger = g_globalContext_->getLogger();
+	} else {
+		logger = Logger::NullLogger::instance();
+	}
 
 	if (!data) {
-		logger->error("MainFilter::videoRender called with null data");
+		logger->error("FilterDataIsNullError");
 		return;
 	}
 
-	auto self = static_cast<std::shared_ptr<MainFilterContext> *>(data)->get();
-	if (!self) {
-		logger->error("MainFilter::videoRender called with null MainFilterContext");
+	auto selfPtr = static_cast<std::shared_ptr<MainFilterContext> *>(data);
+	if (!*selfPtr) {
+		logger->error("FilterSelfIsNullError");
 		return;
 	}
 
 	try {
-		self->videoRender();
+		(*selfPtr)->videoRender();
 		ObsBridgeUtils::GsUnique::drain();
 	} catch (const std::exception &e) {
-		logger->logException(e, "Failed to render video in MainFilterContext");
+		logger->error("VideoRenderExceptionError", {{"message", e.what()}});
 	} catch (...) {
-		logger->error("Failed to render video in MainFilterContext: unknown error");
+		logger->error("VideoRenderUnknownExceptionError");
 	}
 }
 

@@ -38,8 +38,8 @@ inline std::uint32_t bit_ceil(std::uint32_t x)
 } // anonymous namespace
 
 ObsBridgeUtils::unique_gs_texture_t RenderingContext::makeTexture(std::uint32_t width, std::uint32_t height,
-							       enum gs_color_format color_format,
-							       std::uint32_t flags) const noexcept
+								  enum gs_color_format color_format,
+								  std::uint32_t flags) const noexcept
 {
 	ObsBridgeUtils::unique_gs_texture_t texture =
 		ObsBridgeUtils::make_unique_gs_texture(width, height, color_format, 1, NULL, flags);
@@ -78,7 +78,7 @@ RenderingContextRegion RenderingContext::getMaskRoiPosition() const noexcept
 }
 
 std::vector<ObsBridgeUtils::unique_gs_texture_t> RenderingContext::createReductionPyramid(std::uint32_t width,
-										       std::uint32_t height) const
+											  std::uint32_t height) const
 {
 	std::vector<ObsBridgeUtils::unique_gs_texture_t> pyramid;
 
@@ -420,18 +420,18 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 	maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_relaxed);
 	enableCenterFrame_.store(pluginProperty.enableCenterFrame, std::memory_order_relaxed);
 
-	if (pluginProperty.filterLevel == FilterLevel::Default) {
-		logger_->info("Default filter level is parsed to be {}", static_cast<int>(newFilterLevel));
-	} else {
-		logger_->info("Filter level set to {}", static_cast<int>(newFilterLevel));
-	}
-	logger_->info("Motion intensity threshold set to {}", newMotionIntensityThreshold);
-	logger_->info("Guided filter epsilon set to {}", newGuidedFilterEps);
-	logger_->info("Time-averaged filtering alpha set to {}", newTimeAveragedFilteringAlpha);
-	logger_->info("Mask gamma set to {}", newMaskGamma);
-	logger_->info("Mask lower bound set to {}", newMaskLowerBound);
-	logger_->info("Mask upper bound margin set to {}", newMaskUpperBoundMargin);
-	logger_->info("Center Frame {}", pluginProperty.enableCenterFrame ? "enabled" : "disabled");
+	logger_->info("PluginPropertySet", {{"key", "filterLevel"}, {"value", std::to_string(newFilterLevel)}});
+	logger_->info("PluginPropertySet",
+		      {{"key", "motionIntensityThreshold"}, {"value", std::to_string(newMotionIntensityThreshold)}});
+	logger_->info("PluginPropertySet", {{"key", "guidedFilterEps"}, {"value", std::to_string(newGuidedFilterEps)}});
+	logger_->info("PluginPropertySet", {{"key", "timeAveragedFilteringAlpha"},
+					    {"value", std::to_string(newTimeAveragedFilteringAlpha)}});
+	logger_->info("PluginPropertySet", {{"key", "maskGamma"}, {"value", std::to_string(newMaskGamma)}});
+	logger_->info("PluginPropertySet", {{"key", "maskLowerBound"}, {"value", std::to_string(newMaskLowerBound)}});
+	logger_->info("PluginPropertySet",
+		      {{"key", "maskUpperBoundMargin"}, {"value", std::to_string(newMaskUpperBoundMargin)}});
+	logger_->info("PluginPropertySet",
+		      {{"key", "enableCenterFrame"}, {"value", pluginProperty.enableCenterFrame ? "true" : "false"}});
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter
