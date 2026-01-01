@@ -224,15 +224,21 @@ void RenderingContext::videoRender()
 	if (processingFrame && filterLevel >= FilterLevel::Segmentation && isCurrentMotionIntense) {
 		constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
 
-		double widthScale = static_cast<double>(region_.width) / static_cast<double>(segmenterRoi_.width);
-		double heightScale = static_cast<double>(region_.height) / static_cast<double>(segmenterRoi_.height);
-		double scale = std::min(widthScale, heightScale);
+		const double targetW = static_cast<double>(selfieSegmenter_->getWidth());
+		const double targetH = static_cast<double>(selfieSegmenter_->getHeight());
 
-		std::uint32_t width = static_cast<std::uint32_t>(selfieSegmenter_->getWidth() * scale);
-		std::uint32_t height = static_cast<std::uint32_t>(selfieSegmenter_->getHeight() * scale);
+		double fitScaleX = targetW / static_cast<double>(segmenterRoi_.width);
+		double fitScaleY = targetH / static_cast<double>(segmenterRoi_.height);
+		double scale = std::min(fitScaleX, fitScaleY);
 
-		float x = -static_cast<float>(segmenterRoi_.x * selfieSegmenter_->getWidth() / region_.width);
-		float y = -static_cast<float>(segmenterRoi_.y * selfieSegmenter_->getHeight() / region_.height);
+		std::uint32_t width = static_cast<std::uint32_t>(std::round(region_.width * scale));
+		std::uint32_t height = static_cast<std::uint32_t>(std::round(region_.height * scale));
+
+		double roiCenterX = segmenterRoi_.x + segmenterRoi_.width / 2.0;
+		double roiCenterY = segmenterRoi_.y + segmenterRoi_.height / 2.0;
+
+		float x = static_cast<float>((targetW / 2.0) - (roiCenterX * scale));
+		float y = static_cast<float>((targetH / 2.0) - (roiCenterY * scale));
 
 		mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, width, height, x, y);
 	}
