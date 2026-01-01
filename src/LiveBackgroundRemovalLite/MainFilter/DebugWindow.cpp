@@ -124,7 +124,7 @@ void DebugWindow::videoRender()
 {
 	auto mainPluginContext = weakMainFilterContext_.lock();
 	if (!mainPluginContext) {
-		logger_->warn("DebugWindow::videoRender: MainPluginContext is null");
+		logger_->warn("MainPluginContextIsNullError");
 		return;
 	}
 
@@ -132,13 +132,13 @@ void DebugWindow::videoRender()
 
 	auto renderingContext = mainPluginContext->getRenderingContext();
 	if (!renderingContext) {
-		logger->warn("DebugWindow::videoRender: RenderingContext is null");
+		logger->warn("RenderingContextIsNullError");
 		return;
 	}
 
 	auto selectedPreviewTextureIndex = selectedPreviewTextureIndex_.load(std::memory_order_acquire);
 	if (selectedPreviewTextureIndex >= static_cast<int>(textureNames.size())) {
-		logger->warn("DebugWindow::videoRender: selectedPreviewTextureIndex out of bounds");
+		logger->warn("SelectedIndexOutOfBoundsError", {{"index", std::to_string(selectedPreviewTextureIndex)}});
 		return;
 	}
 	auto selectedPreviewTextureName = textureNames[selectedPreviewTextureIndex];
@@ -219,7 +219,7 @@ void DebugWindow::updatePreview()
 {
 	auto mainPluginContext = weakMainFilterContext_.lock();
 	if (!mainPluginContext) {
-		logger_->warn("DebugWindow::updatePreview: MainPluginContext is null");
+		logger_->warn("MainPluginContextIsNullError");
 		return;
 	}
 
@@ -227,7 +227,7 @@ void DebugWindow::updatePreview()
 
 	auto renderingContext = mainPluginContext->getRenderingContext();
 	if (!renderingContext) {
-		logger->warn("DebugWindow::updatePreview: RenderingContext is null");
+		logger->warn("RenderingContextIsNullError");
 		return;
 	}
 

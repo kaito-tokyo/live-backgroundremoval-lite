@@ -373,7 +373,7 @@ void RenderingContext::videoRender()
 		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
 		auto segmenterInputBuffer = selfieSegmenterMemoryBlockPool_->acquire();
 		if (!segmenterInputBuffer) {
-			logger_->error("Failed to acquire memory block for segmenter input");
+			logger_->error("MemoryBlockAcquisitionError");
 			return;
 		}
 

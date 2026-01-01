@@ -144,7 +144,7 @@ public:
 
 		obs_source_t *target = obs_filter_get_target(source);
 		if (target == nullptr) {
-			logger_->error("Failed to get target source for drawing");
+			logger_->error("TargetSourceNotFoundError");
 			return;
 		}
 
