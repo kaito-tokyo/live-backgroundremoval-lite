@@ -130,7 +130,8 @@ private:
 
 	MaskBuffer maskBuffer_;
 
-	std::vector<unsigned char, Memory::AlignedAllocator<unsigned char>> binBuffer_{0, Memory::AlignedAllocator<unsigned char>(kAlignment)};
+	std::vector<unsigned char, Memory::AlignedAllocator<unsigned char>> binBuffer_{
+		0, Memory::AlignedAllocator<unsigned char>(kAlignment)};
 	ncnn::Net selfieSegmenterNet_;
 	ncnn::Mat inputMat_;
 	ncnn::Mat outputMat_;
