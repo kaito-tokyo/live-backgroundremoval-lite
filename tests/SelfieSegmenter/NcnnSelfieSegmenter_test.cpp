@@ -44,8 +44,9 @@
 
 using namespace KaitoTokyo::SelfieSegmenter;
 
-const std::filesystem::path kParamPath = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
-const std::filesystem::path kBinPath = DATA_DIR "/models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
+extern "C" const unsigned char mediapipe_selfie_segmentation_landscape_int8_ncnn_bin[];
+extern "C" const unsigned int mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len;
+extern "C" const char mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text[];
 
 const char kTestImage[] = TESTS_DIR "/SelfieSegmenter/selfie001.jpg";
 const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_ncnn.png";
@@ -54,7 +55,7 @@ const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_ncnn.png";
 
 TEST(NcnnSelfieSegmenterTest, Construction)
 {
-	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
+	NcnnSelfieSegmenter selfieSegmenter(mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text, mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len, mediapipe_selfie_segmentation_landscape_int8_ncnn_bin, 1);
 }
 
 TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
@@ -83,7 +84,8 @@ TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 	ASSERT_EQ(refImageChannels, 1);
 
 	// Test
-	NcnnSelfieSegmenter selfieSegmenter(kParamPath, kBinPath, 1);
+	NcnnSelfieSegmenter selfieSegmenter(mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text, mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len, mediapipe_selfie_segmentation_landscape_int8_ncnn_bin, 1);
+
 	ASSERT_EQ(selfieSegmenter.getWidth(), static_cast<std::size_t>(width));
 	ASSERT_EQ(selfieSegmenter.getHeight(), static_cast<std::size_t>(height));
 	ASSERT_EQ(selfieSegmenter.getPixelCount(), static_cast<std::size_t>(width * height));

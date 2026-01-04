@@ -22,6 +22,8 @@ target_sources(
     MainFilterContext.hpp
     MainFilterInfo.cpp
     MainFilterInfo.hpp
+    mediapipe_selfie_segmentation_landscape_int8_ncnn_bin.c
+    mediapipe_selfie_segmentation_landscape_int8_ncnn_param.cpp
     PluginProperty.hpp
     RenderingContext.cpp
     RenderingContext.hpp

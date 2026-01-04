@@ -32,10 +32,6 @@ namespace {
 constexpr auto kFirstRunOccurredFileName = "live-backgroundremoval-lite_PluginConfig_HasFirstRunOccurred.txt";
 constexpr auto kAutoCheckForUpdateDisabledFileName =
 	"live-backgroundremoval-lite_PluginConfig_AutoCheckForUpdateDisabled.txt";
-constexpr auto kMediaPipeLandscapeSelfieSegmenterParamPath =
-	"models/mediapipe_selfie_segmentation_landscape_int8.ncnn.param";
-constexpr auto kMediaPipeLandscapeSelfieSegmenterBinPath =
-	"models/mediapipe_selfie_segmentation_landscape_int8.ncnn.bin";
 
 std::filesystem::path obsToPath(const char *obsPath)
 {
@@ -111,16 +107,6 @@ bool PluginConfig::isAutoCheckForUpdateEnabled() const noexcept
 	return !disableAutoCheckForUpdate_;
 }
 
-std::filesystem::path PluginConfig::getMediaPipeLandscapeSelfieSegmenterParamPath() const noexcept
-{
-	return mediaPipeLandscapeSelfieSegmenterParamPath_;
-}
-
-std::filesystem::path PluginConfig::getMediaPipeLandscapeSelfieSegmenterBinPath() const noexcept
-{
-	return mediaPipeLandscapeSelfieSegmenterBinPath_;
-}
-
 PluginConfig::PluginConfig(std::shared_ptr<const Logger::ILogger> logger)
 	: logger_(logger ? std::move(logger)
 			 : throw std::invalid_argument("LoggerIsNullError(PluginConfig::PluginConfig)"))
@@ -157,35 +143,12 @@ std::unique_ptr<PluginConfig> PluginConfig::load(std::shared_ptr<const Logger::I
 
 	pluginConfig->disableAutoCheckForUpdate_ = std::filesystem::exists(disableFlagPath);
 
-	// --- mediaPipeLandscapeSelfieSegmenterParamPath ---
-	ObsBridgeUtils::unique_bfree_char_t mediaPipeLandscapeSelfieSegmenterParamPathRaw(
-		obs_module_file(kMediaPipeLandscapeSelfieSegmenterParamPath));
-
-	if (!mediaPipeLandscapeSelfieSegmenterParamPathRaw) {
-		logger->error("ModuleFileError", {{"file", kMediaPipeLandscapeSelfieSegmenterParamPath}});
-		throw std::runtime_error("ModuleFileError(PluginConfig::load)");
-	}
-
-	std::filesystem::path mediaPipeLandscapeSelfieSegmenterParamPath(
-		obsToPath(mediaPipeLandscapeSelfieSegmenterParamPathRaw.get()));
-
-	pluginConfig->mediaPipeLandscapeSelfieSegmenterParamPath_ = mediaPipeLandscapeSelfieSegmenterParamPath;
-
-	// --- mediaPipeLandscapeSelfieSegmenterBinPath ---
-	ObsBridgeUtils::unique_bfree_char_t mediaPipeLandscapeSelfieSegmenterBinPathRaw(
-		obs_module_file(kMediaPipeLandscapeSelfieSegmenterBinPath));
-
-	if (!mediaPipeLandscapeSelfieSegmenterBinPathRaw) {
-		logger->error("ModuleFileError", {{"file", kMediaPipeLandscapeSelfieSegmenterBinPath}});
-		throw std::runtime_error("ModuleFileError(PluginConfig::load)");
-	}
-
-	std::filesystem::path mediaPipeLandscapeSelfieSegmenterBinPath(
-		obsToPath(mediaPipeLandscapeSelfieSegmenterBinPathRaw.get()));
-
-	pluginConfig->mediaPipeLandscapeSelfieSegmenterBinPath_ = mediaPipeLandscapeSelfieSegmenterBinPath;
-
 	return pluginConfig;
+}
+
+std::unique_ptr<PluginConfig> PluginConfig::fallback(std::shared_ptr<const Logger::ILogger> logger)
+{
+	return std::unique_ptr<PluginConfig>(new PluginConfig(logger));
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global
