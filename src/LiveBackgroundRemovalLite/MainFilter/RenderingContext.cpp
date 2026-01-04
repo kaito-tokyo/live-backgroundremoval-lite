@@ -23,6 +23,10 @@
 #include <KaitoTokyo/SelfieSegmenter/BoundingBox.hpp>
 #include <KaitoTokyo/SelfieSegmenter/NcnnSelfieSegmenter.hpp>
 
+extern "C" const unsigned char mediapipe_selfie_segmentation_landscape_int8_ncnn_bin[];
+extern "C" const unsigned int mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len;
+extern "C" const char mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text[];
+
 namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 namespace {
@@ -115,8 +119,9 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  subsamplingRate_(subsamplingRate),
 	  numThreads_(numThreads),
 	  selfieSegmenter_(std::make_unique<KaitoTokyo::SelfieSegmenter::NcnnSelfieSegmenter>(
-		  pluginConfig_->getMediaPipeLandscapeSelfieSegmenterParamPath(),
-		  pluginConfig_->getMediaPipeLandscapeSelfieSegmenterBinPath(), numThreads_)),
+		  mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text,
+		  static_cast<int>(mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len),
+		  mediapipe_selfie_segmentation_landscape_int8_ncnn_bin, numThreads_)),
 	  selfieSegmenterMemoryBlockPool_(
 		  Memory::MemoryBlockPool::create(logger_, selfieSegmenter_->getPixelCount() * 4)),
 	  region_{0, 0, width, height},

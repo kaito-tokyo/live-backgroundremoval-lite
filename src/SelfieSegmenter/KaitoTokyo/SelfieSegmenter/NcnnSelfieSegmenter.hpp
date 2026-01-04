@@ -60,42 +60,18 @@ constexpr auto kAlignment = 32;
 
 class NcnnSelfieSegmenter final : public ISelfieSegmenter {
 public:
-	NcnnSelfieSegmenter(const std::filesystem::path &paramPath, const std::filesystem::path &binPath,
-			    int numThreads)
+	NcnnSelfieSegmenter(const char *paramText, int binSize, const unsigned char *binData, int numThreads)
 		: maskBuffer_(kPixelCount)
 	{
 		selfieSegmenterNet_.opt.num_threads = numThreads;
 		selfieSegmenterNet_.opt.use_local_pool_allocator = true;
 		selfieSegmenterNet_.opt.openmp_blocktime = 1;
 
-		std::uintmax_t paramFileSize = std::filesystem::file_size(paramPath);
-		std::ifstream paramIfs(paramPath, std::ios::binary);
-		if (!paramIfs.is_open()) {
-			throw std::runtime_error("ParamFileOpenError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
-		}
-		std::vector<char> paramBuffer(paramFileSize + 1);
-		if (!paramIfs.read(paramBuffer.data(), paramFileSize)) {
-			throw std::runtime_error("ParamFileReadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
-		}
-		paramIfs.close();
-		paramBuffer[paramFileSize] = '\0';
-
-		if (selfieSegmenterNet_.load_param_mem(paramBuffer.data()) != 0) {
+		if (selfieSegmenterNet_.load_param_mem(paramText) != 0) {
 			throw std::runtime_error("ParamLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 
-		std::uintmax_t binFileSize = std::filesystem::file_size(binPath);
-		std::ifstream binIfs(binPath, std::ios::binary);
-		if (!binIfs.is_open()) {
-			throw std::runtime_error("BinFileOpenError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
-		}
-		binBuffer_ = std::vector<unsigned char, Memory::AlignedAllocator<unsigned char>>(
-			binFileSize, Memory::AlignedAllocator<unsigned char>(kAlignment));
-		if (!binIfs.read(reinterpret_cast<char *>(binBuffer_.data()), binFileSize)) {
-			throw std::runtime_error("BinFileReadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
-		}
-		binIfs.close();
-		if (selfieSegmenterNet_.load_model(binBuffer_.data()) != static_cast<int>(binFileSize)) {
+		if (selfieSegmenterNet_.load_model(binData) != binSize) {
 			throw std::runtime_error("ModelLoadError(NcnnSelfieSegmenter::NcnnSelfieSegmenter)");
 		}
 

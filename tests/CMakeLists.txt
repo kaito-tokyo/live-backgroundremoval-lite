@@ -2,7 +2,11 @@ include(GoogleTest)
 
 set(TEST_LIST "")
 
-add_executable(NcnnSelfieSegmenter_test SelfieSegmenter/NcnnSelfieSegmenter_test.cpp)
+add_executable(NcnnSelfieSegmenter_test
+SelfieSegmenter/NcnnSelfieSegmenter_test.cpp
+../src/LiveBackgroundRemovalLite/MainFIlter/mediapipe_selfie_segmentation_landscape_int8_ncnn_bin.c
+../src/LiveBackgroundRemovalLite/MainFIlter/mediapipe_selfie_segmentation_landscape_int8_ncnn_param.cpp
+)
 target_link_libraries(NcnnSelfieSegmenter_test PRIVATE GTest::gtest_main SelfieSegmenter stb::stb)
 list(APPEND TEST_LIST NcnnSelfieSegmenter_test)
 
