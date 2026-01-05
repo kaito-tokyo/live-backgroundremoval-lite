@@ -64,6 +64,7 @@ FirstRunDialog::FirstRunDialog(std::shared_ptr<Global::PluginConfig> pluginConfi
 	// 2. Dialog Setup & Theme Application
 	// ---------------------------------------------------------
 	setAttribute(Qt::WA_DeleteOnClose);
+	setModal(false);
 	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint | Qt::WindowCloseButtonHint |
 		       Qt::MSWindowsFixedSizeDialogHint);
 
