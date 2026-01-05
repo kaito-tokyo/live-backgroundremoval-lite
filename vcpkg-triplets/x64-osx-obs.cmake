@@ -7,7 +7,5 @@ set(VCPKG_OSX_ARCHITECTURES x86_64)
 
 set(VCPKG_CMAKE_CONFIGURE_OPTIONS -DCMAKE_INSTALL_DO_STRIP=OFF)
 set(VCPKG_OSX_DEPLOYMENT_TARGET "12.0")
-set(VCPKG_C_FLAGS "${VCPKG_C_FLAGS}")
-set(VCPKG_CXX_FLAGS "${VCPKG_CXX_FLAGS}")
 set(VCPKG_C_FLAGS_RELEASE "${VCPKG_C_FLAGS_RELEASE} -g -fno-omit-frame-pointer -fstack-protector-strong")
 set(VCPKG_CXX_FLAGS_RELEASE "${VCPKG_CXX_FLAGS_RELEASE} -g -fno-omit-frame-pointer -fstack-protector-strong")
