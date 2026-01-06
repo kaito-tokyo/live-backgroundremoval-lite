@@ -113,7 +113,7 @@ const structuredData = {
       i18nLangs.map((linkLang) => (
         <link
           rel="alternate"
-          hreflang={linkLang}
+          hreflang={linkLang.toLowerCase()}
           href={withTrailingSlash(joinURL(BASE_URL, linkLang.toLowerCase()))}
         />
       ))
