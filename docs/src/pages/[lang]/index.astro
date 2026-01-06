@@ -23,7 +23,11 @@ export type LatestRelease =
   RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
 
 const { lang } = Astro.params;
-const t = useTranslations(lang);
+const normalizedLang =
+  Object.keys(i18nDic).find(
+    (key) => key.toLowerCase() === lang.toLowerCase(),
+  ) ?? lang;
+const t = useTranslations(normalizedLang);
 
 const { BASE_URL } = import.meta.env;
 
