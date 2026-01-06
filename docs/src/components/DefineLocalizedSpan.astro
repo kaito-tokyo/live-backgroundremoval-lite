@@ -1,0 +1,18 @@
+---
+import { transform } from "esbuild";
+
+import LocalizedSpanRaw from "./LocalizedSpan.ts?raw";
+
+export async function generateCode() {
+  const { code } = await transform(LocalizedSpanRaw, {
+    loader: "ts",
+    minify: true,
+    target: "esnext",
+  });
+  return code;
+}
+
+const code = await generateCode();
+---
+
+<script is:inline set:html={code} />

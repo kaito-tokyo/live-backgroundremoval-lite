@@ -1,6 +1,7 @@
 {
   "en": {
     "langText": "English",
+    "goToLocalizedVersion": "🌐 Go to the localized version of this page",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ Remove your bg, Enrich your stream",
     "home.about.description": "Live Background Removal Lite is a free, open-source, lightweight and easy-to-use plugin for OBS Studio that allows you to remove the background from your webcam feed without the need for a green screen. It uses advanced AI technology to accurately detect and remove the background, leaving you with a clean and professional look.",
@@ -51,6 +52,7 @@
   },
   "de-de": {
     "langText": "Deutsch",
+    "goToLocalizedVersion": "🌐 Zur lokalisierten Version dieser Seite wechseln",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ Entferne deinen Hintergrund, verbessere deinen Stream",
     "home.about.description": "Live Background Removal Lite ist ein kostenloses, quelloffenes, leichtgewichtiges und benutzerfreundliches Plugin für OBS Studio, mit dem du den Hintergrund deines Webcam-Feeds ohne Greenscreen entfernen kannst. Es nutzt fortschrittliche KI-Technologie, um den Hintergrund präzise zu erkennen und zu entfernen, was dir einen sauberen und professionellen Look verleiht.",
@@ -101,6 +103,7 @@
   },
   "es-es": {
     "langText": "Español",
+    "goToLocalizedVersion": "🌐 Ir a la versión localizada de esta página",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ Elimina tu fondo, mejora tu stream",
     "home.about.description": "Live Background Removal Lite es un plugin gratuito, de código abierto, ligero y fácil de usar para OBS Studio que te permite eliminar el fondo de tu cámara web sin necesidad de una pantalla verde. Utiliza tecnología de IA avanzada para detectar y eliminar el fondo con precisión, dejándote con una imagen limpia y profesional.",
@@ -151,6 +154,7 @@
   },
   "fr-fr": {
     "langText": "Français",
+    "goToLocalizedVersion": "🌐 Aller à la version localisée de cette page",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ Supprimez votre arrière-plan, enrichissez votre stream",
     "home.about.description": "Live Background Removal Lite est un plugin gratuit, open-source, léger et facile à utiliser pour OBS Studio qui vous permet de supprimer l'arrière-plan de votre webcam sans avoir besoin d'un fond vert. Il utilise une technologie d'IA avancée pour détecter et supprimer l'arrière-plan avec précision, vous offrant un rendu propre et professionnel.",
@@ -201,6 +205,7 @@
   },
   "ko-kr": {
     "langText": "한국어",
+    "goToLocalizedVersion": "🌐 이 페이지의 현지화 버전으로 이동",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ 배경 제거로 스트리밍 품격 높이기",
     "home.about.description": "Live Background Removal Lite는 OBS Studio를 위한 무료 오픈 소스, 경량화된 사용하기 쉬운 플러그인입니다. 크로마키(그린 스크린) 없이 웹캠 피드에서 배경을 제거할 수 있습니다. 고급 AI 기술을 사용하여 배경을 정확하게 감지하고 제거하여 깔끔하고 전문적인 영상을 제공합니다.",
@@ -251,6 +256,7 @@
   },
   "ja-jp": {
     "langText": "日本語",
+    "goToLocalizedVersion": "🌐 このページのローカライズ版へ移動",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ 背景を削除して、配信をリッチに",
     "home.about.description": "Live Background Removal Liteは、OBS Studio用の無料かつオープンソースの軽量プラグインです。グリーンスクリーンなしでWebカメラの映像から背景を削除できます。高度なAI技術を使用して背景を正確に検出・削除し、清潔感のあるプロフェッショナルな映像を実現します。",
@@ -301,6 +307,7 @@
   },
   "pt-br": {
     "langText": "Português (Brasil)",
+    "goToLocalizedVersion": "🌐 Ir para a versão localizada desta página",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ Remova seu fundo, enriqueça sua live",
     "home.about.description": "O Live Background Removal Lite é um plugin gratuito, de código aberto, leve e fácil de usar para o OBS Studio, que permite remover o fundo da sua webcam sem a necessidade de um chroma key (tela verde). Ele usa tecnologia avançada de IA para detectar e remover o fundo com precisão, deixando você com uma aparência limpa e profissional.",
@@ -351,6 +358,7 @@
   },
   "ru-ru": {
     "langText": "Русский",
+    "goToLocalizedVersion": "🌐 Перейти к локализованной версии этой страницы",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ Удалите фон, улучшите стрим",
     "home.about.description": "Live Background Removal Lite — это бесплатный, открытый, легкий и простой в использовании плагин для OBS Studio, который позволяет удалять фон с веб-камеры без использования зеленого экрана (хромакея). Он использует передовые технологии ИИ для точного обнаружения и удаления фона, обеспечивая чистый и профессиональный вид.",
@@ -401,6 +409,7 @@
   },
   "zh-cn": {
     "langText": "简体中文",
+    "goToLocalizedVersion": "🌐 前往此页面的本地化版本",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ 移除背景，丰富直播画面",
     "home.about.description": "Live Background Removal Lite 是一款免费、开源、轻量级且易于使用的 OBS Studio 插件，让您无需绿幕即可从网络摄像头画面中移除背景。它利用先进的 AI 技术精准检测并移除背景，为您带来干净、专业的直播效果。",
@@ -451,6 +460,7 @@
   },
   "zh-tw": {
     "langText": "繁體中文",
+    "goToLocalizedVersion": "🌐 前往此頁面的在地化版本",
     "home.title": "Live Background Removal Lite",
     "home.about.title": "✂️ 移除背景，豐富直播畫面",
     "home.about.description": "Live Background Removal Lite 是一款免費、開源、輕量且易於使用的 OBS Studio 外掛，讓您無需綠幕即可從網路攝影機畫面中移除背景。它利用先進的 AI 技術精準偵測並移除背景，為您帶來乾淨、專業的直播效果。",

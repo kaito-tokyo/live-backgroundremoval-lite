@@ -3,6 +3,8 @@ import { joinURL, withTrailingSlash } from "ufo";
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 
 import DefineLocalDate from "../components/DefineLocalDate.astro";
+import DefineLocalizedAnchor from "../components/DefineLocalizedAnchor.astro";
+import DefineLocalizedSpan from "../components/DefineLocalizedSpan.astro";
 import GitHubMark from "../../public/github-mark.svg";
 import Layout from "../layouts/Layout.astro";
 import Logo from "../../public/favicon.svg";
@@ -26,6 +28,14 @@ const lang = "en";
 const t = useTranslations(lang);
 
 const { BASE_URL } = import.meta.env;
+
+const localizedPageLinkUrls = Object.fromEntries(
+  i18nLangs.map((lang) => [lang, withTrailingSlash(joinURL(BASE_URL, lang))]),
+);
+
+const localizedPageLinkTexts = Object.fromEntries(
+  i18nLangs.map((lang) => [lang, i18nDic[lang].goToLocalizedVersion]),
+);
 
 async function getLatestRelease(): Promise<LatestRelease> {
   const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
@@ -100,6 +110,8 @@ const structuredData = {
   <Fragment slot="head-bottom">
     <link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
     <DefineLocalDate />
+    <DefineLocalizedAnchor />
+    <DefineLocalizedSpan />
     <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}
@@ -111,6 +123,17 @@ const structuredData = {
       <Logo id="logo" />
       <span>{t("home.title")}</span>
     </h1>
+
+    <div class="localized-button">
+      <localized-anchor data-hrefmap={JSON.stringify(localizedPageLinkUrls)}>
+        <a href={joinURL(BASE_URL, "en")}>
+          <localized-span data-textmap={JSON.stringify(localizedPageLinkTexts)}
+            ><span>🌐 Go to the localized version of this page</span
+            ></localized-span
+          ></a
+        >
+      </localized-anchor>
+    </div>
 
     <section id="about">
       <h2>{t("home.about.title")}</h2>
@@ -381,6 +404,23 @@ const structuredData = {
       justify-content: center;
       align-items: center;
       gap: 1rem;
+    }
+
+    .localized-button {
+      text-align: center;
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.2rem 0.5rem;
+        border-radius: 8px;
+        background: #333;
+        color: #fff;
+        text-decoration: none;
+        box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
+        font-weight: bold;
+      }
     }
 
     #logo {
