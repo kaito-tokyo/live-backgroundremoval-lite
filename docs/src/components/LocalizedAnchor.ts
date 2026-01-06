@@ -31,9 +31,9 @@ class LocalizedAnchorElement extends HTMLElement {
         a.href = hrefMap[lowerLang];
         break;
       }
-      const looseMatch = Object.keys(hrefMap).find(e => e.slice(0, 2) === lowerLang);
-      if (looseMatch) {
-        a.href = hrefMap[looseMatch];
+      const baseLang = lowerLang.split("-")[0];
+      if (baseLang in hrefMap) {
+        a.href = hrefMap[baseLang];
         break;
       }
     }
