@@ -1,7 +1,14 @@
 <RCC>
   <qresource prefix="/live-backgroundremoval-lite">
+    <file>de_DE.qm</file>
+    <file>es_ES.qm</file>
+    <file>fr_FR.qm</file>
     <file>ja_JP.qm</file>
     <file>ko_KR.qm</file>
+    <file>pt_BR.qm</file>
+    <file>ru_RU.qm</file>
+    <file>zh_CN.qm</file>
+    <file>zh_TW.qm</file>
     <file>logo-512.png</file>
   </qresource>
 </RCC>
