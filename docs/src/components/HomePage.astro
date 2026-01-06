@@ -423,13 +423,19 @@ const structuredData = {
       <ul>
         {
           [
-            <li>
-              <a href={withTrailingSlash(baseUrl)} lang="en">
-                Global
-              </a>
-            </li>,
+            isDefaultLang ? (
+              <li>
+                <span lang="en">Global</span>
+              </li>
+            ) : (
+              <li>
+                <a href={withTrailingSlash(baseUrl)} lang="en">
+                  Global
+                </a>
+              </li>
+            ),
             ...i18nLangs.map((linkLang) =>
-              linkLang === lang ? (
+              linkLang === rawLang ? (
                 // prettier-ignore
                 <li><span lang={linkLang}>{i18nDic[linkLang].langText}</span></li>
               ) : (
