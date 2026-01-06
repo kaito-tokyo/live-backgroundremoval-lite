@@ -140,6 +140,7 @@ obs_properties_t *MainFilterContext::getProperties()
 		} catch (...) {
 			logger_->error("CheckUpdateUnknownExceptionError");
 		}
+		obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 	}
 
 	// Debug button
