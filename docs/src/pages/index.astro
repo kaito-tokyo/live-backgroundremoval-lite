@@ -30,7 +30,7 @@ const t = useTranslations(lang);
 const { BASE_URL } = import.meta.env;
 
 const localizedPageLinkUrls = Object.fromEntries(
-  i18nLangs.map((lang) => [lang, withTrailingSlash(joinURL(BASE_URL, lang))]),
+  i18nLangs.map((lang) => [lang, withTrailingSlash(joinURL(BASE_URL, lang.toLowerCase()))]),
 );
 
 const localizedPageLinkTexts = Object.fromEntries(
@@ -105,6 +105,15 @@ const structuredData = {
       rel="canonical"
       href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang))}
     />
+    {
+      i18nLangs.map((linkLang) => (
+        <link
+          rel="alternate"
+          hreflang={linkLang}
+          href={withTrailingSlash(joinURL(BASE_URL, linkLang))}
+        />
+      ))
+    }
   </Fragment>
 
   <Fragment slot="head-bottom">
@@ -378,11 +387,11 @@ const structuredData = {
         {
           [
             <li>
-              <span>Global</span>
+              <span lang="en">Global</span>
             </li>,
             ...i18nLangs.map((linkLang) =>
               // prettier-ignore
-              <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang))} hreflang={linkLang} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>,
+              <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang.toLowerCase()))} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>,
             ),
           ]
         }

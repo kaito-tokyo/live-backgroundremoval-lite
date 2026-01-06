@@ -9,7 +9,8 @@ type Keys = keyof I18nDic[typeof defaultLang];
 export const i18nLangs = Object.keys(i18nDic) as Lang[];
 
 export function useTranslations(lang: string) {
-  const validLang = lang != null && lang in i18nDic ? (lang as Lang) : defaultLang;
+  const validLang =
+    lang != null && lang in i18nDic ? (lang as Lang) : defaultLang;
 
   return (key: Keys, vars?: Record<string, string | number>) => {
     let str = i18nDic[validLang][key] || i18nDic[defaultLang][key] || "";

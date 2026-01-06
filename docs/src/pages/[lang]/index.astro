@@ -88,7 +88,7 @@ const structuredData = {
 };
 
 export async function getStaticPaths() {
-  return i18nLangs.map((lang) => ({ params: { lang } }));
+  return i18nLangs.map((lang) => ({ params: { lang: lang.toLowerCase() } }));
 }
 ---
 
@@ -99,6 +99,15 @@ export async function getStaticPaths() {
       rel="canonical"
       href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang))}
     />
+    {
+      i18nLangs.map((linkLang) => (
+        <link
+          rel="alternate"
+          hreflang={linkLang}
+          href={withTrailingSlash(joinURL(BASE_URL, linkLang))}
+        />
+      ))
+    }
   </Fragment>
 
   <Fragment slot="head-bottom">
@@ -116,7 +125,7 @@ export async function getStaticPaths() {
       <span>{t("home.title")}</span>
     </h1>
 
-    <div class="localized-button">
+    <div class="localized-button" lang="en">
       <a href={joinURL(BASE_URL)}
         ><span>🌐 Go to the global version of this page</span></a
       >
@@ -365,17 +374,17 @@ export async function getStaticPaths() {
         {
           [
             <li>
-              <a href={withTrailingSlash(BASE_URL)} hreflang="en" lang="en">
+              <a href={withTrailingSlash(BASE_URL)} lang="en">
                 Global
               </a>
             </li>,
             ...i18nLangs.map((linkLang) =>
               linkLang === lang ? (
                 // prettier-ignore
-                <li><span>{i18nDic[linkLang].langText}</span></li>
+                <li><span lang={linkLang}>{i18nDic[linkLang].langText}</span></li>
               ) : (
                 // prettier-ignore
-                <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang))} hreflang={linkLang} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>
+                <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang.toLowerCase()))} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>
               ),
             ),
           ]

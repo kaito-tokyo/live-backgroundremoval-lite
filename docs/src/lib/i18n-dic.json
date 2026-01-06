@@ -50,7 +50,7 @@
     "home.structuredData.feature4": "No physical green screen required",
     "home.structuredData.feature5": "Support for Windows, macOS (CoreML), and Linux"
   },
-  "de-de": {
+  "de-DE": {
     "langText": "Deutsch",
     "goToLocalizedVersion": "🌐 Zur lokalisierten Version dieser Seite wechseln",
     "home.title": "Live Background Removal Lite",
@@ -101,7 +101,7 @@
     "home.structuredData.feature4": "Kein physischer Greenscreen erforderlich",
     "home.structuredData.feature5": "Unterstützung für Windows, macOS (CoreML) und Linux"
   },
-  "es-es": {
+  "es-ES": {
     "langText": "Español",
     "goToLocalizedVersion": "🌐 Ir a la versión localizada de esta página",
     "home.title": "Live Background Removal Lite",
@@ -152,7 +152,7 @@
     "home.structuredData.feature4": "No se requiere pantalla verde física",
     "home.structuredData.feature5": "Soporte para Windows, macOS (CoreML) y Linux"
   },
-  "fr-fr": {
+  "fr-FR": {
     "langText": "Français",
     "goToLocalizedVersion": "🌐 Aller à la version localisée de cette page",
     "home.title": "Live Background Removal Lite",
@@ -203,7 +203,7 @@
     "home.structuredData.feature4": "Aucun fond vert physique requis",
     "home.structuredData.feature5": "Support pour Windows, macOS (CoreML) et Linux"
   },
-  "ko-kr": {
+  "ko-KR": {
     "langText": "한국어",
     "goToLocalizedVersion": "🌐 이 페이지의 현지화 버전으로 이동",
     "home.title": "Live Background Removal Lite",
@@ -254,7 +254,7 @@
     "home.structuredData.feature4": "물리적 그린 스크린 불필요",
     "home.structuredData.feature5": "Windows, macOS (CoreML), Linux 지원"
   },
-  "ja-jp": {
+  "ja-JP": {
     "langText": "日本語",
     "goToLocalizedVersion": "🌐 このページのローカライズ版へ移動",
     "home.title": "Live Background Removal Lite",
@@ -305,7 +305,7 @@
     "home.structuredData.feature4": "物理的なグリーンスクリーン不要",
     "home.structuredData.feature5": "Windows, macOS (CoreML), Linux対応"
   },
-  "pt-br": {
+  "pt-BR": {
     "langText": "Português (Brasil)",
     "goToLocalizedVersion": "🌐 Ir para a versão localizada desta página",
     "home.title": "Live Background Removal Lite",
@@ -356,7 +356,7 @@
     "home.structuredData.feature4": "Não requer tela verde física",
     "home.structuredData.feature5": "Suporte para Windows, macOS (CoreML) e Linux"
   },
-  "ru-ru": {
+  "ru-RU": {
     "langText": "Русский",
     "goToLocalizedVersion": "🌐 Перейти к локализованной версии этой страницы",
     "home.title": "Live Background Removal Lite",
@@ -407,7 +407,7 @@
     "home.structuredData.feature4": "Физический зеленый экран не требуется",
     "home.structuredData.feature5": "Поддержка Windows, macOS (CoreML) и Linux"
   },
-  "zh-cn": {
+  "zh-CN": {
     "langText": "简体中文",
     "goToLocalizedVersion": "🌐 前往此页面的本地化版本",
     "home.title": "Live Background Removal Lite",
@@ -458,7 +458,7 @@
     "home.structuredData.feature4": "无需物理绿幕",
     "home.structuredData.feature5": "支持 Windows, macOS (CoreML) 和 Linux"
   },
-  "zh-tw": {
+  "zh-TW": {
     "langText": "繁體中文",
     "goToLocalizedVersion": "🌐 前往此頁面的在地化版本",
     "home.title": "Live Background Removal Lite",
