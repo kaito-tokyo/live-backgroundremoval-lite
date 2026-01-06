@@ -188,7 +188,7 @@ elseif(MSVC)
 else()
   target_link_options(
     ${CMAKE_PROJECT_NAME}
-    PRIVATE "-Wl,--version-script,${CMAKE_CURRENT_SOURCE_DIR}/src/exported_symbols_linux.map"
+    PRIVATE "-Wl,--version-script,${CMAKE_CURRENT_SOURCE_DIR}/src/exported_symbols_linux.map" "-Wl,-Bsymbolic"
   )
 endif()
 
