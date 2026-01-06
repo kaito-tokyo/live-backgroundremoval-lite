@@ -13,29 +13,34 @@ class LocalizedWithMapElement extends HTMLElement {
     this.s = slot;
   }
 
-  matchLocale(
-    supported: readonly string[],
-    requested: readonly string[],
-    fallback: string,
-  ) {
-    for (const req of requested) {
-      try {
-        const reqLocale = new Intl.Locale(req);
+  resolveLocale(languages: readonly string[]): string {
+    for (const rawLang of languages) {
+      const lang = rawLang.toLowerCase();
 
-        if (supported.includes(reqLocale.baseName)) return reqLocale.baseName;
-
-        const found = supported.find((sup) => {
-          const supLocale = new Intl.Locale(sup);
-          return supLocale.language === reqLocale.language;
-        });
-
-        if (found) return found;
-      } catch (e) {
-        continue;
+      if (lang.startsWith('zh')) {
+        if (
+          lang === 'zh-tw' ||
+          lang === 'zh-hk' ||
+          lang === 'zh-mo' ||
+          lang.includes('hant')
+        ) {
+          return 'zh-tw';
+        }
+        return 'zh-cn';
       }
+
+      if (lang.startsWith('ja')) return 'ja-jp';
+      if (lang.startsWith('en')) return 'en';
+      if (lang.startsWith('ko')) return 'ko-kr';
+
+      if (lang.startsWith('de')) return 'de-de';
+      if (lang.startsWith('fr')) return 'fr-fr';
+      if (lang.startsWith('es')) return 'es-es';
+      if (lang.startsWith('pt')) return 'pt-br';
+      if (lang.startsWith('ru')) return 'ru-ru';
     }
 
-    return fallback;
+    return 'en';
   }
 
   handleSlotChange(e: Event) {
@@ -45,11 +50,7 @@ class LocalizedWithMapElement extends HTMLElement {
     const map = this.m;
     const nodes = slot.assignedElements();
     const child = nodes[0];
-    const matchedLocale = this.matchLocale(
-      Object.keys(map),
-      navigator.languages,
-      "en",
-    );
+    const matchedLocale = this.resolveLocale(navigator.languages);
     if (child instanceof HTMLAnchorElement) child.href = map[matchedLocale];
     else if (child instanceof HTMLSpanElement)
       child.textContent = map[matchedLocale];
