@@ -99,6 +99,7 @@ export async function getStaticPaths() {
       rel="canonical"
       href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang.toLowerCase()))}
     />
+    <link rel="alternate" hreflang="x-default" href={withTrailingSlash(BASE_URL)} />
     {
       i18nLangs.map((linkLang) => (
         <link
