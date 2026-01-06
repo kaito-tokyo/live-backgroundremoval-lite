@@ -3,10 +3,14 @@ import i18nDic from "./i18n-dic.json";
 export const defaultLang = "en";
 
 type I18nDic = typeof i18nDic;
-type Lang = keyof I18nDic;
+export type Lang = keyof I18nDic;
 type Keys = keyof I18nDic[typeof defaultLang];
 
 export const i18nLangs = Object.keys(i18nDic) as Lang[];
+
+export function isValidLang(lang: string): lang is Lang {
+  return lang in i18nDic;
+}
 
 export function useTranslations(lang: string) {
   const validLang =
