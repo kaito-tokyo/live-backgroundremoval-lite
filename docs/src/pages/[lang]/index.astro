@@ -1,0 +1,485 @@
+---
+import { joinURL, withTrailingSlash } from "ufo";
+import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
+
+import DefineLocalDate from "../../components/DefineLocalDate.astro";
+import GitHubMark from "../../../public/github-mark.svg";
+import Layout from "../../layouts/Layout.astro";
+import Logo from "../../../public/favicon.svg";
+import { useTranslations, i18nLangs } from '../../lib/i18n.js';
+
+import {
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  GITHUB_URL,
+  PRODUCTION_BASE_URL,
+  getAggregateRating,
+} from "../../lib/info.js";
+
+import { dependencies } from "../../../../buildspec.json";
+
+export type LatestRelease =
+  RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
+
+const { BASE_URL } = import.meta.env;
+
+async function getLatestRelease(): Promise<LatestRelease> {
+  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
+
+  const latestRelease = await octokit.rest.repos.getLatestRelease({
+    owner: GITHUB_OWNER,
+    repo: GITHUB_REPO,
+  });
+
+  return latestRelease.data;
+}
+
+const release = await getLatestRelease();
+
+const windowsZipAsset = release.assets.find((a) =>
+  a.name.endsWith("windows-x64.zip"),
+);
+const macosPkgAsset = release.assets.find((a) =>
+  a.name.endsWith("macos-universal.pkg"),
+);
+const ubuntuDebAsset = release.assets.find((a) =>
+  a.name.endsWith("x86_64-linux-gnu.deb"),
+);
+
+const aggregateRating = await getAggregateRating();
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Live Background Removal Lite",
+  url: "https://kaito-tokyo.github.io/live-backgroundremoval-lite/",
+  author: {
+    "@type": "Person",
+    name: "Kaito Udagawa",
+    url: "https://github.com/kaito-tokyo",
+  },
+  description:
+    "A high-performance, crash-resistant OBS plugin for real-time background removal without a green screen. Optimized for gaming and low-spec PCs.",
+  applicationCategory: "MultimediaApplication",
+  operatingSystem: "Windows 11, macOS, Ubuntu, Arch Linux, Flatpak",
+  softwareRequirements: `OBS Studio ${dependencies["obs-studio"].version} or later`,
+  fileFormat:
+    "application/x-msdownload, application/octet-stream, application/vnd.debian.binary-package",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+    availability: "https://schema.org/InStock",
+  },
+  aggregateRating,
+  featureList: [
+    "Zero-Crash Architecture (Modern C++)",
+    "Smart Hybrid Pipeline (CPU Inference + GPU Post-Processing)",
+    "Gaming-First optimization with negligible GPU load",
+    "No physical green screen required",
+    "Support for Windows, macOS (CoreML), and Linux",
+  ],
+  screenshot:
+    "https://kaito-tokyo.github.io/live-backgroundremoval-lite/demo.gif",
+  softwareVersion: release.tag_name,
+};
+
+export async function getStaticPaths() {
+  return i18nLangs.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params;
+
+const t = useTranslations(lang);
+---
+
+<Layout lang={lang} title="Live Background Removal Lite">
+  <Fragment slot="head-info">
+    <meta name="description" content={structuredData.description} />
+    <link rel="canonical" href={withTrailingSlash(PRODUCTION_BASE_URL)} />
+  </Fragment>
+
+  <Fragment slot="head-bottom">
+    <link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
+    <DefineLocalDate />
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(structuredData)}
+    />
+  </Fragment>
+
+  <main class="white-box">
+    <h1>
+      <Logo id="logo" />
+      <span>Live Background Removal Lite</span>
+    </h1>
+
+    <section id="about">
+      <h2>{t("home.about.title")}</h2>
+      <p>
+        Live Background Removal Lite is a free, open-source, lightweight and
+        easy-to-use plugin for OBS Studio that allows you to remove the
+        background from your webcam feed without the need for a green screen. It
+        uses advanced AI technology to accurately detect and remove the
+        background, leaving you with a clean and professional look.
+      </p>
+    </section>
+
+    <section id="latest-downloads">
+      <h2>
+        ⬇️ Download Latest {release.tag_name}
+        {
+          [
+            "(",
+            <local-date data-date={release.published_at}>
+              <time datetime={release.published_at}>
+                {release.published_at}
+              </time>
+            </local-date>,
+            ")",
+          ]
+        }
+      </h2>
+      <ul class="download-links">
+        {
+          windowsZipAsset && (
+            <li>
+              <a href={windowsZipAsset.browser_download_url}>Windows (zip)</a>
+            </li>
+          )
+        }
+        {
+          macosPkgAsset && (
+            <li>
+              <a href={macosPkgAsset.browser_download_url}>Mac (pkg)</a>
+            </li>
+          )
+        }
+        {
+          ubuntuDebAsset && (
+            <li>
+              <a href={ubuntuDebAsset.browser_download_url}>Ubuntu (deb)</a>
+            </li>
+          )
+        }
+      </ul>
+
+      <ul class="download-links">
+        <li>
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
+            >Arch Linux</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak"
+            >Flatpak</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/fedora"
+            >Fedora</a
+          >
+        </li>
+      </ul>
+
+      <p id="rating">
+        ⭐️ Rated {aggregateRating.ratingValue} / 5 ({
+          aggregateRating.reviewCount
+        }
+        {aggregateRating.reviewCount === "1" ? "review" : "reviews"}) on <a
+          href="https://obsproject.com/forum/resources/live-background-removal-lite.2226/"
+          target="_blank"
+          rel="noopener noreferrer">OBS Forums</a
+        >
+      </p>
+    </section>
+
+    <section id="ask-anything">
+      <a
+        href={withTrailingSlash(joinURL(BASE_URL, "ask-anything"))}
+        class="ask-anything-button"
+      >
+        <svg
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="button-icon"
+          ><path
+            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+          ></path></svg
+        >
+        <span class="button-text">Ask Anything (Experimental)</span>
+      </a>
+    </section>
+
+    <section id="demo">
+      <h2>📸 Demo</h2>
+      <div class="demo-container">
+        <video
+          autoplay
+          loop
+          muted
+          playsinline
+          width="480"
+          height="270"
+          poster={joinURL(BASE_URL, "demo.webp")}
+          aria-label="Video showing background removal revealing a checkerboard pattern"
+        >
+          <source
+            src={joinURL(BASE_URL, "demo-av1.mp4")}
+            type="video/mp4; codecs=av01.0.05M.10"
+          />
+          <source
+            src={joinURL(BASE_URL, "demo.mp4")}
+            type='video/mp4; codecs="avc1.64001f"'
+          />
+        </video>
+        <p class="demo-caption">
+          <em
+            >The plugin removes a cluttered room background, revealing a
+            checkerboard pattern set behind in OBS.</em
+          >
+        </p>
+      </div>
+    </section>
+
+    <hr />
+
+    <nav aria-label="Installing and configuring documentation navigation">
+      <ul>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(BASE_URL, "install"))}
+            title="Installation Guide of Live Background Removal Lite"
+            >Installation Guide</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(BASE_URL, "usage"))}
+            title="Usage & Configuration of Live Background Removal Lite"
+            >Usage & Configuration</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(BASE_URL, "versions"))}
+            title="Version History of Live Background Removal Lite"
+            >Version History</a
+          >
+        </li>
+        <li>
+          <a href={withTrailingSlash(joinURL(BASE_URL, "faq"))}
+            >Frequently Asked Questions (FAQ)</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://discord.gg/ujRU8VB4rw"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Join our Discord Server for community support and discussions"
+            >Discord Server</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(BASE_URL, "site-verification"))}
+            title="Site Verification using Provenance and Attestation"
+            >Site Verification Guide</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer">GitHub Repository</a
+          >
+        </li>
+      </ul>
+    </nav>
+
+    <hr />
+
+    <section id="features">
+      <h2>For who?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>🎮 Gamers & GPU-Heavy Streamers</h3>
+          <p>
+            Don't sacrifice your in-game FPS for a webcam effect. Unlike other
+            plugins that hog your GPU, this plugin follows a <strong
+              >"Gaming-First" philosophy</strong
+            >. It intelligently offloads AI inference to the CPU, preserving
+            your GPU's headroom for rendering games at maximum performance.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>💻 Laptop & Non-RTX Users</h3>
+          <p>
+            Running OBS on a laptop or without a high-end dedicated GPU? No
+            problem. The AI engine runs on a highly optimized CPU model with <strong
+              >constant low usage</strong
+            >, regardless of whether your camera is 720p or 4K.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>🛡️ Streamers Seeking Stability</h3>
+          <p>
+            Tired of plugins crashing your OBS mid-stream? Built with a <strong
+              >"Zero-Crash Architecture"</strong
+            > in Modern C++, this plugin is engineered to be crash-resistant and safe,
+            ensuring your stream stays live no matter what.
+          </p>
+        </div>
+
+        <div class="feature-card">
+          <h3>✨ Users Who Want "Plug & Play"</h3>
+          <p>
+            No complex parameters or manual tweaking required. Designed with a <strong
+              >"Zero-Configuration"</strong
+            > mindset, the default settings are carefully calibrated to work in 99%
+            of environments instantly.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <a
+      href={GITHUB_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="View source on GitHub"
+      id="github-corner-link"
+    >
+      <GitHubMark viewBox="0 0 98 96" width="48" height="48" />
+    </a>
+  </main>
+
+  <style is:global>
+    main {
+      position: relative;
+      background: linear-gradient(49deg, #fff calc(100% - 110px), #bbbbcc 100%);
+
+      h1 {
+        margin-top: 40px;
+        font-weight: 700;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      #logo {
+        width: 96px;
+        height: 96px;
+        flex-shrink: 0;
+      }
+
+      .download-links {
+        margin-bottom: 1rem;
+      }
+
+      #rating {
+        text-align: center;
+        font-style: italic;
+      }
+
+      .demo-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .demo-container video {
+        max-width: 100%;
+        height: auto;
+        background: #e0e0e0;
+      }
+      .demo-caption {
+        margin-top: 8px;
+        color: #666;
+        font-size: 90%;
+        text-align: center;
+      }
+
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+      }
+      .feature-card {
+        background-color: #f9fafb;
+        padding: 1.5rem;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+      }
+      .feature-card h3 {
+        margin-top: 0;
+        font-size: 1.1em;
+      }
+
+      #ask-anything {
+        text-align: center;
+      }
+
+      .ask-anything-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1em 2em;
+        font-size: 1.2em;
+        border-radius: 999px;
+        background: var(--color-button-2, #4f8cff);
+        color: #fff;
+        text-decoration: none;
+        box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
+        transition:
+          background-color 0.2s,
+          box-shadow 0.2s;
+        font-weight: bold;
+      }
+      .ask-anything-button:hover,
+      .ask-anything-button:focus {
+        background: var(--color-button-1, #2563eb);
+        box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
+      }
+      .button-icon {
+        margin-right: 0.5em;
+      }
+      .button-text {
+        vertical-align: middle;
+      }
+
+      #github-corner-link {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        display: block;
+      }
+
+      #github-corner-link::before {
+        content: "";
+        position: absolute;
+
+        top: -1.5rem;
+        right: -1.5rem;
+        bottom: -1.5rem;
+        left: -1.5rem;
+      }
+    }
+  </style>
+</Layout>
