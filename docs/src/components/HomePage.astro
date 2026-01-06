@@ -1,0 +1,595 @@
+---
+import { joinURL, withTrailingSlash } from "ufo";
+import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
+
+import DefineLocalDate from "./DefineLocalDate.astro";
+import DefineLocalizedWithMap from "./DefineLocalizedWithMap.astro";
+import GitHubMark from "../../public/github-mark.svg";
+import Layout from "../layouts/Layout.astro";
+import Logo from "../../public/favicon.svg";
+import {
+  useTranslations,
+  isValidLang,
+  i18nLangs,
+  type Lang,
+} from "../lib/i18n.js";
+import i18nDic from "../lib/i18n-dic.json";
+
+import {
+  GITHUB_OWNER,
+  GITHUB_REPO,
+  GITHUB_URL,
+  PRODUCTION_BASE_URL,
+  getAggregateRating,
+} from "../lib/info.js";
+
+import { dependencies } from "../../../buildspec.json";
+
+interface Props {
+  lang: Lang | "x-default";
+  baseUrl: string;
+}
+
+export type LatestRelease =
+  RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
+
+const { lang: rawLang, baseUrl } = Astro.props;
+
+let lang: Lang;
+if (rawLang === "x-default") {
+  lang = "en";
+} else {
+  if (isValidLang(rawLang)) {
+    lang = rawLang;
+  } else {
+    throw new Error(`Unsupported language: ${rawLang}`);
+  }
+}
+const isDefaultLang = rawLang === "x-default";
+
+const t = useTranslations(lang);
+
+const localizedPageLinkUrls = Object.fromEntries(
+  i18nLangs.map((lang) => [lang, withTrailingSlash(joinURL(baseUrl, lang))]),
+);
+
+const localizedPageLinkTexts = Object.fromEntries(
+  i18nLangs.map((lang) => [lang, i18nDic[lang].goToLocalizedVersion]),
+);
+
+async function getLatestRelease(): Promise<LatestRelease> {
+  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
+
+  const latestRelease = await octokit.rest.repos.getLatestRelease({
+    owner: GITHUB_OWNER,
+    repo: GITHUB_REPO,
+  });
+
+  return latestRelease.data;
+}
+
+const release = await getLatestRelease();
+
+const windowsZipAsset = release.assets.find((a) =>
+  a.name.endsWith("windows-x64.zip"),
+);
+const macosPkgAsset = release.assets.find((a) =>
+  a.name.endsWith("macos-universal.pkg"),
+);
+const ubuntuDebAsset = release.assets.find((a) =>
+  a.name.endsWith("x86_64-linux-gnu.deb"),
+);
+
+const aggregateRating = await getAggregateRating();
+
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Live Background Removal Lite",
+  url: "https://kaito-tokyo.github.io/live-backgroundremoval-lite/",
+  author: {
+    "@type": "Person",
+    name: "Kaito Udagawa",
+    url: "https://github.com/kaito-tokyo",
+  },
+  description: t("home.structuredData.description"),
+  applicationCategory: "MultimediaApplication",
+  operatingSystem: "Windows 11, macOS, Ubuntu, Arch Linux, Flatpak",
+  softwareRequirements: `OBS Studio ${dependencies["obs-studio"].version} or later`,
+  fileFormat:
+    "application/x-msdownload, application/octet-stream, application/vnd.debian.binary-package",
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+    availability: "https://schema.org/InStock",
+  },
+  aggregateRating,
+  featureList: [
+    t("home.structuredData.feature1"),
+    t("home.structuredData.feature2"),
+    t("home.structuredData.feature3"),
+    t("home.structuredData.feature4"),
+    t("home.structuredData.feature5"),
+  ],
+  screenshot:
+    "https://kaito-tokyo.github.io/live-backgroundremoval-lite/demo.gif",
+  softwareVersion: release.tag_name,
+};
+---
+
+<Layout lang={lang} title="Live Background Removal Lite">
+  <Fragment slot="head-info">
+    <meta name="description" content={structuredData.description} />
+    <link
+      rel="canonical"
+      href={withTrailingSlash(
+        isDefaultLang
+          ? PRODUCTION_BASE_URL
+          : joinURL(PRODUCTION_BASE_URL, lang),
+      )}
+    />
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={withTrailingSlash(PRODUCTION_BASE_URL)}
+    />
+    {
+      i18nLangs.map((l) => (
+        <link
+          rel="alternate"
+          hreflang={l}
+          href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, l))}
+        />
+      ))
+    }
+  </Fragment>
+
+  <Fragment slot="head-bottom">
+    <link rel="preload" as="image" href={joinURL(baseUrl, "demo.webp")} />
+    <DefineLocalDate />
+    {isDefaultLang && <DefineLocalizedWithMap />}
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(structuredData)}
+    />
+  </Fragment>
+
+  <main class="white-box">
+    <h1>
+      <Logo id="logo" />
+      <span>{t("home.title")}</span>
+    </h1>
+
+    <div class="localized-button" lang="en">
+      {
+        isDefaultLang ? (
+          <localized-with-map data-map={JSON.stringify(localizedPageLinkUrls)}>
+            <a href={joinURL(baseUrl, "en")}>
+              <localized-with-map
+                data-map={JSON.stringify(localizedPageLinkTexts)}
+              >
+                <span>{i18nDic.en.goToLocalizedVersion}</span>
+              </localized-with-map>
+            </a>
+          </localized-with-map>
+        ) : (
+          <a href={joinURL(baseUrl)}>
+            <span>🌐 Go to the global version of this page</span>
+          </a>
+        )
+      }
+    </div>
+
+    <section id="about">
+      <h2>{t("home.about.title")}</h2>
+      <p>
+        {t("home.about.description")}
+      </p>
+    </section>
+
+    <section id="latest-downloads">
+      <h2>
+        {t("home.downloads.title", { version: release.tag_name })}
+        {
+          [
+            "(",
+            <local-date data-date={release.published_at}>
+              <time datetime={release.published_at}>
+                {release.published_at}
+              </time>
+            </local-date>,
+            ")",
+          ]
+        }
+      </h2>
+      <ul class="download-links">
+        {
+          windowsZipAsset && (
+            <li>
+              <a href={windowsZipAsset.browser_download_url}>
+                {t("home.downloads.windows")}
+              </a>
+            </li>
+          )
+        }
+        {
+          macosPkgAsset && (
+            <li>
+              <a href={macosPkgAsset.browser_download_url}>
+                {t("home.downloads.macos")}
+              </a>
+            </li>
+          )
+        }
+        {
+          ubuntuDebAsset && (
+            <li>
+              <a href={ubuntuDebAsset.browser_download_url}>
+                {t("home.downloads.ubuntu")}
+              </a>
+            </li>
+          )
+        }
+      </ul>
+
+      <ul class="download-links">
+        <li>
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/arch"
+            >{t("home.downloads.arch")}</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/flatpak"
+            >{t("home.downloads.flatpak")}</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://github.com/kaito-tokyo/live-backgroundremoval-lite/tree/main/unsupported/fedora"
+            >{t("home.downloads.fedora")}</a
+          >
+        </li>
+      </ul>
+
+      <p id="rating">
+        {
+          t("home.rating", {
+            rating: aggregateRating.ratingValue,
+            count: aggregateRating.reviewCount,
+            review:
+              aggregateRating.reviewCount === "1"
+                ? t("home.rating.review")
+                : t("home.rating.reviews"),
+          })
+        }
+        <a
+          href="https://obsproject.com/forum/resources/live-background-removal-lite.2226/"
+          target="_blank"
+          rel="noopener noreferrer">OBS Forums</a
+        >
+      </p>
+    </section>
+
+    <section id="ask-anything">
+      <a
+        href={withTrailingSlash(joinURL(baseUrl, "ask-anything"))}
+        class="ask-anything-button"
+      >
+        <svg
+          aria-hidden="true"
+          xmlns="http://www.w3.org/2000/svg"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="button-icon"
+          ><path
+            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+          ></path></svg
+        >
+        <span class="button-text">{t("home.ask-anything")}</span>
+      </a>
+    </section>
+
+    <section id="demo">
+      <h2>{t("home.demo.title")}</h2>
+      <div class="demo-container">
+        <video
+          autoplay
+          loop
+          muted
+          playsinline
+          width="480"
+          height="270"
+          poster={joinURL(baseUrl, "demo.webp")}
+          aria-label={t("home.demo.aria")}
+        >
+          <source
+            src={joinURL(baseUrl, "demo-av1.mp4")}
+            type="video/mp4; codecs=av01.0.05M.10"
+          />
+          <source
+            src={joinURL(baseUrl, "demo.mp4")}
+            type='video/mp4; codecs="avc1.64001f"'
+          />
+        </video>
+        <p class="demo-caption">
+          <em>{t("home.demo.caption")}</em>
+        </p>
+      </div>
+    </section>
+
+    <hr />
+
+    <nav aria-label={t("home.nav.aria")}>
+      <ul>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(baseUrl, "install"))}
+            title={t("home.nav.install.title")}>{t("home.nav.install")}</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(baseUrl, "usage"))}
+            title={t("home.nav.usage.title")}>{t("home.nav.usage")}</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(baseUrl, "versions"))}
+            title={t("home.nav.versions.title")}>{t("home.nav.versions")}</a
+          >
+        </li>
+        <li>
+          <a href={withTrailingSlash(joinURL(baseUrl, "faq"))}
+            >{t("home.nav.faq")}</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://discord.gg/ujRU8VB4rw"
+            target="_blank"
+            rel="noopener noreferrer"
+            title={t("home.nav.discord.title")}
+            aria-label={t("home.nav.discord.aria")}>{t("home.nav.discord")}</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(joinURL(baseUrl, "site-verification"))}
+            title={t("home.nav.siteVerification.title")}
+            >{t("home.nav.siteVerification")}</a
+          >
+        </li>
+        <li>
+          <a
+            href={withTrailingSlash(GITHUB_URL)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t("home.nav.github.aria")}>{t("home.nav.github")}</a
+          >
+        </li>
+      </ul>
+    </nav>
+
+    <hr />
+
+    <section id="features">
+      <h2>{t("home.features.title")}</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>{t("home.features.gamers.title")}</h3>
+          <p>{t("home.features.gamers.desc")}</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>{t("home.features.laptop.title")}</h3>
+          <p>{t("home.features.laptop.desc")}</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>{t("home.features.stability.title")}</h3>
+          <p>{t("home.features.stability.desc")}</p>
+        </div>
+
+        <div class="feature-card">
+          <h3>{t("home.features.plugplay.title")}</h3>
+          <p>{t("home.features.plugplay.desc")}</p>
+        </div>
+      </div>
+    </section>
+
+    <a
+      href={GITHUB_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t("home.nav.github.aria")}
+      id="github-corner-link"
+    >
+      <GitHubMark viewBox="0 0 98 96" width="48" height="48" />
+    </a>
+  </main>
+
+  <Fragment slot="footer-langs">
+    <nav class="footer-langs" aria-label="Language">
+      <ul>
+        {
+          [
+            <li>
+              <a href={withTrailingSlash(baseUrl)} lang="en">
+                Global
+              </a>
+            </li>,
+            ...i18nLangs.map((linkLang) =>
+              linkLang === lang ? (
+                // prettier-ignore
+                <li><span lang={linkLang}>{i18nDic[linkLang].langText}</span></li>
+              ) : (
+                // prettier-ignore
+                <li><a href={withTrailingSlash(joinURL(baseUrl, linkLang))} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>
+              ),
+            ),
+          ]
+        }
+      </ul>
+    </nav>
+  </Fragment>
+</Layout>
+
+<style is:global>
+  main {
+    position: relative;
+    background: linear-gradient(49deg, #fff calc(100% - 110px), #bbbbcc 100%);
+
+    h1 {
+      margin-top: 40px;
+      font-weight: 700;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .localized-button {
+      text-align: center;
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.2rem 0.5rem;
+        border-radius: 8px;
+        background: #333;
+        color: #fff;
+        text-decoration: none;
+        box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
+        font-weight: bold;
+      }
+    }
+
+    #logo {
+      width: 96px;
+      height: 96px;
+      flex-shrink: 0;
+    }
+
+    .download-links {
+      margin-bottom: 1rem;
+    }
+
+    #rating {
+      text-align: center;
+      font-style: italic;
+    }
+
+    .demo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .demo-container video {
+      max-width: 100%;
+      height: auto;
+      background: #e0e0e0;
+    }
+    .demo-caption {
+      margin-top: 8px;
+      color: #666;
+      font-size: 90%;
+      text-align: center;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .feature-card {
+      background-color: #f9fafb;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .feature-card h3 {
+      margin-top: 0;
+      font-size: 1.1em;
+    }
+
+    #ask-anything {
+      text-align: center;
+    }
+
+    .ask-anything-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1em 2em;
+      font-size: 1.2em;
+      border-radius: 999px;
+      background: var(--color-button-2, #4f8cff);
+      color: #fff;
+      text-decoration: none;
+      box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
+      transition:
+        background-color 0.2s,
+        box-shadow 0.2s;
+      font-weight: bold;
+    }
+    .ask-anything-button:hover,
+    .ask-anything-button:focus {
+      background: var(--color-button-1, #2563eb);
+      box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
+    }
+    .button-icon {
+      margin-right: 0.5em;
+    }
+    .button-text {
+      vertical-align: middle;
+    }
+
+    #github-corner-link {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      display: block;
+    }
+
+    #github-corner-link::before {
+      content: "";
+      position: absolute;
+
+      top: -1.5rem;
+      right: -1.5rem;
+      bottom: -1.5rem;
+      left: -1.5rem;
+    }
+  }
+
+  .footer-langs {
+    ul {
+      text-align: center;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    li {
+      display: inline-block;
+    }
+
+    li + li::before {
+      content: "|";
+      margin: 0 0.3rem;
+    }
+  }
+</style>
