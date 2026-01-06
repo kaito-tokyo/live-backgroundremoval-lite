@@ -350,129 +350,152 @@ const structuredData = {
   </main>
 
   <Fragment slot="footer-langs">
-    <nav aria-label="Language">
+    <nav class="footer-langs" aria-label="Language">
       <ul>
-        {i18nLangs.map((lang) => <li />)}
+        {
+          i18nLangs.map((linkLang) =>
+            // prettier-ignore
+            <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang))} hreflang={linkLang} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>
+          )
+        }
       </ul>
     </nav>
-
-    <style is:global>
-      main {
-        position: relative;
-        background: linear-gradient(
-          49deg,
-          #fff calc(100% - 110px),
-          #bbbbcc 100%
-        );
-
-        h1 {
-          margin-top: 40px;
-          font-weight: 700;
-          text-align: center;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        #logo {
-          width: 96px;
-          height: 96px;
-          flex-shrink: 0;
-        }
-
-        .download-links {
-          margin-bottom: 1rem;
-        }
-
-        #rating {
-          text-align: center;
-          font-style: italic;
-        }
-
-        .demo-container {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        .demo-container video {
-          max-width: 100%;
-          height: auto;
-          background: #e0e0e0;
-        }
-        .demo-caption {
-          margin-top: 8px;
-          color: #666;
-          font-size: 90%;
-          text-align: center;
-        }
-
-        .features-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
-          margin-top: 1rem;
-        }
-        .feature-card {
-          background-color: #f9fafb;
-          padding: 1.5rem;
-          border-radius: 8px;
-          border: 1px solid #e5e7eb;
-        }
-        .feature-card h3 {
-          margin-top: 0;
-          font-size: 1.1em;
-        }
-
-        #ask-anything {
-          text-align: center;
-        }
-
-        .ask-anything-button {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 1em 2em;
-          font-size: 1.2em;
-          border-radius: 999px;
-          background: var(--color-button-2, #4f8cff);
-          color: #fff;
-          text-decoration: none;
-          box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
-          transition:
-            background-color 0.2s,
-            box-shadow 0.2s;
-          font-weight: bold;
-        }
-        .ask-anything-button:hover,
-        .ask-anything-button:focus {
-          background: var(--color-button-1, #2563eb);
-          box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
-        }
-        .button-icon {
-          margin-right: 0.5em;
-        }
-        .button-text {
-          vertical-align: middle;
-        }
-
-        #github-corner-link {
-          position: absolute;
-          top: 1.5rem;
-          right: 1.5rem;
-          display: block;
-        }
-
-        #github-corner-link::before {
-          content: "";
-          position: absolute;
-
-          top: -1.5rem;
-          right: -1.5rem;
-          bottom: -1.5rem;
-          left: -1.5rem;
-        }
-      }
-    </style>
   </Fragment>
 </Layout>
+
+<style is:global>
+  main {
+    position: relative;
+    background: linear-gradient(
+      49deg,
+      #fff calc(100% - 110px),
+      #bbbbcc 100%
+    );
+
+    h1 {
+      margin-top: 40px;
+      font-weight: 700;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    #logo {
+      width: 96px;
+      height: 96px;
+      flex-shrink: 0;
+    }
+
+    .download-links {
+      margin-bottom: 1rem;
+    }
+
+    #rating {
+      text-align: center;
+      font-style: italic;
+    }
+
+    .demo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .demo-container video {
+      max-width: 100%;
+      height: auto;
+      background: #e0e0e0;
+    }
+    .demo-caption {
+      margin-top: 8px;
+      color: #666;
+      font-size: 90%;
+      text-align: center;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    .feature-card {
+      background-color: #f9fafb;
+      padding: 1.5rem;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+    }
+    .feature-card h3 {
+      margin-top: 0;
+      font-size: 1.1em;
+    }
+
+    #ask-anything {
+      text-align: center;
+    }
+
+    .ask-anything-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1em 2em;
+      font-size: 1.2em;
+      border-radius: 999px;
+      background: var(--color-button-2, #4f8cff);
+      color: #fff;
+      text-decoration: none;
+      box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
+      transition:
+        background-color 0.2s,
+        box-shadow 0.2s;
+      font-weight: bold;
+    }
+    .ask-anything-button:hover,
+    .ask-anything-button:focus {
+      background: var(--color-button-1, #2563eb);
+      box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
+    }
+    .button-icon {
+      margin-right: 0.5em;
+    }
+    .button-text {
+      vertical-align: middle;
+    }
+
+    #github-corner-link {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      display: block;
+    }
+
+    #github-corner-link::before {
+      content: "";
+      position: absolute;
+
+      top: -1.5rem;
+      right: -1.5rem;
+      bottom: -1.5rem;
+      left: -1.5rem;
+    }
+  }
+
+  .footer-langs {
+    ul {
+      text-align: center;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    li {
+      display: inline-block;
+    }
+
+    li + li::before {
+      content: "|";
+      margin: 0 0.3rem;
+    }
+  }
+</style>
