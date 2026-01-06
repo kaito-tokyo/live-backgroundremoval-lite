@@ -376,15 +376,22 @@ export async function getStaticPaths() {
     <nav class="footer-langs" aria-label="Language">
       <ul>
         {
-          i18nLangs.map((linkLang) =>
-            linkLang === lang ? (
-              // prettier-ignore
-              <li><span>{i18nDic[linkLang].langText}</span></li>
-            ) : (
-              // prettier-ignore
-              <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang))} hreflang={linkLang} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>
+          [
+            <li>
+              <a href={withTrailingSlash(BASE_URL)} hreflang="en" lang="en">
+                Global
+              </a>
+            </li>,
+            ...i18nLangs.map((linkLang) =>
+              linkLang === lang ? (
+                // prettier-ignore
+                <li><span>{i18nDic[linkLang].langText}</span></li>
+              ) : (
+                // prettier-ignore
+                <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang))} hreflang={linkLang} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>
+              ),
             ),
-          )
+          ]
         }
       </ul>
     </nav>

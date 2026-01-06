@@ -353,10 +353,15 @@ const structuredData = {
     <nav class="footer-langs" aria-label="Language">
       <ul>
         {
-          i18nLangs.map((linkLang) =>
-            // prettier-ignore
-            <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang))} hreflang={linkLang} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>
-          )
+          [
+            <li>
+              <span>Global</span>
+            </li>,
+            ...i18nLangs.map((linkLang) =>
+              // prettier-ignore
+              <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang))} hreflang={linkLang} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>,
+            ),
+          ]
         }
       </ul>
     </nav>
@@ -366,11 +371,7 @@ const structuredData = {
 <style is:global>
   main {
     position: relative;
-    background: linear-gradient(
-      49deg,
-      #fff calc(100% - 110px),
-      #bbbbcc 100%
-    );
+    background: linear-gradient(49deg, #fff calc(100% - 110px), #bbbbcc 100%);
 
     h1 {
       margin-top: 40px;
