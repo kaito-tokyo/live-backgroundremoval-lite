@@ -65,8 +65,7 @@ FirstRunDialog::FirstRunDialog(std::shared_ptr<Global::PluginConfig> pluginConfi
 	// ---------------------------------------------------------
 	setAttribute(Qt::WA_DeleteOnClose);
 	setWindowModality(Qt::NonModal);
-	setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint | Qt::WindowCloseButtonHint |
-		       Qt::MSWindowsFixedSizeDialogHint);
+	setWindowFlags(windowFlags() | Qt::WindowCloseButtonHint | Qt::MSWindowsFixedSizeDialogHint);
 
 	setWindowTitle(tr("Live Background Removal Lite - Installation Complete"));
 

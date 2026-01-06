@@ -47,6 +47,8 @@ void StartupController::showFirstRunDialog()
 	if (QMainWindow *parent = static_cast<QMainWindow *>(obs_frontend_get_main_window())) {
 		FirstRunDialog *dialog = new FirstRunDialog(pluginConfig_, globalContext_, parent);
 		dialog->show();
+		dialog->raise();
+		dialog->activateWindow();
 	}
 }
 
