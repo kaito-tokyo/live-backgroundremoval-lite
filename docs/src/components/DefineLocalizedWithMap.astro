@@ -1,10 +1,10 @@
 ---
 import { transform } from "esbuild";
 
-import LocalizedSpanRaw from "./LocalizedSpan.ts?raw";
+import LocalizedWithMapRaw from "./LocalizedWithMap.ts?raw";
 
 export async function generateCode() {
-  const { code } = await transform(LocalizedSpanRaw, {
+  const { code } = await transform(LocalizedWithMapRaw, {
     loader: "ts",
     minify: true,
     target: "esnext",

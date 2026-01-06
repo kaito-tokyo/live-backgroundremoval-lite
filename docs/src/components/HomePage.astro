@@ -3,8 +3,7 @@ import { joinURL, withTrailingSlash } from "ufo";
 import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
 
 import DefineLocalDate from "./DefineLocalDate.astro";
-import DefineLocalizedAnchor from "./DefineLocalizedAnchor.astro";
-import DefineLocalizedSpan from "./DefineLocalizedSpan.astro";
+import DefineLocalizedWithMap from "./DefineLocalizedWithMap.astro";
 import GitHubMark from "../../public/github-mark.svg";
 import Layout from "../layouts/Layout.astro";
 import Logo from "../../public/favicon.svg";
@@ -149,8 +148,7 @@ const structuredData = {
   <Fragment slot="head-bottom">
     <link rel="preload" as="image" href={joinURL(baseUrl, "demo.webp")} />
     <DefineLocalDate />
-    <DefineLocalizedAnchor />
-    <DefineLocalizedSpan />
+    { isDefaultLang && <DefineLocalizedWithMap /> }
     <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}
@@ -166,17 +164,15 @@ const structuredData = {
     <div class="localized-button" lang="en">
       {
         isDefaultLang ? (
-          <localized-anchor
-            data-hrefmap={JSON.stringify(localizedPageLinkUrls)}
-          >
+          <localized-with-map data-map={JSON.stringify(localizedPageLinkUrls)}>
             <a href={joinURL(baseUrl, "en")}>
-              <localized-span
-                data-textmap={JSON.stringify(localizedPageLinkTexts)}
+              <localized-with-map
+                data-map={JSON.stringify(localizedPageLinkTexts)}
               >
-                <span>🌐 Go to the localized version of this page</span>
-              </localized-span>
+                <span>{i18nDic.en.goToLocalizedVersion}</span>
+              </localized-with-map>
             </a>
-          </localized-anchor>
+          </localized-with-map>
         ) : (
           <a href={joinURL(baseUrl)}>
             <span>🌐 Go to the global version of this page</span>
