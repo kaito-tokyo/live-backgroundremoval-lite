@@ -8,7 +8,7 @@ class LocalizedAnchorElement extends HTMLElement {
 
   handleSlotChange(e: Event) {
     if (!e.target || !(e.target instanceof HTMLSlotElement)) {
-      throw new Error("Event target is slot element, expected shadow root.");
+      throw new Error("Event target is not a slot element.");
     }
     const slot = e.target;
     const shadowRoot = slot.getRootNode();
@@ -31,8 +31,7 @@ class LocalizedAnchorElement extends HTMLElement {
         a.href = hrefMap[lowerLang];
         break;
       }
-      const looseMatch = Object.keys(hrefMap).find(e => e.slice(0, 2) === lowerLang)
-      console.log(hrefMap);
+      const looseMatch = Object.keys(hrefMap).find(e => e.slice(0, 2) === lowerLang);
       if (looseMatch) {
         a.href = hrefMap[looseMatch];
         break;

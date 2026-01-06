@@ -8,7 +8,7 @@ class LocalizedSpanElement extends HTMLElement {
 
   handleSlotChange(e: Event) {
     if (!e.target || !(e.target instanceof HTMLSlotElement)) {
-      throw new Error("Event target is slot element, expected shadow root.");
+      throw new Error("Event target is not a slot element.");
     }
     const slot = e.target;
     const shadowRoot = slot.getRootNode();
@@ -32,8 +32,9 @@ class LocalizedSpanElement extends HTMLElement {
         span.lang = lowerLang;
         break;
       }
-      const looseMatch = Object.keys(textMap).find(e => e.slice(0, 2) === lowerLang)
-      console.log(textMap);
+      const looseMatch = Object.keys(textMap).find(
+        e => e.slice(0, 2) === lowerLang,
+      );
       if (looseMatch) {
         span.textContent = textMap[looseMatch];
         span.lang = looseMatch;
@@ -49,7 +50,7 @@ class LocalizedSpanElement extends HTMLElement {
     }
     const slot = shadowRoot.querySelector("slot");
     if (!slot) {
-      throw new Error("LocalizedAnchor requires a <slot> element.");
+      throw new Error("LocalizedSpan requires a <slot> element.");
     }
     slot.addEventListener("slotchange", this.handleSlotChange);
   }
@@ -61,7 +62,7 @@ class LocalizedSpanElement extends HTMLElement {
     }
     const slot = shadowRoot.querySelector("slot");
     if (!slot) {
-      throw new Error("LocalizedAnchor requires a <slot> element.");
+      throw new Error("LocalizedSpan requires a <slot> element.");
     }
     slot.removeEventListener("slotchange", this.handleSlotChange);
   }

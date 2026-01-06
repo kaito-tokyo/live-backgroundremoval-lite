@@ -24,7 +24,10 @@ import { dependencies } from "../../../buildspec.json";
 export type LatestRelease =
   RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
 
-const lang = "en";
+const rawLang = Astro.params.lang;
+const lang = (
+  rawLang && rawLang in i18nDic ? rawLang : "en"
+) as keyof typeof i18nDic;
 const t = useTranslations(lang);
 
 const { BASE_URL } = import.meta.env;
@@ -103,14 +106,14 @@ const structuredData = {
     <meta name="description" content={structuredData.description} />
     <link
       rel="canonical"
-      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang))}
+      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang.toLowerCase()))}
     />
     {
       i18nLangs.map((linkLang) => (
         <link
           rel="alternate"
           hreflang={linkLang}
-          href={withTrailingSlash(joinURL(BASE_URL, linkLang))}
+          href={withTrailingSlash(joinURL(BASE_URL, linkLang.toLowerCase()))}
         />
       ))
     }
