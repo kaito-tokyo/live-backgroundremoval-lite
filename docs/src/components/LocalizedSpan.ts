@@ -32,12 +32,10 @@ class LocalizedSpanElement extends HTMLElement {
         span.lang = lowerLang;
         break;
       }
-      const looseMatch = Object.keys(textMap).find(
-        e => e.slice(0, 2) === lowerLang,
-      );
-      if (looseMatch) {
-        span.textContent = textMap[looseMatch];
-        span.lang = looseMatch;
+      const baseLang = lowerLang.split("-")[0];
+      if (baseLang in textMap) {
+        span.textContent = textMap[baseLang];
+        span.lang = baseLang;
         break;
       }
     }
