@@ -395,7 +395,7 @@ const structuredData = {
             </li>,
             ...i18nLangs.map((linkLang) =>
               // prettier-ignore
-              <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang.toLowerCase()))} lang={linkLang}>{i18nDic[linkLang].langText}</a></li>,
+              <li><a href={withTrailingSlash(joinURL(BASE_URL, linkLang.toLowerCase()))} lang={linkLang.toLowerCase()}>{i18nDic[linkLang].langText}</a></li>,
             ),
           ]
         }
