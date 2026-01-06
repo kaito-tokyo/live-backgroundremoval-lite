@@ -11,7 +11,14 @@ class LocalizedSpanElement extends HTMLElement {
     const textMap = JSON.parse(this.dataset.textmap || "{}");
     slot.addEventListener("slotchange", () => {
       const nodes = slot.assignedElements();
-      const span = nodes[0] as HTMLSpanElement;
+      if (nodes.length === 0) {
+        return;
+      }
+      const firstNode = nodes[0];
+      if (!(firstNode instanceof HTMLSpanElement)) {
+        return;
+      }
+      const span = firstNode;
       for (const lang of navigator.languages) {
         const lowerLang = lang.toLowerCase();
         if (lowerLang in textMap) {
