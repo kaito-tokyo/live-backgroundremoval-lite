@@ -129,7 +129,7 @@ obs_properties_t *MainFilterContext::getProperties()
 		try {
 			std::optional<std::string> latestVersionOpt = globalContext_->getLatestVersion();
 			if (!latestVersionOpt.has_value()) {
-				updateAvailableText = obs_module_text("updateCheckerCheckingPending");
+				updateAvailableText = obs_module_text("updateCheckerPending");
 			} else if (latestVersionOpt.value() == globalContext_->getPluginVersion()) {
 				updateAvailableText = obs_module_text("updateCheckerPluginIsLatest");
 			} else {
