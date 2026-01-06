@@ -9,7 +9,6 @@ class LocalizedSpanElement extends HTMLElement {
     const shadowRoot = this.shadowRoot!;
     const slot = shadowRoot.querySelector("slot") as HTMLSlotElement;
     const textMap = JSON.parse(this.dataset.textmap || "{}");
-    console.log(textMap);
     slot.addEventListener("slotchange", () => {
       const nodes = slot.assignedElements();
       const span = nodes[0] as HTMLSpanElement;
