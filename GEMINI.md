@@ -7,6 +7,11 @@
     - [Procedures (手順)](#手順)
     - [Important Common Rules (重要事項・共通ルール)](#重要事項共通ルール)
     - [Knowledge Base (FAQ) (ナレッジベース-faq)](#ナレッジベース-faq)
+  - [Translation Assistant: Guideline for Locale Generation](#translation-assistant-guideline-for-locale-generation)
+    - [Summary (概要)](#概要)
+    - [Target Language List (ターゲット言語リスト)](#ターゲット言語リスト)
+    - [Translation & Generation Rules (翻訳・生成ルール)](#翻訳・生成ルール)
+    - [Prompt Example (プロンプト例)](#プロンプト例)
 
 # AIエージェントへの指示書
 
