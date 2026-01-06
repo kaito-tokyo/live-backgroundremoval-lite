@@ -33,11 +33,14 @@ const t = useTranslations(lang);
 const { BASE_URL } = import.meta.env;
 
 const localizedPageLinkUrls = Object.fromEntries(
-  i18nLangs.map((lang) => [lang, withTrailingSlash(joinURL(BASE_URL, lang.toLowerCase()))]),
+  i18nLangs.map((linkLang) => [
+    linkLang,
+    withTrailingSlash(joinURL(BASE_URL, linkLang.toLowerCase())),
+  ]),
 );
 
 const localizedPageLinkTexts = Object.fromEntries(
-  i18nLangs.map((lang) => [lang, i18nDic[lang].goToLocalizedVersion]),
+  i18nLangs.map((linkLang) => [linkLang, i18nDic[linkLang].goToLocalizedVersion]),
 );
 
 async function getLatestRelease(): Promise<LatestRelease> {
