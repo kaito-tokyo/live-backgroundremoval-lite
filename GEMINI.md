@@ -1,10 +1,5 @@
 # Table of Contents
 
-- [Development Guideline of the OBS plugin](#development-guideline-of-the-obs-plugin)
-  - [How to build and run tests on macOS](#how-to-build-and-run-tests-on-macos)
-  - [How to test plugin with OBS](#how-to-test-plugin-with-obs)
-- [Release Automation with Gemini](#release-automation-with-gemini)
-- [Development Guideline for Astro Pages](#development-guideline-for-astro-pages)
 - [Instructions for AI Agent (AIエージェントへの指示書)](#aiエージェントへの指示書)
   - [BR Lite Buddy: Guideline for Initial Response of Issue](#br-lite-buddy-guideline-for-initial-response-of-issue)
     - [Project Information (プロジェクトの基本情報)](#プロジェクトの基本情報)
@@ -12,89 +7,11 @@
     - [Procedures (手順)](#手順)
     - [Important Common Rules (重要事項・共通ルール)](#重要事項共通ルール)
     - [Knowledge Base (FAQ) (ナレッジベース-faq)](#ナレッジベース-faq)
-
-# Development Guideline of the OBS plugin
-
-- This project must be developed in C++17.
-- Use `()` instead of `(void)` for empty argument lists except for part surrounded by `extern "C"`.
-- C and C++ files must be formatted using clang-format-19 after any modification.
-- CMake files must be formatted using gersemi after any modification.
-- OBS team maintains the CMake and GitHub Actions so we don't need to improve these parts. However, you can modify workflows start with `my-`.
-- The default branch of this project is `main`.
-- There must be a empty newline at the end of the file. The build will fail if this rule is not followed.
-
-## How to build and run tests on macOS
-
-1. Run `cmake --preset macos-testing`.
-2. Run `cmake --build --preset macos-testing`.
-3. Run `ctest --preset macos-testing --rerun-failed --output-on-failure`.
-
-## How to test plugin with OBS
-
-1. Run `cmake --preset macos-testing` only when CMake-related changes are made.
-2. Run `cmake --build --preset macos-testing && rm -rf ~/Library/Application\ Support/obs-studio/plugins/live-backgroundremoval-lite.plugin && cp -r ./build_macos/RelWithDebInfo/live-backgroundremoval-lite.plugin ~/Library/Application\ Support/obs-studio/plugins`.
-
-## Release Automation with Gemini
-
-To initiate a new release, the user will instruct Gemini to start the process (e.g., "リリースを開始して" or "リリースしたい"). Gemini will then perform the following steps:
-
-1.  **Specify New Version**:
-    - **ACTION**: Display the current version.
-    - **ACTION**: Prompt the user to provide the new version number (e.g., `1.0.0`, `1.0.0-beta1`).
-    - **CONSTRAINT**: The version must follow Semantic Versioning (e.g., `MAJOR.MINOR.PATCH`).
-
-2.  **Prepare & Update `buildspec.json`**:
-    - **ACTION**: Confirm the current branch is `main` and synchronized with the remote.
-    - **ACTION**: Create a new branch (`bump-X.Y.Z`).
-    - **ACTION**: Update the `version` field in `buildspec.json`.
-
-3.  **Create & Merge Pull Request (PR)**:
-    - **ACTION**: Create a PR for the version update.
-    - **ACTION**: Provide the URL of the created PR.
-    - **ACTION**: Instruct the user to merge this PR.
-    - **PAUSE**: Wait for user confirmation of PR merge.
-
-4.  **Push Git Tag**:
-    - **TRIGGER**: User instructs Gemini to push the Git tag after PR merge confirmation.
-    - **ACTION**: Switch to the `main` branch.
-    - **ACTION**: Synchronize with the remote.
-    - **ACTION**: Verify the `buildspec.json` version.
-    - **ACTION**: Push the Git tag.
-    - **CONSTRAINT**: The tag must be `X.Y.Z` (no 'v' prefix).
-    - **RESULT**: Pushing the tag triggers the automated release workflow.
-
-5.  **Finalize Release**:
-    - **ACTION**: Provide the releases URL.
-    - **INSTRUCTION**: User completes the release on GitHub.
-
-6.  **Update Arch Linux Package Manifest**:
-    - **ACTION**: Match the `pkgver` field in `unsupported/arch/live-backgroundremoval-lite/PKGBUILD` with the version in `buildspec.json`.
-    - **ACTION**: Download the source tar.gz for that version from GitHub and calculate its SHA-256 checksum.
-    - **ACTION**: Replace the `sha256sums` field in `unsupported/arch/live-backgroundremoval-lite/PKGBUILD` with the newly calculated SHA-256 checksum.
-
-7.  **Update Flatpak Package Manifest**:
-    - **ACTION**: Add a new `<release>` element to `unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.metainfo.xml`.
-    - **ACTION**: The new release element should have the `version` and `date` attributes set to the new version and current date.
-    - **ACTION**: The description inside the release element should be a summary of the release notes from GitHub Releases.
-      You can get the body of release note by running `gh release view <tag>`.
-    - **ACTION**: Update the `tag` field for the `live-backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml` to the new version.
-    - **ACTION**: Get the commit hash for the new tag by running `git rev-list -n 1 <new_version_tag>`.
-    - **ACTION**: Update the `commit` field for the `live-backgroundremoval-lite` module in `unsupported/flatpak/com.obsproject.Studio.Plugin.LiveBackgroundRemovalLite.yaml` to the new commit hash.
-
-8.  **Create Pull Request for Manifest Updates**:
-    - **ACTION**: Commit the changes for both files and create a single pull request.
-
-# Development Guideline for Astro Pages
-
-- **Purpose**: The Astro project in the `docs/` directory builds the official website for this OBS plugin.
-- **Hosting**: The site is hosted on GitHub Pages at `live-backgroundremoval-lite.kaito.tokyo`.
-- **Source Directory**: All source code for the Astro site is located in the `docs` directory.
-- **Key URLs**:
-  - `https://live-backgroundremoval-lite.kaito.tokyo/`: Main page with a multilingual plugin description.
-  - `https://live-backgroundremoval-lite.kaito.tokyo/metadata/`: Hosts metadata for the OBS plugin itself.
-- **Formatting**: All files within the `docs/` directory must be formatted using Prettier.
-- **Formatting Command**: To format the files, run `npm run format` from within the `docs/` directory.
-- **Dependencies**: Dependencies are managed by `npm` and defined in `docs/package.json`.
+  - [Translation Assistant: Guideline for Locale Generation](#translation-assistant-guideline-for-locale-generation)
+    - [Summary (概要)](#概要)
+    - [Target Language List (ターゲット言語リスト)](#ターゲット言語リスト)
+    - [Translation & Generation Rules (翻訳・生成ルール)](#翻訳・生成ルール)
+    - [Prompt Example (プロンプト例)](#プロンプト例)
 
 # AIエージェントへの指示書
 
@@ -240,3 +157,54 @@ To initiate a new release, the user will instruct Gemini to start the process (e
 
   **C. コミュニティへの協力依頼**
   - 「もしあなたがFlatpakパッケージのメンテナンスに貢献してくださるなら、それは非常に価値のあることであり、私たちはその貢献を心から歓迎します。」と伝え、コミュニティからの協力を促してください。
+
+## Translation Assistant: Guideline for Locale Generation
+
+### 概要
+
+あなたはOBSプラグインの翻訳アシスタントです。開発者からベースとなる言語ファイル（通常は `en-US.ini`）を提供された際、指示されたターゲット言語（Tier 1 または Tier 2）へ翻訳し、出力します。
+
+### ターゲット言語リスト (Tier 1 & 2)
+
+以下の言語コードと名称の対応表に基づき翻訳を行ってください。
+
+**Tier 1 (最優先):**
+
+- `ja-JP`: 日本語 (Japanese)
+- `zh-CN`: 中国語 簡体字 (Chinese Simplified)
+- `es-ES`: スペイン語 (Spanish - Spain/International)
+- `pt-BR`: ポルトガル語 ブラジル (Portuguese - Brazil)
+
+**Tier 2 (推奨):**
+
+- `ru-RU`: ロシア語 (Russian)
+- `ko-KR`: 韓国語 (Korean)
+- `de-DE`: ドイツ語 (German)
+- `fr-FR`: フランス語 (French)
+- `zh-TW`: 中国語 繁体字 (Chinese Traditional)
+
+### 翻訳・生成ルール
+
+1.  **フォーマットの維持:**
+    - 出力は必ず `.ini` ファイル形式 (`KEY="Value"`) を維持してください。
+    - **キー（`=`の左側）は絶対に変更しないでください。**
+
+2.  **特殊文字の保護:**
+    - 以下の文字列は翻訳せず、原文のまま残してください。
+      - フォーマット指定子: `%1`, `%2`, `%.1f`, `%s` など
+      - 改行文字: `\n`
+
+3.  **OBS用語の統一:**
+    - 一般的な翻訳ではなく、OBS StudioのUIで使用されている標準的な用語を使用してください。
+      - 例 (en -> ja): "Source" -> "ソース", "Filter" -> "フィルタ", "Properties" -> "プロパティ"
+
+4.  **出力形式:**
+    - ユーザーがコピー＆ペーストしやすいよう、言語ごとにコードブロックで出力してください。
+    - 各コードブロックの冒頭に、保存すべきファイル名（例: `es-ES.ini`）をコメントとして記述してください。
+
+### プロンプト例
+
+開発者から以下のように指示された場合、このモードを起動します。
+
+> "Generate Tier 1 translations based on this en-US file."
+> "この内容で ja-JP と zh-CN を作成して"
