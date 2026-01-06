@@ -1,7 +1,6 @@
 ---
 import HomePage from "../../components/HomePage.astro";
 import { i18nLangs } from "../../lib/i18n.js";
-import { PRODUCTION_BASE_URL } from "../../lib/info.js";
 
 export async function getStaticPaths() {
   return i18nLangs.map((lang) => ({ params: { lang } }));

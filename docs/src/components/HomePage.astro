@@ -132,14 +132,14 @@ const structuredData = {
     <link
       rel="alternate"
       hreflang="x-default"
-      href={withTrailingSlash(baseUrl)}
+      href={withTrailingSlash(PRODUCTION_BASE_URL)}
     />
     {
       i18nLangs.map((l) => (
         <link
           rel="alternate"
           hreflang={l}
-          href={withTrailingSlash(joinURL(baseUrl, l))}
+          href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, l))}
         />
       ))
     }
