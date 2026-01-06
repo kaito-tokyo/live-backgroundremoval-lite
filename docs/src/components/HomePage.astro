@@ -148,7 +148,7 @@ const structuredData = {
   <Fragment slot="head-bottom">
     <link rel="preload" as="image" href={joinURL(baseUrl, "demo.webp")} />
     <DefineLocalDate />
-    { isDefaultLang && <DefineLocalizedWithMap /> }
+    {isDefaultLang && <DefineLocalizedWithMap />}
     <script
       type="application/ld+json"
       set:html={JSON.stringify(structuredData)}

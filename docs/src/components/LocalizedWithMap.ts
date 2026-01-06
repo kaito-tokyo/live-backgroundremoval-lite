@@ -17,30 +17,30 @@ class LocalizedWithMapElement extends HTMLElement {
     for (const rawLang of languages) {
       const lang = rawLang.toLowerCase();
 
-      if (lang.startsWith('zh')) {
+      if (lang.startsWith("zh")) {
         if (
-          lang === 'zh-tw' ||
-          lang === 'zh-hk' ||
-          lang === 'zh-mo' ||
-          lang.includes('hant')
+          lang === "zh-tw" ||
+          lang === "zh-hk" ||
+          lang === "zh-mo" ||
+          lang.includes("hant")
         ) {
-          return 'zh-tw';
+          return "zh-tw";
         }
-        return 'zh-cn';
+        return "zh-cn";
       }
 
-      if (lang.startsWith('ja')) return 'ja-jp';
-      if (lang.startsWith('en')) return 'en';
-      if (lang.startsWith('ko')) return 'ko-kr';
+      if (lang.startsWith("ja")) return "ja-jp";
+      if (lang.startsWith("en")) return "en";
+      if (lang.startsWith("ko")) return "ko-kr";
 
-      if (lang.startsWith('de')) return 'de-de';
-      if (lang.startsWith('fr')) return 'fr-fr';
-      if (lang.startsWith('es')) return 'es-es';
-      if (lang.startsWith('pt')) return 'pt-br';
-      if (lang.startsWith('ru')) return 'ru-ru';
+      if (lang.startsWith("de")) return "de-de";
+      if (lang.startsWith("fr")) return "fr-fr";
+      if (lang.startsWith("es")) return "es-es";
+      if (lang.startsWith("pt")) return "pt-br";
+      if (lang.startsWith("ru")) return "ru-ru";
     }
 
-    return 'en';
+    return "en";
   }
 
   handleSlotChange(e: Event) {
