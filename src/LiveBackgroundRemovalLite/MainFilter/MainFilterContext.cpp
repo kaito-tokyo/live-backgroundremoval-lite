@@ -103,6 +103,8 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
+	obs_data_set_default_int(data, "forceNoDelay", defaultProperty.forceNoDelay);
+
 	obs_data_set_default_double(data, "motionIntensityThresholdPowDb",
 				    defaultProperty.motionIntensityThresholdPowDb);
 
@@ -200,6 +202,9 @@ obs_properties_t *MainFilterContext::getProperties()
 				  static_cast<int>(FilterLevel::GuidedFilter));
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
 				  static_cast<int>(FilterLevel::TimeAveragedFilter));
+
+	// Force no delay flag
+	obs_properties_add_bool(props, "forceNoDelay", obs_module_text("forceNoDelay"));
 
 	// Motion intensity threshold
 	obs_properties_add_float_slider(props, "motionIntensityThresholdPowDb",

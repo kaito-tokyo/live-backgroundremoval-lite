@@ -80,6 +80,8 @@ public:
 
 	void videoTick(float);
 	void videoRender();
+	void videoRenderOptimized();
+	void videoRenderForceNoDelay();
 
 	void applyPluginProperty(const PluginProperty &pluginProperty);
 
@@ -144,6 +146,8 @@ public:
 
 private:
 	std::atomic<FilterLevel> filterLevel_;
+
+	std::atomic<bool> forceNoDelay_;
 
 	std::atomic<float> motionIntensityThreshold_;
 

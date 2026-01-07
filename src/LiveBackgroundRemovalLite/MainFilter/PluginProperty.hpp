@@ -37,6 +37,8 @@ struct PluginProperty {
 
 	FilterLevel filterLevel = FilterLevel::Default;
 
+	bool forceNoDelay = false;
+
 	double motionIntensityThresholdPowDb = -40.0;
 
 	double guidedFilterEpsPowDb = -40.0;
