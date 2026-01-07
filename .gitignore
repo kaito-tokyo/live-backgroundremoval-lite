@@ -1,6 +1,7 @@
 _codeql_detected_source_root
 .astro/
 .DS_Store
+.vs/
 .vscode/
 /.deps/
 /build_*/
