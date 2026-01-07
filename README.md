@@ -106,7 +106,7 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 
 2.  Follow the instructions for your OS:
     - **For Windows:**
-      - Download the `.zip` file and extract its contents into your OBS Studio plugin directory (e.g., `C:\ProgramData\obs-studio\plugins`).
+      - Download the `.zip` file and extract the `live-backgroundremoval-lite` folder into your OBS Studio plugin directory (e.g., `C:\ProgramData\obs-studio\plugins`).
     - **For macOS:**
       - Download and run the `.pkg` installer.
     - **For Linux:**
