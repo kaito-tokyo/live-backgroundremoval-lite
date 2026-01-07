@@ -68,7 +68,7 @@ Please adhere to these facts to avoid providing incorrect instructions:
 1.  **Windows Installation:**
     - **Format:** `.zip` archive ONLY.
     - **Installer:** There is **NO** `.exe` or `.msi` installer for Windows.
-    - **Method:** Users must manually extract the `obs-plugins` and `data` folders to their OBS directory.
+    - **Method:** Users must manually extract the `live-backgroundremoval-lite` folder from the `.zip` into their OBS Studio plugins directory. This folder contains the `obs-plugins` and `data` subfolders required by the plugin.
     - **Typical Path:** Usually `C:\ProgramData\obs-studio\plugins` (User must confirm their installation path).
 
 2.  **macOS Installation:**
