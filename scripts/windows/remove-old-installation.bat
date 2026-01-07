@@ -13,7 +13,6 @@ if exist "%PLUGIN_DIR1%" (
     rmdir /s /q "%PLUGIN_DIR1%"
     if exist "%PLUGIN_DIR1%" (
         echo Failed to remove "%PLUGIN_DIR1%".
-        exit /b 1
     ) else (
         echo Successfully removed "%PLUGIN_DIR1%".
     )
@@ -27,7 +26,6 @@ if exist "%DLL_FILE%" (
     del /f /q "%DLL_FILE%"
     if exist "%DLL_FILE%" (
         echo Failed to remove "%DLL_FILE%".
-        exit /b 1
     ) else (
         echo Successfully removed "%DLL_FILE%".
     )
@@ -41,7 +39,6 @@ if exist "%PDB_FILE%" (
     del /f /q "%PDB_FILE%"
     if exist "%PDB_FILE%" (
         echo Failed to remove "%PDB_FILE%".
-        exit /b 1
     ) else (
         echo Successfully removed "%PDB_FILE%".
     )
