@@ -123,6 +123,8 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 obs_properties_t *MainFilterContext::getProperties()
 {
+	obs_property_t *pDesc;
+
 	obs_properties_t *props = obs_properties_create();
 
 	// Update notifier
@@ -142,8 +144,101 @@ obs_properties_t *MainFilterContext::getProperties()
 		} catch (...) {
 			logger_->error("CheckUpdateUnknownExceptionError");
 		}
-		obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
+		pDesc = obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
+		obs_property_text_set_info_word_wrap(pDesc, false);
+
+		pDesc = obs_properties_add_text(props, "separatorAfterUpdateNotifier", "<hr />", OBS_TEXT_INFO);
+		obs_property_text_set_info_word_wrap(pDesc, false);
 	}
+
+
+	// Filter level
+	pDesc = obs_properties_add_text(props, "filterLevelDescription", obs_module_text("filterLevelDescription"),
+				OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
+
+	obs_property_t *propFilterLevel =
+		obs_properties_add_list(props, "filterLevel", "", OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
+				  static_cast<int>(FilterLevel::Default));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelPassthrough"),
+				  static_cast<int>(FilterLevel::Passthrough));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
+				  static_cast<int>(FilterLevel::Segmentation));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelMotionIntensityThresholding"),
+				  static_cast<int>(FilterLevel::MotionIntensityThresholding));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
+				  static_cast<int>(FilterLevel::GuidedFilter));
+	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
+				  static_cast<int>(FilterLevel::TimeAveragedFilter));
+
+	pDesc = obs_properties_add_text(props, "filterLevelDescription400", obs_module_text("filterLevelDescription400"),
+				OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
+
+	pDesc = obs_properties_add_text(props, "filterLevelDescription500", obs_module_text("filterLevelDescription500"),
+				OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
+
+	obs_properties_add_text(props, "separatorAfterFilterLevel", "<hr />", OBS_TEXT_INFO);
+
+	// Motion intensity threshold
+	pDesc = obs_properties_add_text(props, "motionIntensityThresholdPowDbDescription",
+				obs_module_text("motionIntensityThresholdPowDbDescription"), OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
+
+	obs_properties_add_float_slider(props, "motionIntensityThresholdPowDb", "", -100.0, 0.0, 0.1);
+
+	pDesc = obs_properties_add_text(props, "separatorAfterMotionIntensityThreshold", "<hr />", OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
+
+	// Time-averaged filtering
+	pDesc = obs_properties_add_text(props, "timeAveragedFilteringAlphaDescription",
+				obs_module_text("timeAveragedFilteringAlphaDescription"), OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
+
+	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha", "", 0.0f, 1.0f, 0.01f);
+
+	pDesc = obs_properties_add_text(props, "separatorAfterTimeAveragedFilteringAlpha", "<hr />", OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
+
+	// Force no delay flag
+	obs_properties_add_bool(props, "forceNoDelay", obs_module_text("forceNoDelay"));
+
+	// Center Frame
+	obs_properties_add_bool(props, "enableCenterFrame", obs_module_text("enableCenterFrame"));
+
+	// Advanced settings group
+	obs_properties_t *propsAdvancedSettings = obs_properties_create();
+	obs_properties_add_group(props, "advancedSettings", obs_module_text("advancedSettings"), OBS_GROUP_CHECKABLE,
+				 propsAdvancedSettings);
+
+	// Guided filter
+	obs_properties_add_float_slider(propsAdvancedSettings, "guidedFilterEpsPowDb",
+					obs_module_text("guidedFilterEpsPowDb"), -60.0, -20.0, 0.1);
+
+	// Mask application
+	obs_properties_add_float_slider(propsAdvancedSettings, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0,
+					0.01);
+	obs_properties_add_float_slider(propsAdvancedSettings, "maskLowerBoundAmpDb",
+					obs_module_text("maskLowerBoundAmpDb"), -80.0, -10.0, 0.1);
+	obs_properties_add_float_slider(propsAdvancedSettings, "maskUpperBoundMarginAmpDb",
+					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
+
+	// Global config dialog button
+	obs_properties_add_button2(
+		props, "openGlobalConfigDialog", obs_module_text("openGlobalConfigDialog"),
+		[](obs_properties_t *, obs_property_t *, void *data) {
+			MainFilterContext *self = static_cast<MainFilterContext *>(data);
+			if (!self)
+				return false;
+
+			Global::PluginConfigDialog dialog(self->pluginConfig_, QApplication::activeWindow());
+			dialog.setWindowModality(Qt::WindowModal);
+			dialog.exec();
+			return false;
+		},
+		this);
 
 	// Debug button
 	obs_properties_add_button2(
@@ -183,77 +278,6 @@ obs_properties_t *MainFilterContext::getProperties()
 				windowToShow->activateWindow();
 			}
 
-			return false;
-		},
-		this);
-
-	// Filter level
-	obs_property_t *propFilterLevel = obs_properties_add_list(props, "filterLevel", obs_module_text("filterLevel"),
-								  OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT);
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelDefault"),
-				  static_cast<int>(FilterLevel::Default));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelPassthrough"),
-				  static_cast<int>(FilterLevel::Passthrough));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelSegmentation"),
-				  static_cast<int>(FilterLevel::Segmentation));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelMotionIntensityThresholding"),
-				  static_cast<int>(FilterLevel::MotionIntensityThresholding));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelGuidedFilter"),
-				  static_cast<int>(FilterLevel::GuidedFilter));
-	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
-				  static_cast<int>(FilterLevel::TimeAveragedFilter));
-
-	obs_properties_add_text(props, "filterLevelDescription", obs_module_text("filterLevelDescription"), OBS_TEXT_INFO);
-	obs_properties_add_text(props, "filterLevelDescription400", obs_module_text("filterLevelDescription400"), OBS_TEXT_INFO);
-	obs_properties_add_text(props, "filterLevelDescription500", obs_module_text("filterLevelDescription500"), OBS_TEXT_INFO);
-
-	// Motion intensity threshold
-	obs_properties_add_float_slider(props, "motionIntensityThresholdPowDb",
-					obs_module_text("motionIntensityThresholdPowDb"), -100.0, 0.0, 0.1);
-
-	obs_properties_add_text(props, "motionIntensityThresholdPowDbDescription", obs_module_text("motionIntensityThresholdPowDbDescription"), OBS_TEXT_INFO);
-
-	// Time-averaged filtering
-	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha",
-					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
-
-	obs_properties_add_text(props, "timeAveragedFilteringAlphaDescription", obs_module_text("timeAveragedFilteringAlphaDescription"), OBS_TEXT_INFO);
-
-	// Force no delay flag
-	obs_properties_add_bool(props, "forceNoDelay", obs_module_text("forceNoDelay"));
-
-
-	// Center Frame
-	obs_properties_add_bool(props, "enableCenterFrame", obs_module_text("enableCenterFrame"));
-
-	// Advanced settings group
-	obs_properties_t *propsAdvancedSettings = obs_properties_create();
-	obs_properties_add_group(props, "advancedSettings", obs_module_text("advancedSettings"), OBS_GROUP_CHECKABLE,
-				 propsAdvancedSettings);
-
-	// Guided filter
-	obs_properties_add_float_slider(propsAdvancedSettings, "guidedFilterEpsPowDb",
-					obs_module_text("guidedFilterEpsPowDb"), -60.0, -20.0, 0.1);
-
-	// Mask application
-	obs_properties_add_float_slider(propsAdvancedSettings, "maskGamma", obs_module_text("maskGamma"), 0.5, 3.0,
-					0.01);
-	obs_properties_add_float_slider(propsAdvancedSettings, "maskLowerBoundAmpDb",
-					obs_module_text("maskLowerBoundAmpDb"), -80.0, -10.0, 0.1);
-	obs_properties_add_float_slider(propsAdvancedSettings, "maskUpperBoundMarginAmpDb",
-					obs_module_text("maskUpperBoundMarginAmpDb"), -80.0, -10.0, 0.1);
-
-	// Global config dialog button
-	obs_properties_add_button2(
-		props, "openGlobalConfigDialog", obs_module_text("openGlobalConfigDialog"),
-		[](obs_properties_t *, obs_property_t *, void *data) {
-			MainFilterContext *self = static_cast<MainFilterContext *>(data);
-			if (!self)
-				return false;
-
-			Global::PluginConfigDialog dialog(self->pluginConfig_, QApplication::activeWindow());
-			dialog.setWindowModality(Qt::WindowModal);
-			dialog.exec();
 			return false;
 		},
 		this);
