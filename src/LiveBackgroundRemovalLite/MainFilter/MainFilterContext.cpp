@@ -103,7 +103,7 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_int(data, "filterLevel", static_cast<int>(defaultProperty.filterLevel));
 
-	obs_data_set_default_int(data, "forceNoDelay", defaultProperty.forceNoDelay);
+	obs_data_set_default_bool(data, "forceNoDelay", defaultProperty.forceNoDelay);
 
 	obs_data_set_default_double(data, "motionIntensityThresholdPowDb",
 				    defaultProperty.motionIntensityThresholdPowDb);
