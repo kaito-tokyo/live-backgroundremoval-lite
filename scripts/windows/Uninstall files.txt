@@ -1,5 +1,0 @@
-C:\ProgramData\obs-studio\plugins\live-backgroundremoval-lite
-
-C:\Program Files\obs-studio\obs-plugins\64bit\live-backgroundremoval-lite.dll
-C:\Program Files\obs-studio\obs-plugins\64bit\live-backgroundremoval-lite.pdb
-C:\Program Files\obs-studio\data\obs-plugins\live-backgroundremoval-lite
