@@ -76,7 +76,23 @@ try {
 
     $MainZip = Join-Path $OutputDir "$PluginName-$PluginVersion-windows-x64.zip"
     if (Test-Path $MainZip) { Remove-Item $MainZip -Force }
-    Compress-Archive -Path "$InstallDir/*" -DestinationPath $MainZip -Force
+
+    # Copy scripts/windows files to a temp root for zipping
+    $TempRoot = Join-Path $TempBase "ziproot"
+    New-Item -ItemType Directory -Path $TempRoot -Force | Out-Null
+
+    # Copy plugin install files (preserve structure)
+    Copy-Item -Path "$InstallDir\*" -Destination $TempRoot -Recurse -Force
+
+    # Copy scripts/windows files to root of zip
+    $ScriptsWin = Join-Path $ScriptDir "windows"
+    if (Test-Path $ScriptsWin) {
+        Get-ChildItem -Path $ScriptsWin -File | ForEach-Object {
+            Copy-Item $_.FullName -Destination $TempRoot -Force
+        }
+    }
+
+    Compress-Archive -Path "$TempRoot/*" -DestinationPath $MainZip -Force
 
     $PdbZip = Join-Path $OutputDir "$PluginName-$PluginVersion-windows-x64-pdb.zip"
     if (Test-Path $PdbZip) { Remove-Item $PdbZip -Force }

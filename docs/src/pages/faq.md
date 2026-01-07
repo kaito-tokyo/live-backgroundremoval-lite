@@ -66,7 +66,7 @@ Many users believe "AI must run on GPU," but for background removal while gaming
 ### Windows
 
 1. Download the latest `.zip` from [Releases](https://github.com/kaito-tokyo/live-backgroundremoval-lite/releases).
-2. Extract the contents directly into your OBS Studio installation folder (e.g., `C:\Program Files\obs-studio`).
+2. Extract the contents directly into your OBS Studio plugins folder (e.g., `C:\ProgramData\obs-studio\plugins`).
 3. Restart OBS.
 
 ### macOS
@@ -142,7 +142,7 @@ By stacking these filters, you get the **precise edge detection** of a physical 
 
 ### The plugin does not appear in the Filters list.
 
-1.  **Check Folder Structure (Windows):** Ensure you extracted the `obs-plugins` and `data` folders directly into the OBS root directory. The file `obs-live-background-removal-lite.dll` must exist inside `C:\Program Files\obs-studio\obs-plugins\64bit\`.
+1.  **Check Folder Structure (Windows):** Ensure you extracted the `live-backgroundremoval-lite` folder directly into the OBS plugins directory. The file `obs-live-backgroundremoval-lite.dll` must exist inside `C:\ProgramData\obs-studio\plugins\live-backgroundremoval-lite\bin\64bit\obs-live-backgroundremoval-lite.dll`.
 2.  **Install Dependencies:** Download and install the latest [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
 3.  **Check CPU Compatibility:** If your CPU is very old (pre-2013) and lacks AVX2 support, the plugin cannot run.
 

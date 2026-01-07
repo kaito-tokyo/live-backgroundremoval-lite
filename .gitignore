@@ -9,3 +9,4 @@ _codeql_detected_source_root
 /docs/dist/
 /vcpkg_installed/
 node_modules/
+release/
