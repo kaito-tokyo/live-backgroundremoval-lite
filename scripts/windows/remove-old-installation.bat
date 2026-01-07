@@ -2,22 +2,22 @@
 REM Remove old installation of live-backgroundremoval-lite plugin
 setlocal
 
-set PLUGIN_DIR1=C:\ProgramData\obs-studio\plugins\live-backgroundremoval-lite
+set PLUGIN_DIR=C:\ProgramData\obs-studio\plugins\live-backgroundremoval-lite
 set DLL_FILE=C:\Program Files\obs-studio\obs-plugins\64bit\live-backgroundremoval-lite.dll
 set PDB_FILE=C:\Program Files\obs-studio\obs-plugins\64bit\live-backgroundremoval-lite.pdb
 set DATA_DIR=C:\Program Files\obs-studio\data\obs-plugins\live-backgroundremoval-lite
 
 REM Remove plugin directory (ProgramData)
-if exist "%PLUGIN_DIR1%" (
-    echo Removing "%PLUGIN_DIR1%" ...
-    rmdir /s /q "%PLUGIN_DIR1%"
-    if exist "%PLUGIN_DIR1%" (
-        echo Failed to remove "%PLUGIN_DIR1%".
+if exist "%PLUGIN_DIR%" (
+    echo Removing "%PLUGIN_DIR%" ...
+    rmdir /s /q "%PLUGIN_DIR%"
+    if exist "%PLUGIN_DIR%" (
+        echo Failed to remove "%PLUGIN_DIR%".
     ) else (
-        echo Successfully removed "%PLUGIN_DIR1%".
+        echo Successfully removed "%PLUGIN_DIR%".
     )
 ) else (
-    echo "%PLUGIN_DIR1%" does not exist.
+    echo "%PLUGIN_DIR%" does not exist.
 )
 
 REM Remove DLL file
