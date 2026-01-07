@@ -1,5 +1,5 @@
-
 How to Install Live Background Removal Lite Plugin on Windows
+=============================================================
 
 1. **Copy the Plugin Folder**
 
@@ -12,8 +12,3 @@ How to Install Live Background Removal Lite Plugin on Windows
 
 2. **Restart OBS Studio**
    - If OBS Studio is running, close it completely and restart it.
-
-3. **Verify Installation**
-   - In OBS Studio, go to `Tools` > `Live Background Removal Lite` to confirm the plugin is available.
-
-If you encounter any issues, please refer to the [README](../../README.md) or open an issue on GitHub.
