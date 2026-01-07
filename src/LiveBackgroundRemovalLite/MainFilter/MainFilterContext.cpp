@@ -151,10 +151,9 @@ obs_properties_t *MainFilterContext::getProperties()
 		obs_property_text_set_info_word_wrap(pDesc, false);
 	}
 
-
 	// Filter level
 	pDesc = obs_properties_add_text(props, "filterLevelDescription", obs_module_text("filterLevelDescription"),
-				OBS_TEXT_INFO);
+					OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
 
 	obs_property_t *propFilterLevel =
@@ -172,19 +171,19 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
 				  static_cast<int>(FilterLevel::TimeAveragedFilter));
 
-	pDesc = obs_properties_add_text(props, "filterLevelDescription400", obs_module_text("filterLevelDescription400"),
-				OBS_TEXT_INFO);
+	pDesc = obs_properties_add_text(props, "filterLevelDescription400",
+					obs_module_text("filterLevelDescription400"), OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
 
-	pDesc = obs_properties_add_text(props, "filterLevelDescription500", obs_module_text("filterLevelDescription500"),
-				OBS_TEXT_INFO);
+	pDesc = obs_properties_add_text(props, "filterLevelDescription500",
+					obs_module_text("filterLevelDescription500"), OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
 
 	obs_properties_add_text(props, "separatorAfterFilterLevel", "<hr />", OBS_TEXT_INFO);
 
 	// Motion intensity threshold
 	pDesc = obs_properties_add_text(props, "motionIntensityThresholdPowDbDescription",
-				obs_module_text("motionIntensityThresholdPowDbDescription"), OBS_TEXT_INFO);
+					obs_module_text("motionIntensityThresholdPowDbDescription"), OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
 
 	obs_properties_add_float_slider(props, "motionIntensityThresholdPowDb", "", -100.0, 0.0, 0.1);
@@ -194,7 +193,7 @@ obs_properties_t *MainFilterContext::getProperties()
 
 	// Time-averaged filtering
 	pDesc = obs_properties_add_text(props, "timeAveragedFilteringAlphaDescription",
-				obs_module_text("timeAveragedFilteringAlphaDescription"), OBS_TEXT_INFO);
+					obs_module_text("timeAveragedFilteringAlphaDescription"), OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
 
 	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha", "", 0.0f, 1.0f, 0.01f);
