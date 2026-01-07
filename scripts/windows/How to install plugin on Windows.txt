@@ -1,0 +1,19 @@
+
+How to Install Live Background Removal Lite Plugin on Windows
+
+1. **Copy the Plugin Folder**
+
+    - Copy the `live-backgroundremoval-lite` folder (this folder) to your OBS Studio plugins directory. The default path is:
+
+       ```
+       C:\ProgramData\obs-studio\plugins\
+       ```
+    - Paste the `live-backgroundremoval-lite` folder into the `plugins` directory.
+
+2. **Restart OBS Studio**
+   - If OBS Studio is running, close it completely and restart it.
+
+3. **Verify Installation**
+   - In OBS Studio, go to `Tools` > `Live Background Removal Lite` to confirm the plugin is available.
+
+If you encounter any issues, please refer to the [README](../../README.md) or open an issue on GitHub.
