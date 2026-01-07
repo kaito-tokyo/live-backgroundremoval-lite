@@ -69,7 +69,7 @@ Please adhere to these facts to avoid providing incorrect instructions:
     - **Format:** `.zip` archive ONLY.
     - **Installer:** There is **NO** `.exe` or `.msi` installer for Windows.
     - **Method:** Users must manually extract the `obs-plugins` and `data` folders to their OBS directory.
-    - **Typical Path:** Usually `C:\Program Files\obs-studio` (User must confirm their installation path).
+    - **Typical Path:** Usually `C:\ProgramData\obs-studio\plugins` (User must confirm their installation path).
 
 2.  **macOS Installation:**
     - **Format:** `.pkg` installer.
