@@ -61,7 +61,7 @@ try {
     New-Item -ItemType Directory -Path $SymbolsDir -Force | Out-Null
 
     Get-ChildItem -Path $InstallDir -Filter "*.pdb" -Recurse | ForEach-Object {
-        $RelativePath = [System.IO.Path]::GetRelativePath($InstallDir, $_.DirectoryName)
+        $RelativePath = $_.DirectoryName.Substring($InstallDir.Length).TrimStart('\', '/')
         $DestDir = Join-Path $SymbolsDir $RelativePath
 
         if (-not (Test-Path $DestDir)) {
