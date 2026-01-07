@@ -203,16 +203,25 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_property_list_add_int(propFilterLevel, obs_module_text("filterLevelTimeAveragedFilter"),
 				  static_cast<int>(FilterLevel::TimeAveragedFilter));
 
-	// Force no delay flag
-	obs_properties_add_bool(props, "forceNoDelay", obs_module_text("forceNoDelay"));
+	obs_properties_add_text(props, "filterLevelDescription", obs_module_text("filterLevelDescription"), OBS_TEXT_INFO);
+	obs_properties_add_text(props, "filterLevelDescription400", obs_module_text("filterLevelDescription400"), OBS_TEXT_INFO);
+	obs_properties_add_text(props, "filterLevelDescription500", obs_module_text("filterLevelDescription500"), OBS_TEXT_INFO);
 
 	// Motion intensity threshold
 	obs_properties_add_float_slider(props, "motionIntensityThresholdPowDb",
 					obs_module_text("motionIntensityThresholdPowDb"), -100.0, 0.0, 0.1);
 
+	obs_properties_add_text(props, "motionIntensityThresholdPowDbDescription", obs_module_text("motionIntensityThresholdPowDbDescription"), OBS_TEXT_INFO);
+
 	// Time-averaged filtering
 	obs_properties_add_float_slider(props, "timeAveragedFilteringAlpha",
 					obs_module_text("timeAveragedFilteringAlpha"), 0.0f, 1.0f, 0.01f);
+
+	obs_properties_add_text(props, "timeAveragedFilteringAlphaDescription", obs_module_text("timeAveragedFilteringAlphaDescription"), OBS_TEXT_INFO);
+
+	// Force no delay flag
+	obs_properties_add_bool(props, "forceNoDelay", obs_module_text("forceNoDelay"));
+
 
 	// Center Frame
 	obs_properties_add_bool(props, "enableCenterFrame", obs_module_text("enableCenterFrame"));
