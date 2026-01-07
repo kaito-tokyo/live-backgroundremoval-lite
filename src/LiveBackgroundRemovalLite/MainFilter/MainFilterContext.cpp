@@ -179,7 +179,8 @@ obs_properties_t *MainFilterContext::getProperties()
 					obs_module_text("filterLevelDescription500"), OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
 
-	obs_properties_add_text(props, "separatorAfterFilterLevel", "<hr />", OBS_TEXT_INFO);
+	pDesc = obs_properties_add_text(props, "separatorAfterFilterLevel", "<hr />", OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
 
 	// Motion intensity threshold
 	pDesc = obs_properties_add_text(props, "motionIntensityThresholdPowDbDescription",
