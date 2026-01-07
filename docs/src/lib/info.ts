@@ -7,8 +7,8 @@ export const PRODUCTION_BASE_URL =
 export async function getAggregateRating() {
   return {
     "@type": "AggregateRating",
-    ratingValue: "5.0",
-    reviewCount: "2",
+    ratingValue: "4.7",
+    reviewCount: "3",
     bestRating: "5",
     worstRating: "1",
   };
