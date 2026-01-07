@@ -142,7 +142,7 @@ By stacking these filters, you get the **precise edge detection** of a physical 
 
 ### The plugin does not appear in the Filters list.
 
-1.  **Check Folder Structure (Windows):** Ensure you extracted the `live-backgroundremoval-lite` folder directly into the OBS plugins directory. The file `obs-live-backgroundremoval-lite.dll` must exist inside `C:\ProgramData\obs-studio\plugins\bin\`.
+1.  **Check Folder Structure (Windows):** Ensure you extracted the `live-backgroundremoval-lite` folder directly into the OBS plugins directory. The file `obs-live-backgroundremoval-lite.dll` must exist inside `C:\ProgramData\obs-studio\plugins\live-backgroundremoval-lite\bin\64bit\obs-live-backgroundremoval-lite.dll`.
 2.  **Install Dependencies:** Download and install the latest [Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
 3.  **Check CPU Compatibility:** If your CPU is very old (pre-2013) and lacks AVX2 support, the plugin cannot run.
 
