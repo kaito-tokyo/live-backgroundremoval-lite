@@ -1,14 +1,13 @@
 # Live Background Removal Lite
 
-**A high-performance, crash-resistant OBS plugin for real-time background removal.**
+> A gaming-first, high-performance, and crash-resilient background removal for OBS Studio
 
-This plugin allows you to remove the background from your video source without a physical green screen. It is a **complete rewrite** of the popular `obs-backgroundremoval` tool, engineered from scratch to prioritize **stability**, **compatibility**, and **smart resource management**.
+## Overview
 
-<div align="center">
+**Live Background Removal Lite** is a lightweight OBS effect filter plugin designed to remove backgrounds from your portrait sources.
+We make resource consumption minimal to avoid affecting your gameplay, and we always develop this plugin with a priority on stability.
 
-[**⬇️ Download Latest Release**](https://kaito-tokyo.github.io/live-backgroundremoval-lite/)
-
-</div>
+[**Download Latest Release**](https://kaito-tokyo.github.io/live-backgroundremoval-lite/)
 
 ---
 
