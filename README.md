@@ -1,32 +1,44 @@
 # Live Background Removal Lite
 
-**A high-performance, crash-resistant OBS plugin for real-time background removal.**
+> A gaming-first, high-performance, and crash-resilient background removal for OBS Studio
 
-This plugin allows you to remove the background from your video source without a physical green screen. It is a **complete rewrite** of the popular `obs-backgroundremoval` tool, engineered from scratch to prioritize **stability**, **compatibility**, and **smart resource management**.
+## Overview
 
-<div align="center">
+**Live Background Removal Lite** is a lightweight OBS effect filter plugin designed to remove backgrounds from your portrait sources.
+We make resource consumption minimal to avoid affecting your gameplay, and we always develop this plugin with a priority on stability.
 
-[**⬇️ Download Latest Release**](https://kaito-tokyo.github.io/live-backgroundremoval-lite/)
+[**Download Latest Release**](https://kaito-tokyo.github.io/live-backgroundremoval-lite/)
 
-</div>
-
----
-
-## 📸 Demo
+## Demo
 
 <div align="center">
 
-<img src="docs/public/demo.gif" alt="Background Removal Lite Demo" width="480" style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;">
+<img src="docs/public/demo.gif" alt="A cluttered background was removed from my portrait source." width="480">
 
-<p style="margin-top:8px; color:#666; font-size:90%;">
-  <em>
-    The plugin seamlessly removes a cluttered background, revealing the source behind it.
-  </em>
-</p>
+*A cluttered background was removed from my portrait source.*
 
 </div>
 
----
+## Requirements
+
+- **OBS Studio** 31.1.1 or later
+- **OS** Windows, Mac, Linux (Ubuntu, Arch Linux, Flatpak)
+- This plugin does not require CUDA or ROCm.
+
+## Development policy
+
+We prioritize the compliance and ethics of our software projects as a member of the global OSS community, and take the LLM concerns seriously.
+While we use LLM-based code reviews to ensure that the quality of our software is satisfactory for every streamer, we always avoid including GenAI-generated content in our product, except for translations.
+
+## Download and installation
+
+Go to [the downloads page](https://kaito-tokyo.github.io/live-backgroundremoval-lite/) to get the latest binary.
+
+- **Windows:** Place the contents of the zip file into `C:\ProgramData\obs-studio\plugins`.
+- **Mac:** Double-click the downloaded `.pkg`.
+- **Ubuntu:** Install the provided `.deb`.
+- **Arch Linux and Flatpak:** Use PKGBUILD or manifest available on [the supplementary repository](https://github.com/kaito-tokyo/live-plugins-hub).
+- **Other Linux distributions:** Build from source.
 
 ## 🧠 Engineering & UX Philosophy
 
@@ -91,32 +103,6 @@ To achieve maximum performance, **Live Background Removal Lite** employs a sophi
 </small>
 
 ---
-
-## 🌟 Features
-
-- **Rock-Solid Stability:** Built with a focus on exception handling and thread safety. If an error occurs in the inference engine, the plugin handles it gracefully without taking down the entire application.
-- **Built-in Debug View:** Includes a comprehensive debug window that visualizes the internal pipeline (raw masks, motion detection heatmaps) in real-time. While developed for our own engineering use, we kept it accessible because we know pro streamers love to see exactly how their tech is performing under the hood.
-- **No Green Screen Required:** High-quality background removal using AI, without the need for a physical chroma key setup.
-- **Simple & Easy to Use:** Just add it as a filter to your source. No complex configuration or external dependencies needed.
-- **Cross-Platform Support:** Works reliably across Windows, macOS, and Linux.
-
-## 💻 Installation
-
-1.  Go to the [Releases page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/releases) and download the appropriate file for your operating system.
-
-2.  Follow the instructions for your OS:
-    - **For Windows:**
-      - Download the `.zip` file and extract the `live-backgroundremoval-lite` folder into your OBS Studio plugin directory (e.g., `C:\ProgramData\obs-studio\plugins`).
-    - **For macOS:**
-      - Download and run the `.pkg` installer.
-    - **For Linux:**
-      - **Ubuntu:** Download and install the provided `.deb` package.
-      - **Fedora:** Please refer to the instructions in [`unsupported/fedora/`](./unsupported/fedora).
-      - **Arch Linux:** Please refer to the instructions in [`unsupported/arch/`](./unsupported/arch).
-      - **Flatpak:** Please refer to the instructions in [`unsupported/flatpak/`](./unsupported/flatpak).
-      - **Other Distributions:** Users of other distributions will need to build from source. Note: Converting the `.deb` package is known not to work.
-
-3.  Restart OBS Studio after the installation is complete.
 
 ## 🔐 Verifying Release Binaries
 
