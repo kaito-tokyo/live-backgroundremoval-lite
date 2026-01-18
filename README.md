@@ -11,17 +11,13 @@ We make resource consumption minimal to avoid affecting your gameplay, and we al
 
 ---
 
-## 📸 Demo
+## Demo
 
 <div align="center">
 
-<img src="docs/public/demo.gif" alt="Background Removal Lite Demo" width="480" style="border:1px solid #ccc; border-radius:8px; box-shadow:0 2px 8px #0002;">
+<img src="docs/public/demo.gif" alt="A cluttered background was removed from my portrait source." width="480">
 
-<p style="margin-top:8px; color:#666; font-size:90%;">
-  <em>
-    The plugin seamlessly removes a cluttered background, revealing the source behind it.
-  </em>
-</p>
+*A cluttered background was removed from my portrait source.*
 
 </div>
 
