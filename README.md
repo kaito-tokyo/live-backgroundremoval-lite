@@ -25,6 +25,11 @@ We make resource consumption minimal to avoid affecting your gameplay, and we al
 - **OS** Windows, Mac, Linux (Ubuntu, Arch Linux, Flatpak)
 - This plugin doesn't use CUDA or ROCm.
 
+## Development policy
+
+We prioritize the compliance and ethics of our software projects as a member of global OSS community, and take the LLM concerns seriously.
+While we use LLM-based code reviews to ensure that the quality of our software is satisfactory for every streamer, we always avoid including GenAI-generated content in our product, except for translations.
+
 ## Installation
 
 1. Go to the [Releases page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/releases) and download the appropriate file for your operating system.
