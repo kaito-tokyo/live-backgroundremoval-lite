@@ -30,25 +30,15 @@ We make resource consumption minimal to avoid affecting your gameplay, and we al
 We prioritize the compliance and ethics of our software projects as a member of global OSS community, and take the LLM concerns seriously.
 While we use LLM-based code reviews to ensure that the quality of our software is satisfactory for every streamer, we always avoid including GenAI-generated content in our product, except for translations.
 
-## Installation
+## Download and installation
 
-1. Go to the [Releases page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/releases) and download the appropriate file for your operating system.
+Go to [downloads page](https://kaito-tokyo.github.io/live-backgroundremoval-lite/) to get the latest binary.
 
-2.  Follow the instructions for your OS:
-    - **For Windows:**
-      - Download the `.zip` file and extract the `live-backgroundremoval-lite` folder into your OBS Studio plugin directory (e.g., `C:\ProgramData\obs-studio\plugins`).
-    - **For macOS:**
-      - Download and run the `.pkg` installer.
-    - **For Linux:**
-      - **Ubuntu:** Download and install the provided `.deb` package.
-      - **Fedora:** Please refer to the instructions in [`unsupported/fedora/`](./unsupported/fedora).
-      - **Arch Linux:** Please refer to the instructions in [`unsupported/arch/`](./unsupported/arch).
-      - **Flatpak:** Please refer to the instructions in [`unsupported/flatpak/`](./unsupported/flatpak).
-      - **Other Distributions:** Users of other distributions will need to build from source. Note: Converting the `.deb` package is known not to work.
-
-3.  Restart OBS Studio after the installation is complete.
-
----
+- **Windows:** Place the contents of zip into `C:\ProgramData\obs-studio\plugins`.
+- **Mac:** Double-click the downloaded `.pkg`.
+- **Ubuntu:** Install the provided `.deb`.
+- **Arch Linux and Flatpak:** Use PKGBUILD or manifest available on [the supplementary repository](https://github.com/kaito-tokyo/live-plugins-hub).
+- **Other Linux distributions:** Build by yourself.
 
 ## 🧠 Engineering & UX Philosophy
 
