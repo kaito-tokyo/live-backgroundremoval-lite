@@ -23,22 +23,22 @@ We make resource consumption minimal to avoid affecting your gameplay, and we al
 
 - **OBS Studio** 31.1.1 or later
 - **OS** Windows, Mac, Linux (Ubuntu, Arch Linux, Flatpak)
-- This plugin doesn't use CUDA or ROCm.
+- This plugin does not require CUDA or ROCm.
 
 ## Development policy
 
-We prioritize the compliance and ethics of our software projects as a member of global OSS community, and take the LLM concerns seriously.
+We prioritize the compliance and ethics of our software projects as a member of the global OSS community, and take the LLM concerns seriously.
 While we use LLM-based code reviews to ensure that the quality of our software is satisfactory for every streamer, we always avoid including GenAI-generated content in our product, except for translations.
 
 ## Download and installation
 
-Go to [downloads page](https://kaito-tokyo.github.io/live-backgroundremoval-lite/) to get the latest binary.
+Go to [the downloads page](https://kaito-tokyo.github.io/live-backgroundremoval-lite/) to get the latest binary.
 
-- **Windows:** Place the contents of zip into `C:\ProgramData\obs-studio\plugins`.
+- **Windows:** Place the contents of the zip file into `C:\ProgramData\obs-studio\plugins`.
 - **Mac:** Double-click the downloaded `.pkg`.
 - **Ubuntu:** Install the provided `.deb`.
 - **Arch Linux and Flatpak:** Use PKGBUILD or manifest available on [the supplementary repository](https://github.com/kaito-tokyo/live-plugins-hub).
-- **Other Linux distributions:** Build by yourself.
+- **Other Linux distributions:** Build from source.
 
 ## 🧠 Engineering & UX Philosophy
 
