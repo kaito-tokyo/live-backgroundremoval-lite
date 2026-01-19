@@ -32,7 +32,7 @@ enum class FilterLevel : int {
 };
 
 struct PluginProperty {
-	int numThreads = 2;
+	int numThreads = 1;
 	int subsamplingRate = 4;
 
 	FilterLevel filterLevel = FilterLevel::Default;
