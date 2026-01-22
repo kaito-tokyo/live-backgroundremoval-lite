@@ -277,6 +277,7 @@ void RenderingContext::videoRender()
 		r32fReducedMeanSquaredMotionReader_.stage(r32fMeanSquaredMotionReductionPyramid_.back());
 	}
 
+	logger_->info("blurSize", {{"value", std::to_string(blurSize_)}});
 	if (processingFrame && blurSize_ > 0) {
 		gs_copy_texture(bgrxDualKawaseBlurReductionPyramid_[0].get(), bgrxSource_.get());
 		// mainEffect_.dualKawaseBlur(bgrxDualKawaseBlurReductionPyramid_, blurSize_);

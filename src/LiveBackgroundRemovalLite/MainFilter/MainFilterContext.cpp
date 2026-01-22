@@ -332,6 +332,8 @@ void MainFilterContext::update(obs_data_t *settings)
 			renderingContext = newRenderingContext;
 			GsUnique::drain();
 		}
+
+		renderingContext_ = renderingContext;
 	}
 
 	if (renderingContext) {
