@@ -120,3 +120,7 @@ cmake --install "$BUILD_DIR" \
 echo "Install done. Artifacts are in $DEPS_DIR"
 echo "Raw build log is saved to $LOG_FILE"
 echo "::endgroup::"
+
+find ./.deps -type f \( -name "*.prl" -o -name "*.cmake" -o -name "*.conf" -o -name "*.pri" \) -print0 | xargs -0 sed -i '' 's/-framework AGL//g'
+find ./.deps -type f \( -name "*.prl" -o -name "*.cmake" -o -name "*.conf" -o -name "*.pri" \) -print0 | xargs -0 sed -i '' 's/-framework;AGL//g'
+find ./.deps -type f \( -name "*.prl" -o -name "*.cmake" -o -name "*.conf" -o -name "*.pri" \) -print0 | xargs -0 sed -i '' 's/set(__opengl_agl_fw_path "${WrapOpenGL_AGL}")//g'
