@@ -201,6 +201,8 @@ void RenderingContext::videoRender()
 	const float maskLowerBound = maskLowerBound_.load(std::memory_order_relaxed);
 	const float maskUpperBoundMargin = maskUpperBoundMargin_.load(std::memory_order_relaxed);
 
+	[[maybe_unused]] const int blurSize = blurSize_.load(std::memory_order_relaxed);
+
 	const bool enableCenterFrame = enableCenterFrame_.load(std::memory_order_relaxed);
 
 	const float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_.load(std::memory_order_relaxed);

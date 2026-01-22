@@ -112,6 +112,8 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
 
+	obs_data_set_default_int(data, "blurSize", 3);
+
 	obs_data_set_default_bool(data, "enableCenterFrame", false);
 
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
@@ -199,6 +201,11 @@ obs_properties_t *MainFilterContext::getProperties()
 
 	pDesc = obs_properties_add_text(props, "separatorAfterTimeAveragedFilteringAlpha", "<hr />", OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
+
+	// Blur size
+	pDesc = obs_properties_add_text(props, "blurSizeDescription", obs_module_text("blurSizeDescription"), OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
+	obs_properties_add_int_slider(props, "blurSize", "", 1, 9, 1);
 
 	// Center Frame
 	obs_properties_add_bool(props, "enableCenterFrame", obs_module_text("enableCenterFrame"));
@@ -301,6 +308,8 @@ void MainFilterContext::update(obs_data_t *settings)
 		newPluginProperty.maskUpperBoundMarginAmpDb =
 			obs_data_get_double(settings, "maskUpperBoundMarginAmpDb");
 	}
+
+	newPluginProperty.blurSize = obs_data_get_int(settings, "blurSize");
 
 	newPluginProperty.enableCenterFrame = obs_data_get_bool(settings, "enableCenterFrame");
 

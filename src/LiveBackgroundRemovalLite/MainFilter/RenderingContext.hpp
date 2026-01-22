@@ -155,6 +155,8 @@ private:
 
 	std::atomic<float> timeAveragedFilteringAlpha_;
 
+	std::atomic<int> blurSize_;
+
 	std::atomic<bool> enableCenterFrame_;
 
 	std::atomic<bool> shouldNextVideoRenderProcessFrame_ = true;
