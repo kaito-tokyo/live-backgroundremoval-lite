@@ -47,7 +47,7 @@ struct PluginProperty {
 	double maskLowerBoundAmpDb = -25.0;
 	double maskUpperBoundMarginAmpDb = -25.0;
 
-	int blurSize = 1;
+	int blurSize = 0;
 
 	bool enableCenterFrame = false;
 };

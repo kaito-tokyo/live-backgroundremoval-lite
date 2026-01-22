@@ -398,22 +398,30 @@ public:
 			float texelHeight = 1.0f / static_cast<float>(gs_texture_get_height(texturePyramid[i].get()));
 
 			gs_technique_begin_pass(tech, 0);
+
 			gs_effect_set_texture(textureImage_, texturePyramid[i].get());
 			gs_effect_set_float(floatTexelWidth_, texelWidth);
 			gs_effect_set_float(floatTexelHeight_, texelHeight);
+
+			gs_draw_sprite(texturePyramid[i + 1].get(), 0, 0u, 0u);
+
 			gs_technique_end_pass(tech);
 		}
 
 		for (int i = blurSize; i > 0; --i) {
-			TextureRenderGuard textureRenderGuard(texturePyramid[i]);
+			TextureRenderGuard textureRenderGuard(texturePyramid[i - 1]);
 
 			float texelWidth = 1.0f / static_cast<float>(gs_texture_get_width(texturePyramid[i].get()));
 			float texelHeight = 1.0f / static_cast<float>(gs_texture_get_height(texturePyramid[i].get()));
 
 			gs_technique_begin_pass(tech, 1);
-			gs_effect_set_texture(textureImage_, texturePyramid[i - 1].get());
+
+			gs_effect_set_texture(textureImage_, texturePyramid[i].get());
 			gs_effect_set_float(floatTexelWidth_, texelWidth);
 			gs_effect_set_float(floatTexelHeight_, texelHeight);
+
+			gs_draw_sprite(texturePyramid[i - 1].get(), 0, 0u, 0u);
+
 			gs_technique_end_pass(tech);
 		}
 
@@ -438,6 +446,19 @@ public:
 		}
 	}
 
+	void directDrawWithBlurredBackground(
+		const ObsBridgeUtils::unique_gs_texture_t &sourceTexture,
+		const ObsBridgeUtils::unique_gs_texture_t &maskTexture,
+		const ObsBridgeUtils::unique_gs_texture_t &blurredBackgroundTexture) const noexcept
+	{
+		while (gs_effect_loop(gsEffect_.get(), "DrawWithBlurredBackground")) {
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
+			gs_effect_set_texture(textureImage1_, maskTexture.get());
+			gs_effect_set_texture(textureImage2_, blurredBackgroundTexture.get());
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
+		}
+	}
+
 	void directDrawWithRefinedMask(const ObsBridgeUtils::unique_gs_texture_t &sourceTexture,
 				       const ObsBridgeUtils::unique_gs_texture_t &maskTexture, const double gamma,
 				       const double lowerBound, const double upperBoundMargin) const noexcept
@@ -446,6 +467,24 @@ public:
 			gs_effect_set_texture(textureImage_, sourceTexture.get());
 			gs_effect_set_texture(textureImage1_, maskTexture.get());
 
+			gs_effect_set_float(floatGamma_, static_cast<float>(gamma));
+			gs_effect_set_float(floatLowerBound_, static_cast<float>(lowerBound));
+			gs_effect_set_float(floatUpperBound_, static_cast<float>(1.0 - upperBoundMargin));
+
+			gs_draw_sprite(sourceTexture.get(), 0, 0u, 0u);
+		}
+	}
+
+	void directDrawWithRefinedBlurredBackground(
+		const ObsBridgeUtils::unique_gs_texture_t &sourceTexture,
+		const ObsBridgeUtils::unique_gs_texture_t &maskTexture, const double gamma, const double lowerBound,
+		const double upperBoundMargin,
+		const ObsBridgeUtils::unique_gs_texture_t &blurredBackgroundTexture) const noexcept
+	{
+		while (gs_effect_loop(gsEffect_.get(), "DrawWithRefinedBlurredBackground")) {
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
+			gs_effect_set_texture(textureImage1_, maskTexture.get());
+			gs_effect_set_texture(textureImage2_, blurredBackgroundTexture.get());
 			gs_effect_set_float(floatGamma_, static_cast<float>(gamma));
 			gs_effect_set_float(floatLowerBound_, static_cast<float>(lowerBound));
 			gs_effect_set_float(floatUpperBound_, static_cast<float>(1.0 - upperBoundMargin));

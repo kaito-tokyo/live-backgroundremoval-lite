@@ -113,6 +113,21 @@ float4 PSDrawWithMask(VertInOut vert_in) : TARGET
 	return final_color;
 }
 
+float4 PSDrawWithBlurredBackground(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+
+	float a = image1.Sample(linear_sampler, uv).r;
+	float3 foreground = image.Sample(point_sampler, uv).rgb;
+	float3 background = image2.Sample(point_sampler, uv).rgb;
+
+	float4 color;
+	color.rgb = a * foreground + (1.0f - a) * background;
+	color.a = 1.0f;
+
+	return color;
+}
+
 /**
  * @brief Composites the final image using a perceptually refined alpha matte.
  * @details This shader takes a source color texture and a raw, soft alpha matte.
@@ -145,6 +160,24 @@ float4 PSDrawWithRefinedMask(VertInOut vert_in) : TARGET
 
 	// 4. Return the final composited color
 	return float4(final_rgb, final_alpha);
+}
+
+float4 PSDrawWithRefinedBlurredBackground(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+
+	float raw_mask = image1.Sample(point_sampler, uv).r;
+	float gamma_corrected_mask = pow(saturate(raw_mask), gamma);
+	float a = smoothstep(lowerBound, upperBound, gamma_corrected_mask);
+
+	float3 foreground = image.Sample(point_sampler, uv).rgb;
+	float3 background = image2.Sample(point_sampler, uv).rgb;
+
+	float4 color;
+	color.rgb = a * foreground + (1.0f - a) * background;
+	color.a = 1.0f;
+
+	return color;
 }
 
 float4 PSResampleByNearestR8(VertInOut vert_in) : TARGET
@@ -387,7 +420,7 @@ float4 PSDualKawaseDownsample(VertInOut vert_in) : TARGET
 	float2 texelSize = float2(texelWidth, texelHeight);
 	float4 offset = texelSize.xyxy * float4(-1.0, -1.0, 1.0, 1.0);
 
-	float2 uv = vert_in.uv + texelSize / 2.0;
+	float2 uv = vert_in.uv;
 
 	float4 color = image.Sample(linear_sampler, uv) * 4.0;
 	color += image.Sample(linear_sampler, uv + offset.xy);
@@ -438,12 +471,30 @@ technique DrawWithMask
 	}
 }
 
+technique DrawWithBlurredBackground
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSDrawWithBlurredBackground(vert_in);
+	}
+}
+
 technique DrawWithRefinedMask
 {
 	pass
 	{
 		vertex_shader = VSDefault(vert_in);
 		pixel_shader = PSDrawWithRefinedMask(vert_in);
+	}
+}
+
+technique DrawWithRefinedBlurredBackground
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSDrawWithRefinedBlurredBackground(vert_in);
 	}
 }
 

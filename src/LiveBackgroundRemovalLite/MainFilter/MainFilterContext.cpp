@@ -112,9 +112,9 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_double(data, "guidedFilterEpsPowDb", defaultProperty.guidedFilterEpsPowDb);
 
-	obs_data_set_default_int(data, "blurSize", 3);
+	obs_data_set_default_int(data, "blurSize", defaultProperty.blurSize);
 
-	obs_data_set_default_bool(data, "enableCenterFrame", false);
+	obs_data_set_default_bool(data, "enableCenterFrame", defaultProperty.enableCenterFrame);
 
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
 	obs_data_set_default_double(data, "maskLowerBoundAmpDb", defaultProperty.maskLowerBoundAmpDb);
@@ -206,7 +206,7 @@ obs_properties_t *MainFilterContext::getProperties()
 	pDesc = obs_properties_add_text(props, "blurSizeDescription", obs_module_text("blurSizeDescription"),
 					OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
-	obs_properties_add_int_slider(props, "blurSize", "", 0, 5, 1);
+	obs_properties_add_int_slider(props, "blurSize", "", 0, 10, 1);
 
 	// Center Frame
 	obs_properties_add_bool(props, "enableCenterFrame", obs_module_text("enableCenterFrame"));
@@ -291,7 +291,7 @@ obs_properties_t *MainFilterContext::getProperties()
 void MainFilterContext::update(obs_data_t *settings)
 {
 	bool doesRenewRenderingContext = false;
-	PluginProperty newPluginProperty;
+	PluginProperty newPluginProperty = pluginProperty_;
 
 	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
 
@@ -311,7 +311,8 @@ void MainFilterContext::update(obs_data_t *settings)
 	}
 
 	int newBlurSize = obs_data_get_int(settings, "blurSize");
-	if (pluginProperty_.blurSize != newBlurSize) {
+
+	if (newPluginProperty.blurSize != newBlurSize) {
 		newPluginProperty.blurSize = newBlurSize;
 		doesRenewRenderingContext = true;
 	}
@@ -329,11 +330,10 @@ void MainFilterContext::update(obs_data_t *settings)
 			GraphicsContextGuard graphicsContextGuard;
 			std::shared_ptr<RenderingContext> newRenderingContext = createRenderingContext(
 				renderingContext->region_.width, renderingContext->region_.height, newBlurSize);
+			renderingContext_ = newRenderingContext;
 			renderingContext = newRenderingContext;
 			GsUnique::drain();
 		}
-
-		renderingContext_ = renderingContext;
 	}
 
 	if (renderingContext) {
