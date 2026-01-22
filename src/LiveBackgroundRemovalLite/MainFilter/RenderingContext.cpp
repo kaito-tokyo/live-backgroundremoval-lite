@@ -191,16 +191,6 @@ void RenderingContext::videoTick(float)
 
 void RenderingContext::videoRender()
 {
-	bool forceNoDelay = forceNoDelay_.load(std::memory_order_relaxed);
-	if (forceNoDelay) {
-		videoRenderForceNoDelay();
-	} else {
-		videoRenderOptimized();
-	}
-}
-
-void RenderingContext::videoRenderOptimized()
-{
 	const FilterLevel filterLevel = filterLevel_.load(std::memory_order_relaxed);
 
 	const float motionIntensityThreshold = motionIntensityThreshold_.load(std::memory_order_relaxed);
@@ -407,246 +397,11 @@ void RenderingContext::videoRenderOptimized()
 	}
 }
 
-void RenderingContext::videoRenderForceNoDelay()
-{
-	const FilterLevel filterLevel = filterLevel_.load(std::memory_order_relaxed);
-
-	const float motionIntensityThreshold = motionIntensityThreshold_.load(std::memory_order_relaxed);
-
-	const float guidedFilterEps = guidedFilterEps_.load(std::memory_order_relaxed);
-
-	const float maskGamma = maskGamma_.load(std::memory_order_relaxed);
-	const float maskLowerBound = maskLowerBound_.load(std::memory_order_relaxed);
-	const float maskUpperBoundMargin = maskUpperBoundMargin_.load(std::memory_order_relaxed);
-
-	const bool enableCenterFrame = enableCenterFrame_.load(std::memory_order_relaxed);
-
-	const float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_.load(std::memory_order_relaxed);
-
-	const bool processingFrame = shouldNextVideoRenderProcessFrame_.exchange(false, std::memory_order_acquire);
-	const bool forceProcessingFrame =
-		shouldNextVideoRenderForceProcessFrame_.exchange(false, std::memory_order_acquire);
-
-	if (processingFrame && filterLevel >= FilterLevel::Passthrough) {
-		mainEffect_.drawSource(bgrxSource_, source_);
-	}
-
-	float motionIntensity = (filterLevel < FilterLevel::MotionIntensityThresholding) ? 1.0f : 0.0f;
-
-	if (processingFrame && filterLevel >= FilterLevel::MotionIntensityThresholding) {
-		mainEffect_.convertToLuma(r32fLuma_, bgrxSource_);
-
-		const auto &lastSubLuma = r32fSubLumas_[currentSubLumaIndex_];
-		const auto &currentSubLuma = r32fSubLumas_[1 - currentSubLumaIndex_];
-		mainEffect_.resampleByNearestR8(currentSubLuma, r32fLuma_);
-
-		mainEffect_.calculateSquaredMotion(r32fSubPaddedSquaredMotion_, currentSubLuma, lastSubLuma);
-
-		currentSubLumaIndex_ = 1 - currentSubLumaIndex_;
-
-		mainEffect_.reduce(r32fMeanSquaredMotionReductionPyramid_, r32fSubPaddedSquaredMotion_);
-
-		r32fReducedMeanSquaredMotionReader_.stage(r32fMeanSquaredMotionReductionPyramid_.back());
-	}
-
-	if (processingFrame && filterLevel >= FilterLevel::Segmentation && hasNewSegmenterInput_) {
-		hasNewSegmenterInput_ = false;
-		try {
-			bgrxSegmenterInputReader_.sync();
-		} catch (const std::exception &e) {
-			logger_->error("TextureSyncError", {{"message", e.what()}});
-		}
-	}
-
-	if (processingFrame && filterLevel >= FilterLevel::MotionIntensityThresholding) {
-		r32fReducedMeanSquaredMotionReader_.sync();
-
-		const float *meanSquaredMotionPtr =
-			reinterpret_cast<const float *>(r32fReducedMeanSquaredMotionReader_.getBuffer().data());
-		motionIntensity = *meanSquaredMotionPtr / (subRegion_.width * subRegion_.height);
-	}
-
-	const bool isCurrentMotionIntense = (motionIntensity >= motionIntensityThreshold);
-
-	if (processingFrame && filterLevel >= FilterLevel::Segmentation &&
-	    (isCurrentMotionIntense || forceProcessingFrame)) {
-		constexpr vec4 blackColor = {0.0f, 0.0f, 0.0f, 1.0f};
-
-		const double targetW = static_cast<double>(selfieSegmenter_->getWidth());
-		const double targetH = static_cast<double>(selfieSegmenter_->getHeight());
-
-		double fitScaleX = targetW / static_cast<double>(segmenterRoi_.width);
-		double fitScaleY = targetH / static_cast<double>(segmenterRoi_.height);
-		double scale = std::min(fitScaleX, fitScaleY);
-
-		std::uint32_t width = static_cast<std::uint32_t>(std::round(region_.width * scale));
-		std::uint32_t height = static_cast<std::uint32_t>(std::round(region_.height * scale));
-
-		double roiCenterX = segmenterRoi_.x + segmenterRoi_.width / 2.0;
-		double roiCenterY = segmenterRoi_.y + segmenterRoi_.height / 2.0;
-
-		float x = static_cast<float>((targetW / 2.0) - (roiCenterX * scale));
-		float y = static_cast<float>((targetH / 2.0) - (roiCenterY * scale));
-
-		mainEffect_.drawRoi(bgrxSegmenterInput_, bgrxSource_, &blackColor, width, height, x, y);
-	}
-
-	if (processingFrame && filterLevel >= FilterLevel::Segmentation) {
-		if (hasNewSegmentationMask_.load(std::memory_order_relaxed) &&
-		    hasNewSegmentationMask_.exchange(false, std::memory_order_acquire)) {
-			if (enableCenterFrame) {
-				SelfieSegmenter::BoundingBox bb;
-				bb.calculateBoundingBoxFrom256x144(selfieSegmenter_->getMask(), 200);
-
-				const std::uint64_t bbX = static_cast<std::uint64_t>(bb.x);
-				const std::uint64_t bbY = static_cast<std::uint64_t>(bb.y);
-				const std::uint64_t bbW = static_cast<std::uint64_t>(bb.width);
-				const std::uint64_t bbH = static_cast<std::uint64_t>(bb.height);
-
-				const std::uint64_t roiX = static_cast<std::uint64_t>(segmenterRoi_.x);
-				const std::uint64_t roiY = static_cast<std::uint64_t>(segmenterRoi_.y);
-				const std::uint64_t roiW = static_cast<std::uint64_t>(segmenterRoi_.width);
-				const std::uint64_t roiH = static_cast<std::uint64_t>(segmenterRoi_.height);
-
-				const std::uint64_t baseW = static_cast<std::uint64_t>(selfieSegmenter_->getWidth());
-				const std::uint64_t baseH = static_cast<std::uint64_t>(selfieSegmenter_->getHeight());
-
-				if (baseW > 0 && baseH > 0) {
-					sourceRoi_.x =
-						static_cast<std::uint32_t>(((bbX * roiW) + (baseW / 2)) / baseW + roiX);
-
-					sourceRoi_.y =
-						static_cast<std::uint32_t>(((bbY * roiH) + (baseH / 2)) / baseH + roiY);
-
-					sourceRoi_.width =
-						static_cast<std::uint32_t>(((bbW * roiW) + (baseW / 2)) / baseW);
-
-					sourceRoi_.height =
-						static_cast<std::uint32_t>(((bbH * roiH) + (baseH / 2)) / baseH);
-				}
-			}
-
-			const std::uint8_t *segmentationMaskData =
-				selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
-
-			// gs_texture_set_image immediately uploads the data to GPU memory
-			gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
-					     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
-		}
-	}
-
-	if (processingFrame && filterLevel >= FilterLevel::GuidedFilter) {
-		const ObsBridgeUtils::unique_gs_texture_t &currentSubLuma = r32fSubLumas_[currentSubLumaIndex_];
-		mainEffect_.resampleByNearestR8(r32fSubGFSource_, r8SegmentationMask_);
-
-		mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanGuide_, currentSubLuma, r32fSubGFIntermediate_);
-		mainEffect_.applyBoxFilterR8KS17(r32fSubGFMeanSource_, r32fSubGFSource_, r32fSubGFIntermediate_);
-
-		mainEffect_.applyBoxFilterWithMulR8KS17(r32fSubGFMeanGuideSource_, currentSubLuma, r32fSubGFSource_,
-							r32fSubGFIntermediate_);
-		mainEffect_.applyBoxFilterWithSqR8KS17(r32fSubGFMeanGuideSq_, currentSubLuma, r32fSubGFIntermediate_);
-
-		mainEffect_.calculateGuidedFilterAAndB(r32fSubGFA_, r32fSubGFB_, r32fSubGFMeanGuideSq_,
-						       r32fSubGFMeanGuide_, r32fSubGFMeanGuideSource_,
-						       r32fSubGFMeanSource_, guidedFilterEps);
-
-		mainEffect_.finalizeGuidedFilter(r8GuidedFilterResult_, r32fLuma_, r32fSubGFA_, r32fSubGFB_);
-	}
-
-	if (processingFrame && filterLevel >= FilterLevel::TimeAveragedFilter) {
-		std::size_t nextIndex = 1 - currentTimeAveragedMaskIndex_;
-		mainEffect_.timeAveragedFiltering(r8TimeAveragedMasks_[nextIndex],
-						  r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
-						  r8GuidedFilterResult_, timeAveragedFilteringAlpha);
-		currentTimeAveragedMaskIndex_ = nextIndex;
-	}
-
-	if (enableCenterFrame) {
-		gs_matrix_push();
-
-		float scaleFactor;
-		if (sourceRoi_.width > 0 && sourceRoi_.height > 0) {
-			float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
-			float heightScale = static_cast<float>(region_.height) / static_cast<float>(sourceRoi_.height);
-			scaleFactor = std::min(widthScale, heightScale);
-		} else {
-			scaleFactor = 1.0f;
-		}
-
-		float displayW = static_cast<float>(sourceRoi_.width) * scaleFactor;
-		float displayH = static_cast<float>(sourceRoi_.height) * scaleFactor;
-
-		float offsetX = (static_cast<float>(region_.width) - displayW) / 2.0f;
-		float offsetY = (static_cast<float>(region_.height) - displayH);
-
-		vec3 vecDest{offsetX, offsetY, 0.0f};
-		gs_matrix_translate(&vecDest);
-
-		vec3 vecScale{scaleFactor, scaleFactor, 1.0f};
-		gs_matrix_scale(&vecScale);
-
-		vec3 vecSource{-static_cast<float>(sourceRoi_.x), -static_cast<float>(sourceRoi_.y), 0.0f};
-		gs_matrix_translate(&vecSource);
-	}
-
-	if (filterLevel == FilterLevel::Passthrough) {
-		mainEffect_.directDraw(bgrxSource_);
-	} else if (filterLevel == FilterLevel::Segmentation ||
-		   filterLevel == FilterLevel::MotionIntensityThresholding) {
-		mainEffect_.directDrawWithMask(bgrxSource_, r8SegmentationMask_);
-	} else if (filterLevel == FilterLevel::GuidedFilter) {
-		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8GuidedFilterResult_, maskGamma, maskLowerBound,
-						      maskUpperBoundMargin);
-	} else if (filterLevel == FilterLevel::TimeAveragedFilter) {
-		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
-						      maskGamma, maskLowerBound, maskUpperBoundMargin);
-	} else {
-		// Draw nothing to prevent unexpected background disclosure
-	}
-
-	if (enableCenterFrame) {
-		gs_matrix_pop();
-	}
-
-	if (processingFrame && filterLevel >= FilterLevel::Segmentation &&
-	    (isCurrentMotionIntense || forceProcessingFrame)) {
-		bgrxSegmenterInputReader_.stage(bgrxSegmenterInput_);
-		hasNewSegmenterInput_ = true;
-
-		auto &bgrxSegmenterInputReaderBuffer = bgrxSegmenterInputReader_.getBuffer();
-		auto segmenterInputBuffer = selfieSegmenterMemoryBlockPool_->acquire();
-		if (!segmenterInputBuffer) {
-			logger_->error("MemoryBlockAcquisitionError");
-			return;
-		}
-
-		std::copy(bgrxSegmenterInputReaderBuffer.begin(), bgrxSegmenterInputReaderBuffer.end(),
-			  segmenterInputBuffer->begin());
-
-		selfieSegmenterTaskQueue_.push(
-			[weakSelf = weak_from_this(), segmenterInputBuffer = std::move(segmenterInputBuffer)](
-				const TaskQueue::ThrottledTaskQueue::CancellationToken &token) {
-				if (auto self = weakSelf.lock()) {
-					if (token->load()) {
-						return;
-					}
-
-					self->selfieSegmenter_->process(segmenterInputBuffer.get()->data());
-					self->hasNewSegmentationMask_.store(true, std::memory_order_release);
-				} else {
-					blog(LOG_INFO, "RenderingContext has been destroyed, skipping segmentation");
-				}
-			});
-	}
-}
-
 void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 {
 	FilterLevel newFilterLevel = (pluginProperty.filterLevel == FilterLevel::Default)
 					     ? FilterLevel::TimeAveragedFilter
 					     : pluginProperty.filterLevel;
-
-	bool newForceNoDelay = pluginProperty.forceNoDelay;
 
 	float newMotionIntensityThreshold =
 		static_cast<float>(std::pow(10.0, pluginProperty.motionIntensityThresholdPowDb / 10.0));
@@ -663,7 +418,6 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 		static_cast<float>(std::pow(10.0, pluginProperty.maskUpperBoundMarginAmpDb / 20.0));
 
 	filterLevel_.store(newFilterLevel, std::memory_order_relaxed);
-	forceNoDelay_.store(newForceNoDelay, std::memory_order_relaxed);
 	motionIntensityThreshold_.store(newMotionIntensityThreshold, std::memory_order_relaxed);
 	guidedFilterEps_.store(newGuidedFilterEps, std::memory_order_relaxed);
 	timeAveragedFilteringAlpha_.store(newTimeAveragedFilteringAlpha, std::memory_order_relaxed);
@@ -674,7 +428,6 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 
 	logger_->info("PluginPropertySet",
 		      {{"key", "filterLevel"}, {"value", std::to_string(static_cast<int>(newFilterLevel))}});
-	logger_->info("PluginPropertySet", {{"key", "forceNoDelay"}, {"value", newForceNoDelay ? "true" : "false"}});
 	logger_->info("PluginPropertySet",
 		      {{"key", "motionIntensityThreshold"}, {"value", std::to_string(newMotionIntensityThreshold)}});
 	logger_->info("PluginPropertySet", {{"key", "guidedFilterEps"}, {"value", std::to_string(newGuidedFilterEps)}});
