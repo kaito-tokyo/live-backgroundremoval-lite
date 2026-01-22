@@ -105,6 +105,26 @@ std::vector<ObsBridgeUtils::unique_gs_texture_t> RenderingContext::createReducti
 	return pyramid;
 }
 
+std::vector<ObsBridgeUtils::unique_gs_texture_t>
+RenderingContext::createDualKawasePyramid(std::uint32_t width, std::uint32_t height, int blurSize) const
+{
+	std::vector<ObsBridgeUtils::unique_gs_texture_t> pyramid;
+
+	std::uint32_t currentWidth = width;
+	std::uint32_t currentHeight = height;
+
+	pyramid.push_back(makeTexture(currentWidth, currentHeight, GS_BGRX, GS_RENDER_TARGET));
+
+	for (int i = 0; i < blurSize; ++i) {
+		currentWidth = std::max(1u, (currentWidth + 1) / 2);
+		currentHeight = std::max(1u, (currentHeight + 1) / 2);
+
+		pyramid.push_back(makeTexture(currentWidth, currentHeight, GS_BGRX, GS_RENDER_TARGET));
+	}
+
+	return pyramid;
+}
+
 RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
 				   const MainEffect &mainEffect,
 				   TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
@@ -163,7 +183,8 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  r32fSubGFB_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
 	  r8GuidedFilterResult_(makeTexture(region_.width, region_.height, GS_R8, GS_RENDER_TARGET)),
 	  r8TimeAveragedMasks_{makeTexture(region_.width, region_.height, GS_R8, GS_RENDER_TARGET),
-			       makeTexture(region_.width, region_.height, GS_R8, GS_RENDER_TARGET)}
+			       makeTexture(region_.width, region_.height, GS_R8, GS_RENDER_TARGET)},
+	  bgrxDualKawaseBlurReductionPyramid_(createDualKawasePyramid(region_.width, region_.height, blurSize_))
 {
 }
 
@@ -254,6 +275,11 @@ void RenderingContext::videoRender()
 		mainEffect_.reduce(r32fMeanSquaredMotionReductionPyramid_, r32fSubPaddedSquaredMotion_);
 
 		r32fReducedMeanSquaredMotionReader_.stage(r32fMeanSquaredMotionReductionPyramid_.back());
+	}
+
+	if (processingFrame && blurSize_ > 0) {
+		gs_copy_texture(bgrxDualKawaseBlurReductionPyramid_[0].get(), bgrxSource_.get());
+		// mainEffect_.dualKawaseBlur(bgrxDualKawaseBlurReductionPyramid_, blurSize_);
 	}
 
 	if (processingFrame && filterLevel >= FilterLevel::Segmentation) {
@@ -379,7 +405,8 @@ void RenderingContext::videoRender()
 	}
 
 	if (filterLevel == FilterLevel::Passthrough) {
-		mainEffect_.directDraw(bgrxSource_);
+		// mainEffect_.directDraw(bgrxSource_);
+		mainEffect_.directDraw(bgrxDualKawaseBlurReductionPyramid_[0]);
 	} else if (filterLevel == FilterLevel::Segmentation ||
 		   filterLevel == FilterLevel::MotionIntensityThresholding) {
 		mainEffect_.directDrawWithMask(bgrxSource_, r8SegmentationMask_);
@@ -387,8 +414,9 @@ void RenderingContext::videoRender()
 		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8GuidedFilterResult_, maskGamma, maskLowerBound,
 						      maskUpperBoundMargin);
 	} else if (filterLevel == FilterLevel::TimeAveragedFilter) {
-		mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
-						      maskGamma, maskLowerBound, maskUpperBoundMargin);
+		// mainEffect_.directDrawWithRefinedMask(bgrxSource_, r8TimeAveragedMasks_[currentTimeAveragedMaskIndex_],
+		// 				      maskGamma, maskLowerBound, maskUpperBoundMargin);
+		mainEffect_.directDraw(bgrxDualKawaseBlurReductionPyramid_[0]);
 	} else {
 		// Draw nothing to prevent unexpected background disclosure
 	}

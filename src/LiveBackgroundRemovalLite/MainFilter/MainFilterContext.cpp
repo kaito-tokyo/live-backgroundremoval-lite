@@ -206,7 +206,7 @@ obs_properties_t *MainFilterContext::getProperties()
 	pDesc = obs_properties_add_text(props, "blurSizeDescription", obs_module_text("blurSizeDescription"),
 					OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
-	obs_properties_add_int_slider(props, "blurSize", "", 1, 9, 1);
+	obs_properties_add_int_slider(props, "blurSize", "", 0, 5, 1);
 
 	// Center Frame
 	obs_properties_add_bool(props, "enableCenterFrame", obs_module_text("enableCenterFrame"));
@@ -324,6 +324,8 @@ void MainFilterContext::update(obs_data_t *settings)
 
 		pluginProperty_ = newPluginProperty;
 		renderingContext = renderingContext_;
+
+		logger_->info("aa", {{"doesRenewRenderingContext", doesRenewRenderingContext ? "true" : "false"}});
 
 		if (renderingContext && doesRenewRenderingContext) {
 			GraphicsContextGuard graphicsContextGuard;

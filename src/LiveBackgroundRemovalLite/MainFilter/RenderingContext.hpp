@@ -66,6 +66,10 @@ private:
 	std::vector<ObsBridgeUtils::unique_gs_texture_t> createReductionPyramid(std::uint32_t width,
 										std::uint32_t height) const;
 
+	[[nodiscard]]
+	std::vector<ObsBridgeUtils::unique_gs_texture_t>
+	createDualKawasePyramid(std::uint32_t width, std::uint32_t height, int blurSize) const;
+
 public:
 	RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
 			 const MainEffect &mainEffect, TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
@@ -142,6 +146,8 @@ public:
 
 	const std::array<ObsBridgeUtils::unique_gs_texture_t, 2> r8TimeAveragedMasks_;
 	std::size_t currentTimeAveragedMaskIndex_ = 0;
+
+	const std::vector<ObsBridgeUtils::unique_gs_texture_t> bgrxDualKawaseBlurReductionPyramid_;
 
 private:
 	std::atomic<FilterLevel> filterLevel_;
