@@ -110,7 +110,7 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 				   TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
 				   std::shared_ptr<Global::PluginConfig> pluginConfig,
 				   const std::uint32_t subsamplingRate, const std::uint32_t width,
-				   const std::uint32_t height, const int numThreads)
+				   const std::uint32_t height, const int numThreads, int blurSize)
 	: source_(source),
 	  logger_(std::move(logger)),
 	  mainEffect_(mainEffect),
@@ -118,6 +118,7 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  pluginConfig_(pluginConfig),
 	  subsamplingRate_(subsamplingRate),
 	  numThreads_(numThreads),
+	  blurSize_(blurSize),
 	  selfieSegmenter_(std::make_unique<KaitoTokyo::SelfieSegmenter::NcnnSelfieSegmenter>(
 		  mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text,
 		  static_cast<int>(mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len),
@@ -200,8 +201,6 @@ void RenderingContext::videoRender()
 	const float maskGamma = maskGamma_.load(std::memory_order_relaxed);
 	const float maskLowerBound = maskLowerBound_.load(std::memory_order_relaxed);
 	const float maskUpperBoundMargin = maskUpperBoundMargin_.load(std::memory_order_relaxed);
-
-	[[maybe_unused]] const int blurSize = blurSize_.load(std::memory_order_relaxed);
 
 	const bool enableCenterFrame = enableCenterFrame_.load(std::memory_order_relaxed);
 

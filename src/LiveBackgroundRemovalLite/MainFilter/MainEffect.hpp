@@ -384,6 +384,31 @@ public:
 		}
 	}
 
+	void dualKawaseBlur(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+			    const ObsBridgeUtils::unique_gs_texture_t &sourceTexture, int blurSize) const noexcept
+	{
+
+		gs_technique_t *tech = gs_effect_get_technique(gsEffect_.get(), "DualKawaseBlur");
+
+		gs_technique_begin(tech);
+
+		for (int i = 0; i < blurSize; ++i) {
+			TextureRenderGuard textureRenderGuard(targetTexture);
+			gs_technique_begin_pass(tech, 0);
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
+			gs_technique_end_pass(tech);
+		}
+
+		for (int i = 0; i < blurSize; ++i) {
+			TextureRenderGuard textureRenderGuard(targetTexture);
+			gs_technique_begin_pass(tech, 1);
+			gs_effect_set_texture(textureImage_, sourceTexture.get());
+			gs_technique_end_pass(tech);
+		}
+
+		gs_technique_end(tech);
+	}
+
 	void directDraw(const ObsBridgeUtils::unique_gs_texture_t &sourceTexture) const noexcept
 	{
 		while (gs_effect_loop(gsEffect_.get(), "Draw")) {

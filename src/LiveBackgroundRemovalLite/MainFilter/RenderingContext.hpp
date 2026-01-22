@@ -70,7 +70,7 @@ public:
 	RenderingContext(obs_source_t *const source, std::shared_ptr<const Logger::ILogger> logger,
 			 const MainEffect &mainEffect, TaskQueue::ThrottledTaskQueue &selfieSegmenterTaskQueue,
 			 std::shared_ptr<Global::PluginConfig> pluginConfig, const std::uint32_t subsamplingRate,
-			 const std::uint32_t width, const std::uint32_t height, const int numThreads);
+			 const std::uint32_t width, const std::uint32_t height, const int numThreads, int blurSize);
 	~RenderingContext() noexcept;
 
 	void activate();
@@ -96,6 +96,7 @@ private:
 public:
 	const std::uint32_t subsamplingRate_;
 	const int numThreads_;
+	const int blurSize_;
 
 	std::unique_ptr<SelfieSegmenter::ISelfieSegmenter> selfieSegmenter_;
 	std::shared_ptr<Memory::MemoryBlockPool> selfieSegmenterMemoryBlockPool_;
@@ -154,8 +155,6 @@ private:
 	std::atomic<float> maskUpperBoundMargin_;
 
 	std::atomic<float> timeAveragedFilteringAlpha_;
-
-	std::atomic<int> blurSize_;
 
 	std::atomic<bool> enableCenterFrame_;
 

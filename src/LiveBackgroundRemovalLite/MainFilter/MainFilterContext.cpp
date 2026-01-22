@@ -203,7 +203,8 @@ obs_properties_t *MainFilterContext::getProperties()
 	obs_property_text_set_info_word_wrap(pDesc, false);
 
 	// Blur size
-	pDesc = obs_properties_add_text(props, "blurSizeDescription", obs_module_text("blurSizeDescription"), OBS_TEXT_INFO);
+	pDesc = obs_properties_add_text(props, "blurSizeDescription", obs_module_text("blurSizeDescription"),
+					OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
 	obs_properties_add_int_slider(props, "blurSize", "", 1, 9, 1);
 
@@ -289,8 +290,7 @@ obs_properties_t *MainFilterContext::getProperties()
 
 void MainFilterContext::update(obs_data_t *settings)
 {
-	bool advancedSettingsEnabled = obs_data_get_bool(settings, "advancedSettings");
-
+	bool doesRenewRenderingContext = false;
 	PluginProperty newPluginProperty;
 
 	newPluginProperty.filterLevel = static_cast<FilterLevel>(obs_data_get_int(settings, "filterLevel"));
@@ -300,6 +300,7 @@ void MainFilterContext::update(obs_data_t *settings)
 
 	newPluginProperty.timeAveragedFilteringAlpha = obs_data_get_double(settings, "timeAveragedFilteringAlpha");
 
+	bool advancedSettingsEnabled = obs_data_get_bool(settings, "advancedSettings");
 	if (advancedSettingsEnabled) {
 		newPluginProperty.guidedFilterEpsPowDb = obs_data_get_double(settings, "guidedFilterEpsPowDb");
 
@@ -309,7 +310,11 @@ void MainFilterContext::update(obs_data_t *settings)
 			obs_data_get_double(settings, "maskUpperBoundMarginAmpDb");
 	}
 
-	newPluginProperty.blurSize = obs_data_get_int(settings, "blurSize");
+	int newBlurSize = obs_data_get_int(settings, "blurSize");
+	if (pluginProperty_.blurSize != newBlurSize) {
+		newPluginProperty.blurSize = newBlurSize;
+		doesRenewRenderingContext = true;
+	}
 
 	newPluginProperty.enableCenterFrame = obs_data_get_bool(settings, "enableCenterFrame");
 
@@ -317,15 +322,13 @@ void MainFilterContext::update(obs_data_t *settings)
 	{
 		std::lock_guard<std::mutex> lock(renderingContextMutex_);
 
-		bool doesRenewRenderingContext = false;
-
 		pluginProperty_ = newPluginProperty;
 		renderingContext = renderingContext_;
 
 		if (renderingContext && doesRenewRenderingContext) {
 			GraphicsContextGuard graphicsContextGuard;
 			std::shared_ptr<RenderingContext> newRenderingContext = createRenderingContext(
-				renderingContext->region_.width, renderingContext->region_.height);
+				renderingContext->region_.width, renderingContext->region_.height, newBlurSize);
 			renderingContext = newRenderingContext;
 			GsUnique::drain();
 		}
@@ -405,7 +408,7 @@ void MainFilterContext::videoTick(float seconds)
 		if (!renderingContext || renderingContext->region_.width != targetWidth ||
 		    renderingContext->region_.height != targetHeight) {
 			GraphicsContextGuard graphicsContextGuard;
-			renderingContext_ = createRenderingContext(targetWidth, targetHeight);
+			renderingContext_ = createRenderingContext(targetWidth, targetHeight, pluginProperty_.blurSize);
 			GsUnique::drain();
 			renderingContext = renderingContext_;
 		}
@@ -447,12 +450,12 @@ void MainFilterContext::videoRender()
 }
 
 std::shared_ptr<RenderingContext> MainFilterContext::createRenderingContext(std::uint32_t targetWidth,
-									    std::uint32_t targetHeight)
+									    std::uint32_t targetHeight, int blurSize)
 {
 	auto renderingContext = std::make_shared<RenderingContext>(source_, logger_, mainEffect_,
 								   selfieSegmenterTaskQueue_, pluginConfig_,
 								   pluginProperty_.subsamplingRate, targetWidth,
-								   targetHeight, pluginProperty_.numThreads);
+								   targetHeight, pluginProperty_.numThreads, blurSize);
 
 	renderingContext->applyPluginProperty(pluginProperty_);
 

@@ -380,6 +380,44 @@ float4 PSTimeAveragedFilter(VertInOut vert_in) : TARGET
 	return float4(y, y, y, 1.0f);
 }
 
+// Dual Kawase
+
+float4 PSDualKawaseDownsample(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+	float2 texelSize = float2(texelWidth, texelHeight);
+	float4 offset = texelSize.xyxy * float4(-1.0, -1.0, 1.0, 1.0);
+
+	float4 color = image.Sample(point_sampler, uv) * 4.0;
+	color += image.Sample(linear_sampler, uv + offset.xy);
+	color += image.Sample(linear_sampler, uv + offset.xw);
+	color += image.Sample(linear_sampler, uv + offset.zy);
+	color += image.Sample(linear_sampler, uv + offset.zw);
+
+	return color / 8.0;
+}
+
+float4 PSDualKawaseUpsample(VertInOut vert_in) : TARGET
+{
+	float2 uv = vert_in.uv;
+	float2 texelSize = float2(texelWidth, texelHeight);
+	float4 offset = texelSize.xyxy * float4(-1.0, -1.0, 1.0, 1.0) / 2.0;
+
+	float4 color = 0.0;
+
+	color += image.Sample(point_sampler, uv + float2(-texelWidth, 0.0));
+	color += image.Sample(point_sampler, uv + float2(texelWidth, 0.0));
+	color += image.Sample(point_sampler, uv + float2(0.0, -texelHeight));
+	color += image.Sample(point_sampler, uv + float2(0.0, texelHeight));
+
+	color += 2.0 * image.Sample(linear_sampler, uv + offset.xy);
+	color += 2.0 * image.Sample(linear_sampler, uv + offset.xw);
+	color += 2.0 * image.Sample(linear_sampler, uv + offset.zy);
+	color += 2.0 * image.Sample(linear_sampler, uv + offset.zw);
+
+	return color / 12.0;
+}
+
 // --- Techniques (Shader pass definitions) ---
 
 technique Draw
@@ -516,4 +554,18 @@ technique TimeAveragedFilter
 		pixel_shader = PSTimeAveragedFilter(vert_in);
 	}
 
+}
+
+technique DualKawaseBlur
+{
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSDualKawaseDownsample(vert_in);
+	}
+	pass
+	{
+		vertex_shader = VSDefault(vert_in);
+		pixel_shader = PSDualKawaseUpsample(vert_in);
+	}
 }

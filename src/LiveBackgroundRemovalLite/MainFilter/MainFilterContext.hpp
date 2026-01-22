@@ -81,7 +81,8 @@ public:
 	}
 
 private:
-	std::shared_ptr<RenderingContext> createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight);
+	std::shared_ptr<RenderingContext> createRenderingContext(std::uint32_t targetWidth, std::uint32_t targetHeight,
+								 int blurSize);
 	void applyPluginProperty(const std::shared_ptr<RenderingContext> &_renderingContext);
 
 	obs_source_t *const source_;
