@@ -66,16 +66,14 @@ protected:
 		try {
 			fmt::basic_memory_buffer<char, 4096> buffer;
 
-			fmt::format_to(std::back_inserter(buffer), "{} name={}\tlocation={}:{}", prefix_, name,
-				       loc.function_name(), loc.line());
+			fmt::format_to(std::back_inserter(buffer), "{} name={}", prefix_, name);
 			for (const Logger::LogField &field : context) {
 				fmt::format_to(std::back_inserter(buffer), "\t{}={}", field.key, field.value);
 			}
 
 			blog(blogLevel, "%.*s", static_cast<int>(buffer.size()), buffer.data());
 		} catch (...) {
-			blog(blogLevel, "%s name=LoggerPanic\tlocation=%s:%d", prefix_.c_str(), loc.function_name(),
-			     loc.line());
+			blog(blogLevel, "%s name=LoggerPanic", prefix_.c_str());
 		}
 	}
 
