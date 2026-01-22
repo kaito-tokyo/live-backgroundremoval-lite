@@ -409,8 +409,8 @@ void RenderingContext::videoRender()
 	} else if (filterLevel == FilterLevel::Segmentation ||
 		   filterLevel == FilterLevel::MotionIntensityThresholding) {
 		if (blurSize_ > 0) {
-			mainEffect_.directDrawWithBlurredBackground(
-				bgrxSource_, bgrxDualKawaseBlurReductionPyramid_.back(), r8SegmentationMask_);
+			mainEffect_.directDrawWithBlurredBackground(bgrxSource_, r8SegmentationMask_,
+								    bgrxDualKawaseBlurReductionPyramid_[0]);
 		} else {
 			mainEffect_.directDrawWithMask(bgrxSource_, r8SegmentationMask_);
 		}
