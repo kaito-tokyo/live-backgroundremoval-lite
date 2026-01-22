@@ -325,8 +325,6 @@ void MainFilterContext::update(obs_data_t *settings)
 		pluginProperty_ = newPluginProperty;
 		renderingContext = renderingContext_;
 
-		logger_->info("aa", {{"doesRenewRenderingContext", doesRenewRenderingContext ? "true" : "false"}});
-
 		if (renderingContext && doesRenewRenderingContext) {
 			GraphicsContextGuard graphicsContextGuard;
 			std::shared_ptr<RenderingContext> newRenderingContext = createRenderingContext(
