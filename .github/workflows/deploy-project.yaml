@@ -254,7 +254,7 @@ jobs:
 
       - name: Configure
         shell: bash
-        run: cmake --preset ubuntu-x86_64
+        run: cmake --preset ubuntu-x86_64 -DCMAKE_INSTALL_PREFIX=/usr
 
       - name: Build
         shell: bash
