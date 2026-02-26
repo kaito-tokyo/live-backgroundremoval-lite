@@ -23,7 +23,6 @@
 #include <QDesktopServices>
 #include <QGridLayout>
 #include <QGroupBox>
-#include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QUrl>
