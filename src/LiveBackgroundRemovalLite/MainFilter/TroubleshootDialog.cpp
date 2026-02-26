@@ -32,10 +32,10 @@ namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter {
 
 TroubleshootDialog::TroubleshootDialog(QWidget *parent)
 	: QDialog(parent),
-	  matrixRoomButton{new QPushButton(this)},
-	  matrixRoomDescriptionLabel{new QLabel(this)},
-	  gitHubIssuesButton{new QPushButton(this)},
-	  gitHubIssuesDescriptionLabel{new QLabel(this)}
+	  matrixRoomButton_{new QPushButton(this)},
+	  matrixRoomDescriptionLabel_{new QLabel(this)},
+	  gitHubIssuesButton_{new QPushButton(this)},
+	  gitHubIssuesDescriptionLabel_{new QLabel(this)}
 {
 	setupUi();
 
