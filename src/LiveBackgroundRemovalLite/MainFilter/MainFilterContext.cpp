@@ -37,6 +37,7 @@
 
 #include "DebugWindow.hpp"
 #include "RenderingContext.hpp"
+#include "TroubleshootDialog.hpp"
 
 using namespace KaitoTokyo::Logger;
 using namespace KaitoTokyo::ObsBridgeUtils;
@@ -150,6 +151,9 @@ obs_properties_t *MainFilterContext::getProperties()
 
 	// Having trouble? button
 	obs_property_clicked_t havingTroubleCallback = [](obs_properties_t *, obs_property_t *, void *) {
+		TroubleshootDialog dialog(QApplication::activeWindow());
+		dialog.setWindowModality(Qt::WindowModal);
+		dialog.exec();
 		return false;
 	};
 
