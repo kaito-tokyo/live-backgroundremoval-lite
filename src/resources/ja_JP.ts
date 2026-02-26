@@ -35,27 +35,27 @@
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="61"/>
         <source>Support and Community</source>
-        <translation type="unfinished"></translation>
+        <translation>サポートとコミュニティ</translation>
     </message>
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="71"/>
         <source>💬 Matrix Chat Room</source>
-        <translation type="unfinished"></translation>
+        <translation>💬 Matrix チャットルーム</translation>
     </message>
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="75"/>
         <source>Join our chat room for interactive support and discussion.</source>
-        <translation type="unfinished"></translation>
+        <translation>インタラクティブなサポートやディスカッションのためにチャットルームに参加してください。</translation>
     </message>
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="78"/>
         <source>🐛 GitHub Issues</source>
-        <translation type="unfinished"></translation>
+        <translation>🐛 GitHub イシュー</translation>
     </message>
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="82"/>
         <source>Report issues or bugs on GitHub.</source>
-        <translation type="unfinished"></translation>
+        <translation>GitHub で問題やバグを報告してください。</translation>
     </message>
 </context>
 <context>
