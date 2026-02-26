@@ -188,7 +188,7 @@ While I contributed to the maintenance of the original `obs-backgroundremoval`, 
 ## 8. Support
 
 - **Bug Reports:** Please use the [GitHub Issues](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues) page.
-- **Community & Discussions:** Join our [Discord Server](https://discord.gg/ujRU8VB4rw) for support and updates.
+- **Community & Discussions:** Join our [Matrix Chat Room](https://matrix.to/#/#live-backgroundremoval-lite:matrix.org) for support and updates.
 - **Logs:** Always attach your OBS log file when reporting an issue.
 
 ---

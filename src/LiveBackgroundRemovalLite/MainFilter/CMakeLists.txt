@@ -27,6 +27,8 @@ target_sources(
     PluginProperty.hpp
     RenderingContext.cpp
     RenderingContext.hpp
+    TroubleshootDialog.cpp
+    TroubleshootDialog.hpp
 )
 target_compile_options(
   ${CMAKE_PROJECT_NAME}_MainFilter
