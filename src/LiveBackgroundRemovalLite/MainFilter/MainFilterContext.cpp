@@ -146,10 +146,18 @@ obs_properties_t *MainFilterContext::getProperties()
 		}
 		pDesc = obs_properties_add_text(props, "isUpdateAvailable", updateAvailableText, OBS_TEXT_INFO);
 		obs_property_text_set_info_word_wrap(pDesc, false);
-
-		pDesc = obs_properties_add_text(props, "separatorAfterUpdateNotifier", "<hr />", OBS_TEXT_INFO);
-		obs_property_text_set_info_word_wrap(pDesc, false);
 	}
+
+	// Having trouble? button
+	obs_property_clicked_t havingTroubleCallback = [](obs_properties_t *, obs_property_t *, void *) {
+		return false;
+	};
+
+	obs_properties_add_button2(props, "havingTroubleButton", obs_module_text("havingTroubleButton"),
+				   havingTroubleCallback, nullptr);
+
+	pDesc = obs_properties_add_text(props, "separatorAfterHavingTroubleButton", "<hr />", OBS_TEXT_INFO);
+	obs_property_text_set_info_word_wrap(pDesc, false);
 
 	// Filter level
 	pDesc = obs_properties_add_text(props, "filterLevelDescription", obs_module_text("filterLevelDescription"),
