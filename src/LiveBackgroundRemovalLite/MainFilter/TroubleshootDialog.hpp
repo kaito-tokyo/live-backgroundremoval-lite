@@ -35,10 +35,10 @@ public:
 	~TroubleshootDialog() override;
 
 private:
-	QPushButton *const matrixRoomButton;
-	QLabel *const matrixRoomDescriptionLabel;
-	QPushButton *const gitHubIssuesButton;
-	QLabel *const gitHubIssuesDescriptionLabel;
+	QPushButton *const matrixRoomButton_;
+	QLabel *const matrixRoomDescriptionLabel_;
+	QPushButton *const gitHubIssuesButton_;
+	QLabel *const gitHubIssuesDescriptionLabel_;
 
 	void setupUi();
 };

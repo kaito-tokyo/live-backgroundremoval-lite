@@ -67,19 +67,19 @@ void TroubleshootDialog::setupUi()
 	gridLayoutMargins.setTop(0);
 	gridLayout->setContentsMargins(gridLayoutMargins);
 
-	matrixRoomButton->setText(tr("💬 Matrix Chat Room"));
-	matrixRoomButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-	gridLayout->addWidget(matrixRoomButton, 0, 0);
+	matrixRoomButton_->setText(tr("💬 Matrix Chat Room"));
+	matrixRoomButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	gridLayout->addWidget(matrixRoomButton_, 0, 0);
 
-	matrixRoomDescriptionLabel->setText(tr("Join our chat room for interactive support and discussion."));
-	gridLayout->addWidget(matrixRoomDescriptionLabel, 0, 1);
+	matrixRoomDescriptionLabel_->setText(tr("Join our chat room for interactive support and discussion."));
+	gridLayout->addWidget(matrixRoomDescriptionLabel_, 0, 1);
 
-	gitHubIssuesButton->setText(tr("🐛 GitHub Issues"));
-	gitHubIssuesButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-	gridLayout->addWidget(gitHubIssuesButton, 1, 0);
+	gitHubIssuesButton_->setText(tr("🐛 GitHub Issues"));
+	gitHubIssuesButton_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	gridLayout->addWidget(gitHubIssuesButton_, 1, 0);
 
-	gitHubIssuesDescriptionLabel->setText(tr("Report issues or bugs on GitHub."));
-	gridLayout->addWidget(gitHubIssuesDescriptionLabel, 1, 1);
+	gitHubIssuesDescriptionLabel_->setText(tr("Report issues or bugs on GitHub."));
+	gridLayout->addWidget(gitHubIssuesDescriptionLabel_, 1, 1);
 
 	setLayout(layout);
 }
