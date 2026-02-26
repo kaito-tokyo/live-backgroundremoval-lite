@@ -39,12 +39,12 @@ TroubleshootDialog::TroubleshootDialog(QWidget *parent)
 {
 	setupUi();
 
-	connect(matrixRoomButton, &QPushButton::clicked, this, [this]() {
+	connect(matrixRoomButton_, &QPushButton::clicked, this, [this]() {
 		QDesktopServices::openUrl(QUrl("https://matrix.to/#/#live-backgroundremoval-lite:matrix.org"));
 		this->accept();
 	});
 
-	connect(gitHubIssuesButton, &QPushButton::clicked, this, [this]() {
+	connect(gitHubIssuesButton_, &QPushButton::clicked, this, [this]() {
 		QDesktopServices::openUrl(QUrl("https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues"));
 		this->accept();
 	});
