@@ -190,7 +190,7 @@ This project is built upon and incorporates several open-source components. We a
 
 If you find a bug or issue, please report it on the [GitHub Issues page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues).
 
-Join our [Discord Server](https://discord.gg/ujRU8VB4rw) for community support, discussions, and updates!
+Join our [Matrix Chat Room](https://matrix.to/#/#live-backgroundremoval-lite:matrix.org) for community support, discussions, and updates!
 
 ## 📜 License
 
