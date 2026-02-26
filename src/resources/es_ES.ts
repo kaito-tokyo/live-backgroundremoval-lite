@@ -35,27 +35,27 @@
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="61"/>
         <source>Support and Community</source>
-        <translation type="unfinished"></translation>
+        <translation>Soporte y Comunidad</translation>
     </message>
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="71"/>
         <source>💬 Matrix Chat Room</source>
-        <translation type="unfinished"></translation>
+        <translation>💬 Sala de chat Matrix</translation>
     </message>
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="75"/>
         <source>Join our chat room for interactive support and discussion.</source>
-        <translation type="unfinished"></translation>
+        <translation>Únete a nuestra sala de chat para soporte interactivo y discusión.</translation>
     </message>
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="78"/>
         <source>🐛 GitHub Issues</source>
-        <translation type="unfinished"></translation>
+        <translation>🐛 Incidencias en GitHub</translation>
     </message>
     <message>
         <location filename="../LiveBackgroundRemovalLite/MainFilter/TroubleshootDialog.cpp" line="82"/>
         <source>Report issues or bugs on GitHub.</source>
-        <translation type="unfinished"></translation>
+        <translation>Reporta problemas o errores en GitHub.</translation>
     </message>
 </context>
 <context>
