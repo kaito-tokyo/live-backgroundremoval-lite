@@ -27,6 +27,7 @@
 
 #include <GlobalContext.hpp>
 #include <MainFilterInfo.hpp>
+#include <AsyncSourceInfo.hpp>
 #include <PluginConfig.hpp>
 #include <StartupController.hpp>
 
@@ -113,6 +114,10 @@ try {
 		throw std::runtime_error("MainFilterLoadModuleError(obs_module_load)");
 	}
 
+	if (!AsyncSource::loadModule(g_pluginConfig_, g_globalContext_)) {
+		throw std::runtime_error("AsyncSourceLoadModuleError(obs_module_load)");
+	}
+
 	obs_frontend_add_event_callback(handleFrontendEvent, nullptr);
 
 	blog(LOG_INFO, "[%s] plugin loaded successfully (version %s)", PLUGIN_NAME, PLUGIN_VERSION);
@@ -130,6 +135,7 @@ void obs_module_unload(void)
 {
 	obs_frontend_remove_event_callback(handleFrontendEvent, nullptr);
 	MainFilter::unloadModule();
+	AsyncSource::unloadModule();
 	g_startupController_.reset();
 	g_globalContext_.reset();
 	g_pluginConfig_.reset();

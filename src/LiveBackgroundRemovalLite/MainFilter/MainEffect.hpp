@@ -154,6 +154,19 @@ public:
 		}
 	}
 
+	void renderSourceToTexture(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
+				   obs_source_t *const source) const noexcept
+	{
+		if (!source) {
+			return;
+		}
+		TextureRenderGuard textureRenderGuard(targetTexture);
+		gs_set_render_target_with_color_space(targetTexture.get(), nullptr, GS_CS_709_EXTENDED);
+		while (gs_effect_loop(gsEffect_.get(), "Draw")) {
+			obs_source_video_render(source);
+		}
+	}
+
 	void drawRoi(const ObsBridgeUtils::unique_gs_texture_t &targetTexture,
 		     const ObsBridgeUtils::unique_gs_texture_t &sourceTexture, const vec4 *color,
 		     const std::uint32_t width = 0, const std::uint32_t height = 0, const float x = 0.0f,
