@@ -1,238 +1,79 @@
-# Contributing to Live Background Removal Lite
+# CONTRIBUTING.md for Live Background Removal Lite
 
-Thank you for your interest in contributing to Live Background Removal Lite! We welcome contributions from the community and appreciate your efforts to make this plugin better.
+## Legal and Community Guidelines
 
-## Code of Conduct
+To keep the Live Background Removal Lite project safe and reliable for everyone including its users, its contributors, and its maintainers, those who are involved in development of this project must know the following terms. Whenever we receive your Pull Request, we will explicitly ask you to confirm that your PR conforms to our policy.
 
-By participating in this project, you agree to maintain a respectful and collaborative environment. Please be professional and considerate in all interactions.
+### 1. Licensing and Patent Grant
 
-## How to Contribute
+- **Apache-2.0**: You agree to distribute all the parts of your contribution which do not link to OBS or any other GPL components under the Apache License, Version 2.0.
+- **GPL-3.0-or-later**: You agree to distribute all the parts of your contribution which link to OBS or any other GPL components under the GNU General Public License v3.0 or later.
+- **Patent License**: Refer to the [terms of Apache License 2.0 (Section 3)](https://www.apache.org/licenses/LICENSE-2.0#patent) for the Apache License 2.0 parts, or the [terms of GNU GPLv3 (Section 11)](https://www.gnu.org/licenses/gpl-3.0.html#section11) for the GPLv3 parts about patents.
 
-### Reporting Bugs
+### 2. License Headers
 
-If you find a bug, please report it on our [GitHub Issues page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues) using the bug report template. When reporting bugs, please include:
+To ensure the transparency of our codebase, we require all new code to include either of the following headers respective to the license your parts apply. Please provide the year, your full legal name, and your email address associated with your GitHub account.
 
-- A clear description of the issue
-- Steps to reproduce the problem
-- Expected vs. actual behavior
-- Your operating system and OBS Studio version
-- Plugin version
-- Any relevant logs or screenshots
+**Apache License 2.0:**
 
-### Requesting Features
-
-Feature requests are welcome! Please use the feature request template on our [GitHub Issues page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues). Describe:
-
-- The problem you're trying to solve
-- Your proposed solution
-- Why this feature would benefit other users
-- Any alternative solutions you've considered
-
-### Security Vulnerabilities
-
-If you discover a security vulnerability, please follow the instructions in our [SECURITY.md](SECURITY.md) file. **Do not** report security issues through public GitHub issues.
-
-## Development Setup
-
-### Prerequisites
-
-- **C++ Compiler**: C++17 compatible compiler
-- **CMake**: Version 3.28 or later
-- **clang-format-19**: For code formatting
-- **gersemi**: For CMake file formatting
-- **Platform-specific dependencies**:
-  - macOS: Xcode Command Line Tools
-  - Windows: Visual Studio 2019 or later
-  - Linux: GCC/Clang and development libraries
-
-### Building on macOS
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/kaito-tokyo/live-backgroundremoval-lite.git
-   cd live-backgroundremoval-lite
-   ```
-
-2. Configure the project:
-
-   ```bash
-   cmake --preset macos
-   ```
-
-3. Build the project:
-
-   ```bash
-   cmake --build --preset macos
-   ```
-
-4. Run tests:
-   ```bash
-   ctest --preset macos --verbose
-   ```
-
-> **Note**: The `macos` preset includes testing by default. For production builds without tests, use the `macos-ci` preset.
-
-### Testing the Plugin with OBS
-
-After building, you can test the plugin with OBS Studio:
-
-1. Build the project (if not already done):
-
-   ```bash
-   cmake --preset macos
-   cmake --build --preset macos
-   ```
-
-2. Install to your OBS plugins directory:
-
-   ```bash
-   cmake --install build_macos --config RelWithDebInfo --prefix "$HOME/Library/Application Support/obs-studio/plugins"
-   ```
-
-3. Launch OBS Studio and test your changes.
-
-> **Note**: You only need to run `cmake --preset macos` again if you've made CMake-related changes. Otherwise, just rebuild with `cmake --build --preset macos`.
-
-### Building on Other Platforms
-
-- **Windows**: Use Visual Studio or the Windows CMake preset
-- **Linux**: Follow similar steps to macOS, adjusting paths as needed
-
-## Coding Standards
-
-### General Guidelines
-
-- **Language**: C++17
-- **Empty argument lists**: Use `()` instead of `(void)`, except within regions marked by `extern "C"`
-- **Member variables**: Must be suffixed with an underscore (`_`)
-- **File endings**: Each file must end with a single empty newline (builds will fail otherwise)
-
-### Code Formatting
-
-- **C/C++ files**: Format with `clang-format-19` after any modification
-- **CMake files**: Format with `gersemi` after any modification
-- **Configuration**: Formatting rules are defined in `.clang-format` (C/C++) and `.gersemirc` (CMake); general editor settings (indentation, line endings, etc.) are defined in `.editorconfig`
-
-To format your code:
-
-```bash
-# Format C/C++ files
-clang-format-19 -i path/to/your/file.cpp
-
-# Format CMake files
-gersemi -i path/to/CMakeLists.txt
+```cpp
+/*
+ * SPDX-FileCopyrightText: Copyright (C) [Year] [Author Name] [Email]
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Live Background Removal Lite - [Module Name] Module
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 ```
 
-### Code Style
+**GPLv3:**
 
-- Follow the existing code style in the project
-- Use meaningful variable and function names
-- Keep functions focused and concise
-- Add comments only when necessary to explain complex logic
-- Use Modern C++ practices (RAII, smart pointers) for memory management
+```cpp
+/*
+ * SPDX-FileCopyrightText: Copyright (C) [Year] [Author Name] [Email]
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ *
+ * Live Background Removal Lite - [Module Name] Module
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+```
 
-## Pull Request Process
+### 3. Code Integrity
 
-### Before Submitting
+We always welcome every contribution! To deliver the value of your work to our users in a professional manner, please adhere to the following policies:
 
-1. **Test your changes**: Ensure all tests pass on your platform
-2. **Format your code**: Run `clang-format-19` and `gersemi` on modified files
-3. **Check for lint errors**: Verify your code passes any linting checks
-4. **Update documentation**: If your changes affect user-facing features, update relevant documentation
+- **No Unverified Code**: Do not submit any code that you cannot fully understand and explain. Submitting any raw outputs from LLMs or Generative-AI is strictly prohibited.
+- **Responsibility**: You must take responsibility for your code. Please ensure that your contribution has clean licensing and is reliable. We are here to help you to accomplish this, of course!
 
-### Submitting a Pull Request
+### 4. Developer Certificate of Origin (DCO) and Commit Signing
 
-1. Fork the repository and create a new branch from `main`:
+Please sign off (-s) all your commits (DCO), and sign all your commits (-S) with your GPG or SSH key:
 
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+```
+git commit -s -S
+```
 
-2. Make your changes following the coding standards
-
-3. Commit your changes with clear, descriptive commit messages:
-
-   ```bash
-   git commit -m "Add feature: brief description"
-   ```
-
-4. Push to your fork:
-
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-5. Open a Pull Request against the `main` branch
-
-### Pull Request Guidelines
-
-- **Title**: Use a clear, descriptive title
-- **Description**: Explain what changes you made and why
-- **Link issues**: Reference any related issues (e.g., "Fixes #123")
-- **Keep it focused**: Each PR should address a single concern
-- **Be responsive**: Address feedback and questions promptly
-
-### Review Process
-
-- The maintainer (@umireon) reviews issues and pull requests regularly, typically about once per week, though response times may vary depending on availability
-- Be patient and respectful during the review process
-- If you don't receive a response within a reasonable time, feel free to ping `@umireon`
-
-## Testing
-
-All code changes should be tested before submission:
-
-- Run the test suite on your platform
-- Manually test the plugin with OBS Studio
-- Verify your changes don't break existing functionality
-- Test edge cases when applicable
-
-## Documentation
-
-When contributing, please ensure that:
-
-- Code is self-documenting where possible
-- Complex algorithms or business logic include explanatory comments
-- User-facing changes are reflected in README.md or other documentation
-- API changes are documented
-
-## Release Process
-
-The release process is handled by the maintainer and is documented in [.github/copilot-instructions.md](.github/copilot-instructions.md). Contributors do not need to manage releases, but you can review the process if you're interested in understanding how new versions are published.
-
-## Platform-Specific Contributions
-
-### Arch Linux
-
-For Arch Linux packaging, refer to [`unsupported/arch/`](unsupported/arch). Community contributions for maintaining the PKGBUILD are welcome.
-
-### Flatpak
-
-For Flatpak packaging, refer to [`unsupported/flatpak/`](unsupported/flatpak). We welcome contributions from community members willing to maintain Flatpak packages.
-
-## Community and Support
-
-- **Issues**: [GitHub Issues](https://github.com/kaito-tokyo/live-backgroundremoval-lite/issues)
-- **Maintainer**: Kaito Udagawa (@umireon)
-- **Email**: umireon@kaito.tokyo
-- **Website**: [https://kaito-tokyo.github.io/live-backgroundremoval-lite/](https://kaito-tokyo.github.io/live-backgroundremoval-lite/)
-
-## License
-
-By contributing to Live Background Removal Lite, you agree that your contributions will be licensed under the project's dual license:
-
-- The plugin as a whole: [GPL-3.0-or-later](LICENSE.GPL-3.0-or-later)
-- Reusable components: [MIT License](LICENSE.MIT)
-
-See the [LICENSE](LICENSE) file for detailed information.
-
-## Questions?
-
-If you have questions about contributing, feel free to:
-
-- Open an issue
-- Reach out to the maintainer via email
-- Check existing issues and documentation for answers
-
-Thank you for contributing to Live Background Removal Lite! Your efforts help make this plugin better for everyone.
+Please refer to the [GitHub Document for commit signing](https://docs.github.com/authentication/managing-commit-signature-verification) for configuring commit signing.
