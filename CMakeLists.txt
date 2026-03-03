@@ -171,6 +171,7 @@ target_link_libraries(
     ObsBridgeUtils
     ${CMAKE_PROJECT_NAME}_Global
     ${CMAKE_PROJECT_NAME}_MainFilter
+    ${CMAKE_PROJECT_NAME}_AsyncSource
     ${CMAKE_PROJECT_NAME}_StartupUI
     Qt6::Core
 )
