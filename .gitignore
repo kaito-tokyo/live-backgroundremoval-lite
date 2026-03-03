@@ -1,8 +1,11 @@
-_codeql_detected_source_root
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: CC0-1.0
+
 .astro/
 .DS_Store
 .vs/
-.vscode/
+.vscode/settings.json
 /.deps/
 /build_*/
 /docs/**/*.js

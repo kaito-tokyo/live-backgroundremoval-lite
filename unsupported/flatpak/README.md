@@ -61,3 +61,9 @@ This will build the plugin and all its dependencies from source and install it a
 ```bash
 flatpak run com.obsproject.Studio
 ```
+
+<!--
+SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+
+SPDX-License-Identifier: Apache-2.0
+-->

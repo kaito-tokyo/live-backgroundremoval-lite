@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 export const GITHUB_OWNER = "kaito-tokyo";
 export const GITHUB_REPO = "live-backgroundremoval-lite";
 export const GITHUB_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`;

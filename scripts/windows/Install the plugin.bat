@@ -1,3 +1,7 @@
+REM SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+REM
+REM SPDX-License-Identifier: Apache-2.0
+
 setlocal
 set "PLUGIN_NAME=Live Background Removal Lite"
 set "PLUGIN_DIR=live-backgroundremoval-lite"
