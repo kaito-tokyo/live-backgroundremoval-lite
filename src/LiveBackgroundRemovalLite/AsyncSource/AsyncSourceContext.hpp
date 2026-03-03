@@ -147,6 +147,8 @@ private:
 	mutable std::mutex renderMutex_;
 	uint32_t renderWidth_ = 0;
 	uint32_t renderHeight_ = 0;
+	std::atomic<uint32_t> reportedWidth_{0};
+	std::atomic<uint32_t> reportedHeight_{0};
 
 	uint32_t subWidth_ = 0;
 	uint32_t subHeight_ = 0;

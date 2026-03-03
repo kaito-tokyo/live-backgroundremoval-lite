@@ -102,14 +102,12 @@ AsyncSourceContext::~AsyncSourceContext() noexcept {}
 
 uint32_t AsyncSourceContext::getWidth() const noexcept
 {
-	std::lock_guard<std::mutex> lock(renderMutex_);
-	return renderWidth_;
+	return reportedWidth_.load(std::memory_order_relaxed);
 }
 
 uint32_t AsyncSourceContext::getHeight() const noexcept
 {
-	std::lock_guard<std::mutex> lock(renderMutex_);
-	return renderHeight_;
+	return reportedHeight_.load(std::memory_order_relaxed);
 }
 
 void AsyncSourceContext::getDefaults(obs_data_t *data)
@@ -377,13 +375,9 @@ void AsyncSourceContext::videoTick(float)
 
 void AsyncSourceContext::processVideoFrame(obs_source_t *videoSource, uint32_t width, uint32_t height)
 {
-	bool resourcesReady = false;
-	{
-		std::lock_guard<std::mutex> lock(renderMutex_);
-		resourcesReady = ensureRenderingResources(width, height);
-	}
+	std::lock_guard<std::mutex> lock(renderMutex_);
 
-	if (!resourcesReady) {
+	if (!ensureRenderingResources(width, height)) {
 		return;
 	}
 
@@ -762,7 +756,7 @@ void AsyncSourceContext::attachVideoSource(const std::string &name)
 	obs_source_release(source);
 
 	{
-		std::lock_guard<std::mutex> lock(renderMutex_);
+		std::lock_guard<std::mutex> renderLock(renderMutex_);
 		clearRenderingResources();
 	}
 	shouldForceProcessFrame_.store(true, std::memory_order_relaxed);
@@ -950,6 +944,8 @@ bool AsyncSourceContext::ensureRenderingResources(uint32_t width, uint32_t heigh
 
 	renderWidth_ = width;
 	renderHeight_ = height;
+	reportedWidth_.store(width, std::memory_order_relaxed);
+	reportedHeight_.store(height, std::memory_order_relaxed);
 
 	shouldForceProcessFrame_.store(true, std::memory_order_relaxed);
 
@@ -960,6 +956,8 @@ void AsyncSourceContext::clearRenderingResources() noexcept
 {
 	renderWidth_ = 0;
 	renderHeight_ = 0;
+	reportedWidth_.store(0, std::memory_order_relaxed);
+	reportedHeight_.store(0, std::memory_order_relaxed);
 	subWidth_ = 0;
 	subHeight_ = 0;
 	subPaddedWidth_ = 0;
