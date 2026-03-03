@@ -1,3 +1,8 @@
+// SPDX-FileCopyrightText: 2025 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 extern "C" const char mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text[] = R"(
 7767517
 114 138

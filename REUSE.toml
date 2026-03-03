@@ -1,0 +1,6 @@
+version = 1
+
+[[annotations]]
+path = ["src/{Async,CurlHelper}/**/*.{cpp,hpp}", "**/CMakeLists.txt"]
+precedence = "aggregate"
+SPDX-License-Identifier = "Apache-2.0"
