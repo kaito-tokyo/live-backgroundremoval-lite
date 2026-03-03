@@ -75,3 +75,9 @@ To initiate a new release, the user will instruct Gemini to start the process (e
     - **ACTION**: Run `~/Documents/GitHub/live-plugins-hub/scripts/update-live-backgroundremoval-lite-arch.sh` to update the Arch Linux manifest automatically.
     - **ACTION**: Run `~/Documents/GitHub/live-plugins-hub/scripts/update-live-backgroundremoval-lite-flatpak.sh` to update the Flatpak manifest automatically.
     - **ACTION**: Review the changes made by the script.
+
+<!--
+SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+
+SPDX-License-Identifier: Apache-2.0
+-->

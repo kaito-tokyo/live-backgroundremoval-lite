@@ -1,3 +1,9 @@
+// SPDX-FileCopyrightText: Nicolai Josuttis
+// SPDX-FileCopyrightText: Lewis Baker
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: CC-BY-4.0
+
 // [MODIFIED]
 // This file has been modified from the original version.
 // Change: Namespace changed from 'std' to 'josuttis' to avoid conflicts with libc++.

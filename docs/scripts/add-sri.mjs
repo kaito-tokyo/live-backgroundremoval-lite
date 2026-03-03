@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { readFile, writeFile, glob } from "node:fs/promises";
 import { relative, sep } from "node:path";
 import { createHash } from "node:crypto";

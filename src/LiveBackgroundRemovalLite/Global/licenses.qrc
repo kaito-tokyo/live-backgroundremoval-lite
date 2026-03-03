@@ -1,8 +1,13 @@
+<!--
+SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 <RCC>
     <qresource prefix="//live-backgroundremoval-lite-licenses">
-        <file alias="LICENSE">../../../LICENSE</file>
-        <file alias="LICENSE.GPL-3.0-or-later">../../../LICENSE.GPL-3.0-or-later</file>
-        <file alias="LICENSE.MIT">../../../LICENSE.MIT</file>
+        <file alias="Apache-2.0.txt">../../../LICENSES/Apache-2.0.txt</file>
+        <file alias="GPL-3.0-or-later.txt">../../../LICENSES/GPL-3.0-or-later.txt</file>
         <file alias="curl.txt">../../../data/licenses/curl.txt</file>
         <file alias="exprtk.txt">../../../data/licenses/exprtk.txt</file>
         <file alias="fmt.txt">../../../data/licenses/fmt.txt</file>

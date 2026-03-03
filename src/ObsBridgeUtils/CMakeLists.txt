@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 add_library(ObsBridgeUtils INTERFACE)
 target_include_directories(ObsBridgeUtils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(ObsBridgeUtils INTERFACE fmt::fmt OBS::libobs Logger)

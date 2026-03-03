@@ -1,22 +1,6 @@
-/*
- * SPDX-FileCopyrightText: Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
- * SPDX-License-Identifier: GPL-3.0-or-later
- *
- * Live Background Removal Lite - Global Module
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "PluginConfigDialog.hpp"
 
@@ -82,10 +66,9 @@ void PluginConfigDialog::setupUi()
 			QString resourcePath;
 		};
 		const QList<LicenseInfo> licenses = {
-			{"Main LICENSE file", "://live-backgroundremoval-lite-licenses/LICENSE"},
 			{"GNU General Public License v3.0 or later",
-			 "://live-backgroundremoval-lite-licenses/LICENSE.GPL-3.0-or-later"},
-			{"MIT License", "://live-backgroundremoval-lite-licenses/LICENSE.MIT"},
+			 "://live-backgroundremoval-lite-licenses/GPL-3.0-or-later.txt"},
+			{"Apache License 2.0", "://live-backgroundremoval-lite-licenses/Apache-2.0.txt"},
 			{"curl", "://live-backgroundremoval-lite-licenses/curl.txt"},
 			{"exprtk", "://live-backgroundremoval-lite-licenses/exprtk.txt"},
 			{"fmt", "://live-backgroundremoval-lite-licenses/fmt.txt"},

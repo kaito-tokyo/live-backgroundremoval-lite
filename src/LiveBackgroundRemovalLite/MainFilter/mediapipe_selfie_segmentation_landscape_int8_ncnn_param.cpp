@@ -1,3 +1,9 @@
+// SPDX-FileCopyrightText: 2021 Google LLC
+// SPDX-FileCopyrightText: 2024-2025 xenova
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 extern "C" const char mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text[] = R"(
 7767517
 114 138

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: Apache-2.0
+
 import { Octokit } from "@octokit/rest";
 
 import { GITHUB_OWNER, GITHUB_REPO } from "../../lib/info.js";
