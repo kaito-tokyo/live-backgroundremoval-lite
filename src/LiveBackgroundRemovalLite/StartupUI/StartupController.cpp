@@ -1,7 +1,5 @@
-// SPDX-FileCopyrightText: 2025 Kaito Udagawa <umireon@kaito.tokyo>
-// SPDX-FileCopyrightText: Copyright (C) 2025 Kaito Udagawa umireon@kaito.tokyo
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 //
-// SPDX-License-Identifier: Apache-2.0
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 #include "StartupController.hpp"
