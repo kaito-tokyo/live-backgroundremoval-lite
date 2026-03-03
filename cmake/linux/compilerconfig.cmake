@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2022-2025 OBS Project and its contributors
+# SPDX-FileCopyrightText: 2023-2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 # CMake Linux compiler configuration module
 
 include_guard(GLOBAL)
