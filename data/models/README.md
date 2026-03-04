@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Acknowledgements
 
 This project uses the following open-source components:
@@ -8,9 +14,3 @@ This project uses the following open-source components:
   - **Original Authors:** Copyright 2020 The MediaPipe Authors.
 
 We are grateful to the contributors of these projects.
-
-<!--
-SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
-
-SPDX-License-Identifier: Apache-2.0
--->
