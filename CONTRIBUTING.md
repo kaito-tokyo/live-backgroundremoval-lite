@@ -2,7 +2,7 @@
 
 ## Legal and Community Guidelines
 
-To keep the Live Background Removal Lite project safe and reliable for everyone including its users, its contributors, and its maintainers, those who are involved in development of this project must know the following terms. Whenever we receive your Pull Request, we will explicitly ask you to confirm that your PR conforms to our policy.
+To keep the Live Background Removal Lite project safe and reliable for everyone including its users, its contributors, and its maintainers, those who are involved in the development of this project must know the following terms. Whenever we receive your pull request (PR), we will explicitly ask you to confirm that it conforms to our policy.
 
 ### 1. Licensing and Patent Grant
 
@@ -12,14 +12,14 @@ To keep the Live Background Removal Lite project safe and reliable for everyone 
 
 ### 2. License Compliance
 
-To ensure the transparency of our codebase, we require all code compliant to [REUSE](https://reuse.software/).
+To ensure the transparency of our codebase, we require all code compliant with [REUSE](https://reuse.software/).
 
 ### 3. Code Integrity
 
 We always welcome every contribution! To deliver the value of your work to our users in a professional manner, please adhere to the following policies:
 
 - **No Unverified Code**: Do not submit any code that you cannot fully understand and explain. Submitting any raw outputs from LLMs or Generative-AI is strictly prohibited.
-- **Responsibility**: You must take responsibility for your code. Please ensure that your contribution has clean licensing and is reliable. We are here to help you to accomplish this, of course!
+- **Responsibility**: You must take responsibility for your code. Please ensure that your contribution has clean licensing and is reliable. We are here to help you accomplish this, of course!
 
 ### 4. Developer Certificate of Origin (DCO) and Commit Signing
 
@@ -29,7 +29,7 @@ Please sign off (-s) all your commits (DCO), and sign all your commits (-S) with
 git commit -s -S
 ```
 
-Please refer to the [GitHub Document for commit signing](https://docs.github.com/authentication/managing-commit-signature-verification) for configuring commit signing.
+Please refer to the [GitHub documentation on commit signing](https://docs.github.com/authentication/managing-commit-signature-verification) for configuring commit signing.
 
 ---
 
