@@ -235,8 +235,8 @@ This project provides an `llms.txt` file for easier context understanding.
 
 - [llms.txt](https://kaito-tokyo.github.io/live-backgroundremoval-lite/llms.txt)
 
-<!--
-SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+---
 
-SPDX-License-Identifier: Apache-2.0
--->
+> SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>  
+>
+> SPDX-License-Identifier: Apache-2.0  

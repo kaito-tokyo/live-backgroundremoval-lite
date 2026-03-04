@@ -6,13 +6,12 @@ To keep the Live Background Removal Lite project safe and reliable for everyone 
 
 ### 1. Licensing and Patent Grant
 
-- **Apache-2.0**: You agree to distribute all the parts of your contribution which do not link to OBS or any other GPL components under the Apache License, Version 2.0.
-- **GPL-3.0-or-later**: You agree to distribute all the parts of your contribution which link to OBS or any other GPL components under the GNU General Public License v3.0 or later.
-- **Patent License**: Refer to the [terms of Apache License 2.0 (Section 3)](https://www.apache.org/licenses/LICENSE-2.0#patent) for the Apache License 2.0 parts, or the [terms of GNU GPLv3 (Section 11)](https://www.gnu.org/licenses/gpl-3.0.html#section11) for the GPLv3 parts about patents.
+- **Agreement**: You agree to distribute your contribution under the Apache License, Version 2.0, or the GNU General Public License v3.0 or later, which is decided based on the component you contribute.
+- **Patent License**: For files lisenced under Apache-2.0, refer to the [terms of Apache License 2.0 (Section 3)](https://www.apache.org/licenses/LICENSE-2.0#patent). For files licensed under GPL-3.0-or-later, refer to [terms of GNU GPLv3 (Section 11)](https://www.gnu.org/licenses/gpl-3.0.html#section11).
 
 ### 2. License Compliance
 
-To ensure the transparency of our codebase, we require all code compliant with [REUSE](https://reuse.software/).
+To ensure the transparency of our codebase, we require all code to be compliant with [REUSE](https://reuse.software/).
 
 ### 3. Code Integrity
 

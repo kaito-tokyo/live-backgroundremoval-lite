@@ -49,8 +49,6 @@ sudo pacman -S --needed base-devel git
 
 This will build the package from the sources defined in the `PKGBUILD` and install it on your system. Please remember that this is considered an unsupported installation method.
 
-<!--
-SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
-
-SPDX-License-Identifier: Apache-2.0
--->
+> SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>  
+>
+> SPDX-License-Identifier: Apache-2.0  

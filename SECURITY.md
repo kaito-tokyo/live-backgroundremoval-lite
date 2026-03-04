@@ -65,8 +65,8 @@ For general questions, bug reports, or feature requests, please use our [GitHub 
 
 Thank you for helping us maintain the security and integrity of Live Background Removal Lite.
 
-<!--
-SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+---
 
-SPDX-License-Identifier: Apache-2.0
--->
+> SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>  
+>
+> SPDX-License-Identifier: Apache-2.0  
