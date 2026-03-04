@@ -1,0 +1,15 @@
+version = 1
+
+[[annotations]]
+path = [
+    "exprtk.hpp",
+    "readme.txt",
+]
+SPDX-FileCopyrightText = "1999-2025 Arash Partow"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "license.txt"
+SPDX-FileCopyrightText = "1999-2025 Arash Partow"
+SPDX-License-Identifier = "CC0-1.0"
+

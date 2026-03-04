@@ -1,7 +1,3 @@
-// SPDX-FileCopyrightText: 1999-2025 Arash Partow
-//
-// SPDX-License-Identifier: MIT
-
 /*
  ******************************************************************
  *           C++ Mathematical Expression Toolkit Library          *

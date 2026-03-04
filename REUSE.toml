@@ -1,0 +1,32 @@
+version = 1
+
+[[annotations]]
+path = [
+    ".aiexclude",
+    ".clang-format",
+    ".editorconfig",
+    ".gersemirc",
+    ".gitattributes",
+    ".github/aw/actions-lock.json",
+    ".github/workflows/*.lock.yml",
+    ".gitignore",
+    ".gitmodules",
+    ".vscode/*",
+    "buildspec.json",
+    "CMakePresets.json",
+    "data/licenses/*.txt",
+    "scripts/windows/*.lnk",
+    "scripts/windows/*.txt",
+    "src/exported_symbols_linux.map",
+    "src/exported_symbols_macos.txt",
+    "src/exported_symbols_windows.def",
+    "vcpkg-configuration.json",
+    "vcpkg.json",
+]
+SPDX-FileCopyrightText = "2025-2026 Kaito Udagawa <umireon@kaito.tokyo>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = "data/locale/*.ini"
+SPDX-FileCopyrightText = "2025-2026 Kaito Udagawa <umireon@kaito.tokyo>"
+SPDX-License-Identifier = "Apache-2.0"

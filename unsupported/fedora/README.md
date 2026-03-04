@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Unsupported Build Instructions for Fedora
 
 ## ⚠️ Important Notice: Manual Build Required
@@ -74,9 +80,3 @@ To remove the plugin:
 ```bash
 sudo dnf remove live-backgroundremoval-lite
 ```
-
-<!--
-SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
-
-SPDX-License-Identifier: Apache-2.0
--->
