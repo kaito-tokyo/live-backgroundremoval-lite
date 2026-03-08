@@ -7,7 +7,7 @@ description: Validate if this Pull Request meets our project criteria (kaito-tok
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened]
     branches: [main]
 
 permissions:
