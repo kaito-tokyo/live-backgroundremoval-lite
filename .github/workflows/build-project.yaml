@@ -94,7 +94,7 @@ jobs:
         run: ctest --preset macos --output-on-failure --parallel 4 --output-junit report.xml
 
       - name: Upload Build Artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-bundle-macos-universal-${{ github.run_number }}
           path: build_macos/rundir/RelWithDebInfo/*.plugin
@@ -103,7 +103,7 @@ jobs:
       - name: Upload Raw Build Log
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ runner.os }}-build-rawlogs-${{ github.run_number }}
           path: "*.log"
@@ -237,13 +237,13 @@ jobs:
         run: ./scripts/package-plugin-windows.ps1
 
       - name: Upload Binary
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}
           path: release/${{ fromJson(steps.metadata.outputs.buildspec).name }}-${{ fromJson(steps.metadata.outputs.buildspec).version }}-windows-x64.zip
 
       - name: Upload PDB
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}-pdb
           path: release/${{ fromJson(steps.metadata.outputs.buildspec).name }}-${{ fromJson(steps.metadata.outputs.buildspec).version }}-windows-x64-pdb.zip
