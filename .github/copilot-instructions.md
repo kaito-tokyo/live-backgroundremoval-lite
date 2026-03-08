@@ -75,7 +75,7 @@ To initiate a new release, the user will instruct Gemini to start the process (e
 
 6.  **Deploy Documentation**:
     - **ACTION**: Run the documentation deployment workflow.
-    - **COMMAND**: `gh workflow run deploy-docs.yaml`
+    - **COMMAND**: `gh workflow run deploy-pages.yaml`
 
 7.  **Update Arch Linux and Flatpak Package Manifests**:
     - **ACTION**: Run `~/Documents/GitHub/live-plugins-hub/scripts/update-live-backgroundremoval-lite-arch.sh` to update the Arch Linux manifest automatically.

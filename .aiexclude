@@ -3,7 +3,7 @@
 /.deps/
 /build_*/
 /data/models/
-/docs/dist/
-/docs/public/
+/pages/dist/
+/pages/public/
 /vcpkg_installed/
 node_modules/

@@ -19,7 +19,7 @@ We make resource consumption minimal to avoid affecting your gameplay, and we al
 
 <div align="center">
 
-<img src="docs/public/demo.gif" alt="A cluttered background was removed from my portrait source." width="480">
+<img src="pages/public/demo.gif" alt="A cluttered background was removed from my portrait source." width="480">
 
 *A cluttered background was removed from my portrait source.*
 

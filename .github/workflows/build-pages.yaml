@@ -2,36 +2,26 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-name: Deploy Docs
+name: Build Pages
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
-  workflow_dispatch:
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 env:
-  BUILD_PATH: docs
+  BUILD_PATH: pages
 
 jobs:
-  deploy:
-    name: Deploy Docs
+  build:
+    name: Build Pages
 
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
     permissions:
-      attestations: write
       contents: read
-      id-token: write
-      pages: write
 
     steps:
       - name: Checkout
@@ -67,24 +57,7 @@ jobs:
           node scripts/generate-provenance.mjs dist provenance.json
           mv provenance.json dist/provenance.json
 
-      - name: Attest provenance
-        id: attest
-        uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
-        with:
-          subject-path: ${{ env.BUILD_PATH }}/dist/provenance.json
-
-      - name: Copy attestation bundle
-        env:
-          BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
-        shell: bash
-        run: |
-          jq -c . "$BUNDLE_PATH" > "$BUILD_PATH/dist/provenance.attestation.jsonl"
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
           path: ${{ env.BUILD_PATH }}/dist
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

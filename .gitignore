@@ -4,8 +4,5 @@
 .vscode/settings.json
 /.deps/
 /build_*/
-/docs/**/*.js
-/docs/dist/
 /vcpkg_installed/
-node_modules/
 release/
