@@ -32,9 +32,7 @@ safe-inputs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 safe-outputs:
-  add-comment:
-    hide-older-comments: true
-    discussions: false
+  submit-pull-request-review: {}
 
 engine:
   id: copilot
@@ -44,6 +42,12 @@ engine:
 # Pull Request Validator
 
 Validate if this Pull Request meets our project criteria (kaito-tokyo/live-backgroundremoval-lite).
+
+## Additional Inputs
+
+<PullRequestText>
+${{ needs.activation.outputs.text }}
+</PullRequestText>
 
 ## Requirements
 
@@ -57,9 +61,12 @@ Validate if this Pull Request meets our project criteria (kaito-tokyo/live-backg
   - **Verification**: Inspect the `message` field of every commit on this Pull Request, and verify if all commits on this Pull Request have DCO.
   - **Context**: Refer to `<PROJECT_ROOT>/CONTRIBUTING.md` for this policy.
 
+- **Pull Request Checklist**
+  - **Verification**: Read the Pull Request text provided above, and verify if it contains the Pull Request template and all the items are checked.
+
 ## Outputs
 
-- **Output Format**: Add a comment as the output of this validation to this Pull Request using safe-output.
+- **Output Format**: Use Pull Request review.
 - **Summary Line**: The first line of your comment MUST be a single-line summary of this validation, starting with either ✅ or 🚫.
-- **Success**: If this Pull Request meets all criteria, add a comment stating that this Pull Request is ready to merge.
-- **Failure**: If this Pull Request fails to meet any criteria, add a comment that explains what the problems are on this Pull Request, and provides instructions on how Author can fix them.
+- **Success**: If this Pull Request meets all criteria, submit an approval review, attaching this Pull Request's text provided above as a code block.
+- **Failure**: If this Pull Request fails to meet any criteria, submit a request-changes review that states what the problems are on this Pull Request.
