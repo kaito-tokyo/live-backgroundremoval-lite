@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@types/marked": "^6.0.0",
-    "prettier": "^3.8.0",
+    "prettier": "^3.8.1",
     "prettier-plugin-astro": "^0.14.1",
     "prettier-plugin-svelte": "^3.5.1"
   }
