@@ -168,7 +168,7 @@ jobs:
           xcrun stapler staple release/*-macos-universal.pkg
 
       - name: Upload pkg
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}
           path: release/${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.pkg
@@ -185,7 +185,7 @@ jobs:
           echo "dSYM zipped successfully."
 
       - name: Upload dSYM
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}-dsym
           path: build_macos/RelWithDebInfo/${{ fromJson(steps.metadata.outputs.buildspec).name }}-*.dSYM.zip
@@ -194,7 +194,7 @@ jobs:
       - name: Upload Raw Build Log
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ runner.os }}-deploy-rawlogs-${{ github.run_number }}
           path: "*.log"
@@ -270,14 +270,14 @@ jobs:
         run: cpack -G DEB
 
       - name: Upload deb
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}
           path: release/*.deb
           if-no-files-found: error
 
       - name: Upload ddeb
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}-dbgsym
           path: release/*.ddeb
@@ -357,13 +357,13 @@ jobs:
         run: ./scripts/package-plugin-windows.ps1
 
       - name: Upload Binary
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}
           path: release/${{ fromJson(steps.metadata.outputs.buildspec).name }}-${{ fromJson(steps.metadata.outputs.buildspec).version }}-windows-x64.zip
 
       - name: Upload PDB
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}-pdb
           path: release/${{ fromJson(steps.metadata.outputs.buildspec).name }}-${{ fromJson(steps.metadata.outputs.buildspec).version }}-windows-x64-pdb.zip
