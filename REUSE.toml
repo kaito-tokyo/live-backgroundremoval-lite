@@ -8,6 +8,7 @@ path = [
     ".gersemirc",
     ".gitattributes",
     ".github/aw/actions-lock.json",
+    ".github/dependabot.yml",
     ".github/pull_request_template.md",
     ".github/workflows/*.lock.yml",
     ".gitignore",
