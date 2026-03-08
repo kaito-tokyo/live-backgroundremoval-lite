@@ -34,6 +34,9 @@ safe-inputs:
 safe-outputs:
   submit-pull-request-review: {}
 
+  add-comment:
+    hide-older-comments: true
+
 engine:
   id: copilot
   model: gpt-5-mini
@@ -66,7 +69,6 @@ ${{ needs.activation.outputs.text }}
 
 ## Outputs
 
-- **Output Format**: Use Pull Request review.
 - **Summary Line**: The first line of your comment MUST be a single-line summary of this validation, starting with either ✅ or 🚫.
-- **Success**: If this Pull Request meets all criteria, submit an approval review, attaching this Pull Request's text provided above as a code block.
-- **Failure**: If this Pull Request fails to meet any criteria, submit a request-changes review that states what the problems are on this Pull Request.
+- **Success**: If this Pull Request meets all criteria, add a comment of approval, attaching this Pull Request's text provided above as a code block. You MUST NOT submit any reviews.
+- **Failure**: If this Pull Request fails to meet any criteria, submit a request-changes review that states what the problems are on this Pull Request. You MUST NOT add any comments.
