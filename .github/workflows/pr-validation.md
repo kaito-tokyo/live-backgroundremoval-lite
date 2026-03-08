@@ -68,5 +68,5 @@ ${{ needs.activation.outputs.text }}
 
 - **Output Format**: Use Pull Request review.
 - **Summary Line**: The first line of your comment MUST be a single-line summary of this validation, starting with either ✅ or 🚫.
-- **Success**: If this Pull Request meets all criteria, submit an approval review, attaching this Pull Request's text provided above as a code block.
+- **Success**: If this Pull Request meets all criteria, submit an approval review, attaching this Pull Request's text including the checklist provided above as a code block.
 - **Failure**: If this Pull Request fails to meet any criteria, submit a request-changes review that states what the problems are on this Pull Request.
