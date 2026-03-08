@@ -9,4 +9,9 @@ export default defineConfig({
   build: {
     assets: "assets",
   },
+  vite: {
+    ssr: {
+      external: ["@mlc-ai/web-llm"],
+    },
+  }
 });
