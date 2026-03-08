@@ -281,7 +281,7 @@ The `provenance.json` file contains detailed information about the build:
 
 1. **Cache Issue**: Your browser or CDN may have cached an old version. Wait a few minutes and try again.
 2. **Download Error**: Re-download the files using the curl command.
-3. **Deployment in Progress**: A new deployment might be in progress. Check the [Actions page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/deploy-docs.yml) for running workflows:
+3. **Deployment in Progress**: A new deployment might be in progress. Check the [Actions page](https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/deploy-pages.yml) for running workflows:
    - Look for workflows with a yellow dot (in progress)
    - Wait for the workflow to complete (green checkmark)
    - Then retry your verification
@@ -347,8 +347,8 @@ The website is served exclusively over HTTPS with HSTS (HTTP Strict Transport Se
 ## Related Resources
 
 - **Daily Security Check Workflow**: [`.github/workflows/daily-website-security-check.yaml`](https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/.github/workflows/daily-website-security-check.yaml)
-- **Deploy Workflow**: [`.github/workflows/deploy-docs.yml`](https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/.github/workflows/deploy-docs.yml)
-- **Provenance Generation Script**: [`docs/scripts/generate-provenance.mjs`](https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/docs/scripts/generate-provenance.mjs)
+- **Deploy Workflow**: [`.github/workflows/deploy-pages.yml`](https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/.github/workflows/deploy-pages.yml)
+- **Provenance Generation Script**: [`pages/scripts/generate-provenance.mjs`](https://github.com/kaito-tokyo/live-backgroundremoval-lite/blob/main/pages/scripts/generate-provenance.mjs)
 - **SLSA Documentation**: https://slsa.dev/
 - **Sigstore Documentation**: https://www.sigstore.dev/
 - **GitHub Attestations**: https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds
