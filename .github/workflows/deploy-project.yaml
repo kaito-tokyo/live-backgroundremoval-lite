@@ -400,37 +400,37 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Download macOS Installer
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}
           path: ${{ runner.temp }}/assets
 
       - name: Download macOS dSYM
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-pkg-macos-universal-${{ github.run_number }}-dsym
           path: ${{ runner.temp }}/assets
 
       - name: Download Ubuntu deb
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}
           path: ${{ runner.temp }}/assets
 
       - name: Download Ubuntu ddeb
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-deb-ubuntu-24.04-x86_64-${{ github.run_number }}-dbgsym
           path: ${{ runner.temp }}/assets
 
       - name: Download Windows Binary
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}
           path: ${{ runner.temp }}/assets
 
       - name: Download Windows PDB
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: ${{ fromJson(steps.metadata.outputs.buildspec).name }}-binary-windows-x64-${{ github.run_number }}-pdb
           path: ${{ runner.temp }}/assets
