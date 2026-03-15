@@ -13,7 +13,7 @@
     "node": "24.x"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.0",
+    "@astrojs/sitemap": "^3.7.1",
     "@mlc-ai/web-llm": "^0.2.81",
     "@nanostores/lit": "^0.2.3",
     "@octokit/rest": "^22.0.1",
