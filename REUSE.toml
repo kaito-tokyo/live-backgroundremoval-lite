@@ -4,6 +4,7 @@ version = 1
 path = [
     ".aiexclude",
     ".clang-format",
+    ".dockerignore",
     ".editorconfig",
     ".gersemirc",
     ".gitattributes",
@@ -15,6 +16,7 @@ path = [
     ".gitignore",
     ".gitmodules",
     ".prettierrc.json",
+    ".python-version",
     ".vscode/*",
     "buildspec.json",
     "CMakePresets.json",
