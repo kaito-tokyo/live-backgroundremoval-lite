@@ -1,22 +1,11 @@
-# SPDX-FileCopyrightText: 2022-2025 OBS Project and its contributors
-# SPDX-FileCopyrightText: 2023-2026 Kaito Udagawa <umireon@kaito.tokyo>
+# SPDX-FileCopyrightText: 2018-2026 OBS Project and its contributors
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 # CMake common compiler options module
 
 include_guard(GLOBAL)
-
-# Set C and C++ language standards to C17 and C++17
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED TRUE)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
-
-# Set symbols to be hidden by default for C and C++
-set(CMAKE_C_VISIBILITY_PRESET hidden)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 
 # clang options for C, C++, ObjC, and ObjC++
 set(

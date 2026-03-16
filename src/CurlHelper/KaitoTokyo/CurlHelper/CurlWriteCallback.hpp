@@ -14,7 +14,8 @@
 
 namespace KaitoTokyo::CurlHelper {
 
-template<typename T> concept SingleByte = sizeof(T) == 1;
+template<typename T>
+concept SingleByte = sizeof(T) == 1;
 
 template<SingleByte T>
 inline std::size_t CurlVectorWriteCallback(void *contents, std::size_t size, std::size_t nmemb, void *userp) noexcept

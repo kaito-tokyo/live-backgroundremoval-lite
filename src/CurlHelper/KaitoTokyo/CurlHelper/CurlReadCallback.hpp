@@ -14,12 +14,10 @@
 
 namespace KaitoTokyo::CurlHelper {
 
-template<typename T> concept CurlReaderInputStreamLike = requires(T & t, char *ptr, std::streamsize n)
-{
+template<typename T>
+concept CurlReaderInputStreamLike = requires(T &t, char *ptr, std::streamsize n) {
 	t.read(ptr, n);
-	{
-		t.gcount()
-	} -> std::convertible_to<std::streamsize>;
+	{ t.gcount() } -> std::convertible_to<std::streamsize>;
 };
 
 template<CurlReaderInputStreamLike StreamT>

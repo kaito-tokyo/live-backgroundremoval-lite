@@ -17,9 +17,17 @@ constexpr auto kFirstRunOccurredFileName = "live-backgroundremoval-lite_PluginCo
 constexpr auto kAutoCheckForUpdateDisabledFileName =
 	"live-backgroundremoval-lite_PluginConfig_AutoCheckForUpdateDisabled.txt";
 
+/**
+ * @brief Converts an OBS path (C-style UTF-8 string) to a std::filesystem::path.
+ */
 std::filesystem::path obsToPath(const char *obsPath)
 {
-	return std::filesystem::path(reinterpret_cast<const char8_t *>(obsPath));
+#ifdef _WIN32
+	// Allow usage of deprecated u8path on Windows for brief implementation
+	return std::filesystem::u8path(obsPath);
+#else
+	return std::filesystem::path(obsPath);
+#endif
 }
 
 } // anonymous namespace

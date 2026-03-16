@@ -1,8 +1,7 @@
-.astro/
+.deps_vendor/
+.deps/
 .DS_Store
-.vs/
+.venv/
 .vscode/settings.json
-/.deps/
-/build_*/
-/vcpkg_installed/
+build_*/
 release/

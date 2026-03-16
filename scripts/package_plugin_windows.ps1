@@ -1,16 +1,18 @@
-# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: Apache-2.0
 
 param (
-    [string]$BuildDir = "build_x64",
-    [string]$Config = "RelWithDebInfo",
+    [string]$Target = "x64",
+    [string]$Configuration = "RelWithDebInfo",
     [string]$OutputDir = "release"
 )
 
+Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 # 1. Locate and read buildspec.json
+$BuildDir = "build_$Target"
 $ScriptDir = $PSScriptRoot
 $RootDir = Split-Path -Parent $ScriptDir
 $BuildSpecFile = Join-Path $RootDir "buildspec.json"
@@ -57,7 +59,7 @@ try {
     # Ensure the parent temp directory exists
     if (-not (Test-Path $TempBase)) { New-Item -ItemType Directory -Path $TempBase -Force | Out-Null }
 
-    cmake --install $BuildDir --config $Config --prefix $InstallDir
+    cmake --install $BuildDir --config $Configuration --prefix $InstallDir
     if ($LASTEXITCODE -ne 0) { throw "CMake install failed" }
 
     # 4. Separate symbol files (PDBs)

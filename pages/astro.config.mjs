@@ -13,5 +13,5 @@ export default defineConfig({
     ssr: {
       external: ["@mlc-ai/web-llm"],
     },
-  }
+  },
 });
