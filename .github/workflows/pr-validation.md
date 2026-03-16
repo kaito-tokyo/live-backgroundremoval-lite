@@ -50,7 +50,7 @@ if: github.event.pull_request.draft == false && contains(github.event.pull_reque
 
 # Pull Request Validator
 
-Validate if this Pull Request meets our project criteria (royshil/obs-backgroundremoval).
+Validate if this Pull Request meets our project criteria (kaito-tokyo/live-backgroundremoval-lite).
 
 ## Additional Inputs
 
