@@ -1,0 +1,26 @@
+# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Extract vcpkg configuration
+description: Extract and output vcpkg configuration
+
+inputs:
+  path:
+    description: Path to vcpkg-configuration.json
+    required: true
+
+outputs:
+  DEFAULT_REGISTRY_BASELINE:
+    description: .default-registry.baseline from vcpkg-configuration.json
+    value: ${{ fromJSON(steps.extract.outputs.json)['default-registry'].baseline }}
+
+runs:
+  using: composite
+  steps:
+    - name: Extract vcpkg configuration
+      id: extract
+      shell: bash
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+      run: (printf 'json=' && jq -c . "$INPUT_PATH") >> "$GITHUB_OUTPUT"

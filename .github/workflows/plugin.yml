@@ -43,9 +43,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Extract plugin metadata
-        id: metadata
+      - name: Extract plugin buildspec
+        id: buildspec
         uses: ./.github/actions/extract-buildspec
+        with:
+          path: ${{ github.workspace }}/buildspec.json
 
       - name: Install dependencies from vcpkg (Windows x64)
         shell: bash
@@ -82,7 +84,7 @@ jobs:
       - name: Upload Plugin Binary
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: ${{ steps.metadata.outputs.name }}-pluginbinary-windows-x64-${{ github.run_id }}
+          name: ${{ steps.buildspec.outputs.name }}-pluginbinary-windows-x64-${{ github.run_id }}
           path: |
             release/*-windows-x64.zip
             release/*-windows-x64-pdb.zip
@@ -108,9 +110,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Extract plugin metadata
-        id: metadata
+      - name: Extract plugin buildspec
+        id: buildspec
         uses: ./.github/actions/extract-buildspec
+        with:
+          path: ${{ github.workspace }}/buildspec.json
 
       - name: Install dependencies from vcpkg (macOS arm64)
         shell: bash
@@ -172,10 +176,10 @@ jobs:
           NO_CODESIGN: ${{ github.event_name != 'push' }}
           MACOS_SIGNING_APPLICATION_IDENTITY: ${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY }}
           MACOS_SIGNING_INSTALLER_IDENTITY: ${{ secrets.MACOS_SIGNING_INSTALLER_IDENTITY }}
-          PLUGIN_NAME: ${{ steps.metadata.outputs.name }}
-          PLUGIN_VERSION: ${{ steps.metadata.outputs.version }}
-          BUNDLE_ID: ${{ steps.metadata.outputs.bundleId }}
-          DISPLAY_NAME: ${{ steps.metadata.outputs.displayName }}
+          PLUGIN_NAME: ${{ steps.buildspec.outputs.name }}
+          PLUGIN_VERSION: ${{ steps.buildspec.outputs.version }}
+          BUNDLE_ID: ${{ steps.buildspec.outputs.bundleId }}
+          DISPLAY_NAME: ${{ steps.buildspec.outputs.displayName }}
         run: |
           set -euo pipefail
           shopt -s nullglob
@@ -245,14 +249,14 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}/build_macos/RelWithDebInfo
         env:
-          PLUGIN_NAME: ${{ steps.metadata.outputs.name }}
-          PLUGIN_VERSION: ${{ steps.metadata.outputs.version }}
+          PLUGIN_NAME: ${{ steps.buildspec.outputs.name }}
+          PLUGIN_VERSION: ${{ steps.buildspec.outputs.version }}
         run: tar -cJf "$GITHUB_WORKSPACE/release/$PLUGIN_NAME-$PLUGIN_VERSION-macos-universal.dSYM.tar.xz" "$PLUGIN_NAME.plugin.dSYM"
 
       - name: Upload Plugin Binary
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: ${{ steps.metadata.outputs.name }}-pluginbinary-${{ runner.os }}-universal-${{ github.run_id }}
+          name: ${{ steps.buildspec.outputs.name }}-pluginbinary-${{ runner.os }}-universal-${{ github.run_id }}
           path: |
             release/*-macos-universal.pkg
             release/*-macos-universal.dSYM.tar.xz
@@ -267,8 +271,110 @@ jobs:
           path: Build.txt
           if-no-files-found: warn
 
+  prepare-ubuntu-x86_64:
+    name: Prepare Builder for Ubuntu x86_64
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    permissions:
+      artifact-metadata: write
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+
+    env:
+      BUILDER_DOCKERFILE: Dockerfile.ubuntu-24.04
+
+    outputs:
+      BUILDER_IMAGE: "${{ fromJSON(steps.meta.outputs.json).tags[0] }}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Extract vcpkg configuration
+        id: vcpkg-configuration
+        uses: ./.github/actions/extract-vcpkg-configuration
+        with:
+          path: ${{ github.workspace }}/vcpkg-configuration.json
+
+      - name: Image info
+        id: image-info
+        shell: bash
+        env:
+          BUILDER_DOCKERFILE_HASH: ${{ hashFiles(env.BUILDER_DOCKERFILE) }}
+        run: |
+          echo "RAW_IMAGE_NAME=$GITHUB_REPOSITORY-ubuntu-builder" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG_TEMPLATE=utc-{{date 'YYYYMMDD'}}-dockerfile-${BUILDER_DOCKERFILE_HASH:0:7}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to the GitHub Container registry
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Extract metadata for builder image
+        id: meta
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: ghcr.io/${{ steps.image-info.outputs.RAW_IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.image-info.outputs.IMAGE_TAG_TEMPLATE }},priority=10000
+            type=raw,value=latest
+
+      - name: Check if builder image already exists
+        id: check-image
+        shell: bash
+        env:
+          BUILDER_IMAGE: ${{ fromJSON(steps.meta.outputs.json).tags[0]}}
+        run: |
+          set -euo pipefail
+          if docker manifest inspect "$BUILDER_IMAGE" >/dev/null 2>&1; then
+            echo "EXISTS=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "EXISTS=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and Push builder image (Ubuntu)
+        id: push
+        if: github.event_name == 'push' || steps.check-image.outputs.EXISTS == 'false'
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        with:
+          build-args: |
+            ARG_VCPKG_DEFAULT_REGISTRY_BASELINE=${{ steps.vcpkg-configuration.outputs.DEFAULT_REGISTRY_BASELINE }}
+            ARG_UBUNTU_ARCHIVE_HOST=azure.archive.ubuntu.com
+          context: ${{ github.workspace }}
+          file: "Dockerfile.ubuntu-24.04"
+          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Extract subject name of builder image
+        id: subject
+        shell: bash
+        env:
+          BUILDER_IMAGE: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+        run: echo "SUBJECT_NAME=${BUILDER_IMAGE%:*}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate artifact attestation for builder image (Ubuntu)
+        if: github.event_name == 'push' || steps.check-image.outputs.EXISTS == 'false'
+        uses: actions/attest@e18a799f23337c367f76b067253d6f53abc6f03d # v4.1.0
+        with:
+          subject-name: ${{ steps.subject.outputs.SUBJECT_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+
   build-ubuntu-x86_64:
     name: Build Plugin for Ubuntu x86_64
+
+    needs: prepare-ubuntu-x86_64
 
     environment: ${{ github.event_name == 'push' && 'production-ubuntu' || 'development' }}
     runs-on: ubuntu-24.04
@@ -276,9 +382,13 @@ jobs:
 
     permissions:
       contents: read
+      packages: read
 
     env:
       ORT_CCACHE_DIR: ${{ github.workspace }}/.ort_ccache
+
+    container:
+      image: ${{ needs.prepare-ubuntu-x86_64.outputs.BUILDER_IMAGE }}
 
     steps:
       - name: Checkout
@@ -286,23 +396,11 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Extract plugin metadata
-        id: metadata
+      - name: Extract plugin buildspec
+        id: buildspec
         uses: ./.github/actions/extract-buildspec
-
-      - name: Install dependencies from apt (Ubuntu x86_64)
-        run: |
-          echo "man-db man-db/auto-update boolean false" | sudo debconf-set-selections
-          sudo apt-get remove --purge -y man-db
-          sudo add-apt-repository -y ppa:obsproject/obs-studio
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            libgles2-mesa-dev \
-            libqt6svg6-dev \
-            libsimde-dev \
-            obs-studio \
-            qt6-base-dev \
-            qt6-base-private-dev
+        with:
+          path: ${{ github.workspace }}/buildspec.json
 
       - name: Install dependencies from vcpkg (Ubuntu x86_64)
         shell: bash
@@ -332,7 +430,7 @@ jobs:
       - name: Upload Plugin Binary
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: ${{ steps.metadata.outputs.name }}-pluginbinary-${{ runner.os }}-x86_64-${{ github.run_id }}
+          name: ${{ steps.buildspec.outputs.name }}-pluginbinary-${{ runner.os }}-x86_64-${{ github.run_id }}
           path: |
             release/*-x86_64-linux-gnu.deb
             release/*-x86_64-linux-gnu-dbgsym.ddeb
@@ -356,9 +454,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Extract plugin metadata
-        id: metadata
+      - name: Extract plugin buildspec
+        id: buildspec
         uses: ./.github/actions/extract-buildspec
+        with:
+          path: ${{ github.workspace }}/buildspec.json
 
       - name: Select secure directory
         id: secure-dir
@@ -371,7 +471,7 @@ jobs:
       - name: Download plugin binaries
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          pattern: ${{ steps.metadata.outputs.name }}-pluginbinary-*
+          pattern: ${{ steps.buildspec.outputs.name }}-pluginbinary-*
           merge-multiple: true
           path: ${{ steps.secure-dir.outputs.artifacts }}
 

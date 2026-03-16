@@ -3,7 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 name: Extract buildspec
-description: Extract and output plugin metadata from buildspec.json
+description: Extract and output plugin buildspec
+
+inputs:
+  path:
+    description: Path to buildspec.json
+    required: true
 
 outputs:
   name:
@@ -22,11 +27,9 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Extract plugin metadata
+    - name: Extract plugin buildspec
       id: extract
       shell: bash
-      run: |
-        {
-          printf 'json='
-          jq -c . "$GITHUB_WORKSPACE/buildspec.json"
-        } >> "$GITHUB_OUTPUT"
+      env:
+        INPUT_PATH: ${{ inputs.path }}
+      run: (printf 'json=' && jq -c . "$INPUT_PATH") >> "$GITHUB_OUTPUT"
