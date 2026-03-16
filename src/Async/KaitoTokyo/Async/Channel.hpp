@@ -20,7 +20,8 @@ namespace KaitoTokyo::Async {
  * This prevents data loss or corruption if an exception were to occur while
  * moving a message out of the channel.
  */
-template<typename T> concept ChannelMessage = std::movable<T> && std::is_nothrow_move_constructible_v<T>;
+template<typename T>
+concept ChannelMessage = std::movable<T> && std::is_nothrow_move_constructible_v<T>;
 
 /**
  * @brief A high-performance, thread-safe asynchronous MPSC Channel.

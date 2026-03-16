@@ -34,7 +34,9 @@ const char kTestImageMask[] = TESTS_DIR "/SelfieSegmenter/selfie001_ncnn.png";
 
 TEST(NcnnSelfieSegmenterTest, Construction)
 {
-	NcnnSelfieSegmenter selfieSegmenter(mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text, mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len, mediapipe_selfie_segmentation_landscape_int8_ncnn_bin, 1);
+	NcnnSelfieSegmenter selfieSegmenter(mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text,
+					    mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len,
+					    mediapipe_selfie_segmentation_landscape_int8_ncnn_bin, 1);
 }
 
 TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
@@ -63,7 +65,9 @@ TEST(NcnnSelfieSegmenterTest, ProcessRealImage)
 	ASSERT_EQ(refImageChannels, 1);
 
 	// Test
-	NcnnSelfieSegmenter selfieSegmenter(mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text, mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len, mediapipe_selfie_segmentation_landscape_int8_ncnn_bin, 1);
+	NcnnSelfieSegmenter selfieSegmenter(mediapipe_selfie_segmentation_landscape_int8_ncnn_param_text,
+					    mediapipe_selfie_segmentation_landscape_int8_ncnn_bin_len,
+					    mediapipe_selfie_segmentation_landscape_int8_ncnn_bin, 1);
 
 	ASSERT_EQ(selfieSegmenter.getWidth(), static_cast<std::size_t>(width));
 	ASSERT_EQ(selfieSegmenter.getHeight(), static_cast<std::size_t>(height));

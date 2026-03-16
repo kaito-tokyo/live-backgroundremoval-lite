@@ -1,5 +1,5 @@
-# SPDX-FileCopyrightText: 2022-2025 OBS Project and its contributors
-# SPDX-FileCopyrightText: 2023-2026 Kaito Udagawa <umireon@kaito.tokyo>
+# SPDX-FileCopyrightText: 2018-2026 OBS Project and its contributors
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -9,8 +9,6 @@ include_guard(GLOBAL)
 
 # Enable find_package targets to become globally available targets
 set(CMAKE_FIND_PACKAGE_TARGETS_GLOBAL TRUE)
-
-# include(buildspec) -- DISABLED --
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(

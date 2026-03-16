@@ -1,5 +1,5 @@
-# SPDX-FileCopyrightText: 2022-2025 OBS Project and its contributors
-# SPDX-FileCopyrightText: 2023-2026 Kaito Udagawa <umireon@kaito.tokyo>
+# SPDX-FileCopyrightText: 2018-2026 OBS Project and its contributors
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -36,7 +36,7 @@ function(set_target_properties_plugin target)
       XCODE_ATTRIBUTE_GENERATE_INFOPLIST_FILE YES
       XCODE_ATTRIBUTE_INFOPLIST_FILE ""
       XCODE_ATTRIBUTE_INFOPLIST_KEY_CFBundleDisplayName ${target}
-      XCODE_ATTRIBUTE_INFOPLIST_KEY_NSHumanReadableCopyright "(C) ${CURRENT_YEAR} ${PLUGIN_AUTHOR}"
+      XCODE_ATTRIBUTE_INFOPLIST_KEY_NSHumanReadableCopyright "(c) ${CURRENT_YEAR} ${PLUGIN_AUTHOR}"
       XCODE_ATTRIBUTE_INSTALL_PATH "$(USER_LIBRARY_DIR)/Application Support/obs-studio/plugins"
   )
 
@@ -70,12 +70,6 @@ function(set_target_properties_plugin target)
   source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" PREFIX "UI Files" FILES ${target_ui_files})
 
   install(TARGETS ${target} LIBRARY DESTINATION .)
-  install(FILES "$<TARGET_BUNDLE_DIR:${target}>.dsym" CONFIGURATIONS Release DESTINATION . OPTIONAL)
-
-  # -- DISABLED --
-  # configure_file(cmake/macos/resources/distribution.in "${CMAKE_CURRENT_BINARY_DIR}/distribution" @ONLY)
-  # configure_file(cmake/macos/resources/create-package.cmake.in "${CMAKE_CURRENT_BINARY_DIR}/create-package.cmake" @ONLY)
-  # install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/create-package.cmake")
 endfunction()
 
 # target_install_resources: Helper function to add resources into bundle

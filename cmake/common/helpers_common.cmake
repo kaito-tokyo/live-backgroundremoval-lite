@@ -1,5 +1,5 @@
-# SPDX-FileCopyrightText: 2022-2025 OBS Project and its contributors
-# SPDX-FileCopyrightText: 2023-2026 Kaito Udagawa <umireon@kaito.tokyo>
+# SPDX-FileCopyrightText: 2018-2026 OBS Project and its contributors
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -47,8 +47,4 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/plugin-support.c.in")
   add_library(plugin-support STATIC)
   target_sources(plugin-support PRIVATE plugin-support.c PUBLIC src/plugin-support.h)
   target_include_directories(plugin-support PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/src")
-  if(OS_LINUX OR OS_FREEBSD OR OS_OPENBSD)
-    # add fPIC on Linux to prevent shared object errors
-    set_property(TARGET plugin-support PROPERTY POSITION_INDEPENDENT_CODE ON)
-  endif()
 endif()

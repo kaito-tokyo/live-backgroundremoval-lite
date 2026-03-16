@@ -4,27 +4,39 @@
 
 cmake_minimum_required(VERSION 3.28)
 
-list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/common")
-include(init)
+# Read buildspec.json for project metadata
+block(
+  PROPAGATE PLUGIN_NAME PLUGIN_VERSION PLUGIN_AUTHOR PLUGIN_EMAIL PREBUILT_VERSION QT6_VERSION MACOS_BUNDLEID
+)
+  file(READ "${CMAKE_CURRENT_SOURCE_DIR}/buildspec.json" BUILDSPEC_CONTENT)
+  string(JSON PLUGIN_NAME GET "${BUILDSPEC_CONTENT}" name)
+  string(JSON PLUGIN_VERSION GET "${BUILDSPEC_CONTENT}" version)
+  string(JSON PLUGIN_AUTHOR GET "${BUILDSPEC_CONTENT}" author)
+  string(JSON PLUGIN_EMAIL GET "${BUILDSPEC_CONTENT}" email)
+  string(JSON PREBUILT_VERSION GET "${BUILDSPEC_CONTENT}" dependencies prebuilt version)
+  string(JSON QT6_VERSION GET "${BUILDSPEC_CONTENT}" dependencies qt6 version)
+  string(JSON MACOS_BUNDLEID GET "${BUILDSPEC_CONTENT}" platformConfig macos bundleId)
+endblock()
 
-project(${PLUGIN_NAME} VERSION ${PLUGIN_VERSION} LANGUAGES C CXX)
+if(DEFINED ENV{GITHUB_RUN_ID})
+  set(PLUGIN_BUILD_NUMBER "$ENV{GITHUB_RUN_ID}")
+else()
+  set(PLUGIN_BUILD_NUMBER "1")
+endif()
 
+project("${PLUGIN_NAME}" VERSION "${PLUGIN_VERSION}" LANGUAGES C CXX)
+
+set(PLUGIN_VERSION_MAJOR "${CMAKE_PROJECT_VERSION_MAJOR}")
+set(PLUGIN_VERSION_MINOR "${CMAKE_PROJECT_VERSION_MINOR}")
+set(PLUGIN_VERSION_PATCH "${CMAKE_PROJECT_VERSION_PATCH}")
+
+# Build options
+set(VCPKG_TARGET_TRIPLET "" CACHE STRING "Vcpkg target triplet to use")
 option(BUILD_TESTING "Build test cases" OFF)
 option(ENABLE_ASAN "Enable Address Sanitizer" OFF)
 option(ENABLE_UBSAN "Enable Undefined Behavior Sanitizer" OFF)
 
-if(MSVC)
-  list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/windows")
-elseif(APPLE)
-  list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/macos")
-else()
-  list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linux")
-endif()
-
-include(compilerconfig)
-include(defaults)
-include(helpers)
-
+# Basic configuration
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED TRUE)
 set(CMAKE_C_EXTENSIONS FALSE)
@@ -35,13 +47,20 @@ set(CMAKE_CXX_EXTENSIONS FALSE)
 set(CMAKE_C_VISIBILITY_PRESET hidden)
 set(CMAKE_CXX_VISIBILITY_PRESET hidden)
 set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 if(MSVC)
   add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
+elseif(APPLE)
+  add_compile_options(-fno-omit-frame-pointer -fstack-protector-strong)
+else()
+  add_compile_options(-fno-omit-frame-pointer -fstack-protector-strong)
 endif()
 
+# Include paths
+list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/common")
 if(MSVC)
+  list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/windows")
   list(
     PREPEND
     CMAKE_PREFIX_PATH
@@ -50,6 +69,7 @@ if(MSVC)
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-${PREBUILT_VERSION}-x64"
   )
 elseif(APPLE)
+  list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/macos")
   list(
     PREPEND
     CMAKE_PREFIX_PATH
@@ -58,6 +78,15 @@ elseif(APPLE)
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-qt6-${QT6_VERSION}-universal"
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-${PREBUILT_VERSION}-universal"
   )
+else()
+  list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linux")
+endif()
+
+if(VCPKG_TARGET_TRIPLET STREQUAL "")
+  message(STATUS "Build without vcpkg")
+else()
+  message(STATUS "Build with vcpkg with target triplet: ${VCPKG_TARGET_TRIPLET}")
+  list(PREPEND CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/.deps_vendor/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
 endif()
 
 if(ENABLE_ASAN)
@@ -84,85 +113,78 @@ if(ENABLE_UBSAN)
   endif()
 endif()
 
+# Common initialization
+include(bootstrap)
+include(compilerconfig)
+include(defaults)
+include(helpers)
+
+# Dependent packages
+
+## PkgConfig
+find_package(PkgConfig QUIET)
+
+## OBS and Qt
 find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 
-if(VCPKG_TARGET_TRIPLET)
-  list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}")
-endif()
-
-find_package(PkgConfig QUIET)
-
-# --- CURL ---
+## CURL
 find_package(CURL CONFIG QUIET)
-if(NOT CURL_FOUND)
-  find_package(CURL QUIET)
-endif()
 
 if(NOT CURL_FOUND AND PkgConfig_FOUND)
-  pkg_check_modules(PC_CURL libcurl)
+  pkg_check_modules(PC_CURL libcurl IMPORTED_TARGET)
   if(PC_CURL_FOUND)
-    add_library(CURL::libcurl INTERFACE IMPORTED)
-    target_link_libraries(CURL::libcurl INTERFACE ${PC_CURL_LIBRARIES})
-    target_include_directories(CURL::libcurl INTERFACE ${PC_CURL_INCLUDE_DIRS})
-    target_compile_definitions(CURL::libcurl INTERFACE ${PC_CURL_CFLAGS_OTHER})
-    target_link_directories(CURL::libcurl INTERFACE ${PC_CURL_LIBRARY_DIRS})
+    add_library(CURL::libcurl ALIAS PkgConfig::PC_CURL)
     set(CURL_FOUND TRUE)
   endif()
 endif()
 
 if(NOT CURL_FOUND)
-  message(FATAL_ERROR "CURL not found via CMake Config or PkgConfig.")
+  message(FATAL_ERROR "CURL not found via CMake or pkg-config.")
 endif()
 
-# --- fmt ---
+## fmt
 find_package(fmt CONFIG QUIET)
 
 if(NOT fmt_FOUND AND PkgConfig_FOUND)
-  pkg_check_modules(PC_FMT fmt)
+  pkg_check_modules(PC_FMT fmt IMPORTED_TARGET)
   if(PC_FMT_FOUND)
-    add_library(fmt::fmt INTERFACE IMPORTED)
-    target_link_libraries(fmt::fmt INTERFACE ${PC_FMT_LIBRARIES})
-    target_include_directories(fmt::fmt INTERFACE ${PC_FMT_INCLUDE_DIRS})
-    target_compile_definitions(fmt::fmt INTERFACE ${PC_FMT_CFLAGS_OTHER})
-    target_link_directories(fmt::fmt INTERFACE ${PC_FMT_LIBRARY_DIRS})
+    add_library(fmt::fmt ALIAS PkgConfig::PC_FMT)
     set(fmt_FOUND TRUE)
   endif()
 endif()
 
 if(NOT fmt_FOUND)
-  message(FATAL_ERROR "fmt not found via CMake Config or PkgConfig.")
+  message(FATAL_ERROR "fmt not found via CMake or pkg-config.")
 endif()
 
-# --- ncnn ---
+## ncnn
 find_package(ncnn CONFIG QUIET)
 
-if(ncnn_FOUND)
-  if(NOT TARGET ncnn::ncnn)
-    add_library(ncnn::ncnn ALIAS ncnn)
-  endif()
-elseif(PkgConfig_FOUND)
-  pkg_check_modules(PC_NCNN ncnn)
+if(NOT ncnn_FOUND AND PkgConfig_FOUND)
+  pkg_check_modules(PC_NCNN ncnn IMPORTED_TARGET)
   if(PC_NCNN_FOUND)
-    add_library(ncnn::ncnn INTERFACE IMPORTED)
-    target_link_libraries(ncnn::ncnn INTERFACE ${PC_NCNN_LIBRARIES})
-    target_include_directories(ncnn::ncnn INTERFACE ${PC_NCNN_INCLUDE_DIRS})
-    target_compile_definitions(ncnn::ncnn INTERFACE ${PC_NCNN_CFLAGS_OTHER} PREFIXED_NCNN_HEADERS)
-    target_link_directories(ncnn::ncnn INTERFACE ${PC_NCNN_LIBRARY_DIRS})
+    add_library(ncnn::ncnn ALIAS PkgConfig::PC_NCNN)
     set(ncnn_FOUND TRUE)
   endif()
 endif()
 
 if(NOT ncnn_FOUND)
-  message(FATAL_ERROR "ncnn not found via CMake Config or PkgConfig.")
+  message(FATAL_ERROR "ncnn not found via CMake or pkg-config.")
 endif()
 
-# --- jthread ---
+if(NOT TARGET ncnn::ncnn)
+  add_library(ncnn::ncnn ALIAS ncnn)
+endif()
+
+## jthread
 if(APPLE)
   set(JTHREAD_LIBRARIES jthread::jthread)
   add_subdirectory(vendor/josuttis-jthread)
 endif()
+
+# Plugin targets
 
 add_subdirectory(src)
 
@@ -182,6 +204,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp src/resources/r
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES AUTORCC ON)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE PLUGIN_VERSION="${PLUGIN_VERSION}")
 
+# Exported symbols
 if(APPLE)
   target_link_options(
     ${CMAKE_PROJECT_NAME}
@@ -208,3 +231,32 @@ if(BUILD_TESTING)
 
   add_subdirectory(tests)
 endif()
+
+# CPack configuration
+set(CPACK_ARCHIVE_THREADS 0)
+set(CPACK_DEBIAN_COMPRESSION_LEVEL 19)
+set(CPACK_DEBIAN_COMPRESSION_TYPE zstd)
+set(CPACK_DEBIAN_DEBUGINFO_PACKAGE TRUE)
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS TRUE)
+set(CPACK_GENERATOR "DEB")
+set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/release")
+set(CPACK_PACKAGE_CONTACT "${PLUGIN_AUTHOR} <${PLUGIN_EMAIL}>")
+set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_C_LIBRARY_ARCHITECTURE}")
+set(CPACK_PACKAGE_NAME "${CMAKE_PROJECT_NAME}")
+set(CPACK_PACKAGE_VERSION "${CMAKE_PROJECT_VERSION}")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSES/GPL-3.0-or-later.txt")
+set(CPACK_SET_DESTDIR TRUE)
+set(CPACK_VERBATIM_VARIABLES TRUE)
+set(
+  CPACK_SOURCE_IGNORE_FILES
+  ".deps_vendor/"
+  ".git/"
+  "build_x86_64/"
+  "build_x64/"
+  "build_macos/"
+  "release/"
+  "vcpkg_installed/"
+)
+
+# Include CPack after setting variables
+include(CPack)

@@ -1,5 +1,5 @@
-# SPDX-FileCopyrightText: 2022-2025 OBS Project and its contributors
-# SPDX-FileCopyrightText: 2023-2026 Kaito Udagawa <umireon@kaito.tokyo>
+# SPDX-FileCopyrightText: 2018-2026 OBS Project and its contributors
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -53,12 +53,6 @@ set(CMAKE_XCODE_GENERATE_TOP_LEVEL_PROJECT_ONLY TRUE)
 # Add all libraries to project link phase (lets Xcode handle linking)
 set(CMAKE_XCODE_LINK_BUILD_PHASE_MODE KNOWN_LOCATION)
 
-# -- DISABLED --
-# Enable codesigning with secure timestamp when not in Debug configuration (required for Notarization)
-# set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=Release] "--timestamp")
-# set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=RelWithDebInfo] "--timestamp")
-# set(CMAKE_XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS[variant=MinSizeRel] "--timestamp")
-
 # Enable codesigning with hardened runtime option when not in Debug configuration (required for Notarization)
 set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=Release] YES)
 set(CMAKE_XCODE_ATTRIBUTE_ENABLE_HARDENED_RUNTIME[variant=RelWithDebInfo] YES)
@@ -72,17 +66,6 @@ set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_INJECT_BASE_ENTITLEMENTS[variant=MinSizeRel]
 
 # Use Swift version 5.0 by default
 set(CMAKE_XCODE_ATTRIBUTE_SWIFT_VERSION 5.0)
-
-# -- DISABLED -- Broken settings
-# # Use DWARF with separate dSYM files when in Release or MinSizeRel configuration.
-# #
-# # * Currently overruled by CMake's Xcode generator, requires adding '-g' flag to raw compiler command line for desired
-# #   output configuration. Report to KitWare.
-# #
-# set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=Debug] dwarf)
-# set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=RelWithDebInfo] dwarf)
-# set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=Release] dwarf-with-dsym)
-# set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=MinSizeRel] dwarf-with-dsym)
 
 set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=Release] dwarf-with-dsym)
 set(CMAKE_XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT[variant=RelWithDebInfo] dwarf-with-dsym)
@@ -108,20 +91,6 @@ set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES)
 set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_WEAK YES)
 # Disable strict aliasing
 set(CMAKE_XCODE_ATTRIBUTE_GCC_STRICT_ALIASING NO)
-
-# Set C++ language default to c17
-#
-# * CMake explicitly sets the version via compiler flag when transitive dependencies require specific compiler feature
-#   set, resulting in the flag being added twice. Report to KitWare as a feature request for Xcode generator
-# * See also: https://gitlab.kitware.com/cmake/cmake/-/issues/17183
-#
-# set(CMAKE_XCODE_ATTRIBUTE_GCC_C_LANGUAGE_STANDARD c17)
-#
-# Set C++ language default to c++17
-#
-# * See above. Report to KitWare as a feature request for Xcode generator
-#
-# set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LANGUAGE_STANDARD c++17)
 
 # Enable support for module imports in ObjC
 set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES YES)

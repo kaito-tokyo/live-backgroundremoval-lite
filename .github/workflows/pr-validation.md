@@ -14,7 +14,7 @@ permissions:
   contents: read
   pull-requests: read
 
-safe-inputs:
+mcp-scripts:
   pull-request-commits:
     description: Returns the JSON from the GitHub API to list commits on a specified pull request
     inputs:
@@ -46,7 +46,7 @@ Validate if this Pull Request meets our project criteria (kaito-tokyo/live-backg
 ## Additional Inputs
 
 <PullRequestText>
-${{ needs.activation.outputs.text }}
+${{ steps.sanitized.outputs.text }}
 </PullRequestText>
 
 ## Requirements
