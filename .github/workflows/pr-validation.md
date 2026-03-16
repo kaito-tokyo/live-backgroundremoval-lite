@@ -36,7 +36,7 @@ mcp-scripts:
         -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
         --paginate \
-        --jq '.[] | map({sha: .sha, message: .commit.message, verification: .commit.verification})'
+        --jq '.[] | {sha: .sha, message: .commit.message, verification: .commit.verification}' | jq -c '.'
 
 safe-outputs:
   submit-pull-request-review: {}
