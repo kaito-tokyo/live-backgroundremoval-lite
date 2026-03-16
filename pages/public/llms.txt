@@ -8,8 +8,6 @@ Unlike other plugins, it is engineered specifically for **Gamers** and **Stabili
 ## Primary Documentation Resources
 
 - **Main Page (Overview):** https://kaito-tokyo.github.io/live-backgroundremoval-lite/
-- **Ask Anything (AI Chatbot):** https://kaito-tokyo.github.io/live-backgroundremoval-lite/ask-anything/
-  - *Direct link to the local AI support assistant.*
 - **Installation Guide:** https://kaito-tokyo.github.io/live-backgroundremoval-lite/install/
   - *Contains specific instructions for Windows (.zip), macOS (.pkg), and Ubuntu (.deb).*
 - **Usage & Configuration:** https://kaito-tokyo.github.io/live-backgroundremoval-lite/usage/

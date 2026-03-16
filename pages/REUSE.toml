@@ -8,7 +8,6 @@ path = [
     "astro.config.mjs",
     "package-lock.json",
     "package.json",
-    "svelte.config.js",
     "tsconfig.json",
 ]
 SPDX-FileCopyrightText = "2025-2026 Kaito Udagawa <umireon@kaito.tokyo>"
