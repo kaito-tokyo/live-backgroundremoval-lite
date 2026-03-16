@@ -23,7 +23,7 @@
 #
 # Validate if this Pull Request meets our project criteria (kaito-tokyo/live-backgroundremoval-lite). COPILOT_GITHUB_TOKEN needs to be configured.
 #
-# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"e63fbc69e1f18a3a67933913b488ec39bd761873e394966a12a50f7e24d15195","compiler_version":"v0.58.3","strict":true}
+# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"a9d5617089bf1e2d499a111b744ffbc5c302afe3e39e423d0f1b970e5ff235cd","compiler_version":"v0.58.3","strict":true}
 
 name: "Pull Request Validator"
 "on":
@@ -31,9 +31,12 @@ name: "Pull Request Validator"
     branches:
     - main
     types:
+    - labeled
     - opened
-    - synchronize
+    - ready_for_review
     - reopened
+    - synchronize
+    - unlabeled
 
 permissions: {}
 
@@ -47,7 +50,8 @@ jobs:
   activation:
     needs: pre_activation
     if: >
-      (needs.pre_activation.outputs.activated == 'true') && ((github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id))
+      (needs.pre_activation.outputs.activated == 'true') && ((github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'auto-review')) &&
+      ((github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id)))
     runs-on: ubuntu-slim
     permissions:
       contents: read
@@ -133,7 +137,8 @@ jobs:
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
-          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
+          GH_AW_STEPS_SANITIZED_OUTPUTS_BODY: ${{ steps.sanitized.outputs.body }}
+          GH_AW_STEPS_SANITIZED_OUTPUTS_TITLE: ${{ steps.sanitized.outputs.title }}
         run: |
           bash /opt/gh-aw/actions/create_prompt_first.sh
           {
@@ -188,7 +193,8 @@ jobs:
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
-          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
+          GH_AW_STEPS_SANITIZED_OUTPUTS_BODY: ${{ steps.sanitized.outputs.body }}
+          GH_AW_STEPS_SANITIZED_OUTPUTS_TITLE: ${{ steps.sanitized.outputs.title }}
         with:
           script: |
             const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
@@ -208,7 +214,8 @@ jobs:
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
           GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: ${{ needs.pre_activation.outputs.activated }}
-          GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: ${{ steps.sanitized.outputs.text }}
+          GH_AW_STEPS_SANITIZED_OUTPUTS_BODY: ${{ steps.sanitized.outputs.body }}
+          GH_AW_STEPS_SANITIZED_OUTPUTS_TITLE: ${{ steps.sanitized.outputs.title }}
         with:
           script: |
             const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
@@ -229,7 +236,8 @@ jobs:
                 GH_AW_GITHUB_RUN_ID: process.env.GH_AW_GITHUB_RUN_ID,
                 GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
                 GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED: process.env.GH_AW_NEEDS_PRE_ACTIVATION_OUTPUTS_ACTIVATED,
-                GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT: process.env.GH_AW_STEPS_SANITIZED_OUTPUTS_TEXT
+                GH_AW_STEPS_SANITIZED_OUTPUTS_BODY: process.env.GH_AW_STEPS_SANITIZED_OUTPUTS_BODY,
+                GH_AW_STEPS_SANITIZED_OUTPUTS_TITLE: process.env.GH_AW_STEPS_SANITIZED_OUTPUTS_TITLE
               }
             });
       - name: Validate prompt placeholders
@@ -648,7 +656,8 @@ jobs:
             "/repos/$GITHUB_REPOSITORY/pulls/$INPUT_PRNUMBER/commits" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
-            --paginate
+            --paginate \
+            --jq 'map({sha: .sha, message: .commit.message, verification: .commit.verification})'
           
           
           GH_AW_MCP_SCRIPTS_SH_PULL-REQUEST-COMMITS_EOF
@@ -678,7 +687,7 @@ jobs:
           DEBUG: '*'
           GH_AW_MCP_SCRIPTS_PORT: ${{ steps.mcp-scripts-config.outputs.mcp_scripts_port }}
           GH_AW_MCP_SCRIPTS_API_KEY: ${{ steps.mcp-scripts-config.outputs.mcp_scripts_api_key }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Environment variables are set above to prevent template injection
           export DEBUG
@@ -695,7 +704,7 @@ jobs:
           GH_AW_SAFE_OUTPUTS: ${{ env.GH_AW_SAFE_OUTPUTS }}
           GH_AW_SAFE_OUTPUTS_API_KEY: ${{ steps.safe-outputs-start.outputs.api_key }}
           GH_AW_SAFE_OUTPUTS_PORT: ${{ steps.safe-outputs-start.outputs.port }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           GITHUB_MCP_LOCKDOWN: ${{ steps.determine-automatic-lockdown.outputs.lockdown == 'true' && '1' || '0' }}
           GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
@@ -780,7 +789,7 @@ jobs:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_SAFE_OUTPUTS: ${{ env.GH_AW_SAFE_OUTPUTS }}
           GH_AW_VERSION: v0.58.3
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           GITHUB_API_URL: ${{ github.api_url }}
           GITHUB_AW: true
           GITHUB_HEAD_REF: ${{ github.head_ref }}
@@ -1165,7 +1174,9 @@ jobs:
             await main();
 
   pre_activation:
-    if: (github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id)
+    if: >
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'auto-review')) &&
+      ((github.event_name != 'pull_request') || (github.event.pull_request.head.repo.id == github.repository_id))
     runs-on: ubuntu-slim
     outputs:
       activated: ${{ steps.check_membership.outputs.is_team_member == 'true' }}
