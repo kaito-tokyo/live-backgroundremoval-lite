@@ -22,21 +22,21 @@ permissions:
 
 mcp-scripts:
   pull-request-commits:
-    description: Returns the JSON from the GitHub API to list commits on a specified pull request
+    description: Returns the JSONL composed from the GitHub API to list commits on a specified pull request. Each line of output JSONL contains the `sha`, `message`, and `verification` fields for each commit.
     inputs:
       prnumber:
         type: string
         required: true
         description: The number of Pull Request
+    env:
+      GH_TOKEN: ${{ github.token }}
     run: |
       gh api \
-        "/repos/$GITHUB_REPOSITORY/pulls/$INPUT_PRNUMBER/commits" \
+        "repos/$GITHUB_REPOSITORY/pulls/$INPUT_PRNUMBER/commits" \
         -H "Accept: application/vnd.github+json" \
         -H "X-GitHub-Api-Version: 2022-11-28" \
         --paginate \
-        --jq 'map({sha: .sha, message: .commit.message, verification: .commit.verification})'
-    env:
-      GH_TOKEN: ${{ github.token }}
+        --jq '.[] | map({sha: .sha, message: .commit.message, verification: .commit.verification})'
 
 safe-outputs:
   submit-pull-request-review: {}
@@ -75,7 +75,7 @@ ${{ steps.sanitized.outputs.body }}
   - **Context**: Refer to `<PROJECT_ROOT>/CONTRIBUTING.md` for this policy.
 
 - **Pull Request Checklist**
-  - **Verification**: Read the Pull Request text provided above, and verify if it contains the Pull Request template and all the items are checked.
+  - **Verification**: Read the Pull Request text provided above in the `<PullRequestTitle>` and `<PullRequestBody>` sections, and verify if it contains the Pull Request template and all the items are checked. When you observe `steps.sanitized.outputs.title`, or `steps.sanitized.outputs.body` literally in the checklist, you MUST fail this workflow due to invalid inputs.
 
 ## Outputs
 

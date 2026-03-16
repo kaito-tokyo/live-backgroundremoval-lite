@@ -23,7 +23,7 @@
 #
 # Validate if this Pull Request meets our project criteria (kaito-tokyo/live-backgroundremoval-lite). COPILOT_GITHUB_TOKEN needs to be configured.
 #
-# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"a9d5617089bf1e2d499a111b744ffbc5c302afe3e39e423d0f1b970e5ff235cd","compiler_version":"v0.58.3","strict":true}
+# gh-aw-metadata: {"schema_version":"v2","frontmatter_hash":"8ff8044f0d12b018f4793d1cca076bfba1cb9a3130ca7f7766b30f399622e079","compiler_version":"v0.58.3","strict":true}
 
 name: "Pull Request Validator"
 "on":
@@ -604,7 +604,7 @@ jobs:
             "tools": [
               {
                 "name": "pull-request-commits",
-                "description": "Returns the JSON from the GitHub API to list commits on a specified pull request",
+                "description": "Returns the JSONL composed from the GitHub API to list commits on a specified pull request. Each line of output JSONL contains the `sha`, `message`, and `verification` fields for each commit.",
                 "inputSchema": {
                   "properties": {
                     "prnumber": {
@@ -648,16 +648,16 @@ jobs:
           cat > /opt/gh-aw/mcp-scripts/pull-request-commits.sh << 'GH_AW_MCP_SCRIPTS_SH_PULL-REQUEST-COMMITS_EOF'
           #!/bin/bash
           # Auto-generated mcp-script tool: pull-request-commits
-          # Returns the JSON from the GitHub API to list commits on a specified pull request
+          # Returns the JSONL composed from the GitHub API to list commits on a specified pull request. Each line of output JSONL contains the `sha`, `message`, and `verification` fields for each commit.
           
           set -euo pipefail
           
           gh api \
-            "/repos/$GITHUB_REPOSITORY/pulls/$INPUT_PRNUMBER/commits" \
+            "repos/$GITHUB_REPOSITORY/pulls/$INPUT_PRNUMBER/commits" \
             -H "Accept: application/vnd.github+json" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             --paginate \
-            --jq 'map({sha: .sha, message: .commit.message, verification: .commit.verification})'
+            --jq '.[] | map({sha: .sha, message: .commit.message, verification: .commit.verification})'
           
           
           GH_AW_MCP_SCRIPTS_SH_PULL-REQUEST-COMMITS_EOF
