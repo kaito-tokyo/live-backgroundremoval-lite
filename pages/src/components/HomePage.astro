@@ -277,31 +277,6 @@ const structuredData = {
       </p>
     </section>
 
-    <section id="ask-anything">
-      <a
-        href={withTrailingSlash(joinURL(baseUrl, "ask-anything"))}
-        class="ask-anything-button"
-      >
-        <svg
-          aria-hidden="true"
-          xmlns="http://www.w3.org/2000/svg"
-          width="32"
-          height="32"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          class="button-icon"
-          ><path
-            d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
-          ></path></svg
-        >
-        <span class="button-text">{t("home.ask-anything")}</span>
-      </a>
-    </section>
-
     <section id="demo">
       <h2>{t("home.demo.title")}</h2>
       <div class="demo-container">
@@ -535,31 +510,6 @@ const structuredData = {
       font-size: 1.1em;
     }
 
-    #ask-anything {
-      text-align: center;
-    }
-
-    .ask-anything-button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1em 2em;
-      font-size: 1.2em;
-      border-radius: 999px;
-      background: var(--color-button-2, #4f8cff);
-      color: #fff;
-      text-decoration: none;
-      box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
-      transition:
-        background-color 0.2s,
-        box-shadow 0.2s;
-      font-weight: bold;
-    }
-    .ask-anything-button:hover,
-    .ask-anything-button:focus {
-      background: var(--color-button-1, #2563eb);
-      box-shadow: 0 6px 24px var(--color-box-shadow, rgba(0, 0, 0, 0.15));
-    }
     .button-icon {
       margin-right: 0.5em;
     }

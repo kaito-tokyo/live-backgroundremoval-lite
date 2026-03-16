@@ -14,13 +14,9 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.1",
-    "@mlc-ai/web-llm": "^0.2.81",
-    "@nanostores/lit": "^0.2.3",
     "@octokit/rest": "^22.0.1",
     "astro": "^6.0.3",
-    "lit": "^3.3.2",
     "marked": "^17.0.4",
-    "nanostores": "^1.1.1",
     "posthtml": "^0.16.7",
     "pretty-bytes": "^7.1.0",
     "typescript": "^5.9.3"
@@ -28,7 +24,6 @@
   "devDependencies": {
     "@types/marked": "^6.0.0",
     "prettier": "^3.8.1",
-    "prettier-plugin-astro": "^0.14.1",
-    "prettier-plugin-svelte": "^3.5.1"
+    "prettier-plugin-astro": "^0.14.1"
   }
 }
