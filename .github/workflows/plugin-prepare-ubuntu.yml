@@ -1,0 +1,113 @@
+# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Prepare Ubuntu
+
+on:
+  workflow_call:
+    outputs:
+      BUILDER_IMAGE_UBUNTU_X86_64:
+        description: The builder image for Ubuntu x86_64
+        value: ${{ jobs.prepare-ubuntu-x86_64.outputs.BUILDER_IMAGE_UBUNTU_X86_64 }}
+
+jobs:
+  prepare-ubuntu-x86_64:
+    name: Prepare Builder for Ubuntu x86_64
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    permissions:
+      artifact-metadata: write
+      attestations: write
+      contents: read
+      id-token: write
+      packages: write
+
+    env:
+      BUILDER_DOCKERFILE: Dockerfile.ubuntu-24.04
+
+    outputs:
+      BUILDER_IMAGE_UBUNTU_X86_64: "${{ fromJSON(steps.meta.outputs.json).tags[0] }}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Extract vcpkg configuration
+        id: vcpkg-configuration
+        uses: ./.github/actions/extract-vcpkg-configuration
+        with:
+          path: ${{ github.workspace }}/vcpkg-configuration.json
+
+      - name: Image info
+        id: image-info
+        shell: bash
+        env:
+          BUILDER_DOCKERFILE_HASH: ${{ hashFiles(env.BUILDER_DOCKERFILE) }}
+        run: |
+          echo "RAW_IMAGE_NAME=$GITHUB_REPOSITORY-ubuntu-builder" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG_TEMPLATE=utc-{{date 'YYYYMMDD'}}-dockerfile-${BUILDER_DOCKERFILE_HASH:0:7}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to the GitHub Container registry
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
+
+      - name: Extract metadata for builder image
+        id: meta
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: ghcr.io/${{ steps.image-info.outputs.RAW_IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.image-info.outputs.IMAGE_TAG_TEMPLATE }},priority=10000
+            type=raw,value=latest
+
+      - name: Check if builder image already exists
+        id: check-image
+        shell: bash
+        env:
+          BUILDER_IMAGE: ${{ fromJSON(steps.meta.outputs.json).tags[0]}}
+        run: |
+          set -euo pipefail
+          if docker manifest inspect "$BUILDER_IMAGE" >/dev/null 2>&1; then
+            echo "EXISTS=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "EXISTS=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and Push builder image (Ubuntu)
+        id: push
+        if: github.event_name == 'push' || steps.check-image.outputs.EXISTS == 'false'
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        with:
+          build-args: |
+            ARG_VCPKG_DEFAULT_REGISTRY_BASELINE=${{ steps.vcpkg-configuration.outputs.DEFAULT_REGISTRY_BASELINE }}
+            ARG_UBUNTU_ARCHIVE_HOST=azure.archive.ubuntu.com
+          context: ${{ github.workspace }}
+          file: "Dockerfile.ubuntu-24.04"
+          labels: ${{ steps.meta.outputs.labels }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Extract subject name of builder image
+        id: subject
+        shell: bash
+        env:
+          BUILDER_IMAGE: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+        run: echo "SUBJECT_NAME=${BUILDER_IMAGE%:*}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate artifact attestation for builder image (Ubuntu)
+        if: github.event_name == 'push' || steps.check-image.outputs.EXISTS == 'false'
+        uses: actions/attest@e18a799f23337c367f76b067253d6f53abc6f03d # v4.1.0
+        with:
+          subject-name: ${{ steps.subject.outputs.SUBJECT_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
