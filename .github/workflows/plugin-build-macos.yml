@@ -46,10 +46,10 @@ jobs:
     permissions:
       contents: read
 
-    steps:
-      - name: Env
-        run: env
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app
 
+    steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -64,46 +64,70 @@ jobs:
       - name: Install dependencies from vcpkg (macOS arm64)
         shell: bash
         run: |
-          set -euo pipefail
-          export VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
-          "$VCPKG_INSTALLATION_ROOT/vcpkg" install \
+          env -i \
+            DEVELOPER_DIR="$DEVELOPER_DIR" \
+            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+            VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT" \
+            "$VCPKG_INSTALLATION_ROOT/vcpkg" \
+            install \
             --x-install-root=./.deps_vendor/vcpkg_installed_arm64 \
             --triplet=arm64-osx-obs
 
       - name: Install dependencies from vcpkg (macOS x64)
         shell: bash
         run: |
-          set -euo pipefail
-          export VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
-          "$VCPKG_INSTALLATION_ROOT/vcpkg" install \
+          env -i \
+            DEVELOPER_DIR="$DEVELOPER_DIR" \
+            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+            VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT" \
+            "$VCPKG_INSTALLATION_ROOT/vcpkg" \
+            install \
             --x-install-root=./.deps_vendor/vcpkg_installed_x64 \
             --triplet=x64-osx-obs
 
       - name: Lipo vcpkg (macOS)
         shell: bash
         run: |
-          ./scripts/lipo_vcpkg_macos.sh \
+          env -i \
+            DEVELOPER_DIR="$DEVELOPER_DIR" \
+            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+            ./scripts/lipo_vcpkg_macos.sh \
             ./.deps_vendor/vcpkg_installed_arm64/arm64-osx-obs \
             ./.deps_vendor/vcpkg_installed_x64/x64-osx-obs \
             ./.deps_vendor/vcpkg_installed/universal-osx-obs
 
       - name: Download dependencies
         shell: bash
-        run: cmake -P ./scripts/download_deps.cmake
+        run: |
+          env -i \
+            DEVELOPER_DIR="$DEVELOPER_DIR" \
+            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+            cmake -P ./scripts/download_deps.cmake
 
       - name: Build libobs (macOS universal)
         shell: bash
-        run: ./scripts/build_libobs_macos.sh
+        run: |
+          env -i \
+            DEVELOPER_DIR="$DEVELOPER_DIR" \
+            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+            ./scripts/build_libobs_macos.sh
 
       - name: Configure (macOS universal)
         shell: bash
-        run: cmake --preset macos-ci
+        run: |
+          env -i \
+            DEVELOPER_DIR="$DEVELOPER_DIR" \
+            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+            cmake --preset macos-ci
 
       - name: Build (macOS universal)
         shell: bash
         run: |
           set -euo pipefail
-          cmake --build --preset macos-ci | tee ./Build.txt | xcbeautify
+          env -i \
+            DEVELOPER_DIR="$DEVELOPER_DIR" \
+            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+            cmake --build --preset macos-ci | tee ./Build.txt | xcbeautify
 
       - name: Set up macOS Signing Certificates
         if: ${{ inputs.codesign-enabled }}
@@ -128,7 +152,10 @@ jobs:
           set -euo pipefail
           shopt -s nullglob
 
-          cmake --install build_macos --config RelWithDebInfo --strip \
+          env -i \
+            DEVELOPER_DIR="$DEVELOPER_DIR" \
+            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
+            cmake --install build_macos --config RelWithDebInfo --strip \
             --prefix ./release/payload/Library/Application\ Support/obs-studio/plugins
 
           PLUGIN_BUNDLE=(./release/payload/Library/Application\ Support/obs-studio/plugins/*.plugin)
