@@ -1,0 +1,86 @@
+# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Build Ubuntu
+
+on:
+  workflow_call:
+    inputs:
+      BUILDER_IMAGE_UBUNTU_X86_64:
+        description: The builder image for Ubuntu x86_64
+        required: true
+        type: string
+      environment:
+        description: The environment name for the build jobs
+        required: true
+        type: string
+      pluginbinary-retention-days:
+        description: Days to retain plugin binary artifacts in GitHub Actions
+        required: true
+        type: number
+      VCPKG_BINARY_SOURCES:
+        description: VCPKG_BINARY_SOURCES environment variable for the build jobs
+        required: false
+        type: string
+        default: ""
+
+env:
+  VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
+
+jobs:
+  build-ubuntu-x86_64:
+    name: Build Plugin for Ubuntu x86_64
+
+    environment: ${{ inputs.environment }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+
+    permissions:
+      contents: read
+      packages: read
+
+    container:
+      image: ${{ inputs.BUILDER_IMAGE_UBUNTU_X86_64 }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+
+      - name: Extract plugin buildspec
+        id: buildspec
+        uses: ./.github/actions/extract-buildspec
+        with:
+          path: ./buildspec.json
+
+      - name: Install dependencies from vcpkg (Ubuntu x86_64)
+        shell: bash
+        run: |
+          VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT" "$VCPKG_INSTALLATION_ROOT/vcpkg" install \
+            --x-install-root=./.deps_vendor/vcpkg_installed \
+            --triplet=x64-linux-obs
+
+      - name: Configure (Ubuntu x86_64)
+        shell: bash
+        run: cmake --preset ubuntu-ci-x86_64
+
+      - name: Build (Ubuntu x86_64)
+        shell: bash
+        run: cmake --build --preset ubuntu-ci-x86_64
+
+      - name: Package (Ubuntu x86_64)
+        shell: bash
+        working-directory: ./build_x86_64
+        run: cpack -G DEB
+
+      - name: Upload Plugin Binary
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: ${{ steps.buildspec.outputs.name }}-pluginbinary-${{ runner.os }}-x86_64-${{ github.run_id }}
+          path: |
+            release/*-x86_64-linux-gnu.deb
+            release/*-x86_64-linux-gnu-dbgsym.ddeb
+          if-no-files-found: error
+          retention-days: ${{ inputs.pluginbinary-retention-days }}

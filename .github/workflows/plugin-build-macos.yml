@@ -1,0 +1,213 @@
+# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: Build macOS
+
+on:
+  workflow_call:
+    inputs:
+      codesign-enabled:
+        description: Whether to enable code signing and notarization steps
+        required: true
+        type: boolean
+      environment:
+        description: The environment name for the build jobs
+        required: true
+        type: string
+      pluginbinary-retention-days:
+        description: Days to retain plugin binary artifacts in GitHub Actions
+        required: true
+        type: number
+      VCPKG_BINARY_SOURCES:
+        description: VCPKG_BINARY_SOURCES environment variable for the build jobs
+        required: false
+        type: string
+        default: ""
+    secrets:
+      MACOS_SIGNING_APPLICATION_IDENTITY:
+        required: false
+      MACOS_SIGNING_CERT:
+        required: false
+      MACOS_SIGNING_CERT_PASSWORD:
+        required: false
+
+env:
+  VCPKG_BINARY_SOURCES: ${{ inputs.VCPKG_BINARY_SOURCES }}
+
+jobs:
+  build-macos-universal:
+    name: Build Plugin for macOS universal
+
+    environment: ${{ inputs.environment }}
+    runs-on: macos-15
+    timeout-minutes: 180
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+
+      - name: Extract plugin buildspec
+        id: buildspec
+        uses: ./.github/actions/extract-buildspec
+        with:
+          path: ./buildspec.json
+
+      - name: Install dependencies from vcpkg (macOS arm64)
+        shell: bash
+        run: |
+          set -euo pipefail
+          export VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
+          "$VCPKG_INSTALLATION_ROOT/vcpkg" install \
+            --x-install-root=./.deps_vendor/vcpkg_installed_arm64 \
+            --triplet=arm64-osx-obs
+
+      - name: Install dependencies from vcpkg (macOS x64)
+        shell: bash
+        run: |
+          set -euo pipefail
+          export VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
+          "$VCPKG_INSTALLATION_ROOT/vcpkg" install \
+            --x-install-root=./.deps_vendor/vcpkg_installed_x64 \
+            --triplet=x64-osx-obs
+
+      - name: Lipo vcpkg (macOS)
+        shell: bash
+        run: |
+          ./scripts/lipo_vcpkg_macos.sh \
+            ./.deps_vendor/vcpkg_installed_arm64/arm64-osx-obs \
+            ./.deps_vendor/vcpkg_installed_x64/x64-osx-obs \
+            ./.deps_vendor/vcpkg_installed/universal-osx-obs
+
+      - name: Download dependencies
+        shell: bash
+        run: cmake -P ./scripts/download_deps.cmake
+
+      - name: Build libobs (macOS universal)
+        shell: bash
+        run: ./scripts/build_libobs_macos.sh
+
+      - name: Configure (macOS universal)
+        shell: bash
+        run: cmake --preset macos-ci
+
+      - name: Build (macOS universal)
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --build --preset macos-ci | tee ./Build.txt | xcbeautify
+
+      - name: Set up macOS Signing Certificates
+        if: ${{ inputs.codesign-enabled }}
+        id: codesign
+        uses: ./.github/actions/setup-macos-codesigning
+        with:
+          MACOS_SIGNING_APPLICATION_IDENTITY: ${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY }}
+          MACOS_SIGNING_CERT: ${{ secrets.MACOS_SIGNING_CERT }}
+          MACOS_SIGNING_CERT_PASSWORD: ${{ secrets.MACOS_SIGNING_CERT_PASSWORD }}
+
+      - name: Package (macOS universal)
+        shell: bash
+        env:
+          CODESIGN_ENABLED: ${{ inputs.codesign-enabled && 'true' || 'false' }}
+          MACOS_SIGNING_APPLICATION_IDENTITY: ${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY }}
+          MACOS_SIGNING_INSTALLER_IDENTITY: ${{ secrets.MACOS_SIGNING_INSTALLER_IDENTITY }}
+          PLUGIN_NAME: ${{ steps.buildspec.outputs.name }}
+          PLUGIN_VERSION: ${{ steps.buildspec.outputs.version }}
+          BUNDLE_ID: ${{ steps.buildspec.outputs.bundleId }}
+          DISPLAY_NAME: ${{ steps.buildspec.outputs.displayName }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          cmake --install build_macos --config RelWithDebInfo --strip \
+            --prefix ./release/payload/Library/Application\ Support/obs-studio/plugins
+
+          PLUGIN_BUNDLE=(./release/payload/Library/Application\ Support/obs-studio/plugins/*.plugin)
+
+          if [[ "${#PLUGIN_BUNDLE[@]}" -ne 1 ]]; then
+            echo "Error: PLUGIN_BUNDLE = ${PLUGIN_BUNDLE[@]}"
+            exit 1
+          fi
+
+          if [[ "$CODESIGN_ENABLED" == true ]]; then
+            codesign --sign "$MACOS_SIGNING_APPLICATION_IDENTITY" --force --deep --options runtime --timestamp "${PLUGIN_BUNDLE[0]}"
+          fi
+
+          pkgbuild --root ./release/payload --identifier "$BUNDLE_ID" --version "$PLUGIN_VERSION" ./release/component.pkg
+
+          {
+            printf '<?xml version="1.0" encoding="utf-8"?>\n'
+            printf '<installer-gui-script minSpecVersion="2">\n'
+            printf '  <title>%s</title>\n' "$DISPLAY_NAME"
+            printf '  <options customize="never" require-scripts="false" hostArchitectures="x86_64,arm64"/>\n'
+            printf '  <domains enable_localSystem="false" enable_currentUserHome="true" enable_anywhere="false"/>\n'
+            printf '  <choices-outline>\n'
+            printf '    <line choice="default"/>\n'
+            printf '  </choices-outline>\n'
+            printf '  <choice id="default" title="%s" visible="false">\n' "$DISPLAY_NAME"
+            printf '    <pkg-ref id="%s"/>\n' "$BUNDLE_ID"
+            printf '  </choice>\n'
+            printf '  <pkg-ref id="%s" version="%s" onConclusion="none" auth="none">component.pkg</pkg-ref>\n' "$BUNDLE_ID" "$PLUGIN_VERSION"
+            printf '</installer-gui-script>\n'
+          } | tee ./release/distribution.xml
+
+          PRODUCTBUILD_ARGS=(
+            --distribution release/distribution.xml
+            --package-path release
+          )
+
+          if [[ "$CODESIGN_ENABLED" == true ]]; then
+            PRODUCTBUILD_ARGS+=(--sign "$MACOS_SIGNING_INSTALLER_IDENTITY")
+          fi
+
+          productbuild "${PRODUCTBUILD_ARGS[@]}" "./release/$PLUGIN_NAME-$PLUGIN_VERSION-macos-universal.pkg"
+
+      - name: Notarize Installer
+        if: ${{ inputs.codesign-enabled }}
+        shell: bash
+        env:
+          MACOS_NOTARIZATION_USERNAME: ${{ secrets.MACOS_NOTARIZATION_USERNAME }}
+          MACOS_NOTARIZATION_PASSWORD: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
+          CODESIGN_TEAM: ${{ steps.codesign.outputs.CODESIGN_TEAM }}
+        run: |
+          set -euo pipefail
+
+          xcrun notarytool submit ./release/*-macos-universal.pkg \
+            --apple-id "$MACOS_NOTARIZATION_USERNAME" \
+            --password "$MACOS_NOTARIZATION_PASSWORD" \
+            --team-id "$CODESIGN_TEAM" \
+            --wait
+
+          xcrun stapler staple ./release/*-macos-universal.pkg
+
+      - name: Archive Plugin dSYM
+        shell: bash
+        working-directory: ${{ github.workspace }}/build_macos/RelWithDebInfo
+        env:
+          PLUGIN_NAME: ${{ steps.buildspec.outputs.name }}
+          PLUGIN_VERSION: ${{ steps.buildspec.outputs.version }}
+        run: tar -cJf "$GITHUB_WORKSPACE/release/$PLUGIN_NAME-$PLUGIN_VERSION-macos-universal.dSYM.tar.xz" "$PLUGIN_NAME.plugin.dSYM"
+
+      - name: Upload Plugin Binary
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: ${{ steps.buildspec.outputs.name }}-pluginbinary-${{ runner.os }}-universal-${{ github.run_id }}
+          path: |
+            release/*-macos-universal.pkg
+            release/*-macos-universal.dSYM.tar.xz
+          if-no-files-found: error
+          retention-days: ${{ inputs.pluginbinary-retention-days }}
+
+      - name: Upload Logs
+        if: always() && runner.debug == '1'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: logs-plugin-${{ runner.os }}-${{ github.run_id }}
+          path: Build.txt
+          if-no-files-found: warn
