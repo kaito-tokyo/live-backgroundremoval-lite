@@ -62,7 +62,7 @@ jobs:
           path: ./buildspec.json
 
       - name: Install dependencies from vcpkg (macOS arm64)
-        shell: bash
+        shell: bash --noprofile --norc -eo pipefail {0}
         run: |
           env -i \
             DEVELOPER_DIR="$DEVELOPER_DIR" \
