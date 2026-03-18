@@ -62,6 +62,9 @@ jobs:
             printf 'export DEVELOPER_DIR="%s"\n' "$DEVELOPER_DIR"
             printf 'export HOME="%s"\n' "$HOME"
             printf 'export PATH="%s"\n' "/usr/bin:/bin:/usr/sbin:/sbin"
+          ) > .bashrc_basic
+          (
+            cat .bashrc_basic
             printf 'export VCPKG_ROOT="%s"\n' "$VCPKG_INSTALLATION_ROOT"
           ) > .bashrc_vcpkg
 
@@ -86,48 +89,28 @@ jobs:
             --triplet=x64-osx-obs
 
       - name: Lipo vcpkg (macOS)
-        shell: bash
+        shell: env -i BASH_ENV=.bashrc_basic bash -euo pipefail {0}
         run: |
-          env -i \
-            DEVELOPER_DIR="$DEVELOPER_DIR" \
-            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
-            ./scripts/lipo_vcpkg_macos.sh \
+          ./scripts/lipo_vcpkg_macos.sh \
             ./.deps_vendor/vcpkg_installed_arm64/arm64-osx-obs \
             ./.deps_vendor/vcpkg_installed_x64/x64-osx-obs \
             ./.deps_vendor/vcpkg_installed/universal-osx-obs
 
       - name: Download dependencies
-        shell: bash
-        run: |
-          env -i \
-            DEVELOPER_DIR="$DEVELOPER_DIR" \
-            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
-            cmake -P ./scripts/download_deps.cmake
+        shell: env -i BASH_ENV=.bashrc_basic bash -euo pipefail {0}
+        run: cmake -P ./scripts/download_deps.cmake
 
       - name: Build libobs (macOS universal)
-        shell: bash
-        run: |
-          env -i \
-            DEVELOPER_DIR="$DEVELOPER_DIR" \
-            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
-            ./scripts/build_libobs_macos.sh
+        shell: env -i BASH_ENV=.bashrc_basic bash -euo pipefail {0}
+        run: ./scripts/build_libobs_macos.sh
 
       - name: Configure (macOS universal)
-        shell: bash
-        run: |
-          env -i \
-            DEVELOPER_DIR="$DEVELOPER_DIR" \
-            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
-            cmake --preset macos-ci
+        shell: env -i BASH_ENV=.bashrc_basic bash -euo pipefail {0}
+        run: cmake --preset macos-ci
 
       - name: Build (macOS universal)
-        shell: bash
-        run: |
-          set -euo pipefail
-          env -i \
-            DEVELOPER_DIR="$DEVELOPER_DIR" \
-            PATH=/usr/bin:/bin:/usr/sbin:/sbin \
-            cmake --build --preset macos-ci | tee ./Build.txt | xcbeautify
+        shell: env -i BASH_ENV=.bashrc_basic bash -euo pipefail {0}
+        run: cmake --build --preset macos-ci | tee ./Build.txt | xcbeautify
 
       - name: Set up macOS Signing Certificates
         if: ${{ inputs.codesign-enabled }}
@@ -139,7 +122,7 @@ jobs:
           MACOS_SIGNING_CERT_PASSWORD: ${{ secrets.MACOS_SIGNING_CERT_PASSWORD }}
 
       - name: Package (macOS universal)
-        shell: bash
+        shell: env -i BASH_ENV=.bashrc_basic bash -euo pipefail {0}
         env:
           CODESIGN_ENABLED: ${{ inputs.codesign-enabled && 'true' || 'false' }}
           MACOS_SIGNING_APPLICATION_IDENTITY: ${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY }}
@@ -149,7 +132,6 @@ jobs:
           BUNDLE_ID: ${{ steps.buildspec.outputs.bundleId }}
           DISPLAY_NAME: ${{ steps.buildspec.outputs.displayName }}
         run: |
-          set -euo pipefail
           shopt -s nullglob
 
           env -i \
@@ -200,14 +182,12 @@ jobs:
 
       - name: Notarize Installer
         if: ${{ inputs.codesign-enabled }}
-        shell: bash
+        shell: env -i BASH_ENV=.bashrc_basic bash -euo pipefail {0}
         env:
           MACOS_NOTARIZATION_USERNAME: ${{ secrets.MACOS_NOTARIZATION_USERNAME }}
           MACOS_NOTARIZATION_PASSWORD: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
           CODESIGN_TEAM: ${{ steps.codesign.outputs.CODESIGN_TEAM }}
         run: |
-          set -euo pipefail
-
           xcrun notarytool submit ./release/*-macos-universal.pkg \
             --apple-id "$MACOS_NOTARIZATION_USERNAME" \
             --password "$MACOS_NOTARIZATION_PASSWORD" \
@@ -217,7 +197,7 @@ jobs:
           xcrun stapler staple ./release/*-macos-universal.pkg
 
       - name: Archive Plugin dSYM
-        shell: bash
+        shell: env -i BASH_ENV=.bashrc_basic bash -euo pipefail {0}
         working-directory: ${{ github.workspace }}/build_macos/RelWithDebInfo
         env:
           PLUGIN_NAME: ${{ steps.buildspec.outputs.name }}
