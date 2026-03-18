@@ -55,6 +55,15 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Export clean env
+        shell: bash
+        run: |
+          (
+            echo DEVELOPER_DIR="$DEVELOPER_DIR"
+            echo PATH=/usr/bin:/bin:/usr/sbin:/sbin
+            echo VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
+          ) | tr '\n' '0' > .env0.vcpkg
+
       - name: Extract plugin buildspec
         id: buildspec
         uses: ./.github/actions/extract-buildspec
@@ -62,24 +71,14 @@ jobs:
           path: ./buildspec.json
 
       - name: Install dependencies from vcpkg (macOS arm64)
-        shell: >-
-          env -i
-          DEVELOPER_DIR="$DEVELOPER_DIR"
-          PATH=/usr/bin:/bin:/usr/sbin:/sbin
-          VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
-          bash --noprofile --norc -eo pipefail {0}
+        shell: < .env0.vcpkg xargs -I{} -0 env -i {} bash --noprofile --norc -eo pipefail {0}
         run: |
           "$VCPKG_ROOT/vcpkg" install \
             --x-install-root=./.deps_vendor/vcpkg_installed_arm64 \
             --triplet=arm64-osx-obs
 
       - name: Install dependencies from vcpkg (macOS x64)
-        shell: >-
-          env -i
-          DEVELOPER_DIR="$DEVELOPER_DIR"
-          PATH=/usr/bin:/bin:/usr/sbin:/sbin
-          VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
-          bash --noprofile --norc -eo pipefail {0}
+        shell: < .env0.vcpkg xargs -I{} -0 env -i {} bash --noprofile --norc -eo pipefail {0}
         run: |
           "$VCPKG_ROOT/vcpkg" install \
             --x-install-root=./.deps_vendor/vcpkg_installed_x64 \
