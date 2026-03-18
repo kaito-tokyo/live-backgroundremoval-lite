@@ -60,6 +60,7 @@ jobs:
         run: |
           (
             printf 'export DEVELOPER_DIR="%s"\n' "$DEVELOPER_DIR"
+            printf 'export HOME="%s"\n' "$HOME"
             printf 'export PATH="%s"\n' "/usr/bin:/bin:/usr/sbin:/sbin"
             printf 'export VCPKG_ROOT="%s"\n' "$VCPKG_INSTALLATION_ROOT"
           ) > .bashrc_vcpkg
