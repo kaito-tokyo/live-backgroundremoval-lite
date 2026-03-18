@@ -59,9 +59,9 @@ jobs:
         shell: bash
         run: |
           (
-            printf 'DEVELOPER_DIR="%s"\n' "$DEVELOPER_DIR"
-            printf 'PATH="%s"\n' "/usr/bin:/bin:/usr/sbin:/sbin"
-            printf 'VCPKG_ROOT="%s"\n' "$VCPKG_INSTALLATION_ROOT"
+            printf 'export DEVELOPER_DIR="%s"\n' "$DEVELOPER_DIR"
+            printf 'export PATH="%s"\n' "/usr/bin:/bin:/usr/sbin:/sbin"
+            printf 'export VCPKG_ROOT="%s"\n' "$VCPKG_INSTALLATION_ROOT"
           ) > .bashrc_vcpkg
 
       - name: Extract plugin buildspec
