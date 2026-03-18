@@ -71,14 +71,14 @@ jobs:
           path: ./buildspec.json
 
       - name: Install dependencies from vcpkg (macOS arm64)
-        shell: env -i bash --rcfile .bashrc_vcpkg -euo pipefail {0}
+        shell: env -i BASH_ENV=.bashrc_vcpkg bash -euo pipefail {0}
         run: |
           "$VCPKG_ROOT/vcpkg" install \
             --x-install-root=./.deps_vendor/vcpkg_installed_arm64 \
             --triplet=arm64-osx-obs
 
       - name: Install dependencies from vcpkg (macOS x64)
-        shell: env -i bash --rcfile .bashrc_vcpkg -euo pipefail {0}
+        shell: env -i BASH_ENV=.bashrc_vcpkg bash -euo pipefail {0}
         run: |
           "$VCPKG_ROOT/vcpkg" install \
             --x-install-root=./.deps_vendor/vcpkg_installed_x64 \
