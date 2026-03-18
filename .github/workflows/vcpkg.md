@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-description: Sync vcpkg-related files with kaito-tokyo/vcpkg-obs-kaito-tokyo. COPILOT_GITHUB_TOKEN needs to be configured.
+description: Vcpkg Update
 
 on:
   schedule: daily
@@ -16,27 +16,51 @@ permissions:
 
 safe-outputs:
   create-pull-request:
-    labels: [dependencies]
+    title-prefix: "[vcpkg] "
+    labels: [dependencies, vcpkg]
     fallback-as-issue: false
+    allowed-files:
+      - "vcpkg-triplets/*.cmake"
+      - "vcpkg-configuration.json"
+
+  push-to-pull-request-branch:
+    target: "*"
+    title-prefix: "[vcpkg] "
+    labels: [dependencies, vcpkg]
+    allowed-files:
+      - "vcpkg-triplets/*.cmake"
+      - "vcpkg-configuration.json"
+
+checkout:
+  fetch: ["*"]
+  fetch-depth: 0
 
 engine:
   id: copilot
   model: gpt-5.4-mini
 ---
 
-# Sync vcpkg-related files with kaito-tokyo/vcpkg-obs-kaito-tokyo
+# Vcpkg Update
 
-## Context
-
+<Context>
 `kaito-tokyo/vcpkg-obs-kaito-tokyo` is the upstream repository for vcpkg binary packages.
+</Context>
 
-## Objective
+<Objective>
+Keep the vcpkg configuration files in sync between this repository and `kaito-tokyo/vcpkg-obs-kaito-tokyo`.
+</Objective>
 
-Keep the following files in sync between this repository and `kaito-tokyo/vcpkg-obs-kaito-tokyo`:
+<TargetVcpkgConfigurationFiles>
+- `vcpkg-triplets/*.cmake`
+- `vcpkg-configuration.json`
+</TargetVcpkgConfigurationFiles>
 
-1. `<PROJECT_ROOT>/vcpkg-triplets/*.cmake`
-2. `<PROJECT_ROOT>/vcpkg-configuration.json`
+<Goal>
+Help maintainers of this repository to keep the vcpkg configuration files up to date by creating or updating a Pull Request when you find changes in the upstream repository.
+</Goal>
 
-# Goal
-
-Create a Pull Request to pull changes from `kaito-tokyo/vcpkg-obs-kaito-tokyo` to this repository when you detect that the corresponding files in the upstream repository are newer than those files in this repository.
+<Constraints>
+- You MUST keep only one open Pull Request at a time for this workflow.
+- Pull Requests created by this workflow use the title prefix `[vcpkg] ` and are labeled with `dependencies` and `vcpkg`.
+- If a matching open Pull Request already exists, you MUST push changes to that Pull Request's branch. Otherwise, you MUST create a new Pull Request.
+</Constraints>
