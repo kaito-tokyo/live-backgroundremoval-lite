@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-description: Vcpkg Update
+description: Dependencies vcpkg
 
 on:
   schedule: daily
@@ -16,8 +16,9 @@ permissions:
 
 safe-outputs:
   create-pull-request:
-    title-prefix: "[vcpkg] "
+    title-prefix: "[dependencies vcpkg] "
     labels: [dependencies, vcpkg]
+    draft: true
     fallback-as-issue: false
     allowed-files:
       - "vcpkg-triplets/*.cmake"
@@ -25,7 +26,7 @@ safe-outputs:
 
   push-to-pull-request-branch:
     target: "*"
-    title-prefix: "[vcpkg] "
+    title-prefix: "[dependencies vcpkg] "
     labels: [dependencies, vcpkg]
     allowed-files:
       - "vcpkg-triplets/*.cmake"
@@ -37,7 +38,7 @@ checkout:
 
 engine:
   id: copilot
-  model: gpt-5.4-mini
+  model: gpt-5-mini
 ---
 
 # Vcpkg Update
@@ -59,8 +60,14 @@ Keep the vcpkg configuration files in sync between this repository and `kaito-to
 Help maintainers of this repository to keep the vcpkg configuration files up to date by creating or updating a Pull Request when you find changes in the upstream repository.
 </Goal>
 
+<PullRequestTemplate>
+{{#runtime-import .github/pull_request_template.md}}
+</PullRequestTemplate>
+
 <Constraints>
 - You MUST keep only one open Pull Request at a time for this workflow.
-- Pull Requests created by this workflow use the title prefix `[vcpkg] ` and are labeled with `dependencies` and `vcpkg`.
+- Pull Requests created by this workflow use the title prefix `[dependencies vcpkg] ` and are labeled with `dependencies` and `vcpkg`.
 - If a matching open Pull Request already exists, you MUST push changes to that Pull Request's branch. Otherwise, you MUST create a new Pull Request.
+- You MUST include the Pull Request template content in the Pull Request description.
+- You MUST NOT change any fields other than `default-registry.baseline` or `registries[].baseline` in `vcpkg-configuration.json`.
 </Constraints>
