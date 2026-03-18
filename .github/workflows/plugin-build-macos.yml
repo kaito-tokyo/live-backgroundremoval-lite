@@ -55,14 +55,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Export clean env
+      - name: Export rcfiles for clean env
         shell: bash
         run: |
           (
-            echo DEVELOPER_DIR="$DEVELOPER_DIR"
-            echo PATH=/usr/bin:/bin:/usr/sbin:/sbin
-            echo VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
-          ) | tr '\n' '0' > .env0.vcpkg
+            printf 'DEVELOPER_DIR="%s"\n' "$DEVELOPER_DIR"
+            printf 'PATH="%s"\n' "/usr/bin:/bin:/usr/sbin:/sbin"
+            printf 'VCPKG_ROOT="%s"\n' "$VCPKG_INSTALLATION_ROOT"
+          ) > .bashrc_vcpkg
 
       - name: Extract plugin buildspec
         id: buildspec
@@ -71,14 +71,14 @@ jobs:
           path: ./buildspec.json
 
       - name: Install dependencies from vcpkg (macOS arm64)
-        shell: < .env0.vcpkg xargs -I{} -0 env -i {} bash --noprofile --norc -eo pipefail {0}
+        shell: env -i bash --rcfile .bashrc_vcpkg -euo pipefail {0}
         run: |
           "$VCPKG_ROOT/vcpkg" install \
             --x-install-root=./.deps_vendor/vcpkg_installed_arm64 \
             --triplet=arm64-osx-obs
 
       - name: Install dependencies from vcpkg (macOS x64)
-        shell: < .env0.vcpkg xargs -I{} -0 env -i {} bash --noprofile --norc -eo pipefail {0}
+        shell: env -i bash --rcfile .bashrc_vcpkg -euo pipefail {0}
         run: |
           "$VCPKG_ROOT/vcpkg" install \
             --x-install-root=./.deps_vendor/vcpkg_installed_x64 \
