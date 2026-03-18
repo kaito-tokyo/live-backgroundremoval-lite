@@ -39,4 +39,4 @@ Keep the following files in sync between this repository and `kaito-tokyo/vcpkg-
 
 # Goal
 
-Create a Pull Request to pull changes from `kaito-tokyo/vcpkg-obs-kaito-tokyo` to this repository when you detect these files in the upstream are newer than those in this repository.
+Create a Pull Request to pull changes from `kaito-tokyo/vcpkg-obs-kaito-tokyo` to this repository when you detect that the corresponding files in the upstream repository are newer than those files in this repository.
