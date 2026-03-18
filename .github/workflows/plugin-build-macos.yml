@@ -62,14 +62,24 @@ jobs:
           path: ./buildspec.json
 
       - name: Install dependencies from vcpkg (macOS arm64)
-        shell: env -i DEVELOPER_DIR="$DEVELOPER_DIR" PATH=/usr/bin:/bin:/usr/sbin:/sbin VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT" bash --noprofile --norc -eo pipefail {0}
+        shell: >-
+          env -i
+          DEVELOPER_DIR="$DEVELOPER_DIR"
+          PATH=/usr/bin:/bin:/usr/sbin:/sbin
+          VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
+          bash --noprofile --norc -eo pipefail {0}
         run: |
           "$VCPKG_ROOT/vcpkg" install \
             --x-install-root=./.deps_vendor/vcpkg_installed_arm64 \
             --triplet=arm64-osx-obs
 
       - name: Install dependencies from vcpkg (macOS x64)
-        shell: env -i DEVELOPER_DIR="$DEVELOPER_DIR" PATH=/usr/bin:/bin:/usr/sbin:/sbin VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT" bash --noprofile --norc -eo pipefail {0}
+        shell: >-
+          env -i
+          DEVELOPER_DIR="$DEVELOPER_DIR"
+          PATH=/usr/bin:/bin:/usr/sbin:/sbin
+          VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT"
+          bash --noprofile --norc -eo pipefail {0}
         run: |
           "$VCPKG_ROOT/vcpkg" install \
             --x-install-root=./.deps_vendor/vcpkg_installed_x64 \
