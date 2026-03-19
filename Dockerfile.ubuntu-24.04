@@ -37,13 +37,13 @@ RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/obs
     && rm -rf /var/lib/apt/lists/* \
     && useradd -u 1001 runner && mkdir -p -m 0700 /home/runner && chown -R runner:runner /home/runner
 
-ENV VCPKG_INSTALLATION_ROOT=/home/runner/vcpkg
+ENV VCPKG_ROOT=/home/runner/vcpkg
 ARG ARG_VCPKG_DEFAULT_REGISTRY_BASELINE=master
 
 USER runner
-RUN git clone --filter=blob:none --no-checkout https://github.com/microsoft/vcpkg.git "$VCPKG_INSTALLATION_ROOT" && \
-    cd "$VCPKG_INSTALLATION_ROOT" && \
+RUN git clone --filter=blob:none --no-checkout https://github.com/microsoft/vcpkg.git "$VCPKG_ROOT" && \
+    cd "$VCPKG_ROOT" && \
     git checkout "$ARG_VCPKG_DEFAULT_REGISTRY_BASELINE" && \
-    "$VCPKG_INSTALLATION_ROOT/bootstrap-vcpkg.sh" -disableMetrics
+    "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
 
 WORKDIR /home/runner/workspace

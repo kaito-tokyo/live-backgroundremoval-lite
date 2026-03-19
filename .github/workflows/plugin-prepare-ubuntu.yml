@@ -45,7 +45,7 @@ jobs:
 
       - name: Image info
         id: image-info
-        shell: bash
+        shell: bash --noprofile --norc -euo pipefail {0}
         env:
           BUILDER_DOCKERFILE_HASH: ${{ hashFiles(env.BUILDER_DOCKERFILE) }}
         run: |
@@ -73,11 +73,10 @@ jobs:
 
       - name: Check if builder image already exists
         id: check-image
-        shell: bash
+        shell: bash --noprofile --norc -euo pipefail {0}
         env:
           BUILDER_IMAGE: ${{ fromJSON(steps.meta.outputs.json).tags[0]}}
         run: |
-          set -euo pipefail
           if docker manifest inspect "$BUILDER_IMAGE" >/dev/null 2>&1; then
             echo "EXISTS=true" >> "$GITHUB_OUTPUT"
           else
@@ -100,7 +99,7 @@ jobs:
 
       - name: Extract subject name of builder image
         id: subject
-        shell: bash
+        shell: bash --noprofile --norc -euo pipefail {0}
         env:
           BUILDER_IMAGE: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
         run: echo "SUBJECT_NAME=${BUILDER_IMAGE%:*}" >> "$GITHUB_OUTPUT"

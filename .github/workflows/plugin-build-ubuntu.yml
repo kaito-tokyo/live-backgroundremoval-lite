@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       environment:
-        description: The environment name for the build jobs
+        description: The environment name for the build jobs, or empty string for no environment
         required: true
         type: string
       pluginbinary-retention-days:
@@ -24,9 +24,6 @@ on:
         required: false
         type: string
         default: ""
-
-env:
-  VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
 
 jobs:
   build-ubuntu-x86_64:
@@ -43,36 +40,56 @@ jobs:
     container:
       image: ${{ inputs.BUILDER_IMAGE_UBUNTU_X86_64 }}
 
+    env:
+      CLEAN_BASH_ENV: ${{ github.workspace }}/.github/scripts/clean-env-ubuntu.bash
+      CREDENTIAL_GIT_CONFIG_PARAMETERS: "'url.https://x-access-token:${{ github.token }}@github.com/.insteadOf=https://github.com/'"
+      MINIMAL_PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+      VCPKG_BINARY_SOURCES: ${{ inputs.VCPKG_BINARY_SOURCES }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: false
           submodules: recursive
 
       - name: Extract plugin buildspec
         id: buildspec
         uses: ./.github/actions/extract-buildspec
         with:
-          path: ./buildspec.json
+          path: buildspec.json
 
       - name: Install dependencies from vcpkg (Ubuntu x86_64)
-        shell: bash
-        run: |
-          VCPKG_ROOT="$VCPKG_INSTALLATION_ROOT" "$VCPKG_INSTALLATION_ROOT/vcpkg" install \
-            --x-install-root=./.deps_vendor/vcpkg_installed \
-            --triplet=x64-linux-obs
+        shell: bash --noprofile --norc -euo pipefail {0}
+        env:
+          BASH_ENV: ${{ env.CLEAN_BASH_ENV }}
+          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
+          PATH: ${{ env.MINIMAL_PATH }}
+        run: '"$VCPKG_ROOT/vcpkg" install --x-install-root=./.deps_vendor/vcpkg_installed --triplet=x64-linux-obs'
 
       - name: Configure (Ubuntu x86_64)
-        shell: bash
+        shell: bash --noprofile --norc -euo pipefail {0}
+        env:
+          BASH_ENV: ${{ env.CLEAN_BASH_ENV }}
+          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
+          PATH: ${{ env.MINIMAL_PATH }}
         run: cmake --preset ubuntu-ci-x86_64
 
       - name: Build (Ubuntu x86_64)
-        shell: bash
+        shell: bash --noprofile --norc -euo pipefail {0}
+        env:
+          BASH_ENV: ${{ env.CLEAN_BASH_ENV }}
+          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
+          PATH: ${{ env.MINIMAL_PATH }}
         run: cmake --build --preset ubuntu-ci-x86_64
 
       - name: Package (Ubuntu x86_64)
-        shell: bash
-        working-directory: ./build_x86_64
+        shell: bash --noprofile --norc -euo pipefail {0}
+        env:
+          BASH_ENV: ${{ env.CLEAN_BASH_ENV }}
+          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
+          PATH: ${{ env.MINIMAL_PATH }}
+        working-directory: build_x86_64
         run: cpack -G DEB
 
       - name: Upload Plugin Binary

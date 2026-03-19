@@ -21,7 +21,7 @@ jobs:
       contents: read
     uses: ./.github/workflows/plugin-build-windows.yml
     with:
-      environment: ${{ github.event_name == 'push' && 'production-windows' || 'development' }}
+      environment: ${{ github.event_name == 'push' && 'production-windows' || '' }}
       pluginbinary-retention-days: 7
       VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
 
@@ -31,7 +31,7 @@ jobs:
     uses: ./.github/workflows/plugin-build-macos.yml
     with:
       codesign-enabled: ${{ github.event_name == 'push' }}
-      environment: ${{ github.event_name == 'push' && 'production-macos' || 'development' }}
+      environment: ${{ github.event_name == 'push' && 'production-macos' || '' }}
       pluginbinary-retention-days: 7
       VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
     secrets: inherit
@@ -53,7 +53,7 @@ jobs:
     uses: ./.github/workflows/plugin-build-ubuntu.yml
     with:
       BUILDER_IMAGE_UBUNTU_X86_64: ${{ needs.prepare-ubuntu.outputs.BUILDER_IMAGE_UBUNTU_X86_64 }}
-      environment: ${{ github.event_name == 'push' && 'production-ubuntu' || 'development' }}
+      environment: ${{ github.event_name == 'push' && 'production-ubuntu' || '' }}
       pluginbinary-retention-days: 7
       VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
 
