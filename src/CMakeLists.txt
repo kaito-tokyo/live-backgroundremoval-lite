@@ -5,6 +5,7 @@
 add_subdirectory(Async)
 add_subdirectory(Logger)
 add_subdirectory(Memory)
+add_subdirectory(SimpleJsonReader)
 
 add_subdirectory(CurlHelper)
 add_subdirectory(TaskQueue)

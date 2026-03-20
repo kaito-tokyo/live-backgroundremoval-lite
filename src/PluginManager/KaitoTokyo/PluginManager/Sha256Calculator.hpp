@@ -8,6 +8,7 @@
 #include <span>
 #include <vector>
 
+#include <wolfssl/options.h>
 #include <wolfssl/wolfcrypt/sha256.h>
 
 namespace KaitoTokyo::PluginManager {

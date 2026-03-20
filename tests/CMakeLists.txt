@@ -14,6 +14,10 @@ SelfieSegmenter/NcnnSelfieSegmenter_test.cpp
 target_link_libraries(NcnnSelfieSegmenter_test PRIVATE GTest::gtest_main SelfieSegmenter stb::stb)
 list(APPEND TEST_LIST NcnnSelfieSegmenter_test)
 
+add_executable(SimpleJsonReader_test SimpleJsonReader/SimpleJsonReader_test.cpp)
+target_link_libraries(SimpleJsonReader_test PRIVATE GTest::gtest_main SimpleJsonReader)
+list(APPEND TEST_LIST SimpleJsonReader_test)
+
 foreach(TEST_NAME IN LISTS TEST_LIST)
   set_target_properties(
     ${TEST_NAME}
