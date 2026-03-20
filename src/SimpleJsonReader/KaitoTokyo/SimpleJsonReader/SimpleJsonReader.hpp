@@ -56,7 +56,7 @@ namespace Detail {
 
 using namespace std::string_view_literals;
 
-SimpleJsonReaderError parseValue(std::string_view *json, SimpleJsonReaderHandler handler, std::vector<std::string_view> *jsonPath);
+SimpleJsonReaderError parseValue(std::string_view *json, SimpleJsonReaderHandler handler, std::vector<SimpleJsonReaderJsonPath> *jsonPath);
 
 void skipWhitespaces(std::string_view *json) noexcept
 {
@@ -70,7 +70,6 @@ SimpleJsonReaderError parseArray(std::string_view *json, SimpleJsonReaderHandler
 
 	json->remove_prefix(1);
 	handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::StartArray, "["sv, *jsonPath});
-	jsonPath->push_back(index);
 
 	while (true) {
 		skipWhitespaces(json);
@@ -84,8 +83,9 @@ SimpleJsonReaderError parseArray(std::string_view *json, SimpleJsonReaderHandler
 			return SimpleJsonReaderError::OK;
 		}
 
+		jsonPath->push_back(index);
 		SimpleJsonReaderError err = parseValue(json, handler, jsonPath);
-		std::get<std::size_t>(jsonPath->back()) = index;
+		jsonPath->pop_back();
 		if (err != SimpleJsonReaderError::OK)
 			return err;
 
@@ -99,7 +99,6 @@ SimpleJsonReaderError parseArray(std::string_view *json, SimpleJsonReaderHandler
 			json->remove_prefix(1);
 			continue;
 		case ']':
-			jsonPath->pop_back();
 			json->remove_prefix(1);
 			handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::EndArray, "]"sv, *jsonPath});
 			return SimpleJsonReaderError::OK;
@@ -219,7 +218,6 @@ SimpleJsonReaderError parseObject(std::string_view *json, SimpleJsonReaderHandle
 			json->remove_prefix(1);
 			continue;
 		case '}':
-			jsonPath->pop_back();
 			json->remove_prefix(1);
 			handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::EndObject, "}"sv, *jsonPath});
 			return SimpleJsonReaderError::OK;
