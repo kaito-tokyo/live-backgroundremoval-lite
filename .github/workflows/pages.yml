@@ -110,7 +110,7 @@ jobs:
       - name: Copy attestation bundle
         env:
           BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
-        shell: bash
+        shell: bash --noprofile --norc -euo pipefail {0}
         run: cp "$BUNDLE_PATH" dist/provenance.attestation.json
 
       - name: Upload artifact
