@@ -5,12 +5,15 @@
 #pragma once
 
 #include <functional>
+#include <optional>
 #include <string_view>
 #include <string>
+#include <variant>
+#include <vector>
 
 namespace KaitoTokyo::SimpleJsonReader {
 
-enum class SimpleJsonReaderEvent {
+enum class SimpleJsonReaderEventType {
 	StartObject,
 	EndObject,
 	StartArray,
@@ -21,6 +24,14 @@ enum class SimpleJsonReaderEvent {
 	True,
 	False,
 	Null
+};
+
+using SimpleJsonReaderJsonPath = std::variant<std::string_view, std::size_t>;
+
+struct SimpleJsonReaderEvent {
+	SimpleJsonReaderEventType type;
+	std::string_view value;
+	const std::vector<SimpleJsonReaderJsonPath> &jsonPath;
 };
 
 enum class SimpleJsonReaderError {
@@ -39,24 +50,27 @@ enum class SimpleJsonReaderError {
 	InvalidTokenLikelyLiteralError,
 };
 
-using SimpleJsonReaderHandler = std::function<void(SimpleJsonReaderEvent, std::string_view)>;
+using SimpleJsonReaderHandler = std::function<void(SimpleJsonReaderEvent)>;
 
 namespace Detail {
 
 using namespace std::string_view_literals;
 
-SimpleJsonReaderError parseValue(std::string_view *json, SimpleJsonReaderHandler handler);
+SimpleJsonReaderError parseValue(std::string_view *json, SimpleJsonReaderHandler handler, std::vector<std::string_view> *jsonPath);
 
-void skipWhitespaces(std::string_view *json)
+void skipWhitespaces(std::string_view *json) noexcept
 {
 	std::size_t first = json->find_first_not_of(" \t\n\r"sv);
 	json->remove_prefix((first == std::string_view::npos) ? json->size() : first);
 }
 
-SimpleJsonReaderError parseArray(std::string_view *json, SimpleJsonReaderHandler handler)
+SimpleJsonReaderError parseArray(std::string_view *json, SimpleJsonReaderHandler handler, std::vector<SimpleJsonReaderJsonPath> *jsonPath)
 {
+	std::size_t index = 0;
+
 	json->remove_prefix(1);
-	handler(SimpleJsonReaderEvent::StartArray, "["sv);
+	handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::StartArray, "["sv, *jsonPath});
+	jsonPath->push_back(index);
 
 	while (true) {
 		skipWhitespaces(json);
@@ -64,12 +78,15 @@ SimpleJsonReaderError parseArray(std::string_view *json, SimpleJsonReaderHandler
 			return SimpleJsonReaderError::UnexpectedEndWhileParsingArrayError;
 
 		if (json->front() == ']') {
+			jsonPath->pop_back();
 			json->remove_prefix(1);
-			handler(SimpleJsonReaderEvent::EndArray, "]"sv);
+			handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::EndArray, "]"sv, *jsonPath});
 			return SimpleJsonReaderError::OK;
 		}
 
-		if (SimpleJsonReaderError err = parseValue(json, handler); err != SimpleJsonReaderError::OK)
+		SimpleJsonReaderError err = parseValue(json, handler, jsonPath);
+		std::get<std::size_t>(jsonPath->back()) = index;
+		if (err != SimpleJsonReaderError::OK)
 			return err;
 
 		skipWhitespaces(json);
@@ -78,11 +95,13 @@ SimpleJsonReaderError parseArray(std::string_view *json, SimpleJsonReaderHandler
 
 		switch (json->front()) {
 		case ',':
+			index += 1;
 			json->remove_prefix(1);
 			continue;
 		case ']':
+			jsonPath->pop_back();
 			json->remove_prefix(1);
-			handler(SimpleJsonReaderEvent::EndArray, "]"sv);
+			handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::EndArray, "]"sv, *jsonPath});
 			return SimpleJsonReaderError::OK;
 		default:
 			return SimpleJsonReaderError::InvalidTokenWhileParsingArrayError;
@@ -90,35 +109,49 @@ SimpleJsonReaderError parseArray(std::string_view *json, SimpleJsonReaderHandler
 	}
 }
 
-template <bool isKey = false>
-SimpleJsonReaderError parseString(std::string_view *json, SimpleJsonReaderHandler handler)
+SimpleJsonReaderError parseString(std::string_view *json, SimpleJsonReaderHandler handler, const std::vector<SimpleJsonReaderJsonPath> &jsonPath)
 {
 	std::size_t pos = json->find('\x01', 1); // Sanitized structural '"'
 	if (pos == std::string_view::npos) {
 		return SimpleJsonReaderError::UnexpectedEndWhileParsingStringError;
 	} else {
-		handler(isKey ? SimpleJsonReaderEvent::Key : SimpleJsonReaderEvent::String, json->substr(1, pos - 1));
+		handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::String, json->substr(1, pos - 1), jsonPath});
 		json->remove_prefix(pos + 1);
 		return SimpleJsonReaderError::OK;
 	}
 }
 
-SimpleJsonReaderError parseNumber(std::string_view *json, SimpleJsonReaderHandler handler)
+
+SimpleJsonReaderError parseKey(std::string_view *json, SimpleJsonReaderHandler handler, std::vector<SimpleJsonReaderJsonPath> *jsonPath)
+{
+	std::size_t pos = json->find('\x01', 1); // Sanitized structural '"'
+	if (pos == std::string_view::npos) {
+		return SimpleJsonReaderError::UnexpectedEndWhileParsingStringError;
+	} else {
+		std::string_view key = json->substr(1, pos - 1);
+		jsonPath->push_back(key);
+		handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::Key, key, *jsonPath});
+		json->remove_prefix(pos + 1);
+		return SimpleJsonReaderError::OK;
+	}
+}
+
+SimpleJsonReaderError parseNumber(std::string_view *json, SimpleJsonReaderHandler handler, const std::vector<SimpleJsonReaderJsonPath> &jsonPath)
 {
 	std::size_t end = json->find_first_of(",]} \t\n\r"sv);
 	std::size_t length = (end == std::string_view::npos) ? json->size() : end;
-	handler(SimpleJsonReaderEvent::Number, json->substr(0, length));
+	handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::Number, json->substr(0, length), jsonPath});
 	json->remove_prefix(length);
 	return SimpleJsonReaderError::OK;
 }
 
-SimpleJsonReaderError parseLiteral(std::string_view *json, SimpleJsonReaderHandler handler) noexcept
+SimpleJsonReaderError parseLiteral(std::string_view *json, SimpleJsonReaderHandler handler, const std::vector<SimpleJsonReaderJsonPath> &jsonPath)
 {
 	switch (json->front()) {
 	case 't':
 		if (json->starts_with("true"sv)) {
 			json->remove_prefix(4);
-			handler(SimpleJsonReaderEvent::True, "true"sv);
+			handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::True, "true"sv, jsonPath});
 			return SimpleJsonReaderError::OK;
 		} else {
 			return SimpleJsonReaderError::InvalidTokenLikelyTrueError;
@@ -126,7 +159,7 @@ SimpleJsonReaderError parseLiteral(std::string_view *json, SimpleJsonReaderHandl
 	case 'f':
 		if (json->starts_with("false"sv)) {
 			json->remove_prefix(5);
-			handler(SimpleJsonReaderEvent::False, "false"sv);
+			handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::False, "false"sv, jsonPath});
 			return SimpleJsonReaderError::OK;
 		} else {
 			return SimpleJsonReaderError::InvalidTokenLikelyFalseError;
@@ -134,7 +167,7 @@ SimpleJsonReaderError parseLiteral(std::string_view *json, SimpleJsonReaderHandl
 	case 'n':
 		if (json->starts_with("null"sv)) {
 			json->remove_prefix(4);
-			handler(SimpleJsonReaderEvent::Null, "null"sv);
+			handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::Null, "null"sv, jsonPath});
 			return SimpleJsonReaderError::OK;
 		} else {
 			return SimpleJsonReaderError::InvalidTokenLikelyNullError;
@@ -144,10 +177,10 @@ SimpleJsonReaderError parseLiteral(std::string_view *json, SimpleJsonReaderHandl
 	}
 }
 
-SimpleJsonReaderError parseObject(std::string_view *json, SimpleJsonReaderHandler handler)
+SimpleJsonReaderError parseObject(std::string_view *json, SimpleJsonReaderHandler handler, std::vector<SimpleJsonReaderJsonPath> *jsonPath)
 {
 	json->remove_prefix(1);
-	handler(SimpleJsonReaderEvent::StartObject, "{"sv);
+	handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::StartObject, "{"sv, *jsonPath});
 
 	while (true) {
 		skipWhitespaces(json);
@@ -156,11 +189,11 @@ SimpleJsonReaderError parseObject(std::string_view *json, SimpleJsonReaderHandle
 
 		if (json->front() == '}') {
 			json->remove_prefix(1);
-			handler(SimpleJsonReaderEvent::EndObject, "}"sv);
+			handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::EndObject, "}"sv, *jsonPath});
 			return SimpleJsonReaderError::OK;
 		}
 
-		if (SimpleJsonReaderError err = parseString<true>(json, handler); err != SimpleJsonReaderError::OK)
+		if (SimpleJsonReaderError err = parseKey(json, handler, jsonPath); err != SimpleJsonReaderError::OK)
 			return err;
 
 		skipWhitespaces(json);
@@ -171,20 +204,24 @@ SimpleJsonReaderError parseObject(std::string_view *json, SimpleJsonReaderHandle
 			return SimpleJsonReaderError::FieldDelimiterMissingError;
 		json->remove_prefix(1);
 
-		if (SimpleJsonReaderError err = parseValue(json, handler); err != SimpleJsonReaderError::OK)
+		SimpleJsonReaderError err = parseValue(json, handler, jsonPath);
+		jsonPath->pop_back();
+		if (err != SimpleJsonReaderError::OK)
 			return err;
 
 		skipWhitespaces(json);
-		if (json->empty())
+		if (json->empty()) {
 			return SimpleJsonReaderError::UnexpectedEndWhileParsingObjectError;
+		}
 
 		switch (json->front()) {
 		case ',':
 			json->remove_prefix(1);
 			continue;
 		case '}':
+			jsonPath->pop_back();
 			json->remove_prefix(1);
-			handler(SimpleJsonReaderEvent::EndObject, "}"sv);
+			handler(SimpleJsonReaderEvent{SimpleJsonReaderEventType::EndObject, "}"sv, *jsonPath});
 			return SimpleJsonReaderError::OK;
 		default:
 			return SimpleJsonReaderError::InvalidTokenWhileParsingObjectError;
@@ -192,7 +229,7 @@ SimpleJsonReaderError parseObject(std::string_view *json, SimpleJsonReaderHandle
 	}
 }
 
-SimpleJsonReaderError parseValue(std::string_view *json, SimpleJsonReaderHandler handler)
+SimpleJsonReaderError parseValue(std::string_view *json, SimpleJsonReaderHandler handler, std::vector<SimpleJsonReaderJsonPath> *jsonPath)
 {
 	skipWhitespaces(json);
 
@@ -201,15 +238,15 @@ SimpleJsonReaderError parseValue(std::string_view *json, SimpleJsonReaderHandler
 
 	switch (json->front()) {
 	case '{':
-		return parseObject(json, handler);
+		return parseObject(json, handler, jsonPath);
 	case '[':
-		return parseArray(json, handler);
+		return parseArray(json, handler, jsonPath);
 	case '\x01': // Sanitized structural '"'
-		return parseString(json, handler);
+		return parseString(json, handler, *jsonPath);
 	case 't':
 	case 'f':
 	case 'n':
-		return parseLiteral(json, handler);
+		return parseLiteral(json, handler, *jsonPath);
 	case '0':
 	case '1':
 	case '2':
@@ -221,7 +258,7 @@ SimpleJsonReaderError parseValue(std::string_view *json, SimpleJsonReaderHandler
 	case '8':
 	case '9':
 	case '-':
-		return parseNumber(json, handler);
+		return parseNumber(json, handler, *jsonPath);
 	default:
 		return SimpleJsonReaderError::InvalidTokenWhileParsingValueError;
 	}
@@ -229,7 +266,7 @@ SimpleJsonReaderError parseValue(std::string_view *json, SimpleJsonReaderHandler
 
 } // namespace Detail
 
-void parseJson(std::string jsonString, SimpleJsonReaderHandler handler)
+SimpleJsonReaderError parseJson(std::string jsonString, SimpleJsonReaderHandler handler)
 {
 	std::size_t pos = 0;
 	bool inString = false;
@@ -259,7 +296,8 @@ void parseJson(std::string jsonString, SimpleJsonReaderHandler handler)
 	}
 
 	std::string_view json(jsonString);
-	Detail::parseValue(&json, handler);
+	std::vector<SimpleJsonReaderJsonPath> jsonPath;
+	return Detail::parseValue(&json, handler, &jsonPath);
 }
 
 } // namespace KaitoTokyo::SimpleJsonReader
