@@ -75,9 +75,9 @@ jobs:
         id: check-image
         shell: bash --noprofile --norc -euo pipefail {0}
         env:
-          BUILDER_IMAGE: ${{ fromJSON(steps.meta.outputs.json).tags[0]}}
+          BUILDER_IMAGE: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
         run: |
-          if docker manifest inspect "$BUILDER_IMAGE" >/dev/null 2>&1; then
+          if docker manifest inspect "$BUILDER_IMAGE" > /dev/null; then
             echo "EXISTS=true" >> "$GITHUB_OUTPUT"
           else
             echo "EXISTS=false" >> "$GITHUB_OUTPUT"
