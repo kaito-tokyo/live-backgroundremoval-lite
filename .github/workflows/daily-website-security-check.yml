@@ -17,7 +17,7 @@ jobs:
   security-check:
     name: Run Security Check
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     timeout-minutes: 10
 
     permissions:
@@ -27,23 +27,23 @@ jobs:
 
     steps:
       - name: Run Security Check
-        shell: bash
+        shell: bash --noprofile --norc -euo pipefail {0}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          set -euo pipefail
+          PRODUCTION_BASE_URL="https://$GITHUB_REPOSITORY_OWNER.github.io/${GITHUB_REPOSITORY#*/}"
 
           curl --retry 3 -fsS \
-            -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.json" \
-            -O "https://kaito-tokyo.github.io/live-backgroundremoval-lite/provenance.attestation.jsonl"
+            -O "$PRODUCTION_BASE_URL/provenance.json" \
+            -O "$PRODUCTION_BASE_URL/provenance.attestation.jsonl"
 
           GH_FORCE_TTY="100%" gh attestation verify provenance.json \
-            --repo kaito-tokyo/live-backgroundremoval-lite \
+            --repo "$GITHUB_REPOSITORY" \
             --bundle provenance.attestation.jsonl
 
           rm -rf site
           mkdir -p site
-          jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
+          jq -r --arg base "$PRODUCTION_BASE_URL" '
             .subject[] |
             .name as $url |
             ($url | sub($base; "")) as $path |
@@ -52,7 +52,7 @@ jobs:
             "create-dirs"
           ' provenance.json | curl --retry 3 -fsS -K -
 
-          jq -r --arg base "https://kaito-tokyo.github.io/live-backgroundremoval-lite/" '
+          jq -r --arg base "$PRODUCTION_BASE_URL" '
             .subject[] |
             (.name | sub($base; "")) as $path |
             "\(.digest.sha384)  site/\($path)"

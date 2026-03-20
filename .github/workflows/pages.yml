@@ -48,12 +48,12 @@ jobs:
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
 
       - name: Install dependencies
-        shell: bash
+        shell: bash --noprofile --norc -euo pipefail {0}
         working-directory: ${{ env.BUILD_PATH }}
         run: npm ci
 
       - name: Build with Astro
-        shell: bash
+        shell: bash --noprofile --norc -euo pipefail {0}
         working-directory: ${{ env.BUILD_PATH }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,7 +61,6 @@ jobs:
           BASE: ${{ steps.pages.outputs.base_path }}
           PRODUCTION_BASE_URL: ${{ steps.pages.outputs.base_url }}
         run: |
-          set -euo pipefail
           npx astro build --site "$SITE" --base "$BASE"
           node scripts/add-sri.mjs "$PRODUCTION_BASE_URL" dist
           node scripts/add-csp-hashes.mjs dist

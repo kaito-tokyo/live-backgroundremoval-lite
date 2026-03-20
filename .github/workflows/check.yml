@@ -15,73 +15,17 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  HOMEBREW_NO_ANALYTICS: "1"
+  HOMEBREW_NO_AUTO_UPDATE: "1"
+  HOMEBREW_NO_ENV_HINTS: "1"
+  HOMEBREW_NO_INSTALL_CLEANUP: "1"
+
 jobs:
   check-clang-format:
     name: Check clang-format
 
     runs-on: ubuntu-24.04
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Install clang-format with Linuxbrew
-        shell: bash
-        env:
-          HOMEBREW_NO_ANALYTICS: "1"
-          HOMEBREW_NO_AUTO_UPDATE: "1"
-          HOMEBREW_NO_ENV_HINTS: "1"
-          HOMEBREW_NO_INSTALL_CLEANUP: "1"
-        run: |
-          set -euo pipefail
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install obsproject/tools/clang-format@19
-          echo "$(brew --prefix obsproject/tools/clang-format@19)/bin" >> "$GITHUB_PATH"
-
-      - name: Check with clang-format
-        shell: bash
-        run: |
-          set -euo pipefail
-          git ls-files '*.c' '*.cpp' '*.h' '*.hpp' ':!vendor' | xargs --no-run-if-empty clang-format-19 --dry-run --Werror
-
-  check-gersemi:
-    name: Check gersemi
-
-    runs-on: ubuntu-24.04
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Install gersemi with Linuxbrew
-        shell: bash
-        env:
-          HOMEBREW_NO_ANALYTICS: "1"
-          HOMEBREW_NO_AUTO_UPDATE: "1"
-          HOMEBREW_NO_ENV_HINTS: "1"
-          HOMEBREW_NO_INSTALL_CLEANUP: "1"
-        run: |
-          set -euo pipefail
-          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-          brew install obsproject/tools/gersemi
-          echo "$(brew --prefix obsproject/tools/gersemi)/bin" >> "$GITHUB_PATH"
-
-      - name: Check with gersemi
-        shell: bash
-        run: |
-          set -euo pipefail
-          git ls-files CMakeLists.txt "*.cmake" ':!vendor' | xargs --no-run-if-empty gersemi --check
-
-  check-reuse:
-    name: Check reuse
-
-    runs-on: ubuntu-slim
     timeout-minutes: 10
 
     permissions:
@@ -93,12 +37,67 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python for REUSE
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version-file: ${{ github.workspace }}/.python-version
-          pip-install: reuse
+      - name: Install clang-format with Linuxbrew
+        shell: bash --noprofile --norc -euo pipefail {0}
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install obsproject/tools/clang-format@19
+          echo "$(brew --prefix obsproject/tools/clang-format@19)/bin" >> "$GITHUB_PATH"
 
-      - name: Lint with REUSE
-        shell: bash
+      - name: Check with clang-format
+        shell: bash --noprofile --norc -euo pipefail {0}
+        run: |
+          git ls-files '*.c' '*.cpp' '*.h' '*.hpp' ':!vendor' | xargs --no-run-if-empty clang-format-19 --dry-run --Werror
+
+  check-gersemi:
+    name: Check gersemi
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install gersemi with Linuxbrew
+        shell: bash --noprofile --norc -euo pipefail {0}
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install obsproject/tools/gersemi
+          echo "$(brew --prefix obsproject/tools/gersemi)/bin" >> "$GITHUB_PATH"
+
+      - name: Check with gersemi
+        shell: bash --noprofile --norc -euo pipefail {0}
+        run: |
+          git ls-files CMakeLists.txt "*.cmake" ':!vendor' | xargs --no-run-if-empty gersemi --check
+
+  check-reuse:
+    name: Check reuse
+
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Install reuse with Linuxbrew
+        shell: bash --noprofile --norc -euo pipefail {0}
+        run: |
+          eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          brew install reuse
+          echo "$(brew --prefix reuse)/bin" >> "$GITHUB_PATH"
+
+      - name: Lint with reuse
+        shell: bash --noprofile --norc -euo pipefail {0}
         run: reuse lint
