@@ -129,6 +129,21 @@ find_package(libobs REQUIRED)
 find_package(obs-frontend-api REQUIRED)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Core)
 
+## wolfSSL
+find_package(wolfssl CONFIG QUIET)
+
+if(NOT wolfssl_FOUND AND PkgConfig_FOUND)
+  pkg_check_modules(PC_WOLFSSL wolfssl IMPORTED_TARGET)
+  if(PC_WOLFSSL_FOUND)
+    add_library(wolfssl::wolfssl ALIAS PkgConfig::PC_WOLFSSL)
+    set(wolfssl_FOUND TRUE)
+  endif()
+endif()
+
+if(NOT wolfssl_FOUND)
+  message(FATAL_ERROR "wolfSSL not found via CMake or pkg-config.")
+endif()
+
 ## CURL
 find_package(CURL CONFIG QUIET)
 

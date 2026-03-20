@@ -18,6 +18,7 @@
       "platform": "(uwp | !windows) & !mingw"
     },
     "fmt",
-    "ncnn"
+    "ncnn",
+    "wolfssl"
   ]
 }

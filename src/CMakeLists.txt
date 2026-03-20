@@ -12,4 +12,6 @@ add_subdirectory(ObsBridgeUtils)
 
 add_subdirectory(SelfieSegmenter)
 
+add_subdirectory(PluginManager)
+
 add_subdirectory(LiveBackgroundRemovalLite)
