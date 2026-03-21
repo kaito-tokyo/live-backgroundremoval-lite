@@ -14,7 +14,7 @@ import Logo from "../../public/favicon.svg";
 import {
   useTranslations,
   isValidLang,
-  i18nLangs,
+  i18nLangsWithoutGlobal,
   type Lang,
 } from "../lib/i18n.js";
 import i18nDic from "../lib/i18n-dic.json";
@@ -51,11 +51,11 @@ const isDefaultLang = rawLang === "x-default";
 const t = useTranslations(lang);
 
 const localizedPageLinkUrls = Object.fromEntries(
-  i18nLangs.map((lang) => [lang, withTrailingSlash(joinURL(baseUrl, lang))]),
+  i18nLangsWithoutGlobal.map((lang) => [lang, withTrailingSlash(joinURL(baseUrl, lang))]),
 );
 
 const localizedPageLinkTexts = Object.fromEntries(
-  i18nLangs.map((lang) => [lang, i18nDic[lang].goToLocalizedVersion]),
+  i18nLangsWithoutGlobal.map((lang) => [lang, i18nDic[lang].goToLocalizedVersion]),
 );
 
 const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
@@ -133,7 +133,7 @@ const structuredData = {
       href={withTrailingSlash(PRODUCTION_BASE_URL)}
     />
     {
-      i18nLangs.map((l) => (
+      i18nLangsWithoutGlobal.map((l) => (
         <link
           rel="alternate"
           hreflang={l}
@@ -159,25 +159,27 @@ const structuredData = {
       <span>{t("home.title")}</span>
     </h1>
 
-    <div class="localized-button" lang="en">
-      {
-        isDefaultLang ? (
-          <localized-with-map data-map={JSON.stringify(localizedPageLinkUrls)}>
-            <a href={joinURL(baseUrl, "en")}>
-              <localized-with-map
-                data-map={JSON.stringify(localizedPageLinkTexts)}
-              >
-                <span>{i18nDic.en.goToLocalizedVersion}</span>
-              </localized-with-map>
+    <localized-with-map>
+      <div class="localized-button">
+        {
+          isDefaultLang ? (
+            <localized-with-map data-map={JSON.stringify(localizedPageLinkUrls)}>
+              <a href={joinURL(baseUrl)}>
+                <localized-with-map
+                  data-map={JSON.stringify(localizedPageLinkTexts)}
+                >
+                  <span>{i18nDic.en.goToLocalizedVersion}</span>
+                </localized-with-map>
+              </a>
+            </localized-with-map>
+          ) : (
+            <a href={joinURL(baseUrl)}>
+              <span lang="en">🌐 Go to the global version of this page</span>
             </a>
-          </localized-with-map>
-        ) : (
-          <a href={joinURL(baseUrl)}>
-            <span>🌐 Go to the global version of this page</span>
-          </a>
-        )
-      }
-    </div>
+          )
+        }
+      </div>
+    </localized-with-map>
 
     <section id="about">
       <h2>{t("home.about.title")}</h2>
@@ -407,7 +409,7 @@ const structuredData = {
                 </a>
               </li>
             ),
-            ...i18nLangs.map((linkLang) =>
+            ...i18nLangsWithoutGlobal.map((linkLang) =>
               linkLang === rawLang ? (
                 // prettier-ignore
                 <li><span lang={linkLang}>{i18nDic[linkLang].langText}</span></li>
@@ -452,6 +454,10 @@ const structuredData = {
         text-decoration: none;
         box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
         font-weight: bold;
+      }
+
+      &[lang="en"] {
+        display: none;
       }
     }
 

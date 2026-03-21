@@ -4,10 +4,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import HomePage from "../../components/HomePage.astro";
-import { i18nLangs } from "../../lib/i18n.js";
+import { i18nLangsWithoutGlobal } from "../../lib/i18n.js";
 
 export async function getStaticPaths() {
-  return i18nLangs.map((lang) => ({ params: { lang } }));
+  return i18nLangsWithoutGlobal.map((lang) => ({ params: { lang } }));
 }
 
 const { lang } = Astro.params;
