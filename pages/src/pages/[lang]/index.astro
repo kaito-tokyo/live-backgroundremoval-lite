@@ -7,7 +7,9 @@ import HomePage from "../../components/HomePage.astro";
 import { i18nLangs } from "../../lib/i18n.js";
 
 export async function getStaticPaths() {
-  return i18nLangs.map((lang) => ({ params: { lang } }));
+  return i18nLangs.flatMap((lang) =>
+    lang === "en" ? [] : [{ params: { lang } }],
+  );
 }
 
 const { lang } = Astro.params;
