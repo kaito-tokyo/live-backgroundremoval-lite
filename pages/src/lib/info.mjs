@@ -8,6 +8,15 @@ export const GITHUB_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`;
 export const PRODUCTION_BASE_URL =
   "https://kaito-tokyo.github.io/live-backgroundremoval-lite";
 
+/**
+ * @param {string} version
+ * @return {boolean}
+ */
+export function isManifestEnabled(version) {
+  const [major] = version.split(".");
+  return Number(major) >= 4;
+}
+
 export async function getAggregateRating() {
   return {
     "@type": "AggregateRating",

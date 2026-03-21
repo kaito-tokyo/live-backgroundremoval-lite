@@ -4,7 +4,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { joinURL, withTrailingSlash } from "ufo";
-import { Octokit } from "@octokit/rest";
+import { Octokit } from "@octokit/core";
+import type { Endpoints } from "@octokit/types";
+import { composePaginateRest } from "@octokit/plugin-paginate-rest";
 import prettyBytes from "pretty-bytes";
 import type { GetStaticPathsOptions, GetStaticPathsResult } from "astro";
 
@@ -13,7 +15,7 @@ import {
   GITHUB_REPO,
   GITHUB_URL,
   PRODUCTION_BASE_URL,
-} from "../../lib/info.js";
+} from "../../lib/info.mjs";
 import DefineFileVerifierDropArea from "../../components/DefineFileVerifierDropArea.astro";
 import DefineLocalDate from "../../components/DefineLocalDate.astro";
 import Layout from "../../layouts/Layout.astro";
@@ -22,12 +24,8 @@ import type { FileVerifierReleaseAsset } from "../../components/FileVerifierResu
 import GitHubMarkWhite from "../../../public/github-mark-white.svg";
 
 interface Props {
-  release: Awaited<
-    ReturnType<Octokit["rest"]["repos"]["getReleaseByTag"]>
-  >["data"];
-  latestRelease: Awaited<
-    ReturnType<Octokit["rest"]["repos"]["getLatestRelease"]>
-  >["data"];
+  release: Endpoints["GET /repos/{owner}/{repo}/releases/tags/{tag}"]["response"]["data"];
+  latestRelease: Endpoints["GET /repos/{owner}/{repo}/releases/latest"]["response"]["data"];
 }
 
 export async function getStaticPaths(
@@ -35,20 +33,44 @@ export async function getStaticPaths(
 ): Promise<GetStaticPathsResult> {
   const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
 
-  const allReleases = await octokit.paginate(octokit.rest.repos.listReleases, {
-    owner: GITHUB_OWNER,
-    repo: GITHUB_REPO,
-    per_page: 100,
-  });
+  const iterator = composePaginateRest.iterator(
+    octokit,
+    "GET /repos/{owner}/{repo}/releases",
+    {
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      headers: {
+        "X-GitHub-Api-Version": "2026-03-10",
+        Accept: "application/vnd.github+json",
+      },
+    } as any,
+  );
 
-  const latestRelease = await octokit.rest.repos.getLatestRelease({
-    owner: GITHUB_OWNER,
-    repo: GITHUB_REPO,
-  });
+  const allReleases: Endpoints["GET /repos/{owner}/{repo}/releases"]["response"]["data"] =
+    [];
+  for await (const { data } of iterator) {
+    if (!data || !Array.isArray(data)) {
+      throw new Error("Failed to fetch releases data.");
+    }
+
+    allReleases.push(...data);
+  }
+
+  const { data: latestRelease } = await octokit.request(
+    "GET /repos/{owner}/{repo}/releases/latest",
+    {
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+      headers: {
+        "X-GitHub-Api-Version": "2026-03-10",
+        Accept: "application/vnd.github+json",
+      },
+    },
+  );
 
   return allReleases.map((release) => ({
     params: { version: release.tag_name },
-    props: { release, latestRelease: latestRelease.data },
+    props: { release, latestRelease: latestRelease },
   }));
 }
 

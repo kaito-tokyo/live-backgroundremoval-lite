@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { joinURL, withTrailingSlash } from "ufo";
-import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
+import { Octokit } from "@octokit/core";
 
 import Layout from "../layouts/Layout.astro";
 
@@ -13,33 +13,27 @@ import {
   GITHUB_REPO,
   GITHUB_URL,
   PRODUCTION_BASE_URL,
-} from "../lib/info.js";
-
-export type LatestRelease =
-  RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
+} from "../lib/info.mjs";
 
 const { BASE_URL } = import.meta.env;
 
-async function getLatestRelease(): Promise<LatestRelease> {
-  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
+const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
 
-  const latestRelease = await octokit.rest.repos.getLatestRelease({
+const { data: latestRelease } = await octokit.request(
+  "GET /repos/{owner}/{repo}/releases/latest",
+  {
     owner: GITHUB_OWNER,
     repo: GITHUB_REPO,
-  });
+  },
+);
 
-  return latestRelease.data;
-}
-
-const release = await getLatestRelease();
-
-const windowsZipAsset = release.assets.find((a) =>
+const windowsZipAsset = latestRelease.assets.find((a) =>
   a.name.endsWith("windows-x64.zip"),
 );
-const macosPkgAsset = release.assets.find((a) =>
+const macosPkgAsset = latestRelease.assets.find((a) =>
   a.name.endsWith("macos-universal.pkg"),
 );
-const ubuntuDebAsset = release.assets.find((a) =>
+const ubuntuDebAsset = latestRelease.assets.find((a) =>
   a.name.endsWith("x86_64-linux-gnu.deb"),
 );
 ---

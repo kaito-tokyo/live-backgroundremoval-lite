@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { joinURL, withTrailingSlash } from "ufo";
-import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
+import { Octokit } from "@octokit/core";
 
 import DefineLocalDate from "./DefineLocalDate.astro";
 import DefineLocalizedWithMap from "./DefineLocalizedWithMap.astro";
@@ -25,7 +25,7 @@ import {
   GITHUB_URL,
   PRODUCTION_BASE_URL,
   getAggregateRating,
-} from "../lib/info.js";
+} from "../lib/info.mjs";
 
 import { dependencies } from "../../../buildspec.json";
 
@@ -33,9 +33,6 @@ interface Props {
   lang: Lang | "x-default";
   baseUrl: string;
 }
-
-export type LatestRelease =
-  RestEndpointMethodTypes["repos"]["getLatestRelease"]["response"]["data"];
 
 const { lang: rawLang, baseUrl } = Astro.props;
 
@@ -61,26 +58,23 @@ const localizedPageLinkTexts = Object.fromEntries(
   i18nLangs.map((lang) => [lang, i18nDic[lang].goToLocalizedVersion]),
 );
 
-async function getLatestRelease(): Promise<LatestRelease> {
-  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
+const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
 
-  const latestRelease = await octokit.rest.repos.getLatestRelease({
+const { data: latestRelease } = await octokit.request(
+  "GET /repos/{owner}/{repo}/releases/latest",
+  {
     owner: GITHUB_OWNER,
     repo: GITHUB_REPO,
-  });
+  },
+);
 
-  return latestRelease.data;
-}
-
-const release = await getLatestRelease();
-
-const windowsZipAsset = release.assets.find((a) =>
+const windowsZipAsset = latestRelease.assets.find((a) =>
   a.name.endsWith("windows-x64.zip"),
 );
-const macosPkgAsset = release.assets.find((a) =>
+const macosPkgAsset = latestRelease.assets.find((a) =>
   a.name.endsWith("macos-universal.pkg"),
 );
-const ubuntuDebAsset = release.assets.find((a) =>
+const ubuntuDebAsset = latestRelease.assets.find((a) =>
   a.name.endsWith("x86_64-linux-gnu.deb"),
 );
 
@@ -118,7 +112,7 @@ const structuredData = {
   ],
   screenshot:
     "https://kaito-tokyo.github.io/live-backgroundremoval-lite/demo.gif",
-  softwareVersion: release.tag_name,
+  softwareVersion: latestRelease.tag_name,
 };
 ---
 
@@ -194,13 +188,13 @@ const structuredData = {
 
     <section id="latest-downloads">
       <h2>
-        {t("home.downloads.title", { version: release.tag_name })}
+        {t("home.downloads.title", { version: latestRelease.tag_name })}
         {
           [
             "(",
-            <local-date data-date={release.published_at}>
-              <time datetime={release.published_at}>
-                {release.published_at}
+            <local-date data-date={latestRelease.published_at}>
+              <time datetime={latestRelease.published_at}>
+                {latestRelease.published_at}
               </time>
             </local-date>,
             ")",
