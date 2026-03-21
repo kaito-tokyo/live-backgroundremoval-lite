@@ -59,7 +59,7 @@ class LocalizedWithMapElement extends HTMLElement {
     else if (child instanceof HTMLSpanElement)
       child.textContent = map[matchedLocale];
     else if (child instanceof HTMLDivElement)
-      child.classList.add(`${matchedLocale}`);
+      child.lang = matchedLocale;
   }
 
   connectedCallback() {

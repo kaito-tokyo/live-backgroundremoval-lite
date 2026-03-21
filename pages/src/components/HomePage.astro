@@ -14,7 +14,7 @@ import Logo from "../../public/favicon.svg";
 import {
   useTranslations,
   isValidLang,
-  i18nLangs,
+  i18nLangsWithoutGlobal,
   type Lang,
 } from "../lib/i18n.js";
 import i18nDic from "../lib/i18n-dic.json";
@@ -51,11 +51,11 @@ const isDefaultLang = rawLang === "x-default";
 const t = useTranslations(lang);
 
 const localizedPageLinkUrls = Object.fromEntries(
-  i18nLangs.map((lang) => [lang, withTrailingSlash(joinURL(baseUrl, lang))]),
+  i18nLangsWithoutGlobal.map((lang) => [lang, withTrailingSlash(joinURL(baseUrl, lang))]),
 );
 
 const localizedPageLinkTexts = Object.fromEntries(
-  i18nLangs.map((lang) => [lang, i18nDic[lang].goToLocalizedVersion]),
+  i18nLangsWithoutGlobal.map((lang) => [lang, i18nDic[lang].goToLocalizedVersion]),
 );
 
 const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
@@ -133,7 +133,7 @@ const structuredData = {
       href={withTrailingSlash(PRODUCTION_BASE_URL)}
     />
     {
-      i18nLangs.map((l) => (
+      i18nLangsWithoutGlobal.map((l) => (
         <link
           rel="alternate"
           hreflang={l}
@@ -174,7 +174,7 @@ const structuredData = {
             </localized-with-map>
           ) : (
             <a href={joinURL(baseUrl)}>
-              <span>🌐 Go to the global version of this page</span>
+              <span lang="en">🌐 Go to the global version of this page</span>
             </a>
           )
         }
@@ -409,7 +409,7 @@ const structuredData = {
                 </a>
               </li>
             ),
-            ...i18nLangs.filter((linkLang) => linkLang !== "en").map((linkLang) =>
+            ...i18nLangsWithoutGlobal.map((linkLang) =>
               linkLang === rawLang ? (
                 // prettier-ignore
                 <li><span lang={linkLang}>{i18nDic[linkLang].langText}</span></li>
@@ -456,7 +456,7 @@ const structuredData = {
         font-weight: bold;
       }
 
-      &.en {
+      &[lang="en"] {
         display: none;
       }
     }
