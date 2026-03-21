@@ -29,7 +29,7 @@ if [[ -z "${1:-}" ]]; then
   exit 1
 fi
 
-HEAD_BRANCH="bump/$BUILDSPEC_VERSION"
+HEAD_BRANCH="$1"
 
 GH_PR_CREATE_ARGS=(
   --assignee umireon

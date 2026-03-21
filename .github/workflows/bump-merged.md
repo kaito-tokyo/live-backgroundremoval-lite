@@ -1,4 +1,8 @@
 ---
+# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: Apache-2.0
+
 on:
   pull_request:
     types: [closed]
@@ -11,7 +15,7 @@ safe-outputs:
     assignees: [umireon]
     expires: false
 
-if: github.event_name == 'pull_request' && github.base_ref == 'refs/heads/main' && github.event.pull_request.merged && startsWith(github.head_ref, 'bump/')
+if: github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.merged && startsWith(github.head_ref, 'bump/')
 ---
 
 # On Bump PR Merged

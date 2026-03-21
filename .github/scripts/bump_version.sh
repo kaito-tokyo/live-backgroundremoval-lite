@@ -20,7 +20,7 @@ echo "Version in pages/package.json: $(jq -r '.version' pages/package.json)"
 
 if [[ -z "${1:-}" ]]; then
   echo "INFO: No new version provided. Exiting."
-  exit 1
+  exit 0
 fi
 
 NEW_VERSION="$1"

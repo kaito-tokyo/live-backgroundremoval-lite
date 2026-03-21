@@ -16,11 +16,3 @@ You SHOULD NOT read the excluded files listed in the following `ExcludedGenerate
 - `src/LiveBackgroundRemoval/MainFilter/mediapipe_selfie_segmentation_landscape_int8_ncnn_param.cpp`
 - `src/resources/*.qm`
 </ExcludedGeneratedFiles>
-
-## Instructions to bump version numbers
-
-<FilesToBeBumped>
-- `buildspec.json`
-- `data/metadata.json`
-- `pages/package.json`
-</FilesToBeBumped>
