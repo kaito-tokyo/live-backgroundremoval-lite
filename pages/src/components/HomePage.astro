@@ -159,25 +159,27 @@ const structuredData = {
       <span>{t("home.title")}</span>
     </h1>
 
-    <div class="localized-button" lang="en">
-      {
-        isDefaultLang ? (
-          <localized-with-map data-map={JSON.stringify(localizedPageLinkUrls)}>
-            <a href={joinURL(baseUrl, "en")}>
-              <localized-with-map
-                data-map={JSON.stringify(localizedPageLinkTexts)}
-              >
-                <span>{i18nDic.en.goToLocalizedVersion}</span>
-              </localized-with-map>
+    <localized-with-map>
+      <div class="localized-button">
+        {
+          isDefaultLang ? (
+            <localized-with-map data-map={JSON.stringify(localizedPageLinkUrls)}>
+              <a href={joinURL(baseUrl)}>
+                <localized-with-map
+                  data-map={JSON.stringify(localizedPageLinkTexts)}
+                >
+                  <span>{i18nDic.en.goToLocalizedVersion}</span>
+                </localized-with-map>
+              </a>
+            </localized-with-map>
+          ) : (
+            <a href={joinURL(baseUrl)}>
+              <span>🌐 Go to the global version of this page</span>
             </a>
-          </localized-with-map>
-        ) : (
-          <a href={joinURL(baseUrl)}>
-            <span>🌐 Go to the global version of this page</span>
-          </a>
-        )
-      }
-    </div>
+          )
+        }
+      </div>
+    </localized-with-map>
 
     <section id="about">
       <h2>{t("home.about.title")}</h2>
@@ -407,7 +409,7 @@ const structuredData = {
                 </a>
               </li>
             ),
-            ...i18nLangs.map((linkLang) =>
+            ...i18nLangs.filter((linkLang) => linkLang !== "en").map((linkLang) =>
               linkLang === rawLang ? (
                 // prettier-ignore
                 <li><span lang={linkLang}>{i18nDic[linkLang].langText}</span></li>
@@ -452,6 +454,10 @@ const structuredData = {
         text-decoration: none;
         box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
         font-weight: bold;
+      }
+
+      &.en {
+        display: none;
       }
     }
 

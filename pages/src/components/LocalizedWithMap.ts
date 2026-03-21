@@ -48,7 +48,7 @@ class LocalizedWithMapElement extends HTMLElement {
   }
 
   handleSlotChange(e: Event) {
-    this.m = JSON.parse(this.dataset.map!);
+    this.m = JSON.parse(this.dataset.map ?? "{}");
 
     const slot = this.s;
     const map = this.m;
@@ -58,6 +58,8 @@ class LocalizedWithMapElement extends HTMLElement {
     if (child instanceof HTMLAnchorElement) child.href = map[matchedLocale];
     else if (child instanceof HTMLSpanElement)
       child.textContent = map[matchedLocale];
+    else if (child instanceof HTMLDivElement)
+      child.classList.add(`${matchedLocale}`);
   }
 
   connectedCallback() {
