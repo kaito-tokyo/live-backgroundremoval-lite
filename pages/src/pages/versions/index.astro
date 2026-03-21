@@ -4,37 +4,46 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { joinURL, withTrailingSlash } from "ufo";
-import { Octokit, type RestEndpointMethodTypes } from "@octokit/rest";
+import { Octokit } from "@octokit/core";
+import { composePaginateRest } from "@octokit/plugin-paginate-rest";
+import type { Endpoints } from "@octokit/types";
 
 import {
   GITHUB_OWNER,
   GITHUB_REPO,
   GITHUB_URL,
   PRODUCTION_BASE_URL,
-} from "../../lib/info.js";
+} from "../../lib/info.mjs";
 import DefineLocalDate from "../../components/DefineLocalDate.astro";
 import Layout from "../../layouts/Layout.astro";
 
-export type Releases =
-  RestEndpointMethodTypes["repos"]["listReleases"]["response"]["data"];
-
 const { BASE_URL } = import.meta.env;
 
-async function listReleases(): Promise<Releases> {
-  const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
+const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
 
-  const allReleases = await octokit.paginate(octokit.rest.repos.listReleases, {
+const iterator = composePaginateRest.iterator(
+  octokit,
+  "GET /repos/{owner}/{repo}/releases",
+  {
     owner: GITHUB_OWNER,
     repo: GITHUB_REPO,
-    per_page: 100,
-  });
+    headers: {
+      "X-GitHub-Api-Version": "2026-03-10",
+    },
+  } as any,
+);
 
-  return allReleases;
+const allReleases: Endpoints["GET /repos/{owner}/{repo}/releases"]["response"]["data"] =
+  [];
+for await (const { data } of iterator) {
+  if (!data || !Array.isArray(data)) {
+    throw new Error("Failed to fetch releases data.");
+  }
+
+  allReleases.push(...data);
 }
 
-const releases = (await listReleases()).filter(
-  (r) => !r.draft && r.published_at,
-);
+const releases = allReleases.filter((r) => !r.draft && r.published_at);
 
 if (releases.length === 0) {
   throw new Error("No releases found.");
