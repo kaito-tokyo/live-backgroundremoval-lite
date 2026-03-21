@@ -35,11 +35,11 @@ jobs:
 
           curl --retry 3 -fsS \
             -O "$PRODUCTION_BASE_URL/provenance.json" \
-            -O "$PRODUCTION_BASE_URL/provenance.attestation.jsonl"
+            -O "$PRODUCTION_BASE_URL/provenance.attestation.json"
 
           GH_FORCE_TTY="100%" gh attestation verify provenance.json \
             --repo "$GITHUB_REPOSITORY" \
-            --bundle provenance.attestation.jsonl
+            --bundle provenance.attestation.json
 
           rm -rf site
           mkdir -p site
