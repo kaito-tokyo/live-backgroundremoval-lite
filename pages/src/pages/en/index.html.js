@@ -4,6 +4,8 @@
 
 /// <reference types="astro/client" />
 
+// Generating a redirect stub since we use GitHub Pages which doesn't support redirecting responses.
+
 import { withTrailingSlash } from "ufo";
 
 import { PRODUCTION_BASE_URL } from "../../lib/info.mjs";

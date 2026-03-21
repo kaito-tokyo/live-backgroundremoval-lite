@@ -55,9 +55,9 @@ class LocalizedWithMapElement extends HTMLElement {
     const nodes = slot.assignedElements();
     const child = nodes[0];
     const matchedLocale = this.resolveLocale(navigator.languages);
-    if (child instanceof HTMLAnchorElement) child.href = map[matchedLocale];
+    if (child instanceof HTMLAnchorElement) child.href = map[matchedLocale] ?? "#";
     else if (child instanceof HTMLSpanElement)
-      child.textContent = map[matchedLocale];
+      child.textContent = map[matchedLocale] ?? "";
     else if (child instanceof HTMLDivElement)
       child.lang = matchedLocale;
   }
