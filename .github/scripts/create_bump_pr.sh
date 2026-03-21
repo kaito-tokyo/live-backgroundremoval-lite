@@ -33,8 +33,7 @@ HEAD_BRANCH="$1"
 
 GH_PR_CREATE_ARGS=(
   --assignee umireon
-  --branch "$HEAD_BRANCH"
-  --template .github/pull_request_template.md
+  --head "$HEAD_BRANCH"
   --title "[release bump] Bump version to $BUILDSPEC_VERSION"
   --web
 )
