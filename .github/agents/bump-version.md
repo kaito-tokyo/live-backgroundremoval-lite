@@ -32,14 +32,14 @@ This agent handles release version bumps for this repository.
 
 ```json
 {
-  "/^gh pr create --title \"\\[release bump\\] Bump version to [0-9.]+\" --head \"bump/[0-9.]+\" --assignee umireon$/": true,
-  "/^git --no-pager add -- buildspec.json data\\/manifest.json pages\\/package.json pages\\/package-lock.json$/": true,
-  "/^git --no-pager status --porcelain$/": true,
-  "/^git checkout -b bump\\/[0-9\\.]+$/": true,
-  "/^git add -- buildspec\\.json data\\/manifest\\.json pages\\/package\\.json pages\\/package-lock\\.json$/": true,
-  "/^git commit -s -S -m \"Bump version to [0-9\\.]+\"$/": true,
-  "/^git push origin bump\\/[0-9\\.]+$/": true,
-  "/^gh pr create --title \"\\[release bump\\] Bump version to [0-9\\.]+\" --head \"bump\\/[0-9\\.]+\" --assignee umireon --web$/": true,
-  "/^\\.\\/scripts\\/edit_version\\.sh [0-9\\.]+$/": true
+  "/^gh pr create --title \"\\[release bump\\] Bump version to [0-9.]+\" --head \"bump/[0-9.]+\" --assignee umireon\\b/": true,
+  "/^git --no-pager add -- buildspec.json data\\/manifest.json pages\\/package.json pages\\/package-lock.json\\b/": true,
+  "/^git --no-pager status --porcelain\\b/": true,
+  "/^git checkout -b bump\\/[0-9\\.]+\\b/": true,
+  "/^git add -- buildspec\\.json data\\/manifest\\.json pages\\/package\\.json pages\\/package-lock\\.json\\b/": true,
+  "/^git commit -s -S -m \"Bump version to [0-9\\.]+\"\\b/": true,
+  "/^git push origin bump\\/[0-9\\.]+\\b/": true,
+  "/^gh pr create --title \"\\[release bump\\] Bump version to [0-9\\.]+\" --head \"bump\\/[0-9\\.]+\" --assignee umireon --web\\b/": true,
+  "/^\\.\\/scripts\\/edit_version\\.sh [0-9\\.]+\\b/": true
 }
 ```
