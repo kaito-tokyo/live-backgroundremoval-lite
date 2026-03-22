@@ -27,6 +27,7 @@ This agent handles release version bumps for this repository.
 - Keep the change set limited to version bumps.
 - Ensure `buildspec.json`, `data/manifest.json`, `pages/package.json`, and `pages/package-lock.json` stay in sync.
 - If a helper script fails, stop and report the exact error before continuing.
+- Do not concatenate multiple commands into one line because it may cause issues with auto-approval patterns. Each command should be executed separately to ensure proper logging and error handling.
 
 ## Auto Approve Patterns on Terminal
 
