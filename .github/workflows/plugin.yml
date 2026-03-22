@@ -65,6 +65,6 @@ jobs:
       attestations: write
       contents: write
       issues: write
-    uses: ./.github/workflows/plugin-create-release.yml
+    uses: ./.github/workflows/plugin-release.yml
     with:
       environment: production-release
