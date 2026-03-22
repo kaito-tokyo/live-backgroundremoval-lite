@@ -67,14 +67,3 @@ jobs:
     uses: ./.github/workflows/plugin-create-release.yml
     with:
       environment: production-release
-
-
-  post-create-release:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    needs: create-release
-    permissions:
-      contents: write
-      issues: write
-    uses: ./.github/workflows/plugin-post-create-release.lock.yml
-    with:
-      ref: ${{ github.ref }}

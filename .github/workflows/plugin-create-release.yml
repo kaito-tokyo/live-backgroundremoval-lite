@@ -56,7 +56,7 @@ jobs:
         with:
           subject-path: ${{ steps.secure-dir.outputs.artifacts }}/*
 
-      - name: Create Draft Release
+      - name: Upload assets to Draft release
         shell: bash --noprofile --norc -euo pipefail {0}
         env:
           BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
@@ -65,16 +65,78 @@ jobs:
         run: |
           shopt -s nullglob
 
-          TAG_NAME=${GITHUB_REF#refs/tags/}
+          GH_RELEASE_UPLOAD_ASSETS=(--clobber)
 
-          GH_RELEASE_CREATE_ARGS=(
-            --draft
-            --generate-notes
-            --title "$TAG_NAME"
+          for f in *; do
+            case "$f" in
+              *-windows-x64.zip) GH_RELEASE_UPLOAD_ASSETS+=("$f#ZIP Binary for Windows (x64)") ;;
+              *-windows-x64-pdb.zip) GH_RELEASE_UPLOAD_ASSETS+=("$f") ;;
+              *-macos-universal.pkg) GH_RELEASE_UPLOAD_ASSETS+=("$f#PKG Binary for macOS (Universal)") ;;
+              *-macos-universal.dSYM.tar.xz) GH_RELEASE_UPLOAD_ASSETS+=("$f") ;;
+              *-x86_64-linux-gnu.deb) GH_RELEASE_UPLOAD_ASSETS+=("$f#DEB Binary for Ubuntu (x86_64)") ;;
+              *-x86_64-linux-gnu-dbgsym.ddeb) GH_RELEASE_UPLOAD_ASSETS+=("$f") ;;
+            esac
+          done
+
+          gh release create "${GITHUB_REF#refs/tags/}" --clobber "${GH_RELEASE_UPLOAD_ASSETS[@]}"
+
+      - name: Create Issue to track New release
+        shell: bash --noprofile --norc -euo pipefail {0}
+        run: |
+          GH_ISSUE_CREATE_ARGS=(
+            --title "Release ${GITHUB_REF#refs/tags/}"
+            --body-file -
+            --assignee @umireon
+            --label todo
           )
 
-          if [[ "$TAG_NAME" =~ .*-.* ]]; then
-            GH_RELEASE_CREATE_ARGS+=(--prerelease)
-          fi
-
-          gh release create "$TAG_NAME" ./* "$BUNDLE_PATH" "${GH_RELEASE_CREATE_ARGS[@]}"
+          {
+            echo "## Release ${GITHUB_REF#refs/tags/}"
+            echo
+            echo "GitHub Releases: https://github.com/$GITHUB_REPOSITORY/releases"
+            echo
+            echo "### Instructions to complete this release"
+            echo
+            echo "1. [ ] Compose the release note on GitHub Releases."
+            echo "2. [ ] Publish the release ${GITHUB_REF#refs/tags/}."
+            echo "3. [ ] Mannually trigger the [Pages CI](https://github.com/$GITHUB_REPOSITORY/actions/workflows/pages.yml)."
+            echo "4. [ ] Post an update on the [OBS Forum's Resource page](https://obsproject.com/forum/resources/live-background-removal-lite.2226/)."
+            echo
+            echo "### Content for OBS Forum's Resource page update"
+            echo
+            echo "**New version number:***"
+            echo '```'
+            echo "${GITHUB_REF#refs/tags/}"
+            echo '```'
+            echo
+            echo "**External download URL:**"
+            echo '```'
+            echo "https://$GITHUB_REPOSITORY_OWNER.github.io/${GITHUB_REPOSITORY##*/}/versions/${GITHUB_REF#refs/tags/}"
+            echo '```'
+            echo
+            echo "**Suggested update title:**"
+            echo '```'
+            echo "${GITHUB_REF#refs/tags/}"
+            echo '```'
+            echo
+            echo "**Update message:**"
+            echo '```'
+            echo "(Include only the first line of the release note on GitHub Release is recommended.)"
+            echo
+            echo "GitHub Pages version: https://$GITHUB_REPOSITORY_OWNER.github.io/${GITHUB_REPOSITORY##*/}/versions/${GITHUB_REF#refs/tags/}"
+            echo "GitHub Release version: https://$GITHUB_REPOSITORY_OWNER.github.io/${GITHUB_REPOSITORY##*/}/releases/tag/${GITHUB_REF#refs/tags/}"
+            echo '```'
+            echo
+            echo "### Notes for OBS Forum's Resource page update"
+            echo
+            echo "- Do not include any file URLs or file names in the update message on the update message."
+            echo "  Any direct references to external files on update message may expose users to potential security risks."
+            echo "  We are responsible for ensuring the security of our users, so please be careful."
+            echo "- Latest Updates section on the Resource page shows only the first line of the update message."
+            echo "  In my opinion, users will be interested in the new release if the release is described in a few words."
+            echo
+            echo "### Final acknowledgements"
+            echo
+            echo "We are always thankful for all people involved in our plugin."
+            echo "Users, contributors, supporters, and maintainers are all essential for our plugin. You all rock! 🎉"
+          } | gh issue create "${GH_ISSUE_CREATE_ARGS[@]}"
