@@ -42,6 +42,6 @@ cp pages/package.json.new pages/package.json
 rm pages/package.json.new
 echo "pages/package.json updated. New version in pages/package.json: $(jq -r '.version' pages/package.json)"
 
-(cd pages && npm install)
+(cd pages && npm install --package-lock-only --ignore-scripts --no-audit --no-fund)
 
 echo "Version bump completed. All files updated to version $NEW_VERSION."
