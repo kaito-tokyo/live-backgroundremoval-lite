@@ -57,13 +57,14 @@ jobs:
       pluginbinary-retention-days: 7
       VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
 
-  create-release:
+  release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: [build-windows, build-macos, build-ubuntu]
     permissions:
       artifact-metadata: write
       attestations: write
       contents: write
+      issues: write
     uses: ./.github/workflows/plugin-create-release.yml
     with:
       environment: production-release
