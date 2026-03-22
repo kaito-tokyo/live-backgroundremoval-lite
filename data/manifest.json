@@ -1,7 +1,7 @@
 {
   "display_name": "Live Background Removal Lite",
   "id": "tokyo.kaito.live-backgroundremoval-lite",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "name": "live-backgroundremoval-lite",
   "description": "A gaming-first, high-performance, and crash-resilient background removal for OBS Studio.",
   "long_description": "Live Background Removal Lite is a lightweight OBS effect filter plugin designed to remove backgrounds from your portrait sources. We make resource consumption minimal to avoid affecting your gameplay, and we always develop this plugin with a priority on stability.",
