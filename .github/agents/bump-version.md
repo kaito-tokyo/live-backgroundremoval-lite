@@ -40,6 +40,6 @@ This agent handles release version bumps for this repository.
   "/^git commit -s -S -m \"Bump version to [0-9\\.]+\"\\b/": true,
   "/^git push origin bump\\/[0-9\\.]+\\b/": true,
   "/^gh pr create --title \"\\[release bump\\] Bump version to [0-9\\.]+\" --head \"bump\\/[0-9\\.]+\" --assignee umireon --web\\b/": true,
-  "/^\\.\\/scripts\\/edit_version\\.sh [0-9\\.]+\\b/": true
+  "/^\\.\\/\\.github\\/scripts\\/edit_version\\.sh [0-9\\.]+\\b/": true
 }
 ```
