@@ -23,9 +23,9 @@ vcpkg install --triplet=arm64-osx-obs --x-install-root="$VCPKG_ARM64_DIR"
 vcpkg install --triplet=x64-osx-obs --x-install-root="$VCPKG_X64_DIR"
 
 "$SCRIPTS_DIR/lipo_vcpkg_macos.sh" \
+  "$VCPKG_DIR/universal-osx-obs" \
   "$VCPKG_ARM64_DIR/arm64-osx-obs" \
-  "$VCPKG_X64_DIR/x64-osx-obs" \
-  "$VCPKG_DIR/universal-osx-obs"
+  "$VCPKG_X64_DIR/x64-osx-obs"
 
 cmake -P "$SCRIPTS_DIR/download_deps.cmake"
 

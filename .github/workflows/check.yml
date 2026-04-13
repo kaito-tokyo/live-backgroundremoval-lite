@@ -4,6 +4,11 @@
 
 name: Check CI
 
+# file: .github/workflows/check.yml
+# author: Kaito Udagawa <umireon@kaito.tokyo>
+# version: 1.0.0
+# date: 2026-04-14
+
 on:
   pull_request:
     branches: [main]
@@ -11,9 +16,7 @@ on:
     branches: [main]
     tags: ["*"]
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+permissions: {}
 
 env:
   HOMEBREW_NO_ANALYTICS: "1"
@@ -38,14 +41,14 @@ jobs:
           persist-credentials: false
 
       - name: Install clang-format with Linuxbrew
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           brew install obsproject/tools/clang-format@19
           echo "$(brew --prefix obsproject/tools/clang-format@19)/bin" >> "$GITHUB_PATH"
 
       - name: Check with clang-format
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         run: |
           git ls-files '*.c' '*.cpp' '*.h' '*.hpp' ':!vendor' | xargs --no-run-if-empty clang-format-19 --dry-run --Werror
 
@@ -65,14 +68,14 @@ jobs:
           persist-credentials: false
 
       - name: Install gersemi with Linuxbrew
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           brew install obsproject/tools/gersemi
           echo "$(brew --prefix obsproject/tools/gersemi)/bin" >> "$GITHUB_PATH"
 
       - name: Check with gersemi
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         run: |
           git ls-files CMakeLists.txt "*.cmake" ':!vendor' | xargs --no-run-if-empty gersemi --check
 
@@ -92,12 +95,12 @@ jobs:
           persist-credentials: false
 
       - name: Install reuse with Linuxbrew
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         run: |
           eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
           brew install reuse
           echo "$(brew --prefix reuse)/bin" >> "$GITHUB_PATH"
 
       - name: Lint with reuse
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         run: reuse lint

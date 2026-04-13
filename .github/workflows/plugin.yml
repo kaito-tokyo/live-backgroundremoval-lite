@@ -11,6 +11,8 @@ on:
     branches: [main]
     tags: ["*"]
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -22,42 +24,40 @@ jobs:
     uses: ./.github/workflows/plugin-build-windows.yml
     with:
       environment: ${{ github.event_name == 'push' && 'production-windows' || '' }}
-      pluginbinary-retention-days: 7
-      VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
+      VCPKG_BINARY_SOURCES: 'clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}'
+      vcpkg-version: '2025.08.27'
 
   build-macos:
     permissions:
       contents: read
     uses: ./.github/workflows/plugin-build-macos.yml
     with:
-      codesign-enabled: ${{ github.event_name == 'push' }}
       environment: ${{ github.event_name == 'push' && 'production-macos' || '' }}
-      pluginbinary-retention-days: 7
-      VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
+      VCPKG_BINARY_SOURCES: 'clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}'
+      vcpkg-version: '2025.08.27'
+      codesign-enabled: ${{ github.event_name == 'push' }}
     secrets: inherit
 
-  prepare-ubuntu:
-    permissions:
-      artifact-metadata: write
-      attestations: write
-      contents: read
-      id-token: write
-      packages: write
-    uses: ./.github/workflows/plugin-prepare-ubuntu.yml
-
   build-ubuntu:
-    needs: prepare-ubuntu
     permissions:
       contents: read
-      packages: read
     uses: ./.github/workflows/plugin-build-ubuntu.yml
     with:
-      BUILDER_IMAGE_UBUNTU_X86_64: ${{ needs.prepare-ubuntu.outputs.BUILDER_IMAGE_UBUNTU_X86_64 }}
       environment: ${{ github.event_name == 'push' && 'production-ubuntu' || '' }}
-      pluginbinary-retention-days: 7
-      VCPKG_BINARY_SOURCES: clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}
+      VCPKG_BINARY_SOURCES: 'clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}'
+      vcpkg-version: '2025.08.27'
 
-  release:
+  accept-plugin:
+    name: Accept Plugin CI
+    needs: [build-windows, build-macos, build-ubuntu]
+    runs-on: ubuntu-slim
+    permissions: {}
+    steps:
+      - name: Accept plugin
+        run: |
+          echo 'The workflow Plugin CI has completed successfully.'
+
+  create-release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs: [build-windows, build-macos, build-ubuntu]
     permissions:
@@ -65,7 +65,6 @@ jobs:
       attestations: write
       contents: write
       id-token: write
-      issues: write
-    uses: ./.github/workflows/plugin-release.yml
+    uses: ./.github/workflows/plugin-create-release.yml
     with:
       environment: production-release

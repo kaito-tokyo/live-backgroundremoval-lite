@@ -1,25 +1,34 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
 # SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: Apache-2.0
 
 name: Build Windows
 
+# file: .github/workflows/plugin-build-windows.yml
+# author: Kaito Udagawa <umireon@kaito.tokyo>
+# version: 1.1.1
+# date: 2026-04-14
+
 on:
   workflow_call:
     inputs:
       environment:
         description: The environment name for the build jobs, or empty string for no environment
-        required: true
-        type: string
-      pluginbinary-retention-days:
-        description: Days to retain plugin binary artifacts in GitHub Actions
-        required: true
-        type: number
-      VCPKG_BINARY_SOURCES:
-        description: VCPKG_BINARY_SOURCES environment variable for the build jobs
         required: false
         type: string
-        default: ""
+        default: ''
+      VCPKG_BINARY_SOURCES:
+        description: VCPKG_BINARY_SOURCES environment variable for the build jobs
+        required: true
+        type: string
+      vcpkg-version:
+        description: The version of vcpkg to clone.
+        required: true
+        type: string
+
+permissions: {}
 
 jobs:
   build-windows-x64:
@@ -33,13 +42,10 @@ jobs:
       contents: read
 
     env:
-      CLEAN_PWSH_ENV: ${{ github.workspace }}/.github/scripts/clean-env-windows.ps1
-      CMAKE_PATH: 'C:\Program Files\CMake\bin;C:\Program Files\Ninja'
-      CREDENTIAL_GIT_CONFIG_PARAMETERS: "'url.https://x-access-token:${{ github.token }}@github.com/.insteadOf=https://github.com/'"
-      GIT_PATH: 'C:\Program Files\Git\cmd'
-      MINIMAL_PATH: 'C:\Windows\System32;C:\Windows'
-      VCPKG_BINARY_SOURCES: ${{ inputs.VCPKG_BINARY_SOURCES }}
-      VCPKG_ROOT: '${{ github.workspace }}\vcpkg'
+      CLEAN_PWSH_ENV: '${{ github.workspace }}\.github\scripts\clean-env-windows.ps1'
+      FILTERED_PATH: 'C:\ProgramData\chocolatey\bin;C:\Program Files\CMake\bin;C:\Program Files\Git\cmd;C:\Windows\System32\WindowsPowerShell\v1.0;C:\Windows\System32;C:\Windows'
+      ORT_CCACHE_DIR: '${{ github.workspace }}\.ort_ccache'
+      ROOT_VCPKG_ROOT: '${{ github.workspace }}\vcpkg'
 
     steps:
       - name: Enable Windows long path
@@ -52,84 +58,118 @@ jobs:
           persist-credentials: false
           submodules: recursive
 
-      - name: Extract vcpkg configuration
-        id: vcpkg-configuration
-        uses: ./.github/actions/extract-vcpkg-configuration
-        with:
-          path: vcpkg-configuration.json
+      - name: Extract plugin buildspec
+        id: buildspec
+        uses: ./.github/actions/extract-buildspec
+
+      - name: Print CMake version on Windows
+        shell: pwsh
+        env:
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          cmake --version
+
+      - name: Print Ninja version on Windows
+        shell: pwsh
+        env:
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          ninja --version
+
+      - name: Print vswhere information for Visual Studio 2022 on Windows
+        shell: pwsh
+        env:
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          vswhere -version '[17.0,18.0)'
 
       - name: Checkout vcpkg
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: microsoft/vcpkg
-          ref: ${{ steps.vcpkg-configuration.outputs.DEFAULT_REGISTRY_BASELINE }}
+          ref: ${{ inputs.vcpkg-version }}
           persist-credentials: false
-          path: vcpkg
-          filter: "blob:none"
+          path: ${{ env.ROOT_VCPKG_ROOT }}
+          filter: blob:none
 
       - name: Run bootstrap-vcpkg.bat
-        shell: pwsh -Command ". $env:PWSH_ENV && . '{0}'"
+        shell: pwsh
         env:
-          PWSH_ENV: ${{ env.CLEAN_PWSH_ENV }}
-          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
-        run: ./vcpkg/bootstrap-vcpkg.bat -disableMetrics
-
-      - name: Extract plugin buildspec
-        id: buildspec
-        uses: ./.github/actions/extract-buildspec
-        with:
-          path: buildspec.json
+          PATH: '${{ env.FILTERED_PATH }}'
+          VCPKG_ROOT: '${{ env.ROOT_VCPKG_ROOT }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          & (Join-Path $env:VCPKG_ROOT "bootstrap-vcpkg.bat") -disableMetrics
 
       - name: Install dependencies from vcpkg (Windows x64)
-        shell: pwsh -Command ". $env:PWSH_ENV && . '{0}'"
+        shell: pwsh
         env:
-          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
-          PATH: "${{ env.GIT_PATH }};${{ env.MINIMAL_PATH }}"
-          PWSH_ENV: ${{ env.CLEAN_PWSH_ENV }}
-        run: ./vcpkg/vcpkg install --x-install-root=./.deps_vendor/vcpkg_installed --triplet=x64-windows-static-md-obs
+          PATH: '${{ env.FILTERED_PATH }}'
+          VCPKG_BINARY_SOURCES: '${{ inputs.VCPKG_BINARY_SOURCES }}'
+          VCPKG_ROOT: '${{ env.ROOT_VCPKG_ROOT }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          & (Join-Path $env:VCPKG_ROOT "vcpkg.exe") install --x-install-root=.\.deps_vendor\vcpkg_installed --triplet=x64-windows-static-md-obs
 
       - name: Download dependencies (Windows)
-        shell: pwsh -Command ". $env:PWSH_ENV && . '{0}'"
+        shell: pwsh
         env:
-          PATH: "${{ env.CMAKE_PATH }};${{ env.MINIMAL_PATH }}"
-          PWSH_ENV: ${{ env.CLEAN_PWSH_ENV }}
-        run: cmake -P ./scripts/download_deps.cmake
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          cmake -P ./scripts/download_deps.cmake
 
       - name: Build libobs (Windows)
-        shell: pwsh -Command ". $env:PWSH_ENV && . '{0}'"
+        shell: pwsh
         env:
-          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
-          PATH: "${{ env.CMAKE_PATH }};${{ env.MINIMAL_PATH }}"
-          PWSH_ENV: ${{ env.CLEAN_PWSH_ENV }}
-        run: ./scripts/build_libobs_windows.ps1
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          ./scripts/build_libobs_windows.ps1
 
       - name: Configure (Windows x64)
-        shell: pwsh -Command ". $env:PWSH_ENV && . '{0}'"
+        shell: pwsh
         env:
-          PATH: "${{ env.CMAKE_PATH }};${{ env.MINIMAL_PATH }}"
-          PWSH_ENV: ${{ env.CLEAN_PWSH_ENV }}
-        run: cmake --preset windows-ci-x64
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          cmake --preset windows-ci-x64
 
       - name: Build (Windows x64)
-        shell: pwsh -Command ". $env:PWSH_ENV && . '{0}'"
+        shell: pwsh
         env:
-          PATH: "${{ env.CMAKE_PATH }};${{ env.MINIMAL_PATH }}"
-          PWSH_ENV: ${{ env.CLEAN_PWSH_ENV }}
-        run: cmake --build --preset windows-ci-x64
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          cmake --build --preset windows-ci-x64
 
       - name: Package (Windows x64)
-        shell: pwsh -Command ". $env:PWSH_ENV && . '{0}'"
+        shell: pwsh
         env:
-          PATH: "${{ env.CMAKE_PATH }};${{ env.MINIMAL_PATH }}"
-          PWSH_ENV: ${{ env.CLEAN_PWSH_ENV }}
-        run: ./scripts/package_plugin_windows.ps1 -Target x64
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          $ErrorActionPreference = 'Stop'; Set-StrictMode -Version Latest; $PSNativeCommandUseErrorActionPreference = $true
+          . $env:CLEAN_PWSH_ENV
+          ./scripts/package_plugin_windows.ps1 -Target x64
 
       - name: Upload Plugin Binary
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: ${{ steps.buildspec.outputs.name }}-pluginbinary-windows-x64-${{ github.run_id }}
+          name: ${{ steps.buildspec.outputs.NAME }}-pluginbinary-windows-x64-${{ github.run_id }}
           path: |
             release/*-windows-x64.zip
             release/*-windows-x64-pdb.zip
           if-no-files-found: error
-          retention-days: ${{ inputs.pluginbinary-retention-days }}
+          retention-days: 7

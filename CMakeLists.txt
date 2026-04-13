@@ -43,16 +43,13 @@ set(CMAKE_C_EXTENSIONS FALSE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(CMAKE_CXX_EXTENSIONS FALSE)
-
-set(CMAKE_C_VISIBILITY_PRESET hidden)
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 
 if(MSVC)
   add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN)
 elseif(APPLE)
   add_compile_options(-fno-omit-frame-pointer -fstack-protector-strong)
+  add_link_options("-Wl,-no_warn_duplicate_libraries")
 else()
   add_compile_options(-fno-omit-frame-pointer -fstack-protector-strong)
 endif()
@@ -67,6 +64,8 @@ if(MSVC)
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps"
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-qt6-${QT6_VERSION}-x64"
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-${PREBUILT_VERSION}-x64"
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps_vendor/ort_x64/Release/vcpkg_installed/x64-windows-static-md"
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps_vendor/ort_x64-prefix"
   )
 elseif(APPLE)
   list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/macos")
@@ -77,9 +76,18 @@ elseif(APPLE)
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps"
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-qt6-${QT6_VERSION}-universal"
     "${CMAKE_CURRENT_SOURCE_DIR}/.deps/obs-deps-${PREBUILT_VERSION}-universal"
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps_vendor/ort_universal_vcpkg_installed/universal-osx"
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps_vendor/ort_universal-prefix"
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps_vendor/vcpkg_installed_universal/universal-osx-obs"
   )
 else()
   list(PREPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/linux")
+  list(
+    PREPEND
+    CMAKE_PREFIX_PATH
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps_vendor/ort_x86_64/Release/vcpkg_installed/x64-linux"
+    "${CMAKE_CURRENT_SOURCE_DIR}/.deps_vendor/ort_x86_64-prefix"
+  )
 endif()
 
 if(VCPKG_TARGET_TRIPLET STREQUAL "")
@@ -185,7 +193,6 @@ if(APPLE)
 endif()
 
 # Plugin targets
-
 add_subdirectory(src)
 
 add_library(${CMAKE_PROJECT_NAME} MODULE)
@@ -244,7 +251,7 @@ set(CPACK_PACKAGE_CONTACT "${PLUGIN_AUTHOR} <${PLUGIN_EMAIL}>")
 set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_C_LIBRARY_ARCHITECTURE}")
 set(CPACK_PACKAGE_NAME "${CMAKE_PROJECT_NAME}")
 set(CPACK_PACKAGE_VERSION "${CMAKE_PROJECT_VERSION}")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSES/GPL-3.0-or-later.txt")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_SET_DESTDIR TRUE)
 set(CPACK_VERBATIM_VARIABLES TRUE)
 set(
