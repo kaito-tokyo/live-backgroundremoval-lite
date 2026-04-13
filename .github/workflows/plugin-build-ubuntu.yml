@@ -1,29 +1,34 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
 # SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: Apache-2.0
 
 name: Build Ubuntu
 
+# file: .github/workflows/plugin-build-ubuntu.yml
+# author: Kaito Udagawa <umireon@kaito.tokyo>
+# version: 1.1.1
+# date: 2026-04-14
+
 on:
   workflow_call:
     inputs:
-      BUILDER_IMAGE_UBUNTU_X86_64:
-        description: The builder image for Ubuntu x86_64
-        required: true
-        type: string
       environment:
         description: The environment name for the build jobs, or empty string for no environment
-        required: true
-        type: string
-      pluginbinary-retention-days:
-        description: Days to retain plugin binary artifacts in GitHub Actions
-        required: true
-        type: number
-      VCPKG_BINARY_SOURCES:
-        description: VCPKG_BINARY_SOURCES environment variable for the build jobs
         required: false
         type: string
-        default: ""
+        default: ''
+      VCPKG_BINARY_SOURCES:
+        description: VCPKG_BINARY_SOURCES environment variable for the build jobs
+        required: true
+        type: string
+      vcpkg-version:
+        description: The version of vcpkg to clone.
+        required: true
+        type: string
+
+permissions: {}
 
 jobs:
   build-ubuntu-x86_64:
@@ -35,16 +40,12 @@ jobs:
 
     permissions:
       contents: read
-      packages: read
-
-    container:
-      image: ${{ inputs.BUILDER_IMAGE_UBUNTU_X86_64 }}
 
     env:
-      CLEAN_BASH_ENV: ${{ github.workspace }}/.github/scripts/clean-env-ubuntu.bash
-      CREDENTIAL_GIT_CONFIG_PARAMETERS: "'url.https://x-access-token:${{ github.token }}@github.com/.insteadOf=https://github.com/'"
-      MINIMAL_PATH: "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-      VCPKG_BINARY_SOURCES: ${{ inputs.VCPKG_BINARY_SOURCES }}
+      CLEAN_BASH_ENV: '${{ github.workspace }}/.github/scripts/clean-env-ubuntu.bash'
+      FILTERED_PATH: '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'
+      ORT_CCACHE_DIR: '${{ github.workspace }}/.ort_ccache'
+      ROOT_VCPKG_ROOT: '${{ github.workspace }}/vcpkg'
 
     steps:
       - name: Checkout
@@ -56,48 +57,97 @@ jobs:
       - name: Extract plugin buildspec
         id: buildspec
         uses: ./.github/actions/extract-buildspec
+
+      - name: Print CMake version on Ubuntu
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
+        env:
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          cmake --version
+
+      - name: Print Ninja version on Ubuntu
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
+        env:
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          ninja --version
+
+      - name: Install dependencies from apt (Ubuntu x86_64)
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
+        run: |
+          APT_PACKAGES=(
+            libgles2-mesa-dev
+            libqt6svg6-dev
+            libsimde-dev
+            obs-studio
+            qt6-base-dev
+            qt6-base-private-dev
+          )
+          echo "man-db man-db/auto-update boolean false" | sudo debconf-set-selections
+          sudo apt-get remove --purge -y man-db
+          sudo add-apt-repository -y ppa:obsproject/obs-studio
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends "${APT_PACKAGES[@]}"
+
+      - name: Checkout vcpkg
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
-          path: buildspec.json
+          repository: microsoft/vcpkg
+          ref: ${{ inputs.vcpkg-version }}
+          persist-credentials: false
+          path: ${{ env.ROOT_VCPKG_ROOT }}
+          filter: blob:none
+
+      - name: Run bootstrap-vcpkg.sh
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
+        env:
+          BASH_ENV: '${{ env.CLEAN_BASH_ENV }}'
+          PATH: '${{ env.FILTERED_PATH }}'
+          VCPKG_ROOT: '${{ env.ROOT_VCPKG_ROOT }}'
+        run: |
+          "$VCPKG_ROOT/bootstrap-vcpkg.sh" -disableMetrics
 
       - name: Install dependencies from vcpkg (Ubuntu x86_64)
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         env:
-          BASH_ENV: ${{ env.CLEAN_BASH_ENV }}
-          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
-          PATH: ${{ env.MINIMAL_PATH }}
-        run: '"$VCPKG_ROOT/vcpkg" install --x-install-root=./.deps_vendor/vcpkg_installed --triplet=x64-linux-obs'
+          BASH_ENV: '${{ env.CLEAN_BASH_ENV }}'
+          PATH: '${{ env.FILTERED_PATH }}'
+          VCPKG_BINARY_SOURCES: '${{ inputs.VCPKG_BINARY_SOURCES }}'
+          VCPKG_ROOT: '${{ env.ROOT_VCPKG_ROOT }}'
+        run: |
+          "$VCPKG_ROOT/vcpkg" install --x-install-root=./.deps_vendor/vcpkg_installed --triplet=x64-linux-obs
 
       - name: Configure (Ubuntu x86_64)
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         env:
-          BASH_ENV: ${{ env.CLEAN_BASH_ENV }}
-          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
-          PATH: ${{ env.MINIMAL_PATH }}
-        run: cmake --preset ubuntu-ci-x86_64
+          BASH_ENV: '${{ env.CLEAN_BASH_ENV }}'
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          cmake --preset ubuntu-ci-x86_64
 
       - name: Build (Ubuntu x86_64)
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         env:
-          BASH_ENV: ${{ env.CLEAN_BASH_ENV }}
-          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
-          PATH: ${{ env.MINIMAL_PATH }}
-        run: cmake --build --preset ubuntu-ci-x86_64
+          BASH_ENV: '${{ env.CLEAN_BASH_ENV }}'
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          cmake --build --preset ubuntu-ci-x86_64
 
       - name: Package (Ubuntu x86_64)
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         env:
-          BASH_ENV: ${{ env.CLEAN_BASH_ENV }}
-          GIT_CONFIG_PARAMETERS: ${{ env.CREDENTIAL_GIT_CONFIG_PARAMETERS }}
-          PATH: ${{ env.MINIMAL_PATH }}
+          BASH_ENV: '${{ env.CLEAN_BASH_ENV }}'
+          PATH: '${{ env.FILTERED_PATH }}'
         working-directory: build_x86_64
-        run: cpack -G DEB
+        run: |
+          cpack -G DEB
 
       - name: Upload Plugin Binary
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: ${{ steps.buildspec.outputs.name }}-pluginbinary-${{ runner.os }}-x86_64-${{ github.run_id }}
+          name: ${{ steps.buildspec.outputs.NAME }}-pluginbinary-${{ runner.os }}-x86_64-${{ github.run_id }}
           path: |
             release/*-x86_64-linux-gnu.deb
             release/*-x86_64-linux-gnu-dbgsym.ddeb
           if-no-files-found: error
-          retention-days: ${{ inputs.pluginbinary-retention-days }}
+          retention-days: 7

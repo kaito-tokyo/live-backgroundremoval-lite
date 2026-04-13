@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Run Security Check
-        shell: bash --noprofile --norc -euo pipefail {0}
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
