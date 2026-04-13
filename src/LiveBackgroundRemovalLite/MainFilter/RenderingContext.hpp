@@ -146,8 +146,6 @@ private:
 
 	std::atomic<float> timeAveragedFilteringAlpha_;
 
-	std::atomic<bool> enableCenterFrame_;
-
 	std::atomic<bool> shouldNextVideoRenderProcessFrame_ = true;
 	std::atomic<bool> shouldNextVideoRenderForceProcessFrame_ = true;
 };
