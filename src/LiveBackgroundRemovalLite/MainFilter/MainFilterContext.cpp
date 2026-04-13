@@ -99,8 +99,6 @@ void MainFilterContext::getDefaults(obs_data_t *data)
 
 	obs_data_set_default_int(data, "blurSize", defaultProperty.blurSize);
 
-	obs_data_set_default_bool(data, "enableCenterFrame", defaultProperty.enableCenterFrame);
-
 	obs_data_set_default_double(data, "maskGamma", defaultProperty.maskGamma);
 	obs_data_set_default_double(data, "maskLowerBoundAmpDb", defaultProperty.maskLowerBoundAmpDb);
 	obs_data_set_default_double(data, "maskUpperBoundMarginAmpDb", defaultProperty.maskUpperBoundMarginAmpDb);
@@ -203,9 +201,6 @@ obs_properties_t *MainFilterContext::getProperties()
 					OBS_TEXT_INFO);
 	obs_property_text_set_info_word_wrap(pDesc, false);
 	obs_properties_add_int_slider(props, "blurSize", "", 0, 10, 1);
-
-	// Center Frame
-	obs_properties_add_bool(props, "enableCenterFrame", obs_module_text("enableCenterFrame"));
 
 	// Advanced settings group
 	obs_properties_t *propsAdvancedSettings = obs_properties_create();
