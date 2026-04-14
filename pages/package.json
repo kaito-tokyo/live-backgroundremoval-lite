@@ -6,7 +6,7 @@
     "node": "24.x"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.1",
+    "@astrojs/sitemap": "^3.7.2",
     "@octokit/core": "^7.0.6",
     "@octokit/plugin-paginate-rest": "^14.0.0",
     "astro": "^6.1.6",
