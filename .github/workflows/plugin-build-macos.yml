@@ -33,9 +33,11 @@ on:
         type: boolean
 
     secrets:
-      MACOS_NOTARIZATION_PASSWORD:
+      APP_STORE_CONNECT_ISSUER:
         required: false
-      MACOS_NOTARIZATION_USERNAME:
+      APP_STORE_CONNECT_KEY:
+        required: false
+      APP_STORE_CONNECT_KEY_ID:
         required: false
       MACOS_SIGNING_APPLICATION_IDENTITY:
         required: false
@@ -74,6 +76,15 @@ jobs:
       - name: Extract plugin buildspec
         id: buildspec
         uses: ./.github/actions/extract-buildspec
+
+      - name: Set up macOS Signing Certificates
+        if: inputs.codesign-enabled
+        id: codesign
+        uses: ./.github/actions/setup-macos-codesigning
+        with:
+          MACOS_SIGNING_APPLICATION_IDENTITY: ${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY }}
+          MACOS_SIGNING_CERT: ${{ secrets.MACOS_SIGNING_CERT }}
+          MACOS_SIGNING_CERT_PASSWORD: ${{ secrets.MACOS_SIGNING_CERT_PASSWORD }}
 
       - name: Print CMake version on macOS
         shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
@@ -125,7 +136,6 @@ jobs:
           VCPKG_ROOT: '${{ env.ROOT_VCPKG_ROOT }}'
         run: ./vcpkg/vcpkg install --x-install-root=./.deps_vendor/vcpkg_installed_x64 --triplet=x64-osx-obs
 
-
       - name: Lipo vcpkg (macOS)
         shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         env:
@@ -175,22 +185,12 @@ jobs:
         run: |
           cmake --install build_macos --config RelWithDebInfo --strip --prefix 'release/payload/Library/Application Support/obs-studio/plugins'
 
-      - name: Set up macOS Signing Certificates
-        if: inputs.codesign-enabled
-        id: codesign
-        uses: ./.github/actions/setup-macos-codesigning
-        with:
-          MACOS_SIGNING_APPLICATION_IDENTITY: ${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY }}
-          MACOS_SIGNING_CERT: ${{ secrets.MACOS_SIGNING_CERT }}
-          MACOS_SIGNING_CERT_PASSWORD: ${{ secrets.MACOS_SIGNING_CERT_PASSWORD }}
-
       - name: Package (macOS universal)
         shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         env:
           BASH_ENV: '${{ env.CLEAN_BASH_ENV }}'
           PATH: '${{ env.FILTERED_PATH }}'
-          KEEP_ENV_VARS: 'CODESIGN_ENABLED;MACOS_SIGNING_APPLICATION_IDENTITY;MACOS_SIGNING_INSTALLER_IDENTITY;PLUGIN_BUNDLE_ID;PLUGIN_DISPLAY_NAME;PLUGIN_NAME;PLUGIN_VERSION'
-          CODESIGN_ENABLED: ${{ inputs.codesign-enabled && 'true' || 'false' }}
+          KEEP_ENV_VARS: 'MACOS_SIGNING_APPLICATION_IDENTITY;MACOS_SIGNING_INSTALLER_IDENTITY;PLUGIN_BUNDLE_ID;PLUGIN_DISPLAY_NAME;PLUGIN_NAME;PLUGIN_VERSION'
           MACOS_SIGNING_APPLICATION_IDENTITY: '${{ secrets.MACOS_SIGNING_APPLICATION_IDENTITY }}'
           MACOS_SIGNING_INSTALLER_IDENTITY: '${{ secrets.MACOS_SIGNING_INSTALLER_IDENTITY }}'
           PLUGIN_BUNDLE_ID: '${{ steps.buildspec.outputs.BUNDLE_ID }}'
@@ -201,15 +201,16 @@ jobs:
           PLUGIN_BUNDLE="release/payload/Library/Application Support/obs-studio/plugins/${PLUGIN_NAME}.plugin"
 
           if ! [[ -d "${PLUGIN_BUNDLE}" ]]; then
-            echo "ERROR: Plugin bundle not found at ${PLUGIN_BUNDLE}."
+            echo "ERROR: Plugin bundle not found."
             exit 1
           fi
 
-          if [[ "$CODESIGN_ENABLED" == true ]]; then
+          # Sign after strip installing
+          if [[ -n "${MACOS_SIGNING_APPLICATION_IDENTITY}" ]]; then
             codesign --sign "${MACOS_SIGNING_APPLICATION_IDENTITY}" --force --deep --options runtime --timestamp "${PLUGIN_BUNDLE}"
           fi
 
-          pkgbuild --root ./release/payload --identifier "${PLUGIN_BUNDLE_ID}" --version "${PLUGIN_VERSION}" ./release/component.pkg
+          pkgbuild --root ./release/payload --identifier "${PLUGIN_BUNDLE_ID}" --version "${PLUGIN_VERSION}" release/component.pkg
 
           {
             printf '<?xml version="1.0" encoding="utf-8"?>\n'
@@ -232,27 +233,31 @@ jobs:
             --package-path release
           )
 
-          if [[ "$CODESIGN_ENABLED" == true ]]; then
+          if [[ -n "${MACOS_SIGNING_INSTALLER_IDENTITY}" ]]; then
             PRODUCTBUILD_ARGS+=(--sign "${MACOS_SIGNING_INSTALLER_IDENTITY}")
           fi
 
-          productbuild "${PRODUCTBUILD_ARGS[@]}" "./release/${PLUGIN_NAME}-${PLUGIN_VERSION}-macos-universal.pkg"
+          productbuild "${PRODUCTBUILD_ARGS[@]}" "release/${PLUGIN_NAME}-${PLUGIN_VERSION}-macos-universal.pkg"
 
       - name: Notarize Installer
-        if: ${{ inputs.codesign-enabled }}
+        if: inputs.codesign-enabled
         shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
         env:
           BASH_ENV: '${{ env.CLEAN_BASH_ENV }}'
           PATH: '${{ env.FILTERED_PATH }}'
-          KEEP_ENV_VARS: 'CODESIGN_TEAM;MACOS_NOTARIZATION_PASSWORD;MACOS_NOTARIZATION_USERNAME'
-          CODESIGN_TEAM: ${{ steps.codesign.outputs.CODESIGN_TEAM }}
-          MACOS_NOTARIZATION_PASSWORD: ${{ secrets.MACOS_NOTARIZATION_PASSWORD }}
-          MACOS_NOTARIZATION_USERNAME: ${{ secrets.MACOS_NOTARIZATION_USERNAME }}
+          KEEP_ENV_VARS: 'APP_STORE_CONNECT_ISSUER;APP_STORE_CONNECT_KEY;APP_STORE_CONNECT_KEY_ID'
+          APP_STORE_CONNECT_ISSUER: ${{ secrets.APP_STORE_CONNECT_ISSUER }}
+          APP_STORE_CONNECT_KEY: ${{ secrets.APP_STORE_CONNECT_KEY }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
         run: |
+          KEY_FILE="$(mktemp -t APP_STORE_CONNECT_KEY)"
+
+          printenv APP_STORE_CONNECT_KEY >"$KEY_FILE"
+
           xcrun notarytool submit ./release/*-macos-universal.pkg \
-            --apple-id "${MACOS_NOTARIZATION_USERNAME}" \
-            --password "${MACOS_NOTARIZATION_PASSWORD}" \
-            --team-id "${CODESIGN_TEAM}" \
+            --issuer "${APP_STORE_CONNECT_ISSUER}" \
+            --key "$KEY_FILE" \
+            --key-id "${APP_STORE_CONNECT_KEY_ID}" \
             --wait
 
           xcrun stapler staple ./release/*-macos-universal.pkg

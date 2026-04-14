@@ -6,27 +6,41 @@
 
 set -euo pipefail
 
-PROJECT_ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-SCRIPTS_DIR="$PROJECT_ROOT_DIR/scripts"
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-DEPS_VENDOR_DIR="$PROJECT_ROOT_DIR/.deps_vendor"
-VCPKG_ARM64_DIR="$DEPS_VENDOR_DIR/vcpkg_installed_arm64"
-VCPKG_X64_DIR="$DEPS_VENDOR_DIR/vcpkg_installed_x64"
-VCPKG_DIR="$DEPS_VENDOR_DIR/vcpkg_installed"
+if [[ -d .deps_vendor ]]; then
+  echo 'The .deps_vendor directory already exists. Exiting...' >&2
+  exit 1
+fi
 
-cd "$PROJECT_ROOT_DIR"
+echo '## Checking if required tools can be called without errors'
 
-vcpkg --version
+if [[ -z "${VCPKG_ROOT:-}" ]]; then
+  echo 'ERROR: VCPKG_ROOT is not set' >&2
+  exit 1
+fi
+
 cmake --version
+ninja --version
+pkg-config --version
+"${VCPKG_ROOT}/vcpkg" --version
+xcodebuild -version
 
-vcpkg install --triplet=arm64-osx-obs --x-install-root="$VCPKG_ARM64_DIR"
-vcpkg install --triplet=x64-osx-obs --x-install-root="$VCPKG_X64_DIR"
+echo '## Installing dependencies'
 
-"$SCRIPTS_DIR/lipo_vcpkg_macos.sh" \
-  "$VCPKG_DIR/universal-osx-obs" \
-  "$VCPKG_ARM64_DIR/arm64-osx-obs" \
-  "$VCPKG_X64_DIR/x64-osx-obs"
+export VCPKG_BINARY_SOURCES
+if [[ -z "${VCPKG_BINARY_SOURCES:-}" ]]; then
+  VCPKG_BINARY_SOURCES='clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}'
+fi
 
-cmake -P "$SCRIPTS_DIR/download_deps.cmake"
+"${VCPKG_ROOT}/vcpkg" install --triplet=arm64-osx-obs --x-install-root=.deps_vendor/vcpkg_installed_arm64
+"${VCPKG_ROOT}/vcpkg" install --triplet=x64-osx-obs --x-install-root=.deps_vendor/vcpkg_installed_x64
 
-"$SCRIPTS_DIR/build_libobs_macos.sh"
+./scripts/lipo_vcpkg_macos.sh \
+  .deps_vendor/vcpkg_installed_universal/universal-osx-obs \
+  .deps_vendor/vcpkg_installed_arm64/arm64-osx-obs \
+  .deps_vendor/vcpkg_installed_x64/x64-osx-obs
+
+cmake -P scripts/download_deps.cmake
+
+./scripts/build_libobs_macos.sh
