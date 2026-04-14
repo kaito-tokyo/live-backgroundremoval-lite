@@ -9,7 +9,7 @@
     "@astrojs/sitemap": "^3.7.1",
     "@octokit/core": "^7.0.6",
     "@octokit/plugin-paginate-rest": "^14.0.0",
-    "astro": "^6.0.8",
+    "astro": "^6.1.6",
     "posthtml": "^0.16.7",
     "pretty-bytes": "^7.1.0",
     "typescript": "^6.0.2"
