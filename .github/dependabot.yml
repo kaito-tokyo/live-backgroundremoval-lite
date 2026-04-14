@@ -1,11 +1,5 @@
 version: 2
 
-multi-ecosystem-groups:
-  plugin:
-    schedule:
-      interval: weekly
-    assignees: [umireon]
-
 updates:
   - package-ecosystem: github-actions
     directory: /
@@ -13,8 +7,6 @@ updates:
       interval: weekly
     exclude-paths:
       - ".github/workflows/*.lock.yml"
-    multi-ecosystem-group: plugin
-    patterns: ["*"]
 
   - package-ecosystem: npm
     directory: /pages
@@ -23,5 +15,3 @@ updates:
     ignore:
       - dependency-name: "@types/node"
         versions: ["*"]
-    multi-ecosystem-group: plugin
-    patterns: ["*"]
