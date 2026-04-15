@@ -39,7 +39,7 @@ const aggregateRating = await getAggregateRating();
 <link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
 <link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
 <link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang))} />
-<link rel="alternate" hreflang="x-default" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL))} />
+<link rel="alternate" hreflang="x-default" href={withTrailingSlash(PRODUCTION_BASE_URL)} />
 <link rel="alternate" hreflang="en" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "en"))} />
 <link rel="alternate" hreflang="de-de" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "de-de"))} />
 <link rel="alternate" hreflang="es-es" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "es-es"))} />
@@ -54,16 +54,17 @@ const aggregateRating = await getAggregateRating();
 <script is:inline src={joinURL(BASE_URL, "scripts", "LanguageSwitcher.js")}></script>
 </head>
 <body id="site-home">
-<main class="white-box">
 
+<nav class="language-switcher" aria-label="Selector de idioma">
+<language-switcher><button lang="en" translate="no">🌐 Language</button></language-switcher>
+<script>document.querySelector("nav.language-switcher button")?.addEventListener("click", LanguageSwitcherElement.onClick);</script>
+</nav>
+
+<main class="white-box">
 <h1>
 <img class="lbrl-logo" src={joinURL(BASE_URL, "favicon.svg")} alt="Logotipo de Live Background Removal Lite" width="96" height="96" />
 <span>Live Background Removal Lite</span>
 </h1>
-
-<nav class="language-switcher" aria-label="Selector de idioma">
-<language-switcher lang="zxx"><button onclick="LanguageSwitcherElement.onClick(this)">🌐 Language</button></language-switcher>
-</nav>
 
 <section id="about">
 <h2>Una eliminación de fondo de alto rendimiento, resistente a fallos y pensada primero para juegos en OBS Studio</h2>

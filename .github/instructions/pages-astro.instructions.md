@@ -8,6 +8,12 @@ applyTo: "pages/**/*.astro"
 
 # Astro Pages Guidelines
 
+## Inline scripts and stylesheets
+
+There is a script (`pages/scripts/add-csp-hashes.mjs`) to add hashes of inline scripts and stylesheets to the CSP header. Adding inline scripts and stylesheets without `unsafe-eval` or `unsafe-inline` is allowed for this project.
+
+## About localization
+
 The website of this project is built using Astro. `pages/src/pages/*.astro` files are the global version of the pages, and `pages/src/pages/*/*.astro` files are the localized versions. The target locales are de-de, es-es, fr-fr, ja-jp, and ko-kr, pt-br, ru-ru, zh-cn, zh-tw.
 
 ## Files to be localized

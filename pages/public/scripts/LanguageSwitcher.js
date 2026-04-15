@@ -2,13 +2,17 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+// Use `<script src=".../LanguageSwitcher.js"></script>` to include this. This script is not a module.
+
 class LanguageSwitcherElement extends HTMLElement {
   /**
-   * @param {HTMLElement} elem
+   * @param {MouseEvent} e
    */
-  static onClick({ parentElement }) {
-    if (parentElement instanceof LanguageSwitcherElement) {
-      parentElement.querySelector("div").showPopover();
+  static onClick(e) {
+    const self = e.currentTarget?.closest("language-switcher");
+
+    if (self instanceof LanguageSwitcherElement) {
+      self.querySelector("div")?.showPopover();
     } else {
       /** @type {HTMLLinkElement | null} */
       const link = document.head.querySelector("link[rel='alternate'][hreflang='x-default']");
@@ -18,6 +22,11 @@ class LanguageSwitcherElement extends HTMLElement {
   }
 
   connectedCallback() {
+    if (this.querySelector("div[popover]")) {
+      // Already initialized
+      return;
+    }
+
     const langTexts = {
       "x-default": "Language Selector",
       "en": "English",
