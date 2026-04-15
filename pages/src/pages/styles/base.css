@@ -1,0 +1,38 @@
+/*
+ * SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #000;
+  min-height: 100vh;
+  margin: 0;
+}
+
+footer {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+footer, footer a {
+  color: #ccc;
+}
+
+.white-box {
+  width: min(800px, 100% - 2rem);
+  margin: 1rem auto;
+  padding: 2rem;
+  overflow: visible;
+
+  border-radius: 8px;
+  box-shadow: 0 4px 8px #0000001a;
+
+  background-color: #fff;
+}

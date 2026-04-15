@@ -12,8 +12,6 @@ const { BASE_URL, PROD } = import.meta.env;
 const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 
 const lang = "zh-tw";
-const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
-const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"));
 ---
 
 <!doctype html>
@@ -29,7 +27,7 @@ const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage
 <link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
 <link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
 <link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
-<link rel="canonical" href={canonicalURL} />
+<link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"))} />
 </head>
 <body id="site-usage">
 <main class="white-box">
@@ -129,7 +127,7 @@ fetchpriority="high"
 </section>
 
 <nav aria-label="頁面導覽">
-<a href={withTrailingSlash(localizedBaseURL)}>返回頂端</a>
+<a href={withTrailingSlash(joinURL(BASE_URL, lang))}>返回頂端</a>
 </nav>
 </main>
 

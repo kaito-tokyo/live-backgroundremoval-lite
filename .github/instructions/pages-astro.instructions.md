@@ -12,7 +12,7 @@ The website of this project is built using Astro. `pages/src/pages/*.astro` file
 
 ## Files to be localized
 
-**`pages/src/pages/index.astro`**:
+**`pages/src/pages/en/index.astro`**:
 
 - `pages/src/pages/de-de/index.astro`
 - `pages/src/pages/es-es/index.astro`
@@ -24,7 +24,7 @@ The website of this project is built using Astro. `pages/src/pages/*.astro` file
 - `pages/src/pages/zh-cn/index.astro`
 - `pages/src/pages/zh-tw/index.astro`
 
-**`pages/src/pages/usage.astro`**:
+**`pages/src/pages/en/usage.astro`**:
 
 - `pages/src/pages/de-de/usage.astro`
 - `pages/src/pages/es-es/usage.astro`

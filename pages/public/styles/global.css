@@ -53,8 +53,29 @@ footer img {
   background-color: var(--color-white-box-bg);
 }
 
-.langs {
-  text-align: center;
+nav.language-switcher {
+  background: white;
+  position: fixed;
+  display: block;
+  top: 1rem;
+  right: 1rem;
+  opacity: 0.9;
+
+  language-switcher {
+    display: block;
+  }
+
+  button {
+    cursor: pointer;
+    display: block;
+    font-size: 1.5rem;
+    margin: auto;
+    width: max-content;
+  }
+
+  div {
+    padding: 1rem;
+  }
 }
 
 ul.download-links {

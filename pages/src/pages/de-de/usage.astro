@@ -12,8 +12,6 @@ const { BASE_URL, PROD } = import.meta.env;
 const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 
 const lang = "de-de";
-const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
-const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"));
 ---
 
 <!doctype html>
@@ -29,7 +27,7 @@ const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage
 <link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
 <link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
 <link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
-<link rel="canonical" href={canonicalURL} />
+<link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"))} />
 </head>
 <body id="site-usage">
 <main class="white-box">
@@ -130,7 +128,7 @@ Um die erweiterten Konfigurationen zu ändern, musst du das Kontrollkästchen <b
 </section>
 
 <nav aria-label="Seitennavigation">
-<a href={withTrailingSlash(localizedBaseURL)}>Zurück nach oben</a>
+<a href={withTrailingSlash(joinURL(BASE_URL, lang))}>Zurück nach oben</a>
 </nav>
 </main>
 
