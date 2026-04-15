@@ -11,16 +11,16 @@ import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../../lib/info.m
 const { BASE_URL, PROD } = import.meta.env;
 const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 
-const lang = "pt-br";
+const lang = "en";
 ---
 
 <!doctype html>
-<html lang="pt-br">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
 { PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
-<title>Uso - Live Background Removal Lite</title>
-<meta name="description" content="Uma remoção de fundo de alto desempenho, resistente a falhas e com foco em jogos para o OBS Studio." />
+<title>Usage - Live Background Removal Lite</title>
+<meta name="description" content="A gaming-first, high-performance, and crash-resilient background removal for OBS Studio." />
 <meta name="viewport" content="width=device-width" />
 <meta name="revision" content={GITHUB_SHA ?? "undefined"} />
 <meta name="github-repo" content="kaito-tokyo/live-backgroundremoval-lite" />
@@ -43,95 +43,95 @@ const lang = "pt-br";
 </head>
 <body id="site-usage">
 
-<nav class="language-switcher" aria-label="Seletor de idioma">
+<nav class="language-switcher" aria-label="Language switcher">
 <language-switcher><button lang="en" translate="no">🌐 Language</button></language-switcher>
 <script>document.querySelector("nav.language-switcher button")?.addEventListener("click", LanguageSwitcherElement.onClick);</script>
 </nav>
 
 <main class="white-box">
 <hgroup>
-<h1>Uso</h1>
+<h1>Usage</h1>
 <h2>Live Background Removal Lite</h2>
 </hgroup>
 
 <section id="adding-filter">
-<h2>Adicionar o filtro</h2>
+<h2>Adding the Filter</h2>
 <img
 src={joinURL(BASE_URL, "effect-filters.webp")}
-alt="Captura de tela da janela de filtros do OBS Studio, mostrando a seleção de 'Live Background Removal Lite' na lista de filtros de efeito."
+alt="Screenshot of the OBS Studio Filters window, showing the selection of 'Live Background Removal Lite' from the Effect Filters list."
 width="1552"
 height="1032"
 fetchpriority="high"
-/
->
+/>
 <ol>
-<li>No OBS Studio, clique com o botão direito na sua fonte de vídeo, por exemplo sua webcam, no painel "Fontes".</li>
-<li>Selecione <b>Filtros</b> no menu de contexto.</li>
-<li>Na janela "Filtros", na seção "Filtros de Efeito", clique no botão <b>+</b> para adicionar um novo filtro.</li>
-<li>Na lista de filtros disponíveis, selecione <b>Live Background Removal Lite</b>.</li>
-<li>O filtro será adicionado à sua fonte e você poderá ajustar suas propriedades conforme necessário.</li>
+<li>In OBS Studio, right-click your video source (e.g., your webcam) in the "Sources" panel.</li>
+<li>Select <b>Filters</b> from the context menu.</li>
+<li>In the "Filters" window, under the "Effect Filters" section, click the <b>+</b> button to add a new filter.</li>
+<li>From the list of available filters, select <b>Live Background Removal Lite</b>.</li>
+<li>The filter will be added to your source, and you can now adjust its properties as needed.</li>
 </ol>
 </section>
 
 <section id="basic-properties">
-<h2>Propriedades básicas</h2>
+<h2>Basic Properties</h2>
 <ul>
-<li><b>Status do plugin</b>: A seção superior exibe o estado atual de atualização do plugin.</li>
+<li><b>Plugin Status</b>: The top section displays the current update status of the plugin.</li>
 <li>
-<b>Nível do filtro</b>: Seleciona a etapa de processamento da remoção de fundo. <br />
+<b>Filter Level</b>: Selects the processing stage for background removal. <br />
 <ul>
-<li><b>Passthrough</b>: Sem remoção de fundo, a fonte é exibida como está.</li>
-<li><b>Segmentation</b>: Aplica uma máscara de segmentação básica para remover o fundo.</li>
-<li><b>Motion Intensity Thresholding</b>: Só aplica a segmentação quando o movimento detectado ultrapassa um limite.</li>
-<li><b>Guided Filter</b>: Refina as bordas da máscara usando um filtro guiado para melhor qualidade.</li>
-<li><b>Time Averaged Filter</b>: Suaviza e estabiliza ainda mais a máscara ao longo do tempo para obter o recorte da mais alta qualidade.</li>
+<li><b>Passthrough</b>: No background removal, source is shown as-is.</li>
+<li><b>Segmentation</b>: Applies a basic segmentation mask to remove the background.</li>
+<li><b>Motion Intensity Thresholding</b>: Only applies segmentation when motion is detected above a threshold.</li>
+<li><b>Guided Filter</b>: Refines the mask edges using a guided filter for better quality.</li>
+<li><b>Time Averaged Filter</b>: Further smooths and stabilizes the mask over time for the highest quality cutout.</li>
 </ul>
 </li>
 <li>
-<b>Motion Intensity Threshold [dB]</b>: Determina a sensibilidade ao movimento que aciona a IA. Diminuir esse valor a torna menos sensível e reduz a carga. <br />
-<em>Dica: ajuste esse valor o mais baixo possível enquanto mantém um rastreamento de máscara preciso ao se mover.</em>
+<b>Motion Intensity Threshold [dB]</b>: Determines the movement sensitivity to trigger the AI. Lowering this value makes it less sensitive (duller) and reduces load. <br />
+<em>Tip: Adjust this value as low as possible while maintaining accurate mask tracking when you move.</em>
 </li>
 <li>
-<b>Motion Tracking Speed</b>: Ajusta o filtro para reduzir o tremor.
+<b>Motion Tracking Speed</b>: Adjusts the filter to suppress flickering.
 <ul>
-<li><b>Valores baixos</b>: Menos tremor, mas aumenta a latência da máscara (lag).</li>
-<li><b>Valores altos</b>: Resposta de rastreamento mais rápida, mas pode aumentar o tremor.</li>
-<li><b>0</b>: A máscara para de se mover.</li>
-<li><b>1</b>: Desativa o filtro completamente.</li>
+<li><b>Lower values</b>: Less flickering, but increases mask latency (lag).
+</li>
+<li><b>Higher values</b>: Faster tracking response, but may increase flickering.</li>
+<li><b>0</b>: The mask stops moving.</li>
+<li><b>1</b>: Disables the filter completely.</li>
 </ul>
 </li>
 </ul>
 </section>
 
 <section id="advanced-properties">
-<h2>Propriedades avançadas</h2>
+<h2>Advanced Properties</h2>
 <p>
-Para modificar as configurações estendidas, você precisa ativar a caixa <b>Advanced Settings</b>.<br />
-<em>Observação: quando esta caixa está desmarcada, todas as configurações abaixo são forçadas para seus valores padrão.</em>
+To modify the extended configurations, you must enable the <b>Advanced Settings</b> checkbox.<br />
+<em>Note: When this checkbox is unchecked, all settings below are forced to their default values.</em>
 </p>
 
 <ul>
-<li><b>Guided Filter Eps [dB]</b>: Controla o parâmetro epsilon do Guided Filter. Isso equilibra suavização e preservação de bordas. Ajuste isso se os detalhes finos parecerem muito borrados ou com ruído.</li>
+<li><b>Guided Filter Eps [dB]</b>: Controls the epsilon parameter of the Guided Filter. This balances smoothing versus edge preservation. Adjust this if fine details look too blurry or noisy.</li>
 <li>
-<b>Mask Gamma</b>: Controla a dureza das bordas.
+<b>Mask Gamma</b>: Controls the edge hardness.
 <ul>
-<li><b>&gt; 1.0</b>: Deixa as bordas mais nítidas/finas (choke).</li>
-<li><b>&lt; 1.0</b>: Deixa as bordas mais suaves/espessas (spread).</li>
-<li><em>Valor típico: 1.5 - 2.5</em></li>
+<li><b>&gt; 1.0</b>: Makes edges sharper/thinner (choke).</li>
+<li><b>&lt; 1.0</b>: Makes edges softer/thicker (spread).</li>
+<li><em>Typical value: 1.5 - 2.5</em></li>
 </ul>
 </li>
 <li>
-<b>Mask Lower Bound [dB]</b> &amp; <b>Mask Upper Bound Margin [dB]</b>: Esses parâmetros evitam semitransparência ambígua para melhorar a qualidade do recorte.
+<b>Mask Lower Bound [dB]</b> &amp; <b>Mask Upper Bound Margin [dB]</b>: These parameters prevent ambiguous semi-transparency to improve the cutout quality.
 <ul>
-<li><b>Lower Bound</b>: Pixels abaixo desse nível ficam totalmente transparentes. Controla a <b>remoção de halo</b>.</li>
-<li><b>Upper Bound Margin</b>: Pixels acima desse nível ficam totalmente opacos. Controla a <b>solidez do núcleo</b>.</li>
+<li><b>Lower Bound</b>: Pixels below this level become fully transparent. Controls <b>halo removal</b>.</li>
+<li><b>Upper Bound Margin</b>: Pixels above this level become fully opaque. Controls <b>core solidity</b>.</li>
 </ul>
 </li>
 </ul>
 </section>
 
-<nav aria-label="Navegação da página">
-<a href={withTrailingSlash(joinURL(BASE_URL, lang))}>Voltar ao topo</a>
+<nav aria-label="Page navigation">
+<a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
 </nav>
 </main>
 

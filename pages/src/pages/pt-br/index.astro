@@ -15,8 +15,6 @@ const { BASE_URL, PROD } = import.meta.env;
 const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 
 const lang = "pt-br";
-const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
-const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang));
 
 const MyOctokit = Octokit.plugin(paginateRest);
 const octokit = new MyOctokit({ auth: import.meta.env.GITHUB_TOKEN });
@@ -40,29 +38,33 @@ const aggregateRating = await getAggregateRating();
 <link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
 <link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
 <link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
-<link rel="canonical" href={canonicalURL} />
+<link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang))} />
+<link rel="alternate" hreflang="x-default" href={withTrailingSlash(PRODUCTION_BASE_URL)} />
+<link rel="alternate" hreflang="en" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "en"))} />
+<link rel="alternate" hreflang="de-de" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "de-de"))} />
+<link rel="alternate" hreflang="es-es" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "es-es"))} />
+<link rel="alternate" hreflang="fr-fr" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "fr-fr"))} />
+<link rel="alternate" hreflang="ja-jp" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ja-jp"))} />
+<link rel="alternate" hreflang="ko-kr" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ko-kr"))} />
+<link rel="alternate" hreflang="pt-br" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "pt-br"))} />
+<link rel="alternate" hreflang="ru-ru" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ru-ru"))} />
+<link rel="alternate" hreflang="zh-cn" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-cn"))} />
+<link rel="alternate" hreflang="zh-tw" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-tw"))} />
 <script is:inline src={joinURL(BASE_URL, "scripts", "LocalDate.js")}></script>
+<script is:inline src={joinURL(BASE_URL, "scripts", "LanguageSwitcher.js")}></script>
 </head>
 <body id="site-home">
-<main class="white-box">
 
+<nav class="language-switcher" aria-label="Seletor de idioma">
+<language-switcher><button lang="en" translate="no">🌐 Language</button></language-switcher>
+<script>document.querySelector("nav.language-switcher button")?.addEventListener("click", LanguageSwitcherElement.onClick);</script>
+</nav>
+
+<main class="white-box">
 <h1>
 <img class="lbrl-logo" src={joinURL(BASE_URL, "favicon.svg")} alt="Logotipo do Live Background Removal Lite" width="96" height="96" />
 <span>Live Background Removal Lite</span>
 </h1>
-
-<nav class="langs" aria-label="Idioma">
-<a href={withTrailingSlash(BASE_URL)} lang="en">Global</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "de-de"))} lang="de-de">Deutsch</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "es-es"))} lang="es-es">Español</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr"))} lang="fr-fr">Français</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr"))} lang="ko-kr">한국어</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp"))} lang="ja-jp">日本語</a> |
-<span lang="pt-br">Português (Brasil)</span> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru"))} lang="ru-ru">Русский</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn"))} lang="zh-cn">简体中文</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "zh-tw"))} lang="zh-tw">繁體中文</a>
-</nav>
 
 <section id="about">
 <h2>Uma remoção de fundo de alto desempenho, resistente a falhas e com foco em jogos para o OBS Studio</h2>
@@ -113,7 +115,7 @@ const aggregateRating = await getAggregateRating();
 <ul>
 <li><a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`}>Repositório GitHub</a></li>
 <li><a href={withTrailingSlash(joinURL(BASE_URL, "versions"))}>Histórico de versões</a></li>
-<li><a href={withTrailingSlash(joinURL(localizedBaseURL, "usage"))}>Uso e configuração</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, lang, "usage"))}>Uso e configuração</a></li>
 </ul>
 </nav>
 </main>

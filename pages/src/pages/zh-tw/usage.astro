@@ -12,8 +12,6 @@ const { BASE_URL, PROD } = import.meta.env;
 const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 
 const lang = "zh-tw";
-const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
-const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"));
 ---
 
 <!doctype html>
@@ -29,28 +27,31 @@ const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage
 <link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
 <link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
 <link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
-<link rel="canonical" href={canonicalURL} />
+<link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"))} />
+<link rel="alternate" hreflang="x-default" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "usage"))} />
+<link rel="alternate" hreflang="en" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "en", "usage"))} />
+<link rel="alternate" hreflang="de-de" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "de-de", "usage"))} />
+<link rel="alternate" hreflang="es-es" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "es-es", "usage"))} />
+<link rel="alternate" hreflang="fr-fr" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "fr-fr", "usage"))} />
+<link rel="alternate" hreflang="ja-jp" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ja-jp", "usage"))} />
+<link rel="alternate" hreflang="ko-kr" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ko-kr", "usage"))} />
+<link rel="alternate" hreflang="pt-br" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "pt-br", "usage"))} />
+<link rel="alternate" hreflang="ru-ru" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ru-ru", "usage"))} />
+<link rel="alternate" hreflang="zh-cn" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-cn", "usage"))} />
+<link rel="alternate" hreflang="zh-tw" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-tw", "usage"))} />
 </head>
 <body id="site-usage">
-<main class="white-box">
 
+<nav class="language-switcher" aria-label="語言切換器">
+<language-switcher><button lang="en" translate="no">🌐 Language</button></language-switcher>
+<script>document.querySelector("nav.language-switcher button")?.addEventListener("click", LanguageSwitcherElement.onClick);</script>
+</nav>
+
+<main class="white-box">
 <hgroup>
 <h1>使用方式</h1>
 <h2>Live Background Removal Lite</h2>
 </hgroup>
-
-<nav class="langs" aria-label="語言">
-<a href={withTrailingSlash(joinURL(BASE_URL, "usage"))} lang="en">Global</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "de-de", "usage"))} lang="de-de">Deutsch</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "es-es", "usage"))} lang="es-es">Español</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr", "usage"))} lang="fr-fr">Français</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr", "usage"))} lang="ko-kr">한국어</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp", "usage"))} lang="ja-jp">日本語</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "pt-br", "usage"))} lang="pt-br">Português (Brasil)</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru", "usage"))} lang="ru-ru">Русский</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn", "usage"))} lang="zh-cn">简体中文</a> |
-<span lang="zh-tw">繁體中文</span>
-</nav>
 
 <section id="adding-filter">
 <h2>新增濾鏡</h2>
@@ -129,7 +130,7 @@ fetchpriority="high"
 </section>
 
 <nav aria-label="頁面導覽">
-<a href={withTrailingSlash(localizedBaseURL)}>返回頂端</a>
+<a href={withTrailingSlash(joinURL(BASE_URL, lang))}>返回頂端</a>
 </nav>
 </main>
 

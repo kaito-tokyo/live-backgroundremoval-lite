@@ -8,6 +8,8 @@ import { joinURL, withTrailingSlash } from "ufo";
 import { defaultContentSecurityPolicy } from "../lib/csp.mjs";
 import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../lib/info.mjs";
 
+import "./styles/base.css";
+
 const { BASE_URL, PROD } = import.meta.env;
 const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 ---
@@ -17,121 +19,53 @@ const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 <head>
 <meta charset="utf-8" />
 { PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
-<title>Usage - Live Background Removal Lite</title>
-<meta name="description" content="A gaming-first, high-performance, and crash-resilient background removal for OBS Studio." />
+<title>Live Background Removal Lite</title>
+<meta name="description" content="The list of available languages for the usage and configuration page of Live Background Removal Lite." />
 <meta name="viewport" content="width=device-width" />
 <meta name="revision" content={GITHUB_SHA ?? "undefined"} />
-<meta name="github-repo" content="kaito-tokyo/live-backgroundremoval-lite" />
 <link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
 <link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
-<link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
-<link rel="canonical" href={withTrailingSlash(PRODUCTION_BASE_URL)} />
-<script is:inline src={joinURL(BASE_URL, "scripts", "LocalDate.js")}></script>
+<link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "usage"))} />
+<link rel="alternate" hreflang="x-default" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "usage"))} />
+<link rel="alternate" hreflang="en" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "en", "usage"))} />
+<link rel="alternate" hreflang="de-de" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "de-de", "usage"))} />
+<link rel="alternate" hreflang="es-es" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "es-es", "usage"))} />
+<link rel="alternate" hreflang="fr-fr" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "fr-fr", "usage"))} />
+<link rel="alternate" hreflang="ja-jp" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ja-jp", "usage"))} />
+<link rel="alternate" hreflang="ko-kr" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ko-kr", "usage"))} />
+<link rel="alternate" hreflang="pt-br" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "pt-br", "usage"))} />
+<link rel="alternate" hreflang="ru-ru" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ru-ru", "usage"))} />
+<link rel="alternate" hreflang="zh-cn" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-cn", "usage"))} />
+<link rel="alternate" hreflang="zh-tw" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-tw", "usage"))} />
 </head>
-<body id="site-usage">
+<body id="site-usage-languages">
 <main class="white-box">
 
 <hgroup>
-<h1>Usage</h1>
+<h1>Usage &amp; Configuration</h1>
 <h2>Live Background Removal Lite</h2>
 </hgroup>
 
-<nav class="langs" aria-label="Language">
-<span lang="en">Global</span> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "de-de", "usage"))} lang="de-de">Deutsch</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "es-es", "usage"))} lang="es-es">Español</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr", "usage"))} lang="fr-fr">Français</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr", "usage"))} lang="ko-kr">한국어</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp", "usage"))} lang="ja-jp">日本語</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "pt-br", "usage"))} lang="pt-br">Português (Brasil)</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru", "usage"))} lang="ru-ru">Русский</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn", "usage"))} lang="zh-cn">简体中文</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "zh-tw", "usage"))} lang="zh-tw">繁體中文</a>
-</nav>
-
-<section id="adding-filter">
-<h2>Adding the Filter</h2>
-<img
-src={joinURL(BASE_URL, "effect-filters.webp")}
-alt="Screenshot of the OBS Studio Filters window, showing the selection of 'Live Background Removal Lite' from the Effect Filters list."
-width="1552"
-height="1032"
-fetchpriority="high"
-/>
-<ol>
-<li>In OBS Studio, right-click your video source (e.g., your webcam) in the "Sources" panel.</li>
-<li>Select <b>Filters</b> from the context menu.</li>
-<li>In the "Filters" window, under the "Effect Filters" section, click the <b>+</b> button to add a new filter.</li>
-<li>From the list of available filters, select <b>Live Background Removal Lite</b>.</li>
-<li>The filter will be added to your source, and you can now adjust its properties as needed.</li>
-</ol>
-</section>
-
-<section id="basic-properties">
-<h2>Basic Properties</h2>
+<nav class="languages-list" aria-label="Languages">
 <ul>
-<li><b>Plugin Status</b>: The top section displays the current update status of the plugin.</li>
-<li>
-<b>Filter Level</b>: Selects the processing stage for background removal. <br />
-<ul>
-<li><b>Passthrough</b>: No background removal, source is shown as-is.</li>
-<li><b>Segmentation</b>: Applies a basic segmentation mask to remove the background.</li>
-<li><b>Motion Intensity Thresholding</b>: Only applies segmentation when motion is detected above a threshold.</li>
-<li><b>Guided Filter</b>: Refines the mask edges using a guided filter for better quality.</li>
-<li><b>Time Averaged Filter</b>: Further smooths and stabilizes the mask over time for the highest quality cutout.</li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "en", "usage"))} lang="en">English</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "de-de", "usage"))} lang="de-de">Deutsch</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "es-es", "usage"))} lang="es-es">Español</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr", "usage"))} lang="fr-fr">Français</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr", "usage"))} lang="ko-kr">한국어</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp", "usage"))} lang="ja-jp">日本語</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "pt-br", "usage"))} lang="pt-br">Português (Brasil)</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru", "usage"))} lang="ru-ru">Русский</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn", "usage"))} lang="zh-cn">简体中文</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "zh-tw", "usage"))} lang="zh-tw">繁體中文</a></li>
 </ul>
-</li>
-<li>
-<b>Motion Intensity Threshold [dB]</b>: Determines the movement sensitivity to trigger the AI. Lowering this value makes it less sensitive (duller) and reduces load. <br />
-<em>Tip: Adjust this value as low as possible while maintaining accurate mask tracking when you move.</em>
-</li>
-<li>
-<b>Motion Tracking Speed</b>: Adjusts the filter to suppress flickering.
-<ul>
-<li><b>Lower values</b>: Less flickering, but increases mask latency (lag).
-</li>
-<li><b>Higher values</b>: Faster tracking response, but may increase flickering.</li>
-<li><b>0</b>: The mask stops moving.</li>
-<li><b>1</b>: Disables the filter completely.</li>
-</ul>
-</li>
-</ul>
-</section>
-
-<section id="advanced-properties">
-<h2>Advanced Properties</h2>
-<p>
-To modify the extended configurations, you must enable the <b>Advanced Settings</b> checkbox.<br />
-<em>Note: When this checkbox is unchecked, all settings below are forced to their default values.</em>
-</p>
-
-<ul>
-<li><b>Guided Filter Eps [dB]</b>: Controls the epsilon parameter of the Guided Filter. This balances smoothing versus edge preservation. Adjust this if fine details look too blurry or noisy.</li>
-<li>
-<b>Mask Gamma</b>: Controls the edge hardness.
-<ul>
-<li><b>&gt; 1.0</b>: Makes edges sharper/thinner (choke).</li>
-<li><b>&lt; 1.0</b>: Makes edges softer/thicker (spread).</li>
-<li><em>Typical value: 1.5 - 2.5</em></li>
-</ul>
-</li>
-<li>
-<b>Mask Lower Bound [dB]</b> &amp; <b>Mask Upper Bound Margin [dB]</b>: These parameters prevent ambiguous semi-transparency to improve the cutout quality.
-<ul>
-<li><b>Lower Bound</b>: Pixels below this level become fully transparent. Controls <b>halo removal</b>.</li>
-<li><b>Upper Bound Margin</b>: Pixels above this level become fully opaque. Controls <b>core solidity</b>.</li>
-</ul>
-</li>
-</ul>
-</section>
-
-<nav aria-label="Page navigation">
-<a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
 </nav>
 </main>
 
 <footer>
-<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer"><img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="Daily Website Security Check" /></a>
+<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer">
+<img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="Daily Website Security Check" />
+</a>
 &copy; 2025-2026 Kaito Udagawa
 </footer>
 

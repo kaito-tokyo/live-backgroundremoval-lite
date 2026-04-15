@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+// Use `<script src=".../LocalDate.js"></script>` to include this. This script is not a module.
+
 class LocalDateElement extends HTMLElement {
   constructor() {
     super();
