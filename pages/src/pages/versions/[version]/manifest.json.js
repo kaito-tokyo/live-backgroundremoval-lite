@@ -18,17 +18,22 @@ export async function getStaticPaths() {
   /** @type {import("astro").GetStaticPathsResult} */
   const staticPaths = [];
 
-  for (const { tag_name: version } of allReleases) {
+  for (const release of allReleases) {
+    if (release.draft || !release.published_at) {
+      continue;
+    }
+
+    const version = release.tag_name;
+
     let compactManifest = sortStringify({ name: "manifest missing", version });
 
     if (isManifestEnabled(version)) {
       const data = await getRepoContents(octokit, "data/manifest.json", version);
-      if (data.type === "file" && data.content) {
-        try {
-          compactManifest = sortStringify(JSON.parse(data.content));
-        } catch (e) {
-          console.debug(`Invalid manifest for ${version}:`, e);
-        }
+      try {
+        compactManifest = sortStringify(JSON.parse(data));
+      } catch (e) {
+        console.error(`Malformed manifest for ${version}:`, e);
+        throw e;
       }
     }
 

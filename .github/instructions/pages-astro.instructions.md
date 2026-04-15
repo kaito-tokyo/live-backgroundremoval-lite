@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-applyTo: "{pages,pages/*}/*.astro"
+applyTo: "pages/**/*.astro"
 ---
 
 # Astro Pages Guidelines

@@ -5,6 +5,7 @@
 
 import { joinURL, withTrailingSlash } from "ufo";
 
+import { defaultContentSecurityPolicy } from "../../lib/csp.mjs";
 import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../../lib/info.mjs";
 
 const { BASE_URL, PROD } = import.meta.env;
@@ -13,31 +14,13 @@ const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 const lang = "ja-jp";
 const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
 const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"));
-
-const cspContent = [
-  "default-src 'self';",
-
-  "connect-src 'self' https://cloudflareinsights.com;",
-  "img-src 'self' data: https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yml/badge.svg;",
-  "script-src 'self' https://static.cloudflareinsights.com;",
-  "style-src 'self';",
-
-  "base-uri 'none';",
-  "font-src 'self';",
-  "form-action 'self';",
-  "frame-src 'none';",
-  "manifest-src 'self';",
-  "object-src 'none';",
-  "upgrade-insecure-requests;",
-  "worker-src 'self';"
-];
 ---
 
 <!doctype html>
 <html lang="ja-jp">
 <head>
 <meta charset="utf-8" />
-{ PROD && (<meta http-equiv="Content-Security-Policy" content={cspContent.join(" ")} />) }
+{ PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
 <title>使い方 - Live Background Removal Lite</title>
 <meta name="description" content="OBS Studio向けの、ゲーム優先・高性能・クラッシュ耐性のある背景削除。" />
 <meta name="viewport" content="width=device-width" />
@@ -46,7 +29,6 @@ const cspContent = [
 <link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
 <link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
 <link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
-<link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
 <link rel="canonical" href={canonicalURL} />
 </head>
 <body id="site-usage">
@@ -147,12 +129,8 @@ fetchpriority="high"
 </ul>
 </section>
 
-<nav class="page-nav" aria-label="ページ内ナビゲーション">
-<ul>
-<li>
+<nav aria-label="ページ内ナビゲーション">
 <a href={withTrailingSlash(localizedBaseURL)}>トップに戻る</a>
-</li>
-</ul>
 </nav>
 </main>
 

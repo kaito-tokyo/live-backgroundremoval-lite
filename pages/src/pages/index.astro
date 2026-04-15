@@ -5,7 +5,10 @@
 
 import { joinURL, withTrailingSlash } from "ufo";
 import { Octokit } from "@octokit/core";
+import { paginateRest } from "@octokit/plugin-paginate-rest";
 
+import { defaultContentSecurityPolicy } from "../lib/csp.mjs";
+import { getLatestRelease } from "../lib/github.mjs";
 import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL, MATRIX_CHATROOM_URL, getAggregateRating } from "../lib/info.mjs";
 
 const { BASE_URL, PROD } = import.meta.env;
@@ -16,42 +19,19 @@ const lang = "en";
 const localizedBaseURL = withTrailingSlash(lang === "en" ? BASE_URL : joinURL(BASE_URL, lang));
 const canonicalURL = withTrailingSlash(lang === "en" ? PRODUCTION_BASE_URL : joinURL(PRODUCTION_BASE_URL, lang));
 
-const octokit = new Octokit({ auth: GITHUB_TOKEN });
+const MyOctokit = Octokit.plugin(paginateRest);
+const octokit = new MyOctokit({ auth: GITHUB_TOKEN });
 
-const { data: latestRelease } = await octokit.request(
-  "GET /repos/{owner}/{repo}/releases/latest",
-  {
-    owner: GITHUB_OWNER,
-    repo: GITHUB_REPO,
-  },
-);
+const latestRelease = await getLatestRelease(octokit);
 
 const aggregateRating = await getAggregateRating();
-
-const cspContent = [
-  "default-src 'self';",
-
-  "connect-src 'self' https://cloudflareinsights.com;",
-  "img-src 'self' data: https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yml/badge.svg;",
-  "script-src 'self' https://static.cloudflareinsights.com;",
-  "style-src 'self';",
-
-  "base-uri 'none';",
-  "font-src 'self';",
-  "form-action 'self';",
-  "frame-src 'none';",
-  "manifest-src 'self';",
-  "object-src 'none';",
-  "upgrade-insecure-requests;",
-  "worker-src 'self';"
-];
 ---
 
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-{ PROD && (<meta http-equiv="Content-Security-Policy" content={cspContent.join(" ")} />) }
+{ PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
 <title>Live Background Removal Lite</title>
 <meta name="description" content="A gaming-first, high-performance, and crash-resilient background removal for OBS Studio." />
 <meta name="viewport" content="width=device-width" />

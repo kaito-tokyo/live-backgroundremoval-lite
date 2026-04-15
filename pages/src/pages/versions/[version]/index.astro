@@ -7,6 +7,7 @@ import { joinURL, withTrailingSlash } from "ufo";
 import { Octokit } from "@octokit/core";
 import { paginateRest } from "@octokit/plugin-paginate-rest";
 
+import { defaultContentSecurityPolicy } from "../../../lib/csp.mjs";
 import { GITHUB_OWNER, GITHUB_REPO, GITHUB_URL, PRODUCTION_BASE_URL, MATRIX_CHATROOM_URL } from "../../../lib/info.mjs";
 import { getLatestRelease, listReleases } from "../../../lib/github.mjs";
 
@@ -15,12 +16,18 @@ export async function getStaticPaths() {
   const octokit = new MyOctokit({ auth: import.meta.env.GITHUB_TOKEN });
 
   const allReleases = await listReleases(octokit);
-  const { data: latestRelease } = await getLatestRelease(octokit);
+  const latestRelease = await getLatestRelease(octokit);
 
-  return allReleases.map((release) => ({
-    params: { version: release.tag_name },
-    props: { release, isLatestRelease: release.id === latestRelease.id },
-  }));
+  return allReleases.flatMap((release) => {
+    if (release.draft || !release.published_at) {
+      return [];
+    } else {
+      return [{
+        params: { version: release.tag_name },
+        props: { release, isLatestRelease: release.id === latestRelease.id },
+      }];
+    }
+  });
 }
 
 const { BASE_URL, PROD } = import.meta.env;
@@ -49,31 +56,13 @@ if (release.body) {
     description += "...";
   }
 }
-
-const cspContent = [
-  "default-src 'self';",
-
-  "connect-src 'self' https://cloudflareinsights.com;",
-  "img-src 'self' data: https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yml/badge.svg;",
-  "script-src 'self' https://static.cloudflareinsights.com;",
-  "style-src 'self';",
-
-  "base-uri 'none';",
-  "font-src 'self';",
-  "form-action 'self';",
-  "frame-src 'none';",
-  "manifest-src 'self';",
-  "object-src 'none';",
-  "upgrade-insecure-requests;",
-  "worker-src 'self';"
-];
 ---
 
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-{ PROD && (<meta http-equiv="Content-Security-Policy" content={cspContent.join(" ")} />) }
+{ PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
 <title>{`Live Background Removal Lite ${version}`}</title>
 <meta name="description" content={description} />
 <meta name="viewport" content="width=device-width" />
@@ -106,7 +95,7 @@ release.prerelease && (
 }
 
 <section class="release-notes">
-<pre>{release.body}</pre>
+<pre>{release.body ?? "No release notes available."}</pre>
 </section>
 
 <section class="downloads-section">
@@ -136,7 +125,7 @@ release.prerelease && (
 
 </article>
 
-<nav class="page-nav" aria-label="Page navigation">
+<nav aria-label="Page navigation">
 <a href={withTrailingSlash(BASE_URL)}>Back to Top</a> |
 <a href={withTrailingSlash(joinURL(BASE_URL, "versions"))}>Back to Version History</a> |
 <a href={withTrailingSlash(GITHUB_URL)} target="_blank" rel="noopener noreferrer">GitHub Repository</a>

@@ -33,7 +33,7 @@ export async function getRepoContents(octokit, path, ref, owner = GITHUB_OWNER, 
  * @param {import("@octokit/core").Octokit & { paginate: import("@octokit/plugin-paginate-rest").PaginateInterface }} octokit
  */
 export async function getLatestRelease(octokit, owner = GITHUB_OWNER, repo = GITHUB_REPO) {
-  return octokit.request(
+  const { data } = await octokit.request(
     "GET /repos/{owner}/{repo}/releases/latest",
     /** @type {{ owner: string; repo: string }} */ ({
       owner,
@@ -44,6 +44,7 @@ export async function getLatestRelease(octokit, owner = GITHUB_OWNER, repo = GIT
       },
     }),
   );
+  return data;
 }
 
 /**
