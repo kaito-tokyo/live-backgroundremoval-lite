@@ -5,184 +5,98 @@
 
 import { joinURL, withTrailingSlash } from "ufo";
 import { Octokit } from "@octokit/core";
-import { composePaginateRest } from "@octokit/plugin-paginate-rest";
-import type { Endpoints } from "@octokit/types";
+import { paginateRest } from "@octokit/plugin-paginate-rest";
 
-import {
-  GITHUB_OWNER,
-  GITHUB_REPO,
-  GITHUB_URL,
-  PRODUCTION_BASE_URL,
-} from "../../lib/info.mjs";
-import DefineLocalDate from "../../components/DefineLocalDate.astro";
-import Layout from "../../layouts/Layout.astro";
+import { GITHUB_OWNER, GITHUB_REPO, GITHUB_URL, PRODUCTION_BASE_URL } from "../../lib/info.mjs";
+import { getLatestRelease, listReleases } from "../../lib/github.mjs";
 
-const { BASE_URL } = import.meta.env;
+const { BASE_URL, PROD } = import.meta.env;
+const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 
-const octokit = new Octokit({ auth: import.meta.env.GITHUB_TOKEN });
+const MyOctokit = Octokit.plugin(paginateRest);
+const octokit = new MyOctokit({ auth: import.meta.env.GITHUB_TOKEN });
 
-const iterator = composePaginateRest.iterator(
-  octokit,
-  "GET /repos/{owner}/{repo}/releases",
-  {
-    owner: GITHUB_OWNER,
-    repo: GITHUB_REPO,
-    headers: {
-      "X-GitHub-Api-Version": "2026-03-10",
-    },
-  } as any,
-);
+const allReleases = await listReleases(octokit);
+const { data: latestRelease } = await getLatestRelease(octokit);
 
-const allReleases: Endpoints["GET /repos/{owner}/{repo}/releases"]["response"]["data"] =
-  [];
-for await (const { data } of iterator) {
-  if (!data || !Array.isArray(data)) {
-    throw new Error("Failed to fetch releases data.");
-  }
+const validReleases = allReleases.filter((release) => !release.prerelease && !release.draft && release.id !== latestRelease.id);
 
-  allReleases.push(...data);
-}
+const cspContent = [
+  "default-src 'self';",
 
-const releases = allReleases.filter((r) => !r.draft && r.published_at);
+  "connect-src 'self' https://cloudflareinsights.com;",
+  "img-src 'self' data: https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yml/badge.svg;",
+  "script-src 'self' https://static.cloudflareinsights.com;",
+  "style-src 'self';",
 
-if (releases.length === 0) {
-  throw new Error("No releases found.");
-}
-
-const latestRelease = releases[0];
-const pastReleases = releases.slice(1);
-
-const schemaData = {
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-
-  mainEntityOfPage: {
-    "@type": "WebPage",
-    "@id": withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions")),
-  },
-  url: withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions")),
-
-  name: "Live Background Removal Lite Version History",
-  alternateName: ["Changelog", "Release Notes", "Software Updates"],
-  description:
-    "Archive of all official releases for Live Background Removal Lite.",
-
-  image: joinURL(PRODUCTION_BASE_URL, "screenshot.webp"),
-
-  sameAs: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases`,
-
-  itemListOrder: "https://schema.org/ItemListOrderDescending",
-  numberOfItems: releases.length,
-
-  itemListElement: releases.map((release, index) => ({
-    "@type": "ListItem",
-    position: index + 1,
-    name: `Version ${release.tag_name}`,
-    url: withTrailingSlash(
-      joinURL(PRODUCTION_BASE_URL, "versions", release.tag_name),
-    ),
-  })),
-};
+  "base-uri 'none';",
+  "font-src 'self';",
+  "form-action 'self';",
+  "frame-src 'none';",
+  "manifest-src 'self';",
+  "object-src 'none';",
+  "upgrade-insecure-requests;",
+  "worker-src 'self';"
+];
 ---
 
-<Layout lang="en" title="Version History - Live Background Removal Lite">
-  <Fragment slot="head-info">
-    <meta
-      name="description"
-      content="Official release archive for Live Background Removal Lite. Access all past versions, release notes, and download links in one place."
-    />
-    <link
-      rel="canonical"
-      href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions"))}
-    />
-  </Fragment>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+{ PROD && (<meta http-equiv="Content-Security-Policy" content={cspContent.join(" ")} />) }
+<title>Versions - Live Background Removal Lite</title>
+<meta name="description" content="Official release archive for Live Background Removal Lite. Access all past versions, release notes, and download links in one place." />
+<meta name="viewport" content="width=device-width" />
+<meta name="revision" content={GITHUB_SHA ?? "undefined"} />
+<meta name="github-repo" content="kaito-tokyo/live-backgroundremoval-lite" />
+<link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
+<link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
+<link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
+<link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
+<link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "versions"))} />
+<script is:inline src={joinURL(BASE_URL, "scripts", "LocalDate.js")}></script>
+</head>
+<body id="site-versions-index">
+<main class="white-box">
 
-  <Fragment slot="head-bottom">
-    <DefineLocalDate />
-    <script type="application/ld+json" set:html={JSON.stringify(schemaData)} />
-  </Fragment>
+<hgroup>
+<h1>Version History</h1>
+<h2>Live Background Removal Lite</h2>
+</hgroup>
 
-  <main class="white-box">
-    <hgroup>
-      <h1>Version History</h1>
-      <h2>Live Background Removal Lite</h2>
-    </hgroup>
+<h2>Latest Release</h2>
+<p id="latest-release">
+<a href={withTrailingSlash(joinURL(BASE_URL, "versions", latestRelease.tag_name))}><b>{latestRelease.tag_name}</b>
+(<local-date data-date={latestRelease.published_at}><time datetime={latestRelease.published_at}>{latestRelease.published_at}</time></local-date>)</a>
+</p>
 
-    <h2>Latest Release</h2>
-    <p id="latest-release">
-      <a
-        href={withTrailingSlash(
-          joinURL(BASE_URL, "versions", latestRelease.tag_name),
-        )}
-        ><strong>{latestRelease.tag_name}</strong>
-        {
-          [
-            "(",
-            <local-date data-date={latestRelease.published_at}>
-              <time datetime={latestRelease.published_at}>
-                {latestRelease.published_at}
-              </time>
-            </local-date>,
-            ")",
-          ]
-        }
-      </a>
-    </p>
+<nav class="page-nav" aria-label="Page navigation">
+<ul>
+<li><a href={withTrailingSlash(BASE_URL)}>Back to Top</a></li>
+<li><a href={withTrailingSlash(GITHUB_URL)} target="_blank" rel="noopener noreferrer">GitHub Repository</a></li>
+</ul>
+</nav>
 
-    <nav class="page-nav" aria-label="Page navigation">
-      <ul>
-        <li>
-          <a href={withTrailingSlash(BASE_URL)}>Back to Top</a>
-        </li>
-        <li>
-          <a
-            href={withTrailingSlash(GITHUB_URL)}
-            target="_blank"
-            rel="noopener noreferrer">GitHub Repository</a
-          >
-        </li>
-      </ul>
-    </nav>
+<hr />
 
-    <hr />
+<h2>Past Versions</h2>
+<ul>
+{ validReleases.map((release) => (
+<li>
+<a href={withTrailingSlash(joinURL(BASE_URL, "versions", release.tag_name))}>
+<b>{release.tag_name}</b>
+(<local-date data-date={release.published_at}><time datetime={release.published_at}>{release.published_at}</time></local-date>)</a>
+</li>
+)) }
+</ul>
+</main>
 
-    <h2>Past Versions</h2>
-    <ul>
-      {
-        pastReleases.map((release) => (
-          <li>
-            <a
-              href={withTrailingSlash(
-                joinURL(BASE_URL, "versions", release.tag_name),
-              )}
-            >
-              {release.tag_name}
-              {[
-                "(",
-                <local-date data-date={release.published_at}>
-                  <time datetime={release.published_at}>
-                    {release.published_at}
-                  </time>
-                </local-date>,
-                ")",
-              ]}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </main>
-</Layout>
+<footer>
+<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer"><img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="Daily Website Security Check" /></a>
+&copy; 2025-2026 Kaito Udagawa
+</footer>
 
-<style is:global>
-  main {
-    ul {
-      max-width: 600px;
-    }
-
-    #latest-release {
-      font-size: 1.25rem;
-      margin-left: 2rem;
-    }
-  }
-</style>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"0df4a48356ba406099ae721158ab230b"}'></script>
+</body>
+</html>

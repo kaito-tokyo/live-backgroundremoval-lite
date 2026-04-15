@@ -8,6 +8,8 @@ export const GITHUB_URL = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`;
 export const PRODUCTION_BASE_URL =
   "https://kaito-tokyo.github.io/live-backgroundremoval-lite";
 
+export const MATRIX_CHATROOM_URL = "https://matrix.to/#/#live-backgroundremoval-lite:matrix.org";
+
 /**
  * @param {string} version
  * @return {boolean}
@@ -20,8 +22,8 @@ export function isManifestEnabled(version) {
 export async function getAggregateRating() {
   return {
     "@type": "AggregateRating",
-    ratingValue: "4.5",
-    reviewCount: "4",
+    ratingValue: "4.0",
+    reviewCount: "5",
     bestRating: "5",
     worstRating: "1",
   };

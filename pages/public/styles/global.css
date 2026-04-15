@@ -1,0 +1,259 @@
+/*
+ * SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+:root {
+  --color-bg: #000;
+  --color-white-box-bg: #fff;
+  --color-box-shadow: #0000001a;
+  --color-download-button-bg: #357a38;
+  --color-download-button-active-bg: #4caf50;
+  --color-download-button-fg: white;
+  --color-alert-bg: #fff3cd;
+  --color-alert-fg: #856404;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+.white-box {
+  width: min(800px, 100% - 2rem);
+  margin: 1rem auto;
+  padding: 2rem;
+  box-sizing: border-box;
+  overflow: visible;
+
+  border-radius: 8px;
+  box-shadow: 0 4px 8px var(--color-box-shadow);
+
+  background-color: var(--color-white-box-bg);
+}
+
+ul.download-links {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+}
+
+ul.download-links > li > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  background-color: var(--color-download-button-bg);
+  color: var(--color-download-button-fg);
+  text-align: center;
+  text-decoration: none;
+  font-size: 18px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  font-weight: bold;
+}
+
+ul.download-links > li > a:hover {
+  background-color: var(--color-download-button-active-bg);
+}
+
+.page-nav {
+  & > ul {
+    padding: 0;
+    list-style: none;
+    margin: 0;
+  }
+
+  & > ul > li {
+    display: inline;
+  }
+
+  & > ul > li:not(:last-child)::after {
+    content: " | " / "";
+  }
+}
+
+body {
+  background-color: var(--color-bg);
+  min-height: 100vh;
+  margin: 0;
+}
+
+footer {
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+footer,
+footer a {
+  color: #ccc;
+}
+
+footer img {
+  vertical-align: middle;
+}
+
+.localized-button {
+  text-align: center;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.5rem;
+    border-radius: 8px;
+    background: #333;
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 4px 16px var(--color-box-shadow, rgba(0, 0, 0, 0.1));
+    font-weight: bold;
+  }
+
+  &[lang="en"] {
+    display: none;
+  }
+}
+
+.download-links {
+  margin-bottom: 1rem;
+}
+
+
+.material-buttons {
+  align-items: center;
+  column-gap: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 0.5rem;
+
+  & > div {
+    margin: .3rem 0;
+  }
+
+  .github-button, .matrix-chatroom-button {
+    display: flex;
+    justify-content: center;
+  }
+
+  a {
+    align-items: center;
+    border-radius: 5px;
+    display: flex;
+    font-size: 18px;
+    font-weight: bold;
+    gap: 0.5rem;
+    padding: 10px 20px;
+    text-decoration: none;
+  }
+
+  .github-button a {
+    background-color: #24292f;
+    color: #fff;
+  }
+
+  .matrix-chatroom-button a {
+    background-color: #0dbd8b;
+    color: #fff;
+  }
+}
+
+.langs {
+  text-align: center;
+}
+
+#site-home {
+  h1 {
+    margin-top: 40px;
+    font-weight: 700;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  #rating {
+    text-align: center;
+    font-style: italic;
+  }
+
+  .demo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .demo-container video {
+    max-width: 100%;
+    height: auto;
+    background: #e0e0e0;
+  }
+
+  .demo-caption {
+    margin-top: 8px;
+    color: #666;
+    font-size: 90%;
+    text-align: center;
+  }
+}
+
+#site-usage {
+  img {
+    width: 100%;
+    height: auto;
+    background: #21232e;
+  }
+}
+
+#site-versions-index {
+  #latest-release {
+    font-size: 1.25rem;
+    margin-left: 2rem;
+  }
+}
+
+#site-versions-version {
+  .version-title-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .version-title-row h1 {
+    margin: 0;
+  }
+
+  .badge-latest {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1;
+    color: #ffffff;
+    background-color: var(--color-download-button-bg);
+    border-radius: 2em;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .alert-box {
+    background-color: var(--color-alert-bg);
+    color: var(--color-alert-fg);
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+  }
+
+  .release-notes pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    max-width: 100%;
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+  }
+}

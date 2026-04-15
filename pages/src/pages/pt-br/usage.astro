@@ -1,0 +1,165 @@
+---
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { joinURL, withTrailingSlash } from "ufo";
+
+import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../../lib/info.mjs";
+
+const { BASE_URL, PROD } = import.meta.env;
+const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
+
+const lang = "pt-br";
+const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
+const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"));
+
+const cspContent = [
+  "default-src 'self';",
+
+  "connect-src 'self' https://cloudflareinsights.com;",
+  "img-src 'self' data: https://github.com/kaito-tokyo/live-backgroundremoval-lite/actions/workflows/daily-website-security-check.yml/badge.svg;",
+  "script-src 'self' https://static.cloudflareinsights.com;",
+  "style-src 'self';",
+
+  "base-uri 'none';",
+  "font-src 'self';",
+  "form-action 'self';",
+  "frame-src 'none';",
+  "manifest-src 'self';",
+  "object-src 'none';",
+  "upgrade-insecure-requests;",
+  "worker-src 'self';"
+];
+---
+
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8" />
+{ PROD && (<meta http-equiv="Content-Security-Policy" content={cspContent.join(" ")} />) }
+<title>Uso - Live Background Removal Lite</title>
+<meta name="description" content="Uma remoção de fundo de alto desempenho, resistente a falhas e com foco em jogos para o OBS Studio." />
+<meta name="viewport" content="width=device-width" />
+<meta name="revision" content={GITHUB_SHA ?? "undefined"} />
+<meta name="github-repo" content="kaito-tokyo/live-backgroundremoval-lite" />
+<link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
+<link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
+<link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
+<link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
+<link rel="canonical" href={canonicalURL} />
+</head>
+<body id="site-usage">
+<main class="white-box">
+
+<hgroup>
+<h1>Uso</h1>
+<h2>Live Background Removal Lite</h2>
+</hgroup>
+
+<nav class="langs" aria-label="Idioma">
+<a href={withTrailingSlash(joinURL(BASE_URL, "usage"))} lang="en">Global</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "de-de", "usage"))} lang="de-de">Deutsch</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "es-es", "usage"))} lang="es-es">Español</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr", "usage"))} lang="fr-fr">Français</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr", "usage"))} lang="ko-kr">한국어</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp", "usage"))} lang="ja-jp">日本語</a> |
+<span lang="pt-br">Português (Brasil)</span> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru", "usage"))} lang="ru-ru">Русский</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn", "usage"))} lang="zh-cn">简体中文</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "zh-tw", "usage"))} lang="zh-tw">繁體中文</a>
+</nav>
+
+<section id="adding-filter">
+<h2>Adicionar o filtro</h2>
+<img
+src={joinURL(BASE_URL, "effect-filters.webp")}
+alt="Captura de tela da janela de filtros do OBS Studio, mostrando a seleção de 'Live Background Removal Lite' na lista de filtros de efeito."
+width="1552"
+height="1032"
+fetchpriority="high"
+/
+>
+<ol>
+<li>No OBS Studio, clique com o botão direito na sua fonte de vídeo, por exemplo sua webcam, no painel "Fontes".</li>
+<li>Selecione <b>Filtros</b> no menu de contexto.</li>
+<li>Na janela "Filtros", na seção "Filtros de Efeito", clique no botão <b>+</b> para adicionar um novo filtro.</li>
+<li>Na lista de filtros disponíveis, selecione <b>Live Background Removal Lite</b>.</li>
+<li>O filtro será adicionado à sua fonte e você poderá ajustar suas propriedades conforme necessário.</li>
+</ol>
+</section>
+
+<section id="basic-properties">
+<h2>Propriedades básicas</h2>
+<ul>
+<li><b>Status do plugin</b>: A seção superior exibe o estado atual de atualização do plugin.</li>
+<li>
+<b>Nível do filtro</b>: Seleciona a etapa de processamento da remoção de fundo. <br />
+<ul>
+<li><b>Passthrough</b>: Sem remoção de fundo, a fonte é exibida como está.</li>
+<li><b>Segmentation</b>: Aplica uma máscara de segmentação básica para remover o fundo.</li>
+<li><b>Motion Intensity Thresholding</b>: Só aplica a segmentação quando o movimento detectado ultrapassa um limite.</li>
+<li><b>Guided Filter</b>: Refina as bordas da máscara usando um filtro guiado para melhor qualidade.</li>
+<li><b>Time Averaged Filter</b>: Suaviza e estabiliza ainda mais a máscara ao longo do tempo para obter o recorte da mais alta qualidade.</li>
+</ul>
+</li>
+<li>
+<b>Motion Intensity Threshold [dB]</b>: Determina a sensibilidade ao movimento que aciona a IA. Diminuir esse valor a torna menos sensível e reduz a carga. <br />
+<em>Dica: ajuste esse valor o mais baixo possível enquanto mantém um rastreamento de máscara preciso ao se mover.</em>
+</li>
+<li>
+<b>Motion Tracking Speed</b>: Ajusta o filtro para reduzir o tremor.
+<ul>
+<li><b>Valores baixos</b>: Menos tremor, mas aumenta a latência da máscara (lag).</li>
+<li><b>Valores altos</b>: Resposta de rastreamento mais rápida, mas pode aumentar o tremor.</li>
+<li><b>0</b>: A máscara para de se mover.</li>
+<li><b>1</b>: Desativa o filtro completamente.</li>
+</ul>
+</li>
+</ul>
+</section>
+
+<section id="advanced-properties">
+<h2>Propriedades avançadas</h2>
+<p>
+Para modificar as configurações estendidas, você precisa ativar a caixa <b>Advanced Settings</b>.<br />
+<em>Observação: quando esta caixa está desmarcada, todas as configurações abaixo são forçadas para seus valores padrão.</em>
+</p>
+
+<ul>
+<li><b>Guided Filter Eps [dB]</b>: Controla o parâmetro epsilon do Guided Filter. Isso equilibra suavização e preservação de bordas. Ajuste isso se os detalhes finos parecerem muito borrados ou com ruído.</li>
+<li>
+<b>Mask Gamma</b>: Controla a dureza das bordas.
+<ul>
+<li><b>&gt; 1.0</b>: Deixa as bordas mais nítidas/finas (choke).</li>
+<li><b>&lt; 1.0</b>: Deixa as bordas mais suaves/espessas (spread).</li>
+<li><em>Valor típico: 1.5 - 2.5</em></li>
+</ul>
+</li>
+<li>
+<b>Mask Lower Bound [dB]</b> &amp; <b>Mask Upper Bound Margin [dB]</b>: Esses parâmetros evitam semitransparência ambígua para melhorar a qualidade do recorte.
+<ul>
+<li><b>Lower Bound</b>: Pixels abaixo desse nível ficam totalmente transparentes. Controla a <b>remoção de halo</b>.</li>
+<li><b>Upper Bound Margin</b>: Pixels acima desse nível ficam totalmente opacos. Controla a <b>solidez do núcleo</b>.</li>
+</ul>
+</li>
+</ul>
+</section>
+
+<nav class="page-nav" aria-label="Navegação da página">
+<ul>
+<li>
+<a href={withTrailingSlash(localizedBaseURL)}>Voltar ao topo</a>
+</li>
+</ul>
+</nav>
+</main>
+
+<footer>
+<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer"><img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="Daily Website Security Check" /></a>
+&copy; 2025-2026 Kaito Udagawa
+</footer>
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"0df4a48356ba406099ae721158ab230b"}'></script>
+</body>
+</html>
