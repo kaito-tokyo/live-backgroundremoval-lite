@@ -1,0 +1,144 @@
+---
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { joinURL, withTrailingSlash } from "ufo";
+
+import { defaultContentSecurityPolicy } from "../../lib/csp.mjs";
+import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../../lib/info.mjs";
+
+const { BASE_URL, PROD } = import.meta.env;
+const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
+
+const lang = "ja-jp";
+const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
+const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"));
+---
+
+<!doctype html>
+<html lang="ja-jp">
+<head>
+<meta charset="utf-8" />
+{ PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
+<title>使い方 - Live Background Removal Lite</title>
+<meta name="description" content="OBS Studio向けの、ゲーム優先・高性能・クラッシュ耐性のある背景削除。" />
+<meta name="viewport" content="width=device-width" />
+<meta name="revision" content={GITHUB_SHA ?? "undefined"} />
+<meta name="github-repo" content="kaito-tokyo/live-backgroundremoval-lite" />
+<link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
+<link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
+<link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
+<link rel="canonical" href={canonicalURL} />
+</head>
+<body id="site-usage">
+<main class="white-box">
+
+
+<hgroup>
+<h1>使い方</h1>
+<h2>Live Background Removal Lite</h2>
+</hgroup>
+
+<nav class="langs" aria-label="言語">
+<a href={withTrailingSlash(joinURL(BASE_URL, "usage"))} lang="en">Global</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "de-de", "usage"))} lang="de-de">Deutsch</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "es-es", "usage"))} lang="es-es">Español</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr", "usage"))} lang="fr-fr">Français</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr", "usage"))} lang="ko-kr">한국어</a> |
+<span lang="ja-jp">日本語</span> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "pt-br", "usage"))} lang="pt-br">Português (Brasil)</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru", "usage"))} lang="ru-ru">Русский</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn", "usage"))} lang="zh-cn">简体中文</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "zh-tw", "usage"))} lang="zh-tw">繁體中文</a>
+</nav>
+
+<section id="adding-filter">
+<h2>フィルターの追加</h2>
+<img
+src={joinURL(BASE_URL, "effect-filters.webp")}
+alt="OBS Studioのフィルターウィンドウのスクリーンショット。エフェクトフィルター一覧から 'Live Background Removal Lite' を選択している様子。"
+width="1552"
+height="1032"
+fetchpriority="high"
+/
+>
+<ol>
+<li>OBS Studioで、ソースパネルのビデオソース（例: ウェブカメラ）を右クリックします。</li>
+<li>コンテキストメニューから <b>フィルター</b> を選択します。</li>
+<li>「フィルター」ウィンドウの「エフェクトフィルター」セクションで、<b>+</b> ボタンをクリックして新しいフィルターを追加します。</li>
+<li>利用可能なフィルターの一覧から <b>Live Background Removal Lite</b> を選択します。</li>
+<li>フィルターがソースに追加され、必要に応じてプロパティを調整できます。</li>
+</ol>
+</section>
+
+<section id="basic-properties">
+<h2>基本設定</h2>
+<ul>
+<li><b>プラグイン状態</b>: 画面上部にプラグインの更新状態が表示されます。</li>
+<li>
+<b>フィルターレベル</b>: 背景除去の処理段階を選択します。 <br />
+<ul>
+<li><b>Passthrough</b>: 背景除去を行わず、そのままソースを表示します。</li>
+<li><b>Segmentation</b>: 基本的なセグメンテーションマスクを適用して背景を除去します。</li>
+<li><b>Motion Intensity Thresholding</b>: 動きが閾値を超えた場合にのみセグメンテーションを適用します。</li>
+<li><b>Guided Filter</b>: ガイドフィルタを使ってマスクのエッジを洗練します。</li>
+<li><b>Time Averaged Filter</b>: マスクを時間的に平滑化し、最も高品質な切り抜きを行います。</li>
+</ul>
+</li>
+<li>
+<b>Motion Intensity Threshold [dB]</b>: AIをトリガーする動作感度を決定します。値を下げると感度が鈍くなり、負荷が減ります。 <br />
+<em>ヒント: 移動してもマスクの追従が保たれる最低限の感度までこの値を下げてください。</em>
+</li>
+<li>
+<b>Motion Tracking Speed</b>: マスクのちらつきを抑えるための設定です。
+<ul>
+<li><b>低い値</b>: ちらつきが減るが、マスクの遅延（ラグ）が増加します。</li>
+<li><b>高い値</b>: 追従は速くなるが、ちらつきが増える可能性があります。</li>
+<li><b>0</b>: マスクの動きが停止します。</li>
+<li><b>1</b>: フィルターを完全に無効化します。</li>
+</ul>
+</li>
+</ul>
+</section>
+
+<section id="advanced-properties">
+<h2>詳細設定</h2>
+<p>
+拡張設定を変更するには、<b>詳細設定</b> のチェックボックスを有効にしてください。<br />
+<em>注: このチェックが外れている場合、下の設定はすべてデフォルト値に固定されます。</em>
+</p>
+
+<ul>
+<li><b>Guided Filter Eps [dB]</b>: ガイドフィルタのイプシロンパラメータを制御します。これにより平滑化とエッジ保持のバランスを調整できます。ディテールがぼやけすぎる・ノイズが多いと感じる場合に調整してください。</li>
+<li>
+<b>Mask Gamma</b>: エッジの硬さを制御します。
+<ul>
+<li><b>&gt; 1.0</b>: エッジが鋭く（チョーク）なります。</li>
+<li><b>&lt; 1.0</b>: エッジが柔らかく（スプレッド）なります。</li>
+<li><em>典型値: 1.5 - 2.5</em></li>
+</ul>
+</li>
+<li>
+<b>Mask Lower Bound [dB]</b> と <b>Mask Upper Bound Margin [dB]</b>: あいまいな半透明領域を防ぎ、切り抜き品質を向上させるためのパラメータです。
+<ul>
+<li><b>Lower Bound</b>: このレベル以下のピクセルは完全に透明になります。<b>ハロー除去</b> を制御します。</li>
+<li><b>Upper Bound Margin</b>: このレベル以上のピクセルは完全に不透明になります。<b>コアの堅牢性</b> を制御します。</li>
+</ul>
+</li>
+</ul>
+</section>
+
+<nav aria-label="ページ内ナビゲーション">
+<a href={withTrailingSlash(localizedBaseURL)}>トップに戻る</a>
+</nav>
+</main>
+
+<footer>
+<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer"><img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="毎日のサイトセキュリティチェック" /></a>
+&copy; 2025-2026 Kaito Udagawa
+</footer>
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"0df4a48356ba406099ae721158ab230b"}'></script>
+</body>
+</html>

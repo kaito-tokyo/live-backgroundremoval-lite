@@ -1,0 +1,144 @@
+---
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { joinURL, withTrailingSlash } from "ufo";
+
+import { defaultContentSecurityPolicy } from "../../lib/csp.mjs";
+import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../../lib/info.mjs";
+
+const { BASE_URL, PROD } = import.meta.env;
+const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
+
+const lang = "fr-fr";
+const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
+const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"));
+---
+
+<!doctype html>
+<html lang="fr-fr">
+<head>
+<meta charset="utf-8" />
+{ PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
+<title>Utilisation - Live Background Removal Lite</title>
+<meta name="description" content="Une suppression d'arrière-plan haute performance, robuste et pensée d'abord pour le jeu dans OBS Studio." />
+<meta name="viewport" content="width=device-width" />
+<meta name="revision" content={GITHUB_SHA ?? "undefined"} />
+<meta name="github-repo" content="kaito-tokyo/live-backgroundremoval-lite" />
+<link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
+<link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
+<link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
+<link rel="canonical" href={canonicalURL} />
+</head>
+<body id="site-usage">
+<main class="white-box">
+
+
+<hgroup>
+<h1>Utilisation</h1>
+<h2>Live Background Removal Lite</h2>
+</hgroup>
+
+<nav class="langs" aria-label="Langue">
+<a href={withTrailingSlash(joinURL(BASE_URL, "usage"))} lang="en">Global</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "de-de", "usage"))} lang="de-de">Deutsch</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "es-es", "usage"))} lang="es-es">Español</a> |
+<span lang="fr-fr">Français</span> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr", "usage"))} lang="ko-kr">한국어</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp", "usage"))} lang="ja-jp">日本語</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "pt-br", "usage"))} lang="pt-br">Português (Brasil)</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru", "usage"))} lang="ru-ru">Русский</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn", "usage"))} lang="zh-cn">简体中文</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "zh-tw", "usage"))} lang="zh-tw">繁體中文</a>
+</nav>
+
+<section id="adding-filter">
+<h2>Ajouter le filtre</h2>
+<img
+src={joinURL(BASE_URL, "effect-filters.webp")}
+alt="Capture d'écran de la fenêtre des filtres d'OBS Studio, montrant la sélection de 'Live Background Removal Lite' dans la liste des filtres d'effets."
+width="1552"
+height="1032"
+fetchpriority="high"
+/
+>
+<ol>
+<li>Dans OBS Studio, fais un clic droit sur ta source vidéo, par exemple ta webcam, dans le panneau "Sources".</li>
+<li>Sélectionne <b>Filtres</b> dans le menu contextuel.</li>
+<li>Dans la fenêtre "Filtres", sous la section "Filtres d'effets", clique sur le bouton <b>+</b> pour ajouter un nouveau filtre.</li>
+<li>Dans la liste des filtres disponibles, sélectionne <b>Live Background Removal Lite</b>.</li>
+<li>Le filtre sera ajouté à ta source et tu pourras maintenant ajuster ses propriétés selon tes besoins.</li>
+</ol>
+</section>
+
+<section id="basic-properties">
+<h2>Propriétés de base</h2>
+<ul>
+<li><b>État du plugin</b> : La section supérieure affiche l'état actuel des mises à jour du plugin.</li>
+<li>
+<b>Niveau de filtre</b> : Sélectionne l'étape de traitement pour la suppression de l'arrière-plan. <br />
+<ul>
+<li><b>Passthrough</b> : Aucune suppression de l'arrière-plan, la source est affichée telle quelle.</li>
+<li><b>Segmentation</b> : Applique un masque de segmentation de base pour supprimer l'arrière-plan.</li>
+<li><b>Motion Intensity Thresholding</b> : N'applique la segmentation que lorsque le mouvement détecté dépasse un seuil.</li>
+<li><b>Guided Filter</b> : Affine les bords du masque avec un filtre guidé pour une meilleure qualité.</li>
+<li><b>Time Averaged Filter</b> : Lisse et stabilise davantage le masque au fil du temps pour obtenir le meilleur détouré possible.</li>
+</ul>
+</li>
+<li>
+<b>Motion Intensity Threshold [dB]</b> : Détermine la sensibilité au mouvement qui déclenche l'IA. Réduire cette valeur la rend moins sensible et diminue la charge. <br />
+<em>Conseil : règle cette valeur aussi bas que possible tout en conservant un suivi précis du masque lorsque tu bouges.</em>
+</li>
+<li>
+<b>Motion Tracking Speed</b> : Ajuste le filtre pour réduire le scintillement.
+<ul>
+<li><b>Valeurs basses</b> : Moins de scintillement, mais augmente la latence du masque (lag).</li>
+<li><b>Valeurs élevées</b> : Réponse de suivi plus rapide, mais peut augmenter le scintillement.</li>
+<li><b>0</b> : Le masque cesse de bouger.</li>
+<li><b>1</b> : Désactive complètement le filtre.</li>
+</ul>
+</li>
+</ul>
+</section>
+
+<section id="advanced-properties">
+<h2>Propriétés avancées</h2>
+<p>
+Pour modifier les configurations étendues, tu dois activer la case <b>Advanced Settings</b>.<br />
+<em>Remarque : lorsque cette case n'est pas cochée, tous les réglages ci-dessous sont forcés à leurs valeurs par défaut.</em>
+</p>
+
+<ul>
+<li><b>Guided Filter Eps [dB]</b> : Contrôle le paramètre epsilon du Guided Filter. Cela équilibre le lissage et la préservation des bords. Ajuste ce réglage si les détails fins paraissent trop flous ou trop bruités.</li>
+<li>
+<b>Mask Gamma</b> : Contrôle la dureté des bords.
+<ul>
+<li><b>&gt; 1.0</b> : Rend les bords plus nets et plus fins (choke).</li>
+<li><b>&lt; 1.0</b> : Rend les bords plus doux et plus épais (spread).</li>
+<li><em>Valeur typique : 1.5 - 2.5</em></li>
+</ul>
+</li>
+<li>
+<b>Mask Lower Bound [dB]</b> &amp; <b>Mask Upper Bound Margin [dB]</b> : Ces paramètres empêchent une semi-transparence ambiguë afin d'améliorer la qualité du détouré.
+<ul>
+<li><b>Lower Bound</b> : Les pixels sous ce niveau deviennent totalement transparents. Contrôle la <b>suppression du halo</b>.</li>
+<li><b>Upper Bound Margin</b> : Les pixels au-dessus de ce niveau deviennent totalement opaques. Contrôle la <b>solidité du cœur</b>.</li>
+</ul>
+</li>
+</ul>
+</section>
+
+<nav aria-label="Navigation de la page">
+<a href={withTrailingSlash(localizedBaseURL)}>Retour en haut</a>
+</nav>
+</main>
+
+<footer>
+<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer"><img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="Vérification quotidienne de sécurité du site web" /></a>
+&copy; 2025-2026 Kaito Udagawa
+</footer>
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"0df4a48356ba406099ae721158ab230b"}'></script>
+</body>
+</html>

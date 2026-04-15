@@ -7,20 +7,19 @@ import { joinURL, withTrailingSlash } from "ufo";
 import { Octokit } from "@octokit/core";
 import { paginateRest } from "@octokit/plugin-paginate-rest";
 
-import { defaultContentSecurityPolicy } from "../lib/csp.mjs";
-import { getLatestRelease } from "../lib/github.mjs";
-import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL, MATRIX_CHATROOM_URL, getAggregateRating } from "../lib/info.mjs";
+import { defaultContentSecurityPolicy } from "../../lib/csp.mjs";
+import { getLatestRelease } from "../../lib/github.mjs";
+import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL, MATRIX_CHATROOM_URL, getAggregateRating } from "../../lib/info.mjs";
 
 const { BASE_URL, PROD } = import.meta.env;
 const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
-const GITHUB_TOKEN = import.meta.env.GITHUB_TOKEN?.trim();
 
-const lang = "en";
-const localizedBaseURL = withTrailingSlash(lang === "en" ? BASE_URL : joinURL(BASE_URL, lang));
-const canonicalURL = withTrailingSlash(lang === "en" ? PRODUCTION_BASE_URL : joinURL(PRODUCTION_BASE_URL, lang));
+const lang = "ja-jp";
+const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
+const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang));
 
 const MyOctokit = Octokit.plugin(paginateRest);
-const octokit = new MyOctokit({ auth: GITHUB_TOKEN });
+const octokit = new MyOctokit({ auth: import.meta.env.GITHUB_TOKEN });
 
 const latestRelease = await getLatestRelease(octokit);
 
@@ -28,12 +27,12 @@ const aggregateRating = await getAggregateRating();
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="ja-jp">
 <head>
 <meta charset="utf-8" />
 { PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
-<title>Live Background Removal Lite</title>
-<meta name="description" content="A gaming-first, high-performance, and crash-resilient background removal for OBS Studio." />
+<title>Live Background Removal Lite - 日本語</title>
+<meta name="description" content="OBS Studio向けの、ゲーム優先・高性能・クラッシュ耐性のある背景削除。" />
 <meta name="viewport" content="width=device-width" />
 <meta name="revision" content={GITHUB_SHA ?? "undefined"} />
 <meta name="github-repo" content="kaito-tokyo/live-backgroundremoval-lite" />
@@ -48,17 +47,17 @@ const aggregateRating = await getAggregateRating();
 <main class="white-box">
 
 <h1>
-<img class="lbrl-logo" src={joinURL(BASE_URL, "favicon.svg")} alt="Logo of Live Background Removal Lite" width="96" height="96" />
+<img class="lbrl-logo" src={joinURL(BASE_URL, "favicon.svg")} alt="Live Background Removal Lite のロゴ" width="96" height="96" />
 <span>Live Background Removal Lite</span>
 </h1>
 
-<nav class="langs" aria-label="Language">
-<span lang="en">Global</span> |
+<nav class="langs" aria-label="言語">
+<a href={withTrailingSlash(BASE_URL)} lang="en">Global</a> |
 <a href={withTrailingSlash(joinURL(BASE_URL, "de-de"))} lang="de-de">Deutsch</a> |
 <a href={withTrailingSlash(joinURL(BASE_URL, "es-es"))} lang="es-es">Español</a> |
 <a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr"))} lang="fr-fr">Français</a> |
 <a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr"))} lang="ko-kr">한국어</a> |
-<a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp"))} lang="ja-jp">日本語</a> |
+<span lang="ja-jp">日本語</span> |
 <a href={withTrailingSlash(joinURL(BASE_URL, "pt-br"))} lang="pt-br">Português (Brasil)</a> |
 <a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru"))} lang="ru-ru">Русский</a> |
 <a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn"))} lang="zh-cn">简体中文</a> |
@@ -66,13 +65,13 @@ const aggregateRating = await getAggregateRating();
 </nav>
 
 <section id="about">
-<h2>A gaming-first, high-performance, and crash-resilient background removal for OBS Studio</h2>
-<p><b>Live Background Removal Lite</b> is a lightweight OBS effect filter plugin designed to remove backgrounds from your portrait sources. We make resource consumption minimal to avoid affecting your gameplay, and we always develop this plugin with a priority on stability.</p>
-<p id="rating">⭐️ Rated {aggregateRating.ratingValue} / 5 ({aggregateRating.reviewCount} reviews) on <a href="https://obsproject.com/forum/resources/live-background-removal-lite.2226/" target="_blank" rel="noopener noreferrer">OBS Forums</a></p>
+<h2>OBS Studio向けの、ゲーム優先・高性能・クラッシュ耐性のある背景削除</h2>
+<p><b>Live Background Removal Lite</b> は、ポートレート系ソースの背景を削除するために設計された軽量な OBS エフェクトフィルタープラグインです。ゲームプレイに影響しないようリソース消費を最小限に抑え、安定性を最優先に開発しています。</p>
+<p id="rating">⭐️ OBSフォーラムで {aggregateRating.ratingValue} / 5（{aggregateRating.reviewCount}件のレビュー）の評価 - <a href="https://obsproject.com/forum/resources/live-background-removal-lite.2226/" target="_blank" rel="noopener noreferrer">OBSフォーラム</a></p>
 </section>
 
 <section id="latest-downloads">
-<h2>⬇️ Download Latest v{latestRelease.tag_name} (<local-date data-date={latestRelease.published_at}><time datetime={latestRelease.published_at}>{latestRelease.published_at}</time></local-date>)</h2>
+<h2>⬇️ 最新版 v{latestRelease.tag_name} をダウンロード (<local-date data-date={latestRelease.published_at}><time datetime={latestRelease.published_at}>{latestRelease.published_at}</time></local-date>)</h2>
 <ul class="download-links">
 <li><a href={`https://github.com/kaito-tokyo/live-backgroundremoval-lite/releases/tag/${latestRelease.tag_name}#:~:text=%2Dwindows%2Dx64.zip`}>Windows</a></li>
 <li><a href={`https://github.com/kaito-tokyo/live-backgroundremoval-lite/releases/tag/${latestRelease.tag_name}#:~:text=%2Dmacos%2Duniversal.pkg`}>macOS</a></li>
@@ -87,40 +86,40 @@ const aggregateRating = await getAggregateRating();
 <div class="github-button">
 <a href={latestRelease.html_url} target="_blank" rel="noopener noreferrer">
 <img src={joinURL(BASE_URL, "github-mark-white.svg")} width="24" height="24" alt="GitHub" />
-<span>View on GitHub</span>
+<span>GitHubで見る</span>
 </a>
 </div>
 <div class="matrix-chatroom-button">
 <a href={MATRIX_CHATROOM_URL} target="_blank" rel="noopener noreferrer">
-<span>Join Matrix Chat Room</span>
+<span>Matrixチャットルームに参加</span>
 </a>
 </div>
 </section>
 
 <section id="demo">
-<h2>📸 Demo</h2>
+<h2>📸 デモ</h2>
 <div class="demo-container">
-<video autoplay loop muted playsinline width="480" height="270" poster={joinURL(BASE_URL, "demo.webp")} aria-label="Video showing background removal revealing a checkerboard pattern">
+<video autoplay loop muted playsinline width="480" height="270" poster={joinURL(BASE_URL, "demo.webp")} aria-label="背景削除によりチェック柄が表示される様子を示す動画">
 <source src={joinURL(BASE_URL, "demo-av1.mp4")} type="video/mp4; codecs=av01.0.05M.10" />
 <source src={joinURL(BASE_URL, "demo.mp4")} type='video/mp4; codecs="avc1.64001f"' />
 </video>
-<p class="demo-caption"><em>The plugin removes a cluttered room background, revealing a checkerboard pattern set behind in OBS.</em></p>
+<p class="demo-caption"><em>プラグインが散らかった部屋の背景を削除し、OBSの背面に設定されたチェック柄を表示しています。</em></p>
 </div>
 </section>
 
 <hr />
 
-<nav aria-label="Installing and configuring documentation navigation">
+<nav aria-label="インストールと設定のドキュメントナビゲーション">
 <ul>
-<li><a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`}>GitHub Repository</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "versions"))}>Version History</a></li>
-<li><a href={withTrailingSlash(joinURL(localizedBaseURL, "usage"))}>Usage &amp; Configuration</a></li>
+<li><a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}`}>GitHubリポジトリ</a></li>
+<li><a href={withTrailingSlash(joinURL(BASE_URL, "versions"))}>バージョン履歴</a></li>
+<li><a href={withTrailingSlash(joinURL(localizedBaseURL, "usage"))}>使い方と設定</a></li>
 </ul>
 </nav>
 </main>
 
 <footer>
-<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer"><img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="Daily Website Security Check" /></a>
+<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer"><img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="毎日のサイトセキュリティチェック" /></a>
 &copy; 2025-2026 Kaito Udagawa
 </footer>
 

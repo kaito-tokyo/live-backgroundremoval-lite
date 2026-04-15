@@ -4,6 +4,28 @@ SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
 SPDX-License-Identifier: CC0-1.0
 -->
 
+# About generated contents on this project
+
+## List of generated contents
+
+- [pages/src/pages/de-de/index.astro](pages/src/pages/de-de/index.astro): Deutsch version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+- [pages/src/pages/de-de/usage.astro](pages/src/pages/de-de/usage.astro): Deutsch version of [pages/src/pages/usage.astro](pages/src/pages/usage.astro) translated by GPT-5.4 mini
+- [pages/src/pages/es-es/index.astro](pages/src/pages/es-es/index.astro): Spanish version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+- [pages/src/pages/es-es/usage.astro](pages/src/pages/es-es/usage.astro): Spanish version of [pages/src/pages/usage.astro](pages/src/pages/usage.astro) translated by GPT-5.4 mini
+- [pages/src/pages/fr-fr/index.astro](pages/src/pages/fr-fr/index.astro): French version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+- [pages/src/pages/fr-fr/usage.astro](pages/src/pages/fr-fr/usage.astro): French version of [pages/src/pages/usage.astro](pages/src/pages/usage.astro) translated by GPT-5.4 mini
+- [pages/src/pages/ja-jp/index.astro](pages/src/pages/ja-jp/index.astro): Japanese version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+- [pages/src/pages/ja-jp/usage.astro](pages/src/pages/ja-jp/usage.astro): Japanese version of [pages/src/pages/usage.astro](pages/src/pages/usage.astro) translated by GPT-5.4 mini
+- [pages/src/pages/ko-kr/index.astro](pages/src/pages/ko-kr/index.astro): Korean version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+- [pages/src/pages/ko-kr/usage.astro](pages/src/pages/ko-kr/usage.astro): Korean version of [pages/src/pages/usage.astro](pages/src/pages/usage.astro) translated by GPT-5.4 mini
+- [pages/src/pages/pt-br/index.astro](pages/src/pages/pt-br/index.astro): Portuguese version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+- [pages/src/pages/pt-br/usage.astro](pages/src/pages/pt-br/usage.astro): Portuguese version of [pages/src/pages/usage.astro](pages/src/pages/usage.astro) translated by GPT-5.4 mini
+- [pages/src/pages/ru-ru/index.astro](pages/src/pages/ru-ru/index.astro): Russian version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+- [pages/src/pages/ru-ru/usage.astro](pages/src/pages/ru-ru/usage.astro): Russian version of [pages/src/pages/usage.astro](pages/src/pages/usage.astro) translated by GPT-5.4 mini
+- [pages/src/pages/zh-cn/index.astro](pages/src/pages/zh-cn/index.astro): Simplified Chinese version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+- [pages/src/pages/zh-cn/usage.astro](pages/src/pages/zh-cn/usage.astro): Simplified Chinese of [pages/src/pages/usage.astro](pages/src/pages/usage.astro) translated by GPT-5.4 mini
+- [pages/src/pages/zh-tw/index.astro](pages/src/pages/zh-tw/index.astro): Traditional Chinese version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+
 # AI-Generated Content History Audit
 
 Audit date: 2026-04-14

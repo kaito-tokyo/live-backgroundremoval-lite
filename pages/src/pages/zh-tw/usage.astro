@@ -1,0 +1,143 @@
+---
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+//
+// SPDX-License-Identifier: Apache-2.0
+
+import { joinURL, withTrailingSlash } from "ufo";
+
+import { defaultContentSecurityPolicy } from "../../lib/csp.mjs";
+import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../../lib/info.mjs";
+
+const { BASE_URL, PROD } = import.meta.env;
+const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
+
+const lang = "zh-tw";
+const localizedBaseURL = withTrailingSlash(joinURL(BASE_URL, lang));
+const canonicalURL = withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang, "usage"));
+---
+
+<!doctype html>
+<html lang="zh-tw">
+<head>
+<meta charset="utf-8" />
+{ PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
+<title>使用方式 - Live Background Removal Lite</title>
+<meta name="description" content="面向 OBS Studio 的遊戲優先、高效能、抗當機背景移除。" />
+<meta name="viewport" content="width=device-width" />
+<meta name="revision" content={GITHUB_SHA ?? "undefined"} />
+<meta name="github-repo" content="kaito-tokyo/live-backgroundremoval-lite" />
+<link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
+<link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
+<link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
+<link rel="canonical" href={canonicalURL} />
+</head>
+<body id="site-usage">
+<main class="white-box">
+
+<hgroup>
+<h1>使用方式</h1>
+<h2>Live Background Removal Lite</h2>
+</hgroup>
+
+<nav class="langs" aria-label="語言">
+<a href={withTrailingSlash(joinURL(BASE_URL, "usage"))} lang="en">Global</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "de-de", "usage"))} lang="de-de">Deutsch</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "es-es", "usage"))} lang="es-es">Español</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr", "usage"))} lang="fr-fr">Français</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr", "usage"))} lang="ko-kr">한국어</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp", "usage"))} lang="ja-jp">日本語</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "pt-br", "usage"))} lang="pt-br">Português (Brasil)</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru", "usage"))} lang="ru-ru">Русский</a> |
+<a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn", "usage"))} lang="zh-cn">简体中文</a> |
+<span lang="zh-tw">繁體中文</span>
+</nav>
+
+<section id="adding-filter">
+<h2>新增濾鏡</h2>
+<img
+src={joinURL(BASE_URL, "effect-filters.webp")}
+alt="OBS Studio 濾鏡視窗的截圖，顯示在效果濾鏡清單中選取 'Live Background Removal Lite' 的畫面。"
+width="1552"
+height="1032"
+fetchpriority="high"
+/
+>
+<ol>
+<li>在 OBS Studio 中，於「來源」面板對你的影片來源，例如攝影機，按一下滑鼠右鍵。</li>
+<li>在內容選單中選擇 <b>濾鏡</b>。</li>
+<li>在「濾鏡」視窗的「效果濾鏡」區段中，點擊 <b>+</b> 按鈕新增濾鏡。</li>
+<li>從可用濾鏡清單中選擇 <b>Live Background Removal Lite</b>。</li>
+<li>濾鏡會加入到來源中，接著你就可以依需求調整其屬性。</li>
+</ol>
+</section>
+
+<section id="basic-properties">
+<h2>基本屬性</h2>
+<ul>
+<li><b>外掛狀態</b>：上方區塊會顯示外掛目前的更新狀態。</li>
+<li>
+<b>濾鏡層級</b>：選擇背景移除的處理階段。 <br />
+<ul>
+<li><b>Passthrough</b>：不進行背景移除，直接顯示來源畫面。</li>
+<li><b>Segmentation</b>：套用基本分割遮罩以移除背景。</li>
+<li><b>Motion Intensity Thresholding</b>：只有在偵測到的動作超過閾值時才套用分割。</li>
+<li><b>Guided Filter</b>：使用導引濾波細化遮罩邊緣，以獲得更好的品質。</li>
+<li><b>Time Averaged Filter</b>：進一步隨時間平滑並穩定遮罩，以獲得最高品質的去背效果。</li>
+</ul>
+</li>
+<li>
+<b>Motion Intensity Threshold [dB]</b>：決定觸發 AI 的動作敏感度。降低此值會讓它更不敏感，並減少負載。 <br />
+<em>提示：在移動時仍能維持準確遮罩追蹤的前提下，將此值調到盡可能低。</em>
+</li>
+<li>
+<b>Motion Tracking Speed</b>：調整濾鏡以抑制閃爍。
+<ul>
+<li><b>較低的值</b>：閃爍較少，但遮罩延遲會增加。</li>
+<li><b>較高的值</b>：追蹤反應較快，但可能增加閃爍。</li>
+<li><b>0</b>：遮罩停止移動。</li>
+<li><b>1</b>：完全停用濾鏡。</li>
+</ul>
+</li>
+</ul>
+</section>
+
+<section id="advanced-properties">
+<h2>進階屬性</h2>
+<p>
+若要修改延伸設定，必須啟用 <b>Advanced Settings</b> 核取方塊。<br />
+<em>注意：當此核取方塊未勾選時，下方所有設定都會強制使用預設值。</em>
+</p>
+
+<ul>
+<li><b>Guided Filter Eps [dB]</b>：控制導引濾波的 epsilon 參數。這在平滑與邊緣保留之間取得平衡。如果細節看起來太模糊或太雜訊，可以調整此項。</li>
+<li>
+<b>Mask Gamma</b>：控制邊緣硬度。
+<ul>
+<li><b>&gt; 1.0</b>：讓邊緣更銳利、更薄（choke）。</li>
+<li><b>&lt; 1.0</b>：讓邊緣更柔和、更厚（spread）。</li>
+<li><em>典型值：1.5 - 2.5</em></li>
+</ul>
+</li>
+<li>
+<b>Mask Lower Bound [dB]</b> &amp; <b>Mask Upper Bound Margin [dB]</b>：這些參數可防止模糊不清的半透明區域，以提升去背品質。
+<ul>
+<li><b>Lower Bound</b>：低於此等級的像素會變成完全透明。控制 <b>halo removal</b>。</li>
+<li><b>Upper Bound Margin</b>：高於此等級的像素會變成完全不透明。控制 <b>core solidity</b>。</li>
+</ul>
+</li>
+</ul>
+</section>
+
+<nav aria-label="頁面導覽">
+<a href={withTrailingSlash(localizedBaseURL)}>返回頂端</a>
+</nav>
+</main>
+
+<footer>
+<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer"><img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="每日網站安全檢查" /></a>
+&copy; 2025-2026 Kaito Udagawa
+</footer>
+
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"0df4a48356ba406099ae721158ab230b"}'></script>
+</body>
+</html>
