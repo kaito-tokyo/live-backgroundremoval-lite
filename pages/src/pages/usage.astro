@@ -6,9 +6,7 @@
 import { joinURL, withTrailingSlash } from "ufo";
 
 import { defaultContentSecurityPolicy } from "../lib/csp.mjs";
-import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../lib/info.mjs";
-
-import "./styles/base.css";
+import { PRODUCTION_BASE_URL } from "../lib/info.mjs";
 
 const { BASE_URL, PROD } = import.meta.env;
 const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
@@ -18,15 +16,15 @@ const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 <html lang="en">
 <head>
 <meta charset="utf-8" />
+<meta name="robots" content="noindex,follow" />
 { PROD && (<meta http-equiv="Content-Security-Policy" content={defaultContentSecurityPolicy.join(" ")} />) }
-<title>Live Background Removal Lite</title>
-<meta name="description" content="The list of available languages for the usage and configuration page of Live Background Removal Lite." />
+<title>Usage and Configuration - Live Background Removal Lite</title>
 <meta name="viewport" content="width=device-width" />
 <meta name="revision" content={GITHUB_SHA ?? "undefined"} />
 <link rel="icon" type="image/svg+xml" href={joinURL(BASE_URL, "favicon.svg")} />
 <link rel="shortcut icon" href={joinURL(BASE_URL, "favicon.ico")} />
-<link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "usage"))} />
-<link rel="alternate" hreflang="x-default" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "usage"))} />
+<link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "en", "usage"))} />
+<link rel="alternate" hreflang="x-default" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "en", "usage"))} />
 <link rel="alternate" hreflang="en" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "en", "usage"))} />
 <link rel="alternate" hreflang="de-de" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "de-de", "usage"))} />
 <link rel="alternate" hreflang="es-es" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "es-es", "usage"))} />
@@ -37,38 +35,9 @@ const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 <link rel="alternate" hreflang="ru-ru" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ru-ru", "usage"))} />
 <link rel="alternate" hreflang="zh-cn" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-cn", "usage"))} />
 <link rel="alternate" hreflang="zh-tw" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-tw", "usage"))} />
+<meta http-equiv="refresh" content={`0; url=${withTrailingSlash(joinURL(BASE_URL, "en", "usage"))}`} />
 </head>
-<body id="site-usage-languages">
-<main class="white-box">
-
-<hgroup>
-<h1>Usage &amp; Configuration</h1>
-<h2>Live Background Removal Lite</h2>
-</hgroup>
-
-<nav class="languages-list" aria-label="Languages">
-<ul>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "en", "usage"))} lang="en">English</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "de-de", "usage"))} lang="de-de">Deutsch</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "es-es", "usage"))} lang="es-es">Español</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr", "usage"))} lang="fr-fr">Français</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr", "usage"))} lang="ko-kr">한국어</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp", "usage"))} lang="ja-jp">日本語</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "pt-br", "usage"))} lang="pt-br">Português (Brasil)</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru", "usage"))} lang="ru-ru">Русский</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn", "usage"))} lang="zh-cn">简体中文</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "zh-tw", "usage"))} lang="zh-tw">繁體中文</a></li>
-</ul>
-</nav>
-</main>
-
-<footer>
-<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer">
-<img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="Daily Website Security Check" />
-</a>
-&copy; 2025-2026 Kaito Udagawa
-</footer>
-
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"0df4a48356ba406099ae721158ab230b"}'></script>
+<body>
+<h1><a href={withTrailingSlash(joinURL(BASE_URL, "en", "usage"))}>English version</a></h1>
 </body>
 </html>

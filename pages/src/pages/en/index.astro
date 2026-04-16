@@ -40,7 +40,7 @@ const aggregateRating = await getAggregateRating();
 <link rel="stylesheet" href={joinURL(BASE_URL, "styles", "global.css")} />
 <link rel="preload" as="image" href={joinURL(BASE_URL, "demo.webp")} />
 <link rel="canonical" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, lang))} />
-<link rel="alternate" hreflang="x-default" href={withTrailingSlash(PRODUCTION_BASE_URL)} />
+<link rel="alternate" hreflang="x-default" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "en"))} />
 <link rel="alternate" hreflang="en" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "en"))} />
 <link rel="alternate" hreflang="de-de" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "de-de"))} />
 <link rel="alternate" hreflang="es-es" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "es-es"))} />
