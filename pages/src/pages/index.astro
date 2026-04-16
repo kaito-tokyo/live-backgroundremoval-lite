@@ -6,9 +6,7 @@
 import { joinURL, withTrailingSlash } from "ufo";
 
 import { defaultContentSecurityPolicy } from "../lib/csp.mjs";
-import { GITHUB_OWNER, GITHUB_REPO, PRODUCTION_BASE_URL } from "../lib/info.mjs";
-
-import "./styles/base.css";
+import { PRODUCTION_BASE_URL } from "../lib/info.mjs";
 
 const { BASE_URL, PROD } = import.meta.env;
 const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
@@ -37,36 +35,9 @@ const GITHUB_SHA = import.meta.env.GITHUB_SHA?.trim();
 <link rel="alternate" hreflang="ru-ru" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "ru-ru"))} />
 <link rel="alternate" hreflang="zh-cn" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-cn"))} />
 <link rel="alternate" hreflang="zh-tw" href={withTrailingSlash(joinURL(PRODUCTION_BASE_URL, "zh-tw"))} />
+<meta http-equiv="refresh" content={`0; url=${withTrailingSlash(joinURL(BASE_URL, "en"))}`} />
 </head>
-<body id="site-home-languages">
-
-<main class="white-box">
-<h1>Live Background Removal Lite</h1>
-
-<nav class="languages-list" aria-label="Languages">
-<ul>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "en"))} lang="en">English</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "de-de"))} lang="de-de">Deutsch</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "es-es"))} lang="es-es">Español</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "fr-fr"))} lang="fr-fr">Français</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "ko-kr"))} lang="ko-kr">한국어</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "ja-jp"))} lang="ja-jp">日本語</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "pt-br"))} lang="pt-br">Português (Brasil)</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "ru-ru"))} lang="ru-ru">Русский</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "zh-cn"))} lang="zh-cn">简体中文</a></li>
-<li><a href={withTrailingSlash(joinURL(BASE_URL, "zh-tw"))} lang="zh-tw">繁體中文</a></li>
-</ul>
-</nav>
-
-</main>
-
-<footer>
-<a href={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml`} target="_blank" rel="noopener noreferrer">
-<img src={`https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/daily-website-security-check.yml/badge.svg`} alt="Daily Website Security Check" />
-</a>
-&copy; 2025-2026 Kaito Udagawa
-</footer>
-
+<body>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"0df4a48356ba406099ae721158ab230b"}'></script>
 </body>
 </html>

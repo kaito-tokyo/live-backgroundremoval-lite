@@ -28,7 +28,6 @@ class LanguageSwitcherElement extends HTMLElement {
     }
 
     const langTexts = {
-      "x-default": "Language Selector",
       "en": "English",
       "de-de": "Deutsch",
       "es-es": "Español",
@@ -52,7 +51,7 @@ class LanguageSwitcherElement extends HTMLElement {
     div.appendChild(ul);
     document.head.querySelectorAll("link").forEach((link) => {
       const { rel, href, hreflang } = link;
-      if (rel !== "alternate" || !hreflang) return;
+      if (rel !== "alternate" || !hreflang || hreflang === "x-default") return;
 
       const a = document.createElement("a");
       a.textContent = langTexts[hreflang] || hreflang;
