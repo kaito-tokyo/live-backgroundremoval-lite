@@ -155,7 +155,6 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  bgrxSegmenterInputReader_(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
 				    static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX),
 	  segmenterInputBuffer_(selfieSegmenter_->getPixelCount() * 4),
-	  sourceRoi_(region_),
 	  r8SegmentationMask_(makeTexture(maskRoi_.width, maskRoi_.height, GS_R8, GS_DYNAMIC)),
 	  r32fSubGFIntermediate_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
 	  r32fSubGFSource_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
@@ -206,8 +205,6 @@ void RenderingContext::videoRender()
 	const float maskGamma = maskGamma_.load(std::memory_order_relaxed);
 	const float maskLowerBound = maskLowerBound_.load(std::memory_order_relaxed);
 	const float maskUpperBoundMargin = maskUpperBoundMargin_.load(std::memory_order_relaxed);
-
-	const bool enableCenterFrame = enableCenterFrame_.load(std::memory_order_relaxed);
 
 	const float timeAveragedFilteringAlpha = timeAveragedFilteringAlpha_.load(std::memory_order_relaxed);
 
@@ -324,68 +321,12 @@ void RenderingContext::videoRender()
 
 		selfieSegmenter_->process(segmenterInputBuffer.get()->data());
 
-		if (enableCenterFrame) {
-			SelfieSegmenter::BoundingBox bb;
-			bb.calculateBoundingBoxFrom256x144(selfieSegmenter_->getMask(), 200);
-
-			const std::uint64_t bbX = static_cast<std::uint64_t>(bb.x);
-			const std::uint64_t bbY = static_cast<std::uint64_t>(bb.y);
-			const std::uint64_t bbW = static_cast<std::uint64_t>(bb.width);
-			const std::uint64_t bbH = static_cast<std::uint64_t>(bb.height);
-
-			const std::uint64_t roiX = static_cast<std::uint64_t>(segmenterRoi_.x);
-			const std::uint64_t roiY = static_cast<std::uint64_t>(segmenterRoi_.y);
-			const std::uint64_t roiW = static_cast<std::uint64_t>(segmenterRoi_.width);
-			const std::uint64_t roiH = static_cast<std::uint64_t>(segmenterRoi_.height);
-
-			const std::uint64_t baseW = static_cast<std::uint64_t>(selfieSegmenter_->getWidth());
-			const std::uint64_t baseH = static_cast<std::uint64_t>(selfieSegmenter_->getHeight());
-
-			if (baseW > 0 && baseH > 0) {
-				sourceRoi_.x = static_cast<std::uint32_t>(((bbX * roiW) + (baseW / 2)) / baseW + roiX);
-
-				sourceRoi_.y = static_cast<std::uint32_t>(((bbY * roiH) + (baseH / 2)) / baseH + roiY);
-
-				sourceRoi_.width = static_cast<std::uint32_t>(((bbW * roiW) + (baseW / 2)) / baseW);
-
-				sourceRoi_.height = static_cast<std::uint32_t>(((bbH * roiH) + (baseH / 2)) / baseH);
-			}
-		}
-
 		const std::uint8_t *segmentationMaskData =
 			selfieSegmenter_->getMask() + (maskRoi_.y * selfieSegmenter_->getWidth() + maskRoi_.x);
 
 		// gs_texture_set_image immediately uploads the data to GPU memory
 		gs_texture_set_image(r8SegmentationMask_.get(), segmentationMaskData,
 				     static_cast<std::uint32_t>(selfieSegmenter_->getWidth()), 0);
-	}
-
-	if (enableCenterFrame) {
-		gs_matrix_push();
-
-		float scaleFactor;
-		if (sourceRoi_.width > 0 && sourceRoi_.height > 0) {
-			float widthScale = static_cast<float>(region_.width) / static_cast<float>(sourceRoi_.width);
-			float heightScale = static_cast<float>(region_.height) / static_cast<float>(sourceRoi_.height);
-			scaleFactor = std::min(widthScale, heightScale);
-		} else {
-			scaleFactor = 1.0f;
-		}
-
-		float displayW = static_cast<float>(sourceRoi_.width) * scaleFactor;
-		float displayH = static_cast<float>(sourceRoi_.height) * scaleFactor;
-
-		float offsetX = (static_cast<float>(region_.width) - displayW) / 2.0f;
-		float offsetY = (static_cast<float>(region_.height) - displayH);
-
-		vec3 vecDest{offsetX, offsetY, 0.0f};
-		gs_matrix_translate(&vecDest);
-
-		vec3 vecScale{scaleFactor, scaleFactor, 1.0f};
-		gs_matrix_scale(&vecScale);
-
-		vec3 vecSource{-static_cast<float>(sourceRoi_.x), -static_cast<float>(sourceRoi_.y), 0.0f};
-		gs_matrix_translate(&vecSource);
 	}
 
 	if (filterLevel == FilterLevel::Passthrough) {
@@ -421,10 +362,6 @@ void RenderingContext::videoRender()
 	} else {
 		// Draw nothing to prevent unexpected background disclosure
 	}
-
-	if (enableCenterFrame) {
-		gs_matrix_pop();
-	}
 }
 
 void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
@@ -454,7 +391,6 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 	maskGamma_.store(newMaskGamma, std::memory_order_relaxed);
 	maskLowerBound_.store(newMaskLowerBound, std::memory_order_relaxed);
 	maskUpperBoundMargin_.store(newMaskUpperBoundMargin, std::memory_order_relaxed);
-	enableCenterFrame_.store(pluginProperty.enableCenterFrame, std::memory_order_relaxed);
 
 	logger_->info("PluginPropertySet",
 		      {{"key", "filterLevel"}, {"value", std::to_string(static_cast<int>(newFilterLevel))}});
@@ -467,8 +403,6 @@ void RenderingContext::applyPluginProperty(const PluginProperty &pluginProperty)
 	logger_->info("PluginPropertySet", {{"key", "maskLowerBound"}, {"value", std::to_string(newMaskLowerBound)}});
 	logger_->info("PluginPropertySet",
 		      {{"key", "maskUpperBoundMargin"}, {"value", std::to_string(newMaskUpperBoundMargin)}});
-	logger_->info("PluginPropertySet",
-		      {{"key", "enableCenterFrame"}, {"value", pluginProperty.enableCenterFrame ? "true" : "false"}});
 }
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::MainFilter

@@ -113,8 +113,6 @@ public:
 
 	std::vector<std::uint8_t> segmenterInputBuffer_;
 
-	RenderingContextRegion sourceRoi_;
-
 	const ObsBridgeUtils::unique_gs_texture_t r8SegmentationMask_;
 
 	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFIntermediate_;
@@ -145,8 +143,6 @@ private:
 	std::atomic<float> maskUpperBoundMargin_;
 
 	std::atomic<float> timeAveragedFilteringAlpha_;
-
-	std::atomic<bool> enableCenterFrame_;
 
 	std::atomic<bool> shouldNextVideoRenderProcessFrame_ = true;
 	std::atomic<bool> shouldNextVideoRenderForceProcessFrame_ = true;
