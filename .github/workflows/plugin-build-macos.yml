@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
-# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -8,8 +8,8 @@ name: Build macOS
 
 # file: .github/workflows/plugin-build-macos.yml
 # author: Kaito Udagawa <umireon@kaito.tokyo>
-# version: 1.1.1
-# date: 2026-04-14
+# version: 1.1.2
+# date: 2026-04-17
 
 on:
   workflow_call:
@@ -99,6 +99,13 @@ jobs:
           PATH: '${{ env.FILTERED_PATH }}'
         run: |
           ninja --version
+
+      - name: Print xcbeautify version on macOS
+        shell: bash --noprofile --norc -euo pipefail -O nullglob {0}
+        env:
+          PATH: '${{ env.FILTERED_PATH }}'
+        run: |
+          xcbeautify --version
 
       - name: Checkout vcpkg
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

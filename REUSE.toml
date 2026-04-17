@@ -2,26 +2,9 @@ version = 1
 
 [[annotations]]
 path = [
-    ".aiexclude",
     ".clang-format",
-    ".dockerignore",
-    ".editorconfig",
-    ".gersemirc",
-    ".gitattributes",
-    ".github/agents/*.md",
-    ".github/aw/actions-lock.json",
-    ".github/dependabot.yml",
-    ".github/pull_request_template.md",
-    ".github/workflows/*.lock.yml",
-    ".gitignore",
-    ".gitmodules",
-    ".prettierrc.json",
-    ".python-version",
-    ".vscode/*",
     "buildspec.json",
     "CMakePresets.json",
-    "data/licenses/*.txt",
-    "data/manifest.json",
     "scripts/windows/*.lnk",
     "scripts/windows/*.txt",
     "src/exported_symbols_linux.map",
@@ -32,8 +15,3 @@ path = [
 ]
 SPDX-FileCopyrightText = "2025-2026 Kaito Udagawa <umireon@kaito.tokyo>"
 SPDX-License-Identifier = "CC0-1.0"
-
-[[annotations]]
-path = "data/locale/*.ini"
-SPDX-FileCopyrightText = "2025-2026 Kaito Udagawa <umireon@kaito.tokyo>"
-SPDX-License-Identifier = "Apache-2.0"

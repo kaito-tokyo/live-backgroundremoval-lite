@@ -1,4 +1,6 @@
-# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -6,8 +8,8 @@ name: Create Release
 
 # file: .github/workflows/plugin-create-release.yml
 # author: Kaito Udagawa <umireon@kaito.tokyo>
-# version: 1.1.1
-# date: 2026-04-14
+# version: 1.1.2
+# date: 2026-04-17
 
 on:
   workflow_call:

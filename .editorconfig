@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
+#
+# SPDX-License-Identifier: CC0-1.0
+
 root = true
 
 [*]
@@ -5,59 +9,13 @@ charset = utf-8
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
 
-[*.{c,h,cpp,hpp,cc,cxx}]
+[*.{c,h,cpp,hpp}]
 indent_style = tab
 indent_size = 8
 tab_width = 8
 
-[*.{m,mm}]
-indent_style = space
-indent_size = 4
-
-[*.{cmake,CMakeLists.txt}]
-indent_style = space
-indent_size = 2
-
-[*.{sh,zsh,bash}]
-indent_style = space
-indent_size = 2
-
-[run-*]
-indent_style = space
-indent_size = 2
-
-[*.ps1]
-indent_style = space
-indent_size = 4
-
-[*.json]
-indent_style = space
-indent_size = 2
-
-[*.{yaml,yml}]
-indent_style = space
-indent_size = 2
-
 [*.md]
 trim_trailing_whitespace = false
-
-[*.{js,ts,mjs}]
-indent_style = space
-indent_size = 2
-
-[*.astro]
-indent_style = space
-indent_size = 2
-
-[*.svelte]
-indent_style = space
-indent_size = 2
-
-[*.css]
-indent_style = space
-indent_size = 2
-
-[*.qrc]
-indent_style = space
-indent_size = 2

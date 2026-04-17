@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 
-// SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+// SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 //
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: Apache-2.0
 
 // Run this script with Node 24.x
-
-/// <reference types="node" />
 
 import { glob, readFile, writeFile } from "node:fs/promises";
 import { join, relative, resolve, sep } from "node:path";

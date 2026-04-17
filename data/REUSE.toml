@@ -1,0 +1,17 @@
+version = 1
+
+[[annotations]]
+path = [
+  "licenses/*.txt",
+]
+SPDX-FileCopyrightText = "2025-2026 Kaito Udagawa <umireon@kaito.tokyo>"
+SPDX-License-Identifier = "CC0-1.0"
+
+[[annotations]]
+path = [
+  "effects/*.effect",
+  "locale/*.ini",
+  "manifest.json",
+]
+SPDX-FileCopyrightText = "2025-2026 Kaito Udagawa <umireon@kaito.tokyo>"
+SPDX-License-Identifier = "Apache-2.0"
