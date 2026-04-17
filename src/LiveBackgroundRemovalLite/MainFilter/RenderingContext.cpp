@@ -155,7 +155,6 @@ RenderingContext::RenderingContext(obs_source_t *const source, std::shared_ptr<c
 	  bgrxSegmenterInputReader_(static_cast<std::uint32_t>(selfieSegmenter_->getWidth()),
 				    static_cast<std::uint32_t>(selfieSegmenter_->getHeight()), GS_BGRX),
 	  segmenterInputBuffer_(selfieSegmenter_->getPixelCount() * 4),
-	  sourceRoi_(region_),
 	  r8SegmentationMask_(makeTexture(maskRoi_.width, maskRoi_.height, GS_R8, GS_DYNAMIC)),
 	  r32fSubGFIntermediate_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),
 	  r32fSubGFSource_(makeTexture(subRegion_.width, subRegion_.height, GS_R32F, GS_RENDER_TARGET)),

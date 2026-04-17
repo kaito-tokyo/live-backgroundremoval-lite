@@ -113,8 +113,6 @@ public:
 
 	std::vector<std::uint8_t> segmenterInputBuffer_;
 
-	RenderingContextRegion sourceRoi_;
-
 	const ObsBridgeUtils::unique_gs_texture_t r8SegmentationMask_;
 
 	const ObsBridgeUtils::unique_gs_texture_t r32fSubGFIntermediate_;
