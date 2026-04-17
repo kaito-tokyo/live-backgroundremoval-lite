@@ -207,9 +207,53 @@ target_link_libraries(
     ${CMAKE_PROJECT_NAME}_StartupUI
     Qt6::Core
 )
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp src/resources/resources.qrc)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE src/plugin-main.cpp)
 set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES AUTORCC ON)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE PLUGIN_VERSION="${PLUGIN_VERSION}")
+
+# Qt translations
+block(PROPAGATE QM_FILES)
+  find_program(QT_LRELEASE_EXECUTABLE NAMES lrelease pyside6-lrelease)
+
+  if(NOT QT_LRELEASE_EXECUTABLE)
+    message(FATAL_ERROR "lrelease or pyside6-lrelease not found!")
+  endif()
+
+  set(QM_FILES "")
+  foreach(LOCALE de_DE es_ES fr_FR ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW)
+    set(TS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources/${LOCALE}.ts")
+    set(QM_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources/${LOCALE}.qm")
+
+    add_custom_command(
+      OUTPUT "${QM_FILE}"
+      COMMAND ${QT_LRELEASE_EXECUTABLE} "${TS_FILE}" -qm "${QM_FILE}"
+      DEPENDS "${TS_FILE}"
+      VERBATIM
+    )
+
+    list(APPEND QM_FILES "${QM_FILE}")
+  endforeach()
+
+  target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${QM_FILES})
+endblock()
+
+# Qt resouces
+qt_add_resources(${CMAKE_PROJECT_NAME} resources
+  PREFIX "/live-backgroundremoval-lite/${CMAKE_PROJECT_VERSION}"
+  BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+  FILES
+  ${QM_FILES}
+  data/licenses/curl.txt
+  data/licenses/fmt.txt
+  data/licenses/josuttis-jthread.txt
+  data/licenses/ncnn.txt
+  data/licenses/obs-studio.txt
+  data/licenses/wolfssl.txt
+  data/licenses/zlib.txt
+  LICENSES/Apache-2.0.txt
+  LICENSES/GPL-3.0-or-later.txt
+  resources/logo-512.png
+)
 
 # Exported symbols
 if(APPLE)

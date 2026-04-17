@@ -6,6 +6,7 @@
 
 #include <QDialog>
 
+#include "GlobalContext.hpp"
 #include "PluginConfig.hpp"
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
@@ -14,12 +15,14 @@ class PluginConfigDialog : public QDialog {
 	Q_OBJECT
 
 public:
-	explicit PluginConfigDialog(std::shared_ptr<PluginConfig> pluginConfig, QWidget *parent = nullptr);
+	explicit PluginConfigDialog(std::shared_ptr<PluginConfig> pluginConfig,
+				    std::shared_ptr<GlobalContext> globalContext, QWidget *parent = nullptr);
 	~PluginConfigDialog() override;
 
 private:
 	void setupUi();
 	const std::shared_ptr<PluginConfig> pluginConfig_;
+	const std::shared_ptr<GlobalContext> globalContext_;
 };
 
 } // namespace KaitoTokyo::LiveBackgroundRemovalLite::Global

@@ -29,6 +29,8 @@ using namespace KaitoTokyo::LiveBackgroundRemovalLite;
 #define PLUGIN_VERSION "0.0.0"
 #endif
 
+#define QT_RESOURCE_PREFIX "/" PLUGIN_NAME "/" PLUGIN_VERSION
+
 namespace {
 
 const char latestVersionUrl[] = "https://kaito-tokyo.github.io/live-backgroundremoval-lite/metadata/latest-version.txt";
@@ -59,7 +61,6 @@ try {
 bool obs_module_load(void)
 try {
 	Q_INIT_RESOURCE(resources);
-	Q_INIT_RESOURCE(licenses);
 	curl_global_init(CURL_GLOBAL_DEFAULT);
 
 	const std::shared_ptr<const Logger::ILogger> logger =
@@ -71,7 +72,7 @@ try {
 
 	g_appTranslator_ = std::make_unique<QTranslator>();
 
-	QString qmPath = QString(":/live-backgroundremoval-lite/%1.qm").arg(localeStr);
+	QString qmPath = QString(":%1/resources/%2.qm").arg(QT_RESOURCE_PREFIX).arg(localeStr);
 
 	if (g_appTranslator_->load(qmPath)) {
 		QCoreApplication::installTranslator(g_appTranslator_.get());
@@ -128,7 +129,6 @@ void obs_module_unload(void)
 	}
 	g_appTranslator_.reset();
 	curl_global_cleanup();
-	Q_CLEANUP_RESOURCE(licenses);
 	Q_CLEANUP_RESOURCE(resources);
 	blog(LOG_INFO, "[%s] plugin unloaded", PLUGIN_NAME);
 }
