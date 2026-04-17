@@ -25,6 +25,15 @@ SPDX-License-Identifier: CC0-1.0
 - [pages/src/pages/zh-cn/index.astro](pages/src/pages/zh-cn/index.astro): Simplified Chinese version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
 - [pages/src/pages/zh-cn/usage.astro](pages/src/pages/zh-cn/usage.astro): Simplified Chinese of [pages/src/pages/usage.astro](pages/src/pages/usage.astro) translated by GPT-5.4 mini
 - [pages/src/pages/zh-tw/index.astro](pages/src/pages/zh-tw/index.astro): Traditional Chinese version of [pages/src/pages/index.astro](pages/src/pages/index.astro) translated by GPT-5.4 mini
+- [data/locale/de-DE.ini](data/locale/de-DE.ini): German locale version of [data/locale/en-US.ini](data/locale/en-US.ini) translated by GPT-5.4
+- [data/locale/es-ES.ini](data/locale/es-ES.ini): Spanish locale version of [data/locale/en-US.ini](data/locale/en-US.ini) translated by GPT-5.4
+- [data/locale/fr-FR.ini](data/locale/fr-FR.ini): French locale version of [data/locale/en-US.ini](data/locale/en-US.ini) translated by GPT-5.4
+- [data/locale/ja-JP.ini](data/locale/ja-JP.ini): Japanese locale version of [data/locale/en-US.ini](data/locale/en-US.ini) translated by GPT-5.4
+- [data/locale/ko-KR.ini](data/locale/ko-KR.ini): Korean locale version of [data/locale/en-US.ini](data/locale/en-US.ini) translated by GPT-5.4
+- [data/locale/pt-BR.ini](data/locale/pt-BR.ini): Portuguese locale version of [data/locale/en-US.ini](data/locale/en-US.ini) translated by GPT-5.4
+- [data/locale/ru-RU.ini](data/locale/ru-RU.ini): Russian locale version of [data/locale/en-US.ini](data/locale/en-US.ini) translated by GPT-5.4
+- [data/locale/zh-CN.ini](data/locale/zh-CN.ini): Simplified Chinese locale version of [data/locale/en-US.ini](data/locale/en-US.ini) translated by GPT-5.4
+- [data/locale/zh-TW.ini](data/locale/zh-TW.ini): Traditional Chinese locale version of [data/locale/en-US.ini](data/locale/en-US.ini) translated by GPT-5.4
 
 # AI-Generated Content History Audit
 
