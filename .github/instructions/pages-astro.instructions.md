@@ -1,7 +1,12 @@
 ---
-# SPDX-FileCopyrightText: 2026 Kaito Udagawa <umireon@kaito.tokyo>
+# SPDX-FileCopyrightText: 2025-2026 Kaito Udagawa <umireon@kaito.tokyo>
 #
 # SPDX-License-Identifier: Apache-2.0
+
+# file: .github/instructions/pages-astro.instructions.md
+# author: Kaito Udagawa <umireon@kaito.tokyo>
+# version: 1.0.0
+# date: 2026-04-17
 
 applyTo: "pages/**/*.astro"
 ---
@@ -14,7 +19,7 @@ There is a script (`pages/scripts/add-csp-hashes.mjs`) to add hashes of inline s
 
 ## About localization
 
-The website of this project is built using Astro. `pages/src/pages/*.astro` files are the global version of the pages, and `pages/src/pages/*/*.astro` files are the localized versions. The target locales are de-de, es-es, fr-fr, ja-jp, and ko-kr, pt-br, ru-ru, zh-cn, zh-tw.
+The website of this project is built using Astro. `pages/src/pages/*.astro` files are the global version of the pages, and `pages/src/pages/*/*.astro` files are the localized versions.
 
 ## Files to be localized
 

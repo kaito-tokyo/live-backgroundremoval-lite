@@ -2,11 +2,8 @@ version = 1
 
 [[annotations]]
 path = [
-  ".ncurc.json",
-  ".node-version",
-  "package-lock.json",
-  "package.json",
-  "tsconfig.json",
+  "aw/actions-lock.json",
+  "workflows/*.lock.yml",
 ]
 SPDX-FileCopyrightText = "2025-2026 Kaito Udagawa <umireon@kaito.tokyo>"
 SPDX-License-Identifier = "CC0-1.0"

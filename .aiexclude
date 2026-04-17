@@ -1,9 +1,0 @@
-.astro/
-.vscode/
-/.deps/
-/build_*/
-/data/models/
-/pages/dist/
-/pages/public/
-/vcpkg_installed/
-node_modules/
