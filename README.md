@@ -68,7 +68,7 @@ This project is built upon and incorporates several open-source components. We a
 
 ## Uninstalling this plugin
 
-- **Windows:** Remove `%PROGRAMDATA%\obs-studio\plugins\live-backgroundremoval-lite` and `%APPDATA%\Roaming\obs-studio\plugins\live-backgroundremoval-lite`.
+- **Windows:** Remove `%PROGRAMDATA%\obs-studio\plugins\live-backgroundremoval-lite` and `%APPDATA%\obs-studio\plugins\live-backgroundremoval-lite`.
 - **Mac:** Remove `~/Library/Application Support/obs-studio/plugins/live-backgroundremoval-lite` and `~/Library/Application Support/obs-studio/plugin_config/live-backgroundremoval-lite`.
 
 [^1]: He, Kaiming, Jian Sun, and Xiaoou Tang. “Guided Image Filtering.” IEEE Transactions on Pattern Analysis and Machine Intelligence 35, no. 6 (June 2013): 1397–1409. https://doi.org/10.1109/TPAMI.2012.213.

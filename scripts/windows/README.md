@@ -28,5 +28,5 @@ The plugin binary is installed under *%ProgramData%/obs-studio/plugins/live-back
 
 ## Supported environments
 
-Standalone environments such as installed under *C:/Program Files* or *D:/* are supported. We don't provide any help for portable installations. Do not ask about portable installation on our project page.
+Standalone OBS installations (for example, installed under *C:/Program Files* or *D:/*) are supported. We don't provide any help for portable installations. Do not ask about portable installation on our project page.
 

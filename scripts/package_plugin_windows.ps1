@@ -19,7 +19,7 @@ $BuildSpecFile = Join-Path $RootDir "buildspec.json"
 
 $IncludedFiles = @(
   Join-Path $ScriptDir "windows/Install video.mp4",
-  Join-Path $ScriptDir "windows/README.mp4",
+  Join-Path $ScriptDir "windows/README.md",
   Join-Path $ScriptDir "windows/Uninstall video.mp4"
 )
 
