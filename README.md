@@ -62,8 +62,8 @@ This project is built upon and incorporates several open-source components. We a
 - **josuttis-jthread**: https://github.com/josuttis/jthread (License: [MIT](https://github.com/josuttis/jthread/blob/main/LICENSE))
 - **MediaPipe Selfie Segmentation**: https://huggingface.co/onnx-community/mediapipe_selfie_segmentation (License: [Apache-2.0](https://opensource.org/licenses/Apache-2.0))
 - **ncnn**: https://github.com/Tencent/ncnn (License: [BSD-3-Clause](https://github.com/Tencent/ncnn/blob/master/LICENSE.txt))
-- **OpenCV**: https://github.com/opencv/opencv (License: [Apache-2.0](https://github.com/opencv/opencv/blob/master/LICENSE))
 - **wolfSSL**: https://github.com/wolfSSL/wolfssl (License: [GPL-3.0](https://github.com/wolfSSL/wolfssl/blob/master/COPYING))
+- **zlib**: https://zlib.net (License: [Zlib](https://zlib.net/zlib_license.html))
 
 ---
 
