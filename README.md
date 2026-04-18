@@ -33,6 +33,7 @@ We make resource consumption minimal to avoid affecting your gameplay, and we al
 
 We prioritize the compliance and ethics of our software projects as a member of the global OSS community, and take the LLM concerns seriously.
 While we use LLM-based code reviews to ensure that the quality of our software is satisfactory for every streamer, we always avoid including GenAI-generated content in our product, except for translations.
+See [GENERATED.md](GENERATED.md) for more details.
 
 ## Download and installation
 
