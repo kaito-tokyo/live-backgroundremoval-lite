@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "name": "Fedora",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-containers",
+        "astro-build.astro-vscode",
+        "editorconfig.editorconfig",
+        "github.vscode-github-actions",
+        "ms-vscode.cpp-devtools",
+        "ms-vscode.cpptools-extension-pack",
+        "redhat.vscode-yaml"
+      ]
+    }
+  },
+  "mounts": [
+    "source=${localWorkspaceFolderBasename}-build_fedora,target=${containerWorkspaceFolder}/build_fedora,type=volume,volume-nocopy",
+    "source=${localWorkspaceFolderBasename}-build_macos,target=${containerWorkspaceFolder}/build_macos,type=volume,volume-nocopy",
+    "source=${localWorkspaceFolderBasename}-build_x64,target=${containerWorkspaceFolder}/build_x64,type=volume,volume-nocopy",
+    "source=${localWorkspaceFolderBasename}-build_x86_64,target=${containerWorkspaceFolder}/build_x86_64,type=volume,volume-nocopy",
+    "source=${localWorkspaceFolderBasename}-deps_vendor,target=${containerWorkspaceFolder}/.deps_vendor,type=volume,volume-nocopy",
+    "source=${localWorkspaceFolderBasename}-deps,target=${containerWorkspaceFolder}/.deps,type=volume,volume-nocopy",
+    "source=${localWorkspaceFolderBasename}-venv,target=${containerWorkspaceFolder}/.venv,type=volume,volume-nocopy"
+  ],
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true
+}

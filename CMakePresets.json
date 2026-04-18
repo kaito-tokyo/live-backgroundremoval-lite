@@ -113,6 +113,29 @@
         "ENABLE_ASAN": false,
         "ENABLE_UBSAN": false
       }
+    },
+    {
+      "name": "fedora",
+      "displayName": "Fedora",
+      "description": "Build binary for Fedora",
+      "binaryDir": "${sourceDir}/build_fedora",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "generator": "Ninja",
+      "warnings": {
+        "dev": false,
+        "deprecated": false
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "BUILD_TESTING": false,
+        "ENABLE_ASAN": false,
+        "ENABLE_UBSAN": false,
+        "CMAKE_INSTALL_PREFIX": "/usr"
+      }
     }
   ],
   "buildPresets": [
@@ -156,6 +179,13 @@
       "configurePreset": "ubuntu-ci-x86_64",
       "displayName": "Ubuntu x86_64 (CI)",
       "description": "Build x86_64 binary for Ubuntu (CI)",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "fedora",
+      "configurePreset": "fedora",
+      "displayName": "Fedora",
+      "description": "Build binary for Fedora",
       "configuration": "RelWithDebInfo"
     }
   ],
