@@ -17,6 +17,12 @@ $ScriptDir = $PSScriptRoot
 $RootDir = Split-Path -Parent $ScriptDir
 $BuildSpecFile = Join-Path $RootDir "buildspec.json"
 
+$IncludedFiles = @(
+  Join-Path $ScriptDir "windows/Install video.mp4",
+  Join-Path $ScriptDir "windows/README.mp4",
+  Join-Path $ScriptDir "windows/Uninstall video.mp4"
+)
+
 if (-not (Test-Path $BuildSpecFile)) {
   Write-Error "buildspec.json not found at $BuildSpecFile"
   exit 1
@@ -91,10 +97,12 @@ try {
   Copy-Item -Path "$InstallDir\*" -Destination $TempRoot -Recurse -Force
 
   # Copy scripts/windows files to root of zip
-  $ScriptsWin = Join-Path $ScriptDir "windows"
-  if (Test-Path $ScriptsWin) {
-    Get-ChildItem -Path $ScriptsWin -File | ForEach-Object {
-      Copy-Item $_.FullName -Destination $TempRoot -Force
+  foreach ($File in $IncludedFiles) {
+    if (Test-Path $File) {
+      Copy-Item -Path $File -Destination $TempRoot -Force
+    }
+    else {
+      throw "Included file not found: $File"
     }
   }
 
