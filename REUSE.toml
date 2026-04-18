@@ -3,6 +3,8 @@ version = 1
 [[annotations]]
 path = [
   ".clang-format",
+  ".python-version",
+  ".vscode/c_cpp_properties.json",
   "buildspec.json",
   "CMakePresets.json",
   "scripts/windows/*.lnk",

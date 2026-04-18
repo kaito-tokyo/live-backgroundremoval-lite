@@ -79,7 +79,8 @@ FirstRunDialog::FirstRunDialog(std::shared_ptr<Global::PluginConfig> pluginConfi
 	headerLayout->setSpacing(20);
 
 	QLabel *iconLabel = new QLabel(this);
-	iconLabel->setPixmap(QPixmap(":/live-backgroundremoval-lite/logo-512.png"));
+	iconLabel->setPixmap(QPixmap(QString(":%1/resources/logo-512.png")
+					     .arg(QString::fromStdString(globalContext_->getQtResourcePrefix()))));
 	iconLabel->setScaledContents(true);
 	iconLabel->setFixedSize(80, 80);
 	headerLayout->addWidget(iconLabel);

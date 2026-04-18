@@ -17,5 +17,9 @@ indent_style = tab
 indent_size = 8
 tab_width = 8
 
+[.gitconfig*]
+indent_style = space
+indent_size = 8
+
 [*.md]
 trim_trailing_whitespace = false

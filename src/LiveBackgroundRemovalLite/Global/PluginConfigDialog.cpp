@@ -4,6 +4,8 @@
 
 #include "PluginConfigDialog.hpp"
 
+#include <stdexcept>
+
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -18,9 +20,13 @@
 
 namespace KaitoTokyo::LiveBackgroundRemovalLite::Global {
 
-PluginConfigDialog::PluginConfigDialog(std::shared_ptr<PluginConfig> pluginConfig, QWidget *parent)
+PluginConfigDialog::PluginConfigDialog(std::shared_ptr<PluginConfig> pluginConfig,
+				       std::shared_ptr<GlobalContext> globalContext, QWidget *parent)
 	: QDialog(parent),
-	  pluginConfig_{std::move(pluginConfig)}
+	  pluginConfig_{std::move(pluginConfig)},
+	  globalContext_{globalContext ? std::move(globalContext)
+				       : throw std::invalid_argument(
+						 "GlobalContextIsNullError(PluginConfigDialog::PluginConfigDialog)")}
 {
 	setupUi();
 }
@@ -65,21 +71,18 @@ void PluginConfigDialog::setupUi()
 			QString name;
 			QString resourcePath;
 		};
+		const QString prefix = QString::fromStdString(globalContext_->getQtResourcePrefix());
 		const QList<LicenseInfo> licenses = {
 			{"GNU General Public License v3.0 or later",
-			 "://live-backgroundremoval-lite-licenses/GPL-3.0-or-later.txt"},
-			{"Apache License 2.0", "://live-backgroundremoval-lite-licenses/Apache-2.0.txt"},
-			{"curl", "://live-backgroundremoval-lite-licenses/curl.txt"},
-			{"exprtk", "://live-backgroundremoval-lite-licenses/exprtk.txt"},
-			{"fmt", "://live-backgroundremoval-lite-licenses/fmt.txt"},
-			{"googletest", "://live-backgroundremoval-lite-licenses/googletest.txt"},
-			{"josuttis-jthread", "://live-backgroundremoval-lite-licenses/josuttis-jthread.txt"},
-			{"ncnn", "://live-backgroundremoval-lite-licenses/ncnn.txt"},
-			{"obs-studio", "://live-backgroundremoval-lite-licenses/obs-studio.txt"},
-			{"qt-lgpl-3.0", "://live-backgroundremoval-lite-licenses/qt-lgpl-3.0.txt"},
-			{"stb", "://live-backgroundremoval-lite-licenses/stb.txt"},
-			{"wolfssl", "://live-backgroundremoval-lite-licenses/wolfssl.txt"},
-			{"zlib", "://live-backgroundremoval-lite-licenses/zlib.txt"},
+			 QString(":%1/LICENSES/GPL-3.0-or-later.txt").arg(prefix)},
+			{"Apache License 2.0", QString(":%1/LICENSES/Apache-2.0.txt").arg(prefix)},
+			{"curl", QString(":%1/data/licenses/curl.txt").arg(prefix)},
+			{"fmt", QString(":%1/data/licenses/fmt.txt").arg(prefix)},
+			{"josuttis-jthread", QString(":%1/data/licenses/josuttis-jthread.txt").arg(prefix)},
+			{"ncnn", QString(":%1/data/licenses/ncnn.txt").arg(prefix)},
+			{"obs-studio", QString(":%1/data/licenses/obs-studio.txt").arg(prefix)},
+			{"wolfssl", QString(":%1/data/licenses/wolfssl.txt").arg(prefix)},
+			{"zlib", QString(":%1/data/licenses/zlib.txt").arg(prefix)},
 		};
 
 		QString text;

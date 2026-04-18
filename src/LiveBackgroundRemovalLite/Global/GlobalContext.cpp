@@ -49,6 +49,11 @@ std::string GlobalContext::getPluginVersion() const noexcept
 	return pluginVersion_;
 }
 
+std::string GlobalContext::getQtResourcePrefix() const noexcept
+{
+	return "/" + pluginName_ + "/" + pluginVersion_;
+}
+
 std::shared_ptr<const Logger::ILogger> GlobalContext::getLogger() const noexcept
 {
 	return logger_;

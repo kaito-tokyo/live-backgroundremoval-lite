@@ -36,6 +36,7 @@ public:
 
 	std::string getPluginName() const noexcept;
 	std::string getPluginVersion() const noexcept;
+	std::string getQtResourcePrefix() const noexcept;
 	std::shared_ptr<const Logger::ILogger> getLogger() const noexcept;
 	std::optional<std::string> getLatestVersion() const;
 

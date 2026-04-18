@@ -57,7 +57,6 @@ This project is built upon and incorporates several open-source components. We a
 
 - **OBS Studio**: https://github.com/obsproject/obs-studio (License: [GPL-2.0](https://github.com/obsproject/obs-studio/blob/master/COPYING))
 - **cURL**: https://github.com/curl/curl (License: [curl](https://curl.se/docs/copyright.html))
-- **exprtk**: https://github.com/ArashPartow/exprtk (License: [MIT](https://www.partow.net/programming/exprtk/index.html))
 - **fmt**: https://github.com/fmtlib/fmt (License: [MIT](https://github.com/fmtlib/fmt/blob/master/LICENSE.rst))
 - **GoogleTest**: https://github.com/google/googletest (License: [BSD-3-Clause](https://github.com/google/googletest/blob/main/LICENSE))
 - **josuttis-jthread**: https://github.com/josuttis/jthread (License: [MIT](https://github.com/josuttis/jthread/blob/main/LICENSE))

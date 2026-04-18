@@ -227,7 +227,8 @@ obs_properties_t *MainFilterContext::getProperties()
 			if (!self)
 				return false;
 
-			Global::PluginConfigDialog dialog(self->pluginConfig_, QApplication::activeWindow());
+			Global::PluginConfigDialog dialog(self->pluginConfig_, self->globalContext_,
+							  QApplication::activeWindow());
 			dialog.setWindowModality(Qt::WindowModal);
 			dialog.exec();
 			return false;

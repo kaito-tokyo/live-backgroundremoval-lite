@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# file: .github/instructions/data-locale-generation.instructions.md
+# file: .github/instructions/locale-ini-generation.instructions.md
 # author: Kaito Udagawa <umireon@kaito.tokyo>
 # version: 1.0.0
 # date: 2026-04-17
@@ -11,7 +11,7 @@
 applyTo: "data/locale/*.ini"
 ---
 
-# Guidelines for Generating Localization Data
+# Guidelines for Generating Localization ini
 
 ## Files to be localized
 
