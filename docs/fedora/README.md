@@ -11,7 +11,7 @@ SPDX-License-Identifier: Apache-2.0
 Install the required build dependencies:
 
 ```bash
-sudo dnf install fmt-devel git libcurl-devel ncnn-devel ninja-build obs-studio obs-studio-devel qt6-linguist qt6-qtbase-private-devel rpm-build
+sudo dnf install @development-tools cmake fmt-devel git libcurl-devel ncnn-devel ninja-build obs-studio obs-studio-devel qt6-linguist qt6-qtbase-private-devel rpm-build
 ```
 
 ## Build and install steps
@@ -26,7 +26,7 @@ cd live-backgroundremoval-lite
 **Configure and build**:
 
 ```bash
-cmake --preset fedora && cmake --build build_fedora --preset fedora
+cmake --preset fedora && cmake --build --preset fedora
 ```
 
 **Package**:
@@ -38,7 +38,7 @@ cmake --preset fedora && cmake --build build_fedora --preset fedora
 **Install the plugin**:
 
 ```bash
-sudo dnf install release/*.rpm
+sudo dnf install ./release/*.rpm
 ```
 
 ## Uninstalling the plugin

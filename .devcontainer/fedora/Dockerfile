@@ -8,6 +8,8 @@ FROM fedora:latest
 
 RUN <<'EOT' bash -euo pipefail -O nullglob
 dependencies_dev=(
+  @development-tools
+  cmake
   fmt-devel
   git
   libcurl-devel

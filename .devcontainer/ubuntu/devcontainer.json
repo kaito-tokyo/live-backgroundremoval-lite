@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
-  "name": "Fedora",
+  "name": "Ubuntu",
   "build": {
     "dockerfile": "Dockerfile"
   },
@@ -16,6 +16,9 @@
         "redhat.vscode-yaml"
       ]
     }
+  },
+  "containerEnv": {
+    "VCPKG_BINARY_SOURCES": "clear;http,https://vcpkg-obs.kaito.tokyo/{name}/{version}/{sha}"
   },
   "remoteUser": "vscode",
   "updateRemoteUserUID": true
