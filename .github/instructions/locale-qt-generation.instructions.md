@@ -8,7 +8,7 @@
 # version: 1.0.0
 # date: 2026-04-17
 
-applyTo: "resources/*.ts"
+applyTo: "translations/*.ts"
 ---
 
 # Guidelines for Generating Qt Localization
@@ -20,12 +20,12 @@ applyTo: "resources/*.ts"
 
 ## Supported languages
 
-- `resources/de_DE.ts`
-- `resources/es_ES.ts`
-- `resources/fr_FR.ts`
-- `resources/ja_JP.ts`
-- `resources/ko_KR.ts`
-- `resources/pt_BR.ts`
-- `resources/ru_RU.ts`
-- `resources/zh_CN.ts`
-- `resources/zh_TW.ts`
+- `translations/de_DE.ts`
+- `translations/es_ES.ts`
+- `translations/fr_FR.ts`
+- `translations/ja_JP.ts`
+- `translations/ko_KR.ts`
+- `translations/pt_BR.ts`
+- `translations/ru_RU.ts`
+- `translations/zh_CN.ts`
+- `translations/zh_TW.ts`

@@ -72,7 +72,7 @@ try {
 
 	g_appTranslator_ = std::make_unique<QTranslator>();
 
-	QString qmPath = QString(":%1/resources/%2.qm").arg(QT_RESOURCE_PREFIX).arg(localeStr);
+	QString qmPath = QString(":%1/translations/%2.qm").arg(QT_RESOURCE_PREFIX).arg(localeStr);
 
 	if (g_appTranslator_->load(qmPath)) {
 		QCoreApplication::installTranslator(g_appTranslator_.get());

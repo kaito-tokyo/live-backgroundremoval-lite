@@ -28,5 +28,5 @@ LOCALES=(
 )
 
 for locale in "${LOCALES[@]}"; do
-  lupdate "${ROOT_DIR}/src" -ts "${ROOT_DIR}/resources/${locale}.ts" -target-language "${locale}"
+  lupdate "${ROOT_DIR}/src" -ts "${ROOT_DIR}/translations/${locale}.ts" -target-language "${locale}"
 done

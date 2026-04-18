@@ -216,13 +216,27 @@ block(PROPAGATE QM_FILES)
   find_program(QT_LRELEASE_EXECUTABLE NAMES lrelease pyside6-lrelease)
 
   if(NOT QT_LRELEASE_EXECUTABLE)
-    message(FATAL_ERROR "lrelease or pyside6-lrelease not found!")
+    message("lrelease or pyside6-lrelease not found!")
+    return()
   endif()
 
+  file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/translations")
+
   set(QM_FILES "")
-  foreach(LOCALE de_DE es_ES fr_FR ja_JP ko_KR pt_BR ru_RU zh_CN zh_TW)
-    set(TS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources/${LOCALE}.ts")
-    set(QM_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources/${LOCALE}.qm")
+  foreach(
+    LOCALE
+    de_DE
+    es_ES
+    fr_FR
+    ja_JP
+    ko_KR
+    pt_BR
+    ru_RU
+    zh_CN
+    zh_TW
+  )
+    set(TS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/translations/${LOCALE}.ts")
+    set(QM_FILE "${CMAKE_CURRENT_BINARY_DIR}/translations/${LOCALE}.qm")
 
     add_custom_command(
       OUTPUT "${QM_FILE}"
@@ -231,16 +245,15 @@ block(PROPAGATE QM_FILES)
       VERBATIM
     )
 
+    set_source_files_properties("${QM_FILE}" PROPERTIES QT_RESOURCE_ALIAS "translations/${LOCALE}.qm")
+
     list(APPEND QM_FILES "${QM_FILE}")
   endforeach()
-
-  target_sources(${CMAKE_PROJECT_NAME} PRIVATE ${QM_FILES})
 endblock()
 
-# Qt resouces
+# Qt resources
 qt_add_resources(${CMAKE_PROJECT_NAME} resources
-  PREFIX "/live-backgroundremoval-lite/${CMAKE_PROJECT_VERSION}"
-  BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+  PREFIX "/${CMAKE_PROJECT_NAME}/${CMAKE_PROJECT_VERSION}"
   FILES
   ${QM_FILES}
   data/licenses/curl.txt

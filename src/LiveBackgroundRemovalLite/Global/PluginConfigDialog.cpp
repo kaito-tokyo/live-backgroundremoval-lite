@@ -4,6 +4,8 @@
 
 #include "PluginConfigDialog.hpp"
 
+#include <stdexcept>
+
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -22,7 +24,9 @@ PluginConfigDialog::PluginConfigDialog(std::shared_ptr<PluginConfig> pluginConfi
 				       std::shared_ptr<GlobalContext> globalContext, QWidget *parent)
 	: QDialog(parent),
 	  pluginConfig_{std::move(pluginConfig)},
-	  globalContext_{std::move(globalContext)}
+	  globalContext_{globalContext ? std::move(globalContext)
+				       : throw std::invalid_argument(
+						 "GlobalContextIsNullError(PluginConfigDialog::PluginConfigDialog)")}
 {
 	setupUi();
 }
