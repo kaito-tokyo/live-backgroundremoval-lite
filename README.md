@@ -28,6 +28,7 @@ We make resource consumption minimal to avoid affecting your gameplay, and we al
 - **OBS Studio** 31.1.1 or later
 - **OS** Windows, Mac, Linux (Ubuntu, Arch Linux, Flatpak)
 - This plugin does not require CUDA or ROCm.
+- Portable installation is **not supported**.
 
 ## Development policy
 
@@ -66,7 +67,10 @@ This project is built upon and incorporates several open-source components. We a
 - **wolfSSL**: https://github.com/wolfSSL/wolfssl (License: [GPL-3.0](https://github.com/wolfSSL/wolfssl/blob/master/COPYING))
 - **zlib**: https://zlib.net (License: [Zlib](https://zlib.net/zlib_license.html))
 
----
+## Uninstalling this plugin
+
+- **Windows:** Remove `%PROGRAMDATA%\obs-studio\plugins\live-backgroundremoval-lite` and `%APPDATA%\obs-studio\plugins\live-backgroundremoval-lite`.
+- **Mac:** Remove `~/Library/Application Support/obs-studio/plugins/live-backgroundremoval-lite` and `~/Library/Application Support/obs-studio/plugin_config/live-backgroundremoval-lite`.
 
 [^1]: He, Kaiming, Jian Sun, and Xiaoou Tang. “Guided Image Filtering.” IEEE Transactions on Pattern Analysis and Machine Intelligence 35, no. 6 (June 2013): 1397–1409. https://doi.org/10.1109/TPAMI.2012.213.
 [^2]: He, Kaiming, and Jian Sun. "Fast Guided Filter." arXiv preprint arXiv:1505.00996 (2015). https://doi.org/10.48550/arXiv.1505.00996
