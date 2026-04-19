@@ -213,42 +213,41 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE PLUGIN_VERSION="${PLUGI
 
 # Qt translations
 block(PROPAGATE QM_FILES)
-  find_program(QT_LRELEASE_EXECUTABLE NAMES lrelease pyside6-lrelease)
+  find_program(QT_LRELEASE_EXECUTABLE NAMES lrelease lrelease-qt6 pyside6-lrelease)
 
-  if(NOT QT_LRELEASE_EXECUTABLE)
-    message("lrelease or pyside6-lrelease not found!")
-    return()
+  if(QT_LRELEASE_EXECUTABLE)
+    set(QM_FILES "")
+    foreach(
+      LOCALE
+      de_DE
+      es_ES
+      fr_FR
+      ja_JP
+      ko_KR
+      pt_BR
+      ru_RU
+      zh_CN
+      zh_TW
+    )
+      set(TS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/translations/${LOCALE}.ts")
+      set(QM_FILE "${CMAKE_CURRENT_BINARY_DIR}/translations/${LOCALE}.qm")
+
+      add_custom_command(
+        OUTPUT "${QM_FILE}"
+        COMMAND ${QT_LRELEASE_EXECUTABLE} "${TS_FILE}" -qm "${QM_FILE}"
+        DEPENDS "${TS_FILE}"
+        VERBATIM
+      )
+
+      set_source_files_properties("${QM_FILE}" PROPERTIES QT_RESOURCE_ALIAS "translations/${LOCALE}.qm")
+
+      list(APPEND QM_FILES "${QM_FILE}")
+    endforeach()
+  else()
+    message("lrelease, lrelease-qt6 or pyside6-lrelease not found!")
   endif()
 
   file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/translations")
-
-  set(QM_FILES "")
-  foreach(
-    LOCALE
-    de_DE
-    es_ES
-    fr_FR
-    ja_JP
-    ko_KR
-    pt_BR
-    ru_RU
-    zh_CN
-    zh_TW
-  )
-    set(TS_FILE "${CMAKE_CURRENT_SOURCE_DIR}/translations/${LOCALE}.ts")
-    set(QM_FILE "${CMAKE_CURRENT_BINARY_DIR}/translations/${LOCALE}.qm")
-
-    add_custom_command(
-      OUTPUT "${QM_FILE}"
-      COMMAND ${QT_LRELEASE_EXECUTABLE} "${TS_FILE}" -qm "${QM_FILE}"
-      DEPENDS "${TS_FILE}"
-      VERBATIM
-    )
-
-    set_source_files_properties("${QM_FILE}" PROPERTIES QT_RESOURCE_ALIAS "translations/${LOCALE}.qm")
-
-    list(APPEND QM_FILES "${QM_FILE}")
-  endforeach()
 endblock()
 
 # Qt resources
@@ -301,14 +300,17 @@ set(CPACK_ARCHIVE_THREADS 0)
 set(CPACK_DEBIAN_COMPRESSION_LEVEL 19)
 set(CPACK_DEBIAN_COMPRESSION_TYPE zstd)
 set(CPACK_DEBIAN_DEBUGINFO_PACKAGE TRUE)
+set(CPACK_DEBIAN_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_C_LIBRARY_ARCHITECTURE}")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS TRUE)
 set(CPACK_GENERATOR "DEB")
 set(CPACK_OUTPUT_FILE_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/release")
 set(CPACK_PACKAGE_CONTACT "${PLUGIN_AUTHOR} <${PLUGIN_EMAIL}>")
-set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}-${CMAKE_C_LIBRARY_ARCHITECTURE}")
 set(CPACK_PACKAGE_NAME "${CMAKE_PROJECT_NAME}")
 set(CPACK_PACKAGE_VERSION "${CMAKE_PROJECT_VERSION}")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RPM_COMPRESSION_TYPE zstd)
+set(CPACK_RPM_PACKAGE_GROUP Unspecified)
+set(CPACK_RPM_PACKAGE_LICENSE GPL-3.0-or-later)
 set(CPACK_SET_DESTDIR TRUE)
 set(CPACK_VERBATIM_VARIABLES TRUE)
 set(

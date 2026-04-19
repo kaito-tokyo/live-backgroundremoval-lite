@@ -18,9 +18,9 @@ $RootDir = Split-Path -Parent $ScriptDir
 $BuildSpecFile = Join-Path $RootDir "buildspec.json"
 
 $IncludedFiles = @(
-  Join-Path $ScriptDir "windows/Install video.mp4",
-  Join-Path $ScriptDir "windows/README.md",
-  Join-Path $ScriptDir "windows/Uninstall video.mp4"
+  (Join-Path $ScriptDir "windows/Install video.mp4"),
+  (Join-Path $ScriptDir "windows/README.md"),
+  (Join-Path $ScriptDir "windows/Uninstall video.mp4")
 )
 
 if (-not (Test-Path $BuildSpecFile)) {
