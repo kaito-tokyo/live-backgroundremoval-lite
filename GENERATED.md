@@ -11,7 +11,7 @@ SPDX-License-Identifier: CC0-1.0
 - We will not use generated content in our project codebase because GenAI-generated code is unreliable and suspicious.
 - We use GitHub Copilot code review to help ensure that the quality of our software is satisfactory for every streamer, but we will not incorporate LLM-suggested code snippets into the codebase.
 - We use GitHub Agentic Workflows to enforce our development policy, but we will not use them to generate any code or text automatically.
-- **EXCEPTION**: We use OpenAI GPT to generate translations for our product. We always prioritize accessibility and localization because they are essential to deliver our product globally. We believe GenAI is one of the best tools for OSS developers like us.
+- **EXCEPTION**: We use OpenAI GPT to generate translations for our product.
 
 ## List of generated contents
 
