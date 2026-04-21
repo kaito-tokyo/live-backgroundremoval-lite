@@ -2,15 +2,29 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg-configuration.schema.json",
   "default-registry": {
     "kind": "git",
-    "baseline": "4ef2a7144d00c2f446029b9700e701a3094b8bfb",
+    "baseline": "5e6578b62d9e4ac5a563e816802a56818540cd2e",
     "repository": "https://github.com/microsoft/vcpkg"
   },
   "registries": [
     {
       "kind": "git",
-      "baseline": "1e678209cf07f4b413d3e05431126808bb4954f2",
+      "baseline": "ab4cbd85a768bcc1442aaf8c087058c9b02f850b",
+      "repository": "https://github.com/kaito-tokyo/vcpkg-tensorflow-kaito-tokyo",
+      "packages": [
+        "flatbuffers",
+        "ruy",
+        "tensorflow-lite"
+      ]
+    },
+    {
+      "kind": "git",
+      "baseline": "06279050194c6f69e8f60ddea2d13245fb08046a",
       "repository": "https://github.com/kaito-tokyo/vcpkg-obs-kaito-tokyo",
       "packages": [
+        "kaldi",
+        "openfst",
+        "tesseract",
+        "vosk",
         "wolfssl"
       ]
     }
