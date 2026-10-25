@@ -5,6 +5,12 @@
 [submodule "vendor/googletest"]
 	path = vendor/googletest
 	url = https://github.com/google/googletest.git
+[submodule "vendor/ncnn"]
+	path = vendor/ncnn
+	url = https://github.com/Tencent/ncnn.git
+	x-tag = 20261020
+	x-archive-url = https://github.com/Tencent/ncnn/archive/refs/tags/20261020.zip
+	x-archive-hash = sha256:ca7643d59d50b8ff455edfe4b08c64da0355028ef57d87ac8fa5264d1d18e4ab
 [submodule "vendor/stb"]
 	path = vendor/stb
 	url = https://github.com/nothings/stb.git
